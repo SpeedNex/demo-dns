@@ -28,8 +28,9 @@ return new class extends Migration {
             }
         });
 
-        $this->safeIndex('wallet_transactions', 'wallet_transactions_wallet_id_idx', '(wallet_id)');
-        $this->safeIndex('wallet_transactions', 'wallet_transactions_txno_uq', '(transaction_no)', true);
+        $prefix = DB::connection()->getTablePrefix();
+        $this->safeIndex($prefix . 'wallet_transactions', $prefix . 'wallet_transactions_wallet_id_idx', '(wallet_id)');
+        $this->safeIndex($prefix . 'wallet_transactions', $prefix . 'wallet_transactions_txno_uq', '(transaction_no)', true);
     }
 
     public function down(): void

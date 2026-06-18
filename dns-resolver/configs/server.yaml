@@ -11,8 +11,8 @@ listen:
     udp: 5355
 control_plane:
     endpoint: http://localhost:8081
-    api_key: 6DBcFlA095HCfKyz8lE4HgLgQhZIcrr5
-    secret: sk_d5029b742297c15220063c12ce71186e86df5d0d9bedc16084e9c48ae126f627
+    api_key: ntk_nh7g84bnumt3s26wdsx2ngzrigwoqfkp
+    secret: hmk_dwhhwdbcuosjzrtpaa2pyrvtvksy5ofx
     node_id: node_b2synjbh2thmul8q
     heartbeat_interval: 30
     config_poll_interval: 30

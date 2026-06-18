@@ -32,11 +32,12 @@ return new class extends Migration {
         });
 
         // 补齐索引
-        DB::statement('CREATE INDEX IF NOT EXISTS invoices_billing_period_idx ON invoices (billing_period_id)');
-        DB::statement('CREATE INDEX IF NOT EXISTS invoices_billing_type_idx ON invoices (billing_type)');
+        $prefix = DB::connection()->getTablePrefix();
+        DB::statement('CREATE INDEX IF NOT EXISTS ' . $prefix . 'invoices_billing_period_idx ON ' . $prefix . 'invoices (billing_period_id)');
+        DB::statement('CREATE INDEX IF NOT EXISTS ' . $prefix . 'invoices_billing_type_idx ON ' . $prefix . 'invoices (billing_type)');
 
         // 注释统一
-        DB::statement("COMMENT ON COLUMN invoices.amount_minor IS '单位:分'");
+        DB::statement("COMMENT ON COLUMN " . $prefix . "invoices.amount_minor IS '单位:分'");
     }
 
     public function down(): void

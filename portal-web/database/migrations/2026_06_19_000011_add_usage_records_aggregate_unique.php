@@ -14,16 +14,18 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
+        $prefix = DB::connection()->getTablePrefix();
         $exists = DB::selectOne(
-            "SELECT 1 FROM pg_indexes WHERE indexname = 'usage_records_aggregate_unique'"
+            "SELECT 1 FROM pg_indexes WHERE indexname = '" . $prefix . "usage_records_aggregate_unique'"
         );
         if ($exists === null) {
-            DB::statement('CREATE UNIQUE INDEX usage_records_aggregate_unique ON usage_records (user_id, profile_id, device_id, billing_category, billing_period_id)');
+            DB::statement('CREATE UNIQUE INDEX ' . $prefix . 'usage_records_aggregate_unique ON ' . $prefix . 'usage_records (user_id, profile_id, device_id, billing_category, billing_period_id)');
         }
     }
 
     public function down(): void
     {
-        DB::statement('DROP INDEX IF EXISTS usage_records_aggregate_unique');
+        $prefix = DB::connection()->getTablePrefix();
+        DB::statement('DROP INDEX IF EXISTS ' . $prefix . 'usage_records_aggregate_unique');
     }
 };

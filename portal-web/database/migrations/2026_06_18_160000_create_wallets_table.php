@@ -12,7 +12,7 @@ return new class extends Migration
         // UI.md #54: 钱包系统
         Schema::create('wallets', function (Blueprint $table) {
             $table->id();
-            $table->string('user_id', 30)->unique();
+            $table->string('user_id', 36)->unique();
             $table->string('currency', 3)->default('USD');
             $table->bigInteger('balance')->default(0)->comment('单位：分');
             $table->bigInteger('frozen')->default(0)->comment('单位：分');

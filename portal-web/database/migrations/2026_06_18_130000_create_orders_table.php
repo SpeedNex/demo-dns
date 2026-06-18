@@ -11,7 +11,7 @@ return new class extends Migration
         // UI.md #51: 订单中心
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->string('user_id', 30);
+            $table->string('user_id', 36);
             $table->string('order_no', 50)->unique();
             $table->string('plan_code', 30);
             $table->string('status', 20)->default('pending')->comment('pending / paid / cancelled / refunded');

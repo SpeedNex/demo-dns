@@ -12,7 +12,7 @@ return new class extends Migration
         // 状态机：pending → success → failed → refunded
         Schema::create('payment_transactions', function (Blueprint $table) {
             $table->id();
-            $table->string('user_id', 30);
+            $table->string('user_id', 36);
             $table->unsignedBigInteger('order_id')->nullable();
             $table->string('provider', 30)->default('stripe');
             $table->string('provider_session_id', 200)->nullable()->comment('Stripe Checkout Session id');

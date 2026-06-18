@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
+        $prefix = DB::connection()->getTablePrefix();
         $tables = [
             'wallets' => 'currency',
             'wallet_transactions' => 'currency',
@@ -25,12 +26,12 @@ return new class extends Migration {
             if (! Schema::hasColumn($table, $col)) {
                 continue;
             }
-            DB::statement("UPDATE {$table} SET {$col} = 'USD' WHERE {$col} IS NULL OR {$col} = ''");
-            DB::statement("ALTER TABLE {$table} ALTER COLUMN {$col} SET DEFAULT 'USD'");
+            DB::statement("UPDATE {$prefix}{$table} SET {$col} = 'USD' WHERE {$col} IS NULL OR {$col} = ''");
+            DB::statement("ALTER TABLE {$prefix}{$table} ALTER COLUMN {$col} SET DEFAULT 'USD'");
         }
         if (Schema::hasColumn('users', 'currency')) {
-            DB::statement("UPDATE users SET currency = 'USD' WHERE currency IS NULL OR currency = ''");
-            DB::statement("ALTER TABLE users ALTER COLUMN currency SET DEFAULT 'USD'");
+            DB::statement("UPDATE {$prefix}users SET currency = 'USD' WHERE currency IS NULL OR currency = ''");
+            DB::statement("ALTER TABLE {$prefix}users ALTER COLUMN currency SET DEFAULT 'USD'");
         }
     }
 

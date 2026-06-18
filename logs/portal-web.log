@@ -2905,3 +2905,4 @@ AggregateError [ECONNREFUSED]:
 14:24:57 [vite] (client) hmr update /src/components/Layout.vue
 14:25:08 [vite] (client) hmr update /src/components/Layout.vue
 14:25:22 [vite] (client) hmr update /src/components/Layout.vue
+14:39:26 [vite] (client) hmr update /src/views/admin/AdminLogin.vue, /src/views/admin/AdminLogin.vue?vue&type=style&index=0&scoped=205d3567&lang.css

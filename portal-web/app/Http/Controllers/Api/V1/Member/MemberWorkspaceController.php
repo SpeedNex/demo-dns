@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api\V1\Member;
 use App\Application\Member\WorkspaceRuleService;
 use App\Domain\Profile\MemberCatalogService;
 use App\Domain\Profile\MemberWorkspaceService;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 final class MemberWorkspaceController
@@ -294,6 +296,99 @@ final class MemberWorkspaceController
     public function dnsEndpoints(Request $request): JsonResponse
     {
         return response()->json(['data' => $this->workspace->dnsEndpoints($request->user()->id)]);
+    }
+
+    public function usage(Request $request): JsonResponse
+    {
+        $user = User::findOrFail($request->user()->id);
+        $subscription = DB::table('subscriptions')->where('user_id', $user->id)->first();
+        $plan = $subscription ? DB::table('plans')->where('code', $subscription->plan_code ?? 'free')->first() : null;
+        
+        $monthlyLimit = $plan && isset($plan->limits) ? (json_decode($plan->limits, true)['monthly_queries'] ?? null) : 300000;
+        
+        // Get usage from usage_records
+        $currentPeriod = DB::table('usage_records')
+            ->where('user_id', $user->id)
+            ->where('period', 'monthly')
+            ->orderByDesc('created_at')
+            ->first();
+        
+        $queriesUsed = $currentPeriod ? $currentPeriod->queries : 0;
+        
+        return response()->json([
+            'data' => [
+                'queries_used' => $queriesUsed,
+                'queries_total' => $monthlyLimit,
+                'is_unlimited' => $monthlyLimit === null,
+                'upgrade_price' => 'US$3.99',
+            ]
+        ]);
+    }
+
+    public function wallet(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $wallet = DB::table('wallets')->where('user_id', $user->id)->first();
+        
+        if (!$wallet) {
+            // Create wallet if doesn't exist
+            $walletId = 'wal_' . substr(hash('sha256', $user->id . microtime()), 0, 12);
+            DB::table('wallets')->insert([
+                'id' => $walletId,
+                'user_id' => $user->id,
+                'balance' => 0,
+                'currency' => 'USD',
+                'frozen' => 0,
+                'version' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $balance = 0;
+        } else {
+            $balance = $wallet->balance / 100; // Convert from minor units
+        }
+        
+        return response()->json([
+            'data' => [
+                'balance' => number_format($balance, 2, '.', ''),
+            ]
+        ]);
+    }
+
+    public function subscription(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $subscription = DB::table('subscriptions')
+            ->where('user_id', $user->id)
+            ->first();
+        
+        if (!$subscription) {
+            return response()->json(['data' => null]);
+        }
+        
+        $plan = DB::table('plans')->where('code', $subscription->plan_code ?? 'free')->first();
+        
+        return response()->json([
+            'data' => [
+                'plan_name' => $plan ? $plan->name : 'Free',
+                'status' => $subscription->status,
+                'expires_at' => $subscription->current_period_end,
+                'current_period_start' => $subscription->current_period_start,
+            ]
+        ]);
+    }
+
+    public function referralLink(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        
+        return response()->json([
+            'data' => [
+                'link' => config('app.url') . '?ref=' . $user->id,
+                'reward_amount' => 1.00,
+                'currency' => 'USD',
+            ]
+        ]);
     }
 
     public function topDomains(Request $request): JsonResponse

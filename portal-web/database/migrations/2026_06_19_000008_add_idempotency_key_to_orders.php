@@ -14,18 +14,20 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::table('orders', function (Blueprint $table): void {
+        $prefix = DB::connection()->getTablePrefix();
+        Schema::table('orders', function (Blueprint $table) use ($prefix): void {
             if (! Schema::hasColumn('orders', 'idempotency_key')) {
                 $table->string('idempotency_key', 80)->nullable()->after('order_no');
             }
         });
         // PostgreSQL 唯一索引（partial：只对非空键生效，允许历史数据）
-        DB::statement('CREATE UNIQUE INDEX IF NOT EXISTS orders_user_idem_unique ON orders (user_id, idempotency_key) WHERE idempotency_key IS NOT NULL');
+        DB::statement('CREATE UNIQUE INDEX IF NOT EXISTS ' . $prefix . 'orders_user_idem_unique ON ' . $prefix . 'orders (user_id, idempotency_key) WHERE idempotency_key IS NOT NULL');
     }
 
     public function down(): void
     {
-        DB::statement('DROP INDEX IF EXISTS orders_user_idem_unique');
+        $prefix = DB::connection()->getTablePrefix();
+        DB::statement('DROP INDEX IF EXISTS ' . $prefix . 'orders_user_idem_unique');
         // 保留列：向前兼容
     }
 };

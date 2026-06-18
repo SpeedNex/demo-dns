@@ -50,6 +50,10 @@ Route::prefix('member')->middleware('auth:api')->group(function (): void {
     Route::get('catalogs', [MemberWorkspaceController::class, 'catalogs']);
     Route::get('membership', [MemberWorkspaceController::class, 'membership']);
     Route::post('upgrade', [MemberWorkspaceController::class, 'upgrade']);
+    Route::get('usage', [MemberWorkspaceController::class, 'usage']);
+    Route::get('wallet', [MemberWorkspaceController::class, 'wallet']);
+    Route::get('subscription', [MemberWorkspaceController::class, 'subscription']);
+    Route::get('referral-link', [MemberWorkspaceController::class, 'referralLink']);
 
     Route::prefix('profiles')->group(function (): void {
         Route::get('', [ProfileController::class, 'index']);

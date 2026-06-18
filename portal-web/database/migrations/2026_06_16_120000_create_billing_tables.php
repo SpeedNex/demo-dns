@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('wallet_transactions', function (Blueprint $table) {
             $table->id();
-            $table->string('user_id', 30);
+            $table->string('user_id', 36);
             $table->string('type', 30)->comment('charge / refund / usage_deduction / upgrade / downgrade');
             $table->bigInteger('amount_minor');
             $table->string('currency', 3)->default('CNY');
@@ -29,7 +29,7 @@ return new class extends Migration
 
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->string('user_id', 30);
+            $table->string('user_id', 36);
             $table->string('invoice_no', 50)->unique();
             $table->bigInteger('amount_minor');
             $table->string('currency', 3)->default('CNY');
@@ -49,7 +49,7 @@ return new class extends Migration
 
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
-            $table->string('user_id', 30)->unique();
+            $table->string('user_id', 36)->unique();
             $table->string('plan_code', 30)->default('free');
             $table->string('status', 20)->default('active');
             $table->bigInteger('monthly_query_limit')->nullable()->comment('null = unlimited');
@@ -64,7 +64,7 @@ return new class extends Migration
 
         Schema::create('usage_records', function (Blueprint $table) {
             $table->id();
-            $table->string('user_id', 30);
+            $table->string('user_id', 36);
             $table->string('plan_code', 30)->default('free');
             $table->string('period', 7)->comment('YYYY-MM');
             $table->bigInteger('query_count')->default(0);

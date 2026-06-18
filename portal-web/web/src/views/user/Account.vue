@@ -1,4 +1,5 @@
 <template>
+    <Layout>
     <div class="account-page">
         <div class="page-header">
             <h1 class="page-title">{{ $t('account.title') }}</h1>
@@ -246,6 +247,7 @@
             </template>
         </el-dialog>
     </div>
+    </Layout>
 </template>
 
 <script setup>
@@ -254,6 +256,7 @@ import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { Coin, Share, Wallet, Tickets, Message, Lock, CopyDocument } from '@element-plus/icons-vue'
 import client from '@/api/client'
+import Layout from '@/components/Layout.vue'
 
 const { t } = useI18n()
 

@@ -41,8 +41,8 @@ return new class extends Migration {
             }
         });
 
-        DB::statement('CREATE INDEX IF NOT EXISTS usage_records_user_period_idx ON usage_records (user_id, period_start)');
-        DB::statement('CREATE INDEX IF NOT EXISTS usage_records_billing_period_idx ON usage_records (billing_period_id)');
+        DB::statement('CREATE INDEX IF NOT EXISTS ' . DB::connection()->getTablePrefix() . 'usage_records_user_period_idx ON ' . DB::connection()->getTablePrefix() . 'usage_records (user_id, period_start)');
+        DB::statement('CREATE INDEX IF NOT EXISTS ' . DB::connection()->getTablePrefix() . 'usage_records_billing_period_idx ON ' . DB::connection()->getTablePrefix() . 'usage_records (billing_period_id)');
     }
 
     public function down(): void

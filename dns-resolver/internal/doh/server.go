@@ -153,31 +153,37 @@ func (s *Server) handleDNSQuery(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleProfileDNSQuery handles profile-specific DoH requests.
-// URL format: /{profile_uid}/dns-query
+// URL format: /{profile_uid} or /{profile_uid}/dns-query
 func (s *Server) handleProfileDNSQuery(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/")
 
-	if !strings.HasSuffix(path, "/dns-query") {
-		// Try to match as profile-specific path with dns-query
-		// This is a fallback - the /dns-query handler also works
-		if strings.Contains(path, "/dns-query") {
-			profileUID := resolver.ExtractProfileFromPath(path)
-			if profileUID != "" {
-				s.resolveDNS(w, r, profileUID)
-				return
-			}
-		}
-		http.NotFound(w, r)
-		return
-	}
-
+	// Support both /{profile_uid} and /{profile_uid}/dns-query
 	profileUID := strings.TrimSuffix(path, "/dns-query")
-	if len(profileUID) == 0 {
+	if profileUID == "" {
 		s.resolveDNS(w, r, "")
 		return
 	}
 
-	s.resolveDNS(w, r, profileUID)
+	// Validate it looks like a profile UID
+	if isValidProfileUID(profileUID) {
+		s.resolveDNS(w, r, profileUID)
+		return
+	}
+
+	http.NotFound(w, r)
+}
+
+// isValidProfileUID checks if a string looks like a valid profile UID.
+func isValidProfileUID(uid string) bool {
+	if len(uid) < 4 || len(uid) > 64 {
+		return false
+	}
+	for _, c := range uid {
+		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_') {
+			return false
+		}
+	}
+	return true
 }
 
 // resolveDNS performs the full DNS resolution with Profile Resolution Layer.

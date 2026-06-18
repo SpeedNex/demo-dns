@@ -14,22 +14,24 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::table('subscriptions', function (Blueprint $table): void {
+        $prefix = DB::connection()->getTablePrefix();
+        Schema::table('subscriptions', function (Blueprint $table) use ($prefix): void {
             if (! Schema::hasColumn('subscriptions', 'order_id')) {
                 $table->unsignedBigInteger('order_id')->nullable()->after('user_id');
             }
         });
         // 唯一索引：同一 order_id 只能产生一个 subscription
         $exists = DB::selectOne(
-            "SELECT 1 FROM pg_indexes WHERE indexname = 'subscriptions_order_id_unique'"
+            "SELECT 1 FROM pg_indexes WHERE indexname = '" . $prefix . "subscriptions_order_id_unique'"
         );
         if ($exists === null) {
-            DB::statement('CREATE UNIQUE INDEX subscriptions_order_id_unique ON subscriptions (order_id) WHERE order_id IS NOT NULL');
+            DB::statement('CREATE UNIQUE INDEX ' . $prefix . 'subscriptions_order_id_unique ON ' . $prefix . 'subscriptions (order_id) WHERE order_id IS NOT NULL');
         }
     }
 
     public function down(): void
     {
-        DB::statement('DROP INDEX IF EXISTS subscriptions_order_id_unique');
+        $prefix = DB::connection()->getTablePrefix();
+        DB::statement('DROP INDEX IF EXISTS ' . $prefix . 'subscriptions_order_id_unique');
     }
 };
