@@ -129,23 +129,25 @@ const showCategoryPicker = ref(false)
 const searchQuery = ref('')
 
 const blockedCategories = ref([])
-const categoryPresets = [
-    { key: 'adult' },
-    { key: 'gambling' },
-    { key: 'dating' },
-    { key: 'piracy' },
-    { key: 'social' },
-    { key: 'gaming' },
-    { key: 'streaming' },
-]
+const categoryPresets = ref([
+    { key: 'adult', name: 'Adult Content', desc: 'Adult and explicit content' },
+    { key: 'gambling', name: 'Gambling', desc: 'Betting and gambling services' },
+    { key: 'social', name: 'Social Media', desc: 'Social networks and communities' },
+    { key: 'gaming', name: 'Gaming', desc: 'Gaming platforms and launchers' },
+    { key: 'streaming', name: 'Streaming', desc: 'Video and live streaming' },
+])
 
 const getCategoryName = (key) => {
     if (!key) return ''
+    const preset = categoryPresets.value.find((item) => item.key === key)
+    if (preset?.name) return preset.name
     const name = t(`parental.categories.${key}`)
     return name && name !== `parental.categories.${key}` ? name : key
 }
 const getCategoryDesc = (key) => {
     if (!key) return ''
+    const preset = categoryPresets.value.find((item) => item.key === key)
+    if (preset?.desc) return preset.desc
     const desc = t(`parental.categories.${key}Desc`)
     return desc && desc !== `parental.categories.${key}Desc` ? desc : ''
 }
@@ -173,7 +175,7 @@ const form = reactive({
     time_limits: {},
 })
 
-const presets = [
+const presets = ref([
     { name: '抖音/TikTok', icon: 'https://favicons.nextdns.io/hex:7777772e74696b746f6b2e636f6d@1x.png', category: 'website' },
     { name: 'Tinder', icon: 'https://favicons.nextdns.io/hex:74696e6465722e636f6d@1x.png', category: 'app' },
     { name: 'Instagram', icon: 'https://favicons.nextdns.io/hex:7777772e696e7374616772616d2e636f6d@1x.png', category: 'app' },
@@ -217,7 +219,7 @@ const presets = [
     { name: 'ChatGPT', icon: 'https://favicons.nextdns.io/hex:636861742e6f70656e61692e636f6d@1x.png', category: 'website' },
     { name: '亚马逊（Amazon）', icon: 'https://favicons.nextdns.io/hex:7777772e616d617a6f6e2e636f6d@1x.png', category: 'website' },
     { name: 'Zoom', icon: 'https://favicons.nextdns.io/hex:7a6f6f6d2e7573@1x.png', category: 'app' },
-]
+])
 
 const blockedItems = ref([])
 
@@ -237,8 +239,8 @@ const removeItem = (row) => {
 
 const filteredPresets = computed(() => {
     const q = searchQuery.value.toLowerCase().trim()
-    if (!q) return presets
-    return presets.filter((p) => p.name.toLowerCase().includes(q))
+    if (!q) return presets.value
+    return presets.value.filter((p) => p.name.toLowerCase().includes(q))
 })
 
 const categoryItems = [
@@ -282,6 +284,14 @@ watch(
 
 onMounted(async () => {
     try {
+        const catalogResponse = await client.get('/member/catalogs')
+        const catalogs = catalogResponse.data?.data || {}
+        if (Array.isArray(catalogs.parental_presets) && catalogs.parental_presets.length > 0) {
+            presets.value = catalogs.parental_presets
+        }
+        if (Array.isArray(catalogs.parental_categories) && catalogs.parental_categories.length > 0) {
+            categoryPresets.value = catalogs.parental_categories
+        }
         const { data } = await client.get('/member/parental')
         const apiData = data.data || {}
         Object.assign(form, { ...apiData })

@@ -503,7 +503,7 @@ export default {
     account: 'Account',
     language: 'Language',
     timezone: 'Timezone',
-    lang: { en: '🇬🇧 English', zh: '🇨🇳 简体中文', ko: '🇰🇷 한국어' },
+    lang: { en: '🇬🇧 English', zh: '🇨🇳 简体中文', ko: '🇰🇷 한국어', ja: '🇯🇵 日本語' },
     profile: 'Profile Settings',
     profileName: 'Profile Name',
     defaultAction: 'Default Action',
@@ -1127,6 +1127,10 @@ export default {
     plans: {
       title: 'Plan Management',
       desc: 'Manage membership plans, pricing and display order',
+    },
+    memberCatalogs: {
+      title: 'Member Policy Catalogs',
+      desc: 'Manage device models, blocklists, preset websites/apps/games and category catalogs',
     },
     finance: {
       menu: 'Finance',

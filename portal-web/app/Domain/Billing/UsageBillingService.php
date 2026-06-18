@@ -50,6 +50,7 @@ final class UsageBillingService
             foreach ($buckets as $key => $count) {
                 [$userId, $profileId, $deviceId, $category] = explode('|', $key);
                 $period = $this->ensureOpenPeriod($userId);
+                $planCode = DB::table('subscriptions')->where('user_id', $userId)->value('plan_code') ?? 'free';
                 DB::table('usage_records')->updateOrInsert(
                     [
                         'user_id' => $userId,
@@ -59,6 +60,8 @@ final class UsageBillingService
                         'billing_period_id' => $period->id,
                     ],
                     [
+                        'period' => $period->period_code,
+                        'plan_code' => $planCode,
                         'query_count' => DB::raw('COALESCE(usage_records.query_count, 0) + ' . (int) $count),
                         'amount_minor' => DB::raw('COALESCE(usage_records.amount_minor, 0)'),
                         'period_start' => $period->period_start,
@@ -99,6 +102,7 @@ final class UsageBillingService
                     }
                     $billingId = DB::table('invoices')->insertGetId([
                         'user_id' => $period->user_id,
+                        'invoice_no' => 'UINV-' . now()->format('YmdHis') . '-' . str_pad((string) $period->id, 6, '0', STR_PAD_LEFT),
                         'type' => 'usage',
                         'billing_type' => 'usage',
                         'billing_period_id' => $period->id,
@@ -140,6 +144,7 @@ final class UsageBillingService
         $now = now();
         $monthStart = $now->copy()->startOfMonth();
         $monthEnd = $now->copy()->endOfMonth();
+        $periodCode = $monthStart->format('Y-m');
         $row = DB::table('billing_periods')
             ->where('user_id', $userId)
             ->where('period_start', $monthStart)
@@ -152,6 +157,7 @@ final class UsageBillingService
             'user_id' => $userId,
             'period_start' => $monthStart,
             'period_end' => $monthEnd,
+            'period_code' => $periodCode,
             'status' => 'open',
             'created_at' => $now,
             'updated_at' => $now,

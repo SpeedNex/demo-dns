@@ -505,7 +505,7 @@ export default {
     account: '账号信息',
     language: '界面语言',
     timezone: '时区',
-    lang: { en: '🇬🇧 English', zh: '🇨🇳 简体中文', ko: '🇰🇷 한국어' },
+    lang: { en: '🇬🇧 English', zh: '🇨🇳 简体中文', ko: '🇰🇷 한국어', ja: '🇯🇵 日本語' },
     profile: '方案设置',
     profileName: '方案名称',
     defaultAction: '默认动作',
@@ -1260,6 +1260,10 @@ export default {
     plans: {
       title: '套餐管理',
       desc: '管理会员中心套餐、价格和展示顺序',
+    },
+    memberCatalogs: {
+      title: '会员策略目录',
+      desc: '维护设备型号、拦截列表、网站/App/Game 预设与分类目录',
     },
     finance: {
       menu: '财务管理',

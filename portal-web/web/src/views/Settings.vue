@@ -21,6 +21,7 @@
                                 <el-option :label="$t('settings.lang.en')" value="en" />
                                 <el-option :label="$t('settings.lang.zh')" value="zh-CN" />
                                 <el-option :label="$t('settings.lang.ko')" value="ko" />
+                                <el-option :label="$t('settings.lang.ja')" value="ja" />
                             </el-select>
                         </el-form-item>
                         <el-form-item :label="$t('settings.timezone')">

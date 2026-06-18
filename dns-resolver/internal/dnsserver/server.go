@@ -40,8 +40,9 @@ type Server struct {
 
 type activeConfig struct {
 	Profiles []struct {
-		ProfileID     string `json:"profile_id"`
-		BlockResponse string `json:"block_response"`
+		ProfileID     string         `json:"profile_id"`
+		BlockResponse string         `json:"block_response"`
+		Parental      map[string]any `json:"parental"`
 		Devices       []struct {
 			DeviceID string `json:"device_id"`
 			SourceIP string `json:"source_ip"`
@@ -155,7 +156,7 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 		firstSeen = true
 	}
 
-	profileID, blockResponse, deviceID, profileOK := s.resolveRuntimeProfile(w.RemoteAddr())
+	profileID, blockResponse, deviceID, safeSearchEnabled, profileOK := s.resolveRuntimeProfile(w.RemoteAddr())
 	if !profileOK {
 		// UI.md #41: no IP→profile binding; refuse the query (NXDOMAIN)
 		// instead of resolving on a paid default profile.
@@ -168,12 +169,13 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 		return
 	}
 	decision := s.resolutionLayer.Resolve(&resolver.ResolutionContext{
-		ProfileUID: profileID,
-		DeviceUID:  deviceID,
-		ClientIP:   remoteIP(w.RemoteAddr()),
-		Domain:     domain,
-		QueryType:  queryType,
-		Protocol:   w.LocalAddr().Network(),
+		ProfileUID:        profileID,
+		DeviceUID:         deviceID,
+		SafeSearchEnabled: safeSearchEnabled,
+		ClientIP:          remoteIP(w.RemoteAddr()),
+		Domain:            domain,
+		QueryType:         queryType,
+		Protocol:          w.LocalAddr().Network(),
 	})
 
 	if decision.Action == "BLOCK" {
@@ -182,6 +184,26 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 		_ = w.WriteMsg(reply)
 		if firstSeen {
 			s.appendLog(profileID, deviceID, domain, "BLOCK", decision.Reason, decision.Category, w.RemoteAddr().String(), queryType, reply.Rcode, startedAt)
+		}
+		return
+	}
+
+	if decision.Action == "REWRITE" {
+		reply.Answer = []dns.RR{
+			&dns.CNAME{
+				Hdr: dns.RR_Header{
+					Name:   question.Name,
+					Rrtype: dns.TypeCNAME,
+					Class:  dns.ClassINET,
+					Ttl:    60,
+				},
+				Target: dns.Fqdn(decision.Category),
+			},
+		}
+		s.metrics.IncAllowed()
+		_ = w.WriteMsg(reply)
+		if firstSeen {
+			s.appendLog(profileID, deviceID, domain, "REWRITE", decision.Reason, decision.Category, w.RemoteAddr().String(), queryType, reply.Rcode, startedAt)
 		}
 		return
 	}
@@ -223,13 +245,13 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 	}
 }
 
-func (s *Server) resolveRuntimeProfile(addr net.Addr) (profileID string, blockResponse string, deviceID string, ok bool) {
+func (s *Server) resolveRuntimeProfile(addr net.Addr) (profileID string, blockResponse string, deviceID string, safeSearch bool, ok bool) {
 	cfg, err := s.loadActiveConfig()
 	if err != nil || len(cfg.Profiles) == 0 {
 		// UI.md #41: failure must NOT silently fall back to a paid
 		// "default" profile.  Return ok=false so the caller can degrade
 		// to public DNS or refuse the query.
-		return "", "nxdomain", "", false
+		return "", "nxdomain", "", false, false
 	}
 
 	sourceMap := make(map[string]string)
@@ -255,11 +277,19 @@ func (s *Server) resolveRuntimeProfile(addr net.Addr) (profileID string, blockRe
 	if err != nil || pid == "" {
 		// UI.md #41: no IP→device binding found.  Do not silently fall
 		// back to the first profile (which is usually a paid plan).
-		return "", "nxdomain", "", false
+		return "", "nxdomain", "", false, false
 	}
 
 	host := remoteHost(addr.String())
-	return pid, firstNonEmpty(blockMap[pid], "nxdomain"), deviceMap[host], true
+	for _, profileConfig := range cfg.Profiles {
+		if profileConfig.ProfileID != pid {
+			continue
+		}
+		safeSearch = boolFromMap(profileConfig.Parental, "safe_search") || boolFromMap(profileConfig.Parental, "force_safe_search")
+		break
+	}
+
+	return pid, firstNonEmpty(blockMap[pid], "nxdomain"), deviceMap[host], safeSearch, true
 }
 
 func (s *Server) loadActiveConfig() (*activeConfig, error) {
@@ -327,6 +357,18 @@ func firstNonEmpty(values ...string) string {
 		}
 	}
 	return ""
+}
+
+func boolFromMap(values map[string]any, key string) bool {
+	if values == nil {
+		return false
+	}
+	raw, ok := values[key]
+	if !ok {
+		return false
+	}
+	boolean, ok := raw.(bool)
+	return ok && boolean
 }
 
 // dedupFingerprint returns a stable per-(client,qname,qtype) fingerprint used

@@ -63,7 +63,7 @@
                     </div>
                 </el-form-item>
                 <el-form-item :label="$t('admin.menuConfig.path') || '路径'">
-                    <el-input v-model="editingMenu.path" placeholder="/admin/xxx" :disabled="!!editingMenu.parentId" />
+                    <el-input v-model="editingMenu.path" placeholder="/admin/xxx" />
                 </el-form-item>
                 <el-form-item :label="$t('admin.menuConfig.icon') || '图标'">
                     <el-select v-model="editingMenu.icon" placeholder="Select icon" style="width:100%">
@@ -77,6 +77,9 @@
                 </el-form-item>
                 <el-form-item :label="$t('admin.menuConfig.visible') || '显示'">
                     <el-switch v-model="editingMenu.visible" />
+                </el-form-item>
+                <el-form-item :label="$t('admin.menuConfig.sortOrder') || '排序'">
+                    <el-input-number v-model="editingMenu.sort" :min="1" :max="999" style="width:100%" />
                 </el-form-item>
             </el-form>
             <template #footer>
@@ -137,19 +140,61 @@ const defaultMainMenuItems = [
     { id: 'rbac', labelKey: 'admin.rbac.title', path: '/admin/rbac', icon: 'Lock', visible: true, sort: 11 },
     { id: 'billing', labelKey: 'admin.billing.title', path: '/admin/billing', icon: 'Coin', visible: true, sort: 12 },
     { id: 'plans', labelKey: 'admin.plans.title', path: '/admin/plans', icon: 'Tickets', visible: true, sort: 13 },
-    { id: 'finance', labelKey: 'admin.finance.menu', path: 'finance', icon: 'Wallet', visible: true, sort: 14 },
-    { id: 'system-config', labelKey: 'nav.systemConfig', path: '/admin/system-config', icon: 'Tools', visible: true, sort: 15 },
-    { id: 'basic-config', labelKey: 'admin.basicConfig.title', path: '/admin/basic-config', icon: 'Setting', visible: true, sort: 16 },
-    { id: 'audit-logs', labelKey: 'nav.auditLogs', path: '/admin/audit-logs', icon: 'Tickets', visible: true, sort: 17 },
-    { id: 'menu-config', labelKey: 'admin.menuConfig.title', path: '/admin/menu-config', icon: 'List', visible: true, sort: 18 },
+    { id: 'balance', labelKey: 'admin.finance.balance', path: '/admin/balance', icon: 'Wallet', visible: true, sort: 14 },
+    { id: 'recharge', labelKey: 'admin.finance.recharge', path: '/admin/recharge', icon: 'Coin', visible: true, sort: 15 },
+    { id: 'bill', labelKey: 'admin.finance.bill', path: '/admin/bill', icon: 'Document', visible: true, sort: 16 },
+    { id: 'refund-records', labelKey: 'admin.finance.refundRecords', path: '/admin/refund-records', icon: 'Tickets', visible: true, sort: 17 },
+    { id: 'system-config', labelKey: 'nav.systemConfig', path: '/admin/system-config', icon: 'Tools', visible: true, sort: 18 },
+    { id: 'audit-logs', labelKey: 'nav.auditLogs', path: '/admin/audit-logs', icon: 'Tickets', visible: true, sort: 19 },
+    { id: 'menu-config', labelKey: 'admin.menuConfig.title', path: '/admin/menu-config', icon: 'List', visible: true, sort: 20 },
 ]
 
-const defaultSubMenuItems = [
-    { id: 'balance', labelKey: 'admin.finance.balance', path: '/admin/balance', parentId: 'finance', visible: true, sort: 1 },
-    { id: 'recharge', labelKey: 'admin.finance.recharge', path: '/admin/recharge', parentId: 'finance', visible: true, sort: 2 },
-    { id: 'bill', labelKey: 'admin.finance.bill', path: '/admin/bill', parentId: 'finance', visible: true, sort: 3 },
-    { id: 'refund-records', labelKey: 'admin.finance.refundRecords', path: '/admin/refund-records', parentId: 'finance', visible: true, sort: 4 },
-]
+const defaultSubMenuItems = []
+
+const topLevelMenuIds = new Set(defaultMainMenuItems.map((item) => item.id))
+const topLevelIconMap = {
+    balance: 'Wallet',
+    recharge: 'Coin',
+    bill: 'Document',
+    'refund-records': 'Tickets',
+}
+
+const normalizeMenuConfig = (mainMenu = [], subMenu = []) => {
+    const normalizedMain = []
+    const normalizedSub = []
+
+    for (const item of mainMenu) {
+        if (item.id === 'finance' || item.id === 'basic-config') {
+            continue
+        }
+        normalizedMain.push({
+            ...item,
+            parentId: null,
+        })
+    }
+
+    for (const item of subMenu) {
+        if (item.parentId === 'finance' || topLevelMenuIds.has(item.id)) {
+            normalizedMain.push({
+                ...item,
+                parentId: null,
+                icon: item.icon || topLevelIconMap[item.id] || 'Document',
+            })
+            continue
+        }
+        normalizedSub.push(item)
+    }
+
+    normalizedMain.sort((a, b) => a.sort - b.sort)
+    normalizedMain.forEach((item, index) => {
+        item.sort = index + 1
+    })
+
+    return {
+        mainMenu: normalizedMain,
+        subMenu: normalizedSub,
+    }
+}
 
 const mainMenuItems = ref([...defaultMainMenuItems])
 const subMenuItems = ref([...defaultSubMenuItems])
@@ -262,13 +307,15 @@ const editMenu = (menu) => {
 }
 
 const saveMenu = () => {
-    const { id, parentId, labelKey, path, icon, visible } = editingMenu.value
+    const { id, parentId, labelKey, path, icon, visible, sort } = editingMenu.value
     if (parentId) {
         const item = subMenuItems.value.find(i => i.id === id)
         if (item) {
             item.labelKey = labelKey
+            item.path = path
             item.icon = icon
             item.visible = visible
+            item.sort = sort
         }
     } else {
         const item = mainMenuItems.value.find(i => i.id === id)
@@ -277,6 +324,7 @@ const saveMenu = () => {
             item.path = path
             item.icon = icon
             item.visible = visible
+            item.sort = sort
         }
     }
     dialogVisible.value = false
@@ -345,8 +393,9 @@ onMounted(async () => {
             })
 
             if (mainMenu.length > 0) {
-                mainMenuItems.value = mainMenu
-                subMenuItems.value = subMenu
+                const normalized = normalizeMenuConfig(mainMenu, subMenu)
+                mainMenuItems.value = normalized.mainMenu
+                subMenuItems.value = normalized.subMenu
                 loadedFromApi = true
             }
         }
@@ -355,9 +404,9 @@ onMounted(async () => {
     }
 
     if (!loadedFromApi) {
-        // Fallback to hardcoded defaults when API is empty/unavailable
-        mainMenuItems.value = [...defaultMainMenuItems]
-        subMenuItems.value = [...defaultSubMenuItems]
+        const normalized = normalizeMenuConfig([...defaultMainMenuItems], [...defaultSubMenuItems])
+        mainMenuItems.value = normalized.mainMenu
+        subMenuItems.value = normalized.subMenu
     }
 })
 </script>

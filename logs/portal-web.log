@@ -2940,3 +2940,17 @@ AggregateError [ECONNREFUSED]:
 15:38:10 [vite] server restarted.
 15:38:34 [vite] vite.config.js changed, restarting server...
 15:38:35 [vite] server restarted.
+16:21:32 [vite] (client) hmr update /src/views/Privacy.vue
+16:21:45 [vite] (client) hmr update /src/views/ParentalControl.vue
+16:21:57 [vite] (client) page reload src/locales/index.js
+16:22:02 [vite] (client) page reload src/locales/zh-CN.js
+16:22:07 [vite] (client) page reload src/locales/en.js
+16:22:12 [vite] (client) page reload src/locales/ko.js
+16:22:26 [vite] (client) hmr update /src/components/Layout.vue
+16:22:32 [vite] (client) hmr update /src/components/AdminLayout.vue
+16:22:37 [vite] (client) hmr update /src/views/Home.vue
+16:22:44 [vite] (client) hmr update /src/views/Settings.vue
+16:27:35 [vite] (client) hmr update /src/views/admin/Nodes.vue
+16:28:00 [vite] (client) hmr update /src/views/admin/MenuConfig.vue
+16:28:19 [vite] (client) hmr update /src/components/AdminLayout.vue
+16:29:14 [vite] (client) hmr update /src/components/AdminLayout.vue

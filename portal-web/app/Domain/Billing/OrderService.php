@@ -65,30 +65,27 @@ final class OrderService
 
     public function markPaid(string $orderId, ?string $paymentRef = null): Order
     {
-        $order = Order::findOrFail($orderId);
+        $order = null;
+        DB::transaction(function () use ($orderId, $paymentRef, &$order) {
+            $order = Order::query()->whereKey($orderId)->lockForUpdate()->firstOrFail();
+            if ($order->status === Order::STATUS_PAID) {
+                return;
+            }
+            if (in_array($order->status, [Order::STATUS_CANCELLED, Order::STATUS_REFUNDED], true)) {
+                throw new \DomainException(sprintf(
+                    'Order %s cannot transition to paid from status=%s',
+                    $orderId,
+                    $order->status
+                ));
+            }
+            if ($order->status !== Order::STATUS_PENDING) {
+                throw new \DomainException(sprintf(
+                    'Order %s expected status=pending, got %s',
+                    $orderId,
+                    $order->status
+                ));
+            }
 
-        // 状态保护：已 paid 重复 webhook 幂等返回，不再走订阅开通链路
-        if ($order->status === Order::STATUS_PAID) {
-            return $order;
-        }
-        // 状态保护：cancelled / refunded 禁止回到 paid
-        if (in_array($order->status, [Order::STATUS_CANCELLED, Order::STATUS_REFUNDED], true)) {
-            throw new \DomainException(sprintf(
-                'Order %s cannot transition to paid from status=%s',
-                $orderId,
-                $order->status
-            ));
-        }
-        // 状态保护：非 pending 拒绝
-        if ($order->status !== Order::STATUS_PENDING) {
-            throw new \DomainException(sprintf(
-                'Order %s expected status=pending, got %s',
-                $orderId,
-                $order->status
-            ));
-        }
-
-        DB::transaction(function () use ($order, $paymentRef) {
             $order->update([
                 'status' => Order::STATUS_PAID,
                 'paid_at' => now(),

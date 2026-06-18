@@ -88,8 +88,13 @@ func upstreamAddr(addr string) string {
 // block_response to keep both servers' blocked-query response consistent.
 type activeConfig struct {
 	Profiles []struct {
-		ProfileID     string `json:"profile_id"`
-		BlockResponse string `json:"block_response"`
+		ProfileID     string         `json:"profile_id"`
+		BlockResponse string         `json:"block_response"`
+		Parental      map[string]any `json:"parental"`
+		Devices       []struct {
+			DeviceID string `json:"device_id"`
+			SourceIP string `json:"source_ip"`
+		} `json:"devices"`
 	} `json:"profiles"`
 }
 
@@ -134,6 +139,42 @@ func (s *Server) blockResponseFor(profileUID string) string {
 		return first.BlockResponse
 	}
 	return blockresponse.ModeNXDomain
+}
+
+func (s *Server) resolveRuntimeProfile(remoteAddr string, requestedProfile string) (profileID string, blockResponse string, deviceID string, safeSearch bool, ok bool) {
+	cfg, err := s.loadActiveConfig()
+	if err != nil || len(cfg.Profiles) == 0 {
+		return "", blockresponse.ModeNXDomain, "", false, false
+	}
+
+	clientIP := remoteIPFromAddr(remoteAddr)
+	clientIPText := ""
+	if clientIP != nil {
+		clientIPText = clientIP.String()
+	}
+
+	for _, profile := range cfg.Profiles {
+		if profile.ProfileID == "" {
+			continue
+		}
+
+		if requestedProfile != "" {
+			if profile.ProfileID != requestedProfile {
+				continue
+			}
+			return profile.ProfileID, firstNonEmpty(profile.BlockResponse, blockresponse.ModeNXDomain), "", boolFromMap(profile.Parental, "safe_search") || boolFromMap(profile.Parental, "force_safe_search"), true
+		}
+
+		for _, device := range profile.Devices {
+			if device.SourceIP == "" || device.SourceIP != clientIPText {
+				continue
+			}
+
+			return profile.ProfileID, firstNonEmpty(profile.BlockResponse, blockresponse.ModeNXDomain), device.DeviceID, boolFromMap(profile.Parental, "safe_search") || boolFromMap(profile.Parental, "force_safe_search"), true
+		}
+	}
+
+	return "", blockresponse.ModeNXDomain, "", false, false
 }
 
 // Handler returns the HTTP handler for DoH endpoints.
@@ -265,21 +306,33 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 			firstSeen = seen
 		}
 
+		resolvedProfileUID, blockMode, runtimeDeviceID, safeSearchEnabled, ok := s.resolveRuntimeProfile(r.RemoteAddr, profileUID)
+		if !ok {
+			http.Error(w, "profile not found", http.StatusForbidden)
+			s.metrics.IncErrors()
+			return
+		}
+		profileUID = resolvedProfileUID
+
 		// Extract device info from headers
 		deviceUID, deviceType := resolver.ExtractDeviceFromHeaders(map[string]string{
 			"X-Device-ID":   r.Header.Get("X-Device-ID"),
 			"X-Device-Type": r.Header.Get("X-Device-Type"),
 		})
+		if deviceUID == "" {
+			deviceUID = runtimeDeviceID
+		}
 
 		// Build resolution context
 		ctx := &resolver.ResolutionContext{
-			ProfileUID: profileUID,
-			DeviceUID:  deviceUID,
-			DeviceType: deviceType,
-			ClientIP:   remoteIPFromAddr(r.RemoteAddr),
-			Domain:     domain,
-			QueryType:  queryType,
-			Protocol:   "doh",
+			ProfileUID:        resolvedProfileUID,
+			DeviceUID:         deviceUID,
+			DeviceType:        deviceType,
+			SafeSearchEnabled: safeSearchEnabled,
+			ClientIP:          remoteIPFromAddr(r.RemoteAddr),
+			Domain:            domain,
+			QueryType:         queryType,
+			Protocol:          "doh",
 		}
 
 		// Run the full resolution pipeline
@@ -296,7 +349,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 			// differently for the same client.
 			reply := new(dns.Msg)
 			reply.SetReply(msg)
-			blockresponse.ApplyTo(reply, msg.Question[0], s.blockResponseFor(profileUID))
+			blockresponse.ApplyTo(reply, msg.Question[0], blockMode)
 
 			packed, err := reply.Pack()
 			if err != nil {
@@ -312,7 +365,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 				// Log the blocked query
 				elapsed := time.Since(startTime).Milliseconds()
 				s.logBuffer.Append(logging.LogEntry{
-					ProfileUID:     profileUID,
+					ProfileUID:     resolvedProfileUID,
 					DeviceUID:      deviceUID,
 					Domain:         domain,
 					Action:         "BLOCK",
@@ -326,8 +379,53 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 				})
 			}
 
-			log.Printf("[BLOCK] %s -> %s reason=%s category=%s profile=%s",
-				domain, decision.Reason, decision.Category, profileUID, deviceUID)
+			log.Printf("[BLOCK] %s reason=%s category=%s profile=%s device=%s",
+				domain, decision.Reason, decision.Category, resolvedProfileUID, deviceUID)
+			return
+		}
+
+		if decision.Action == "REWRITE" {
+			reply := new(dns.Msg)
+			reply.SetReply(msg)
+			reply.Answer = []dns.RR{
+				&dns.CNAME{
+					Hdr: dns.RR_Header{
+						Name:   msg.Question[0].Name,
+						Rrtype: dns.TypeCNAME,
+						Class:  dns.ClassINET,
+						Ttl:    60,
+					},
+					Target: dns.Fqdn(decision.Category),
+				},
+			}
+
+			packed, err := reply.Pack()
+			if err != nil {
+				http.Error(w, "Failed to pack response", http.StatusInternalServerError)
+				s.metrics.IncErrors()
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/dns-message")
+			w.Write(packed)
+			s.metrics.IncAllowed()
+
+			if firstSeen {
+				elapsed := time.Since(startTime).Milliseconds()
+				s.logBuffer.Append(logging.LogEntry{
+					ProfileUID:     resolvedProfileUID,
+					DeviceUID:      deviceUID,
+					Domain:         domain,
+					Action:         "REWRITE",
+					Reason:         decision.Reason,
+					Category:       decision.Category,
+					ClientIP:       r.RemoteAddr,
+					QueryType:      queryType,
+					ResponseCode:   reply.Rcode,
+					ResponseTimeMs: elapsed,
+					QueriedAt:      time.Now().Unix(),
+				})
+			}
 			return
 		}
 	}
@@ -372,6 +470,27 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 			QueriedAt:      time.Now().Unix(),
 		})
 	}
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if value != "" {
+			return value
+		}
+	}
+	return ""
+}
+
+func boolFromMap(values map[string]any, key string) bool {
+	if values == nil {
+		return false
+	}
+	raw, ok := values[key]
+	if !ok {
+		return false
+	}
+	boolean, ok := raw.(bool)
+	return ok && boolean
 }
 
 // dohDedupFingerprint returns a stable per-(client,qname,qtype) fingerprint

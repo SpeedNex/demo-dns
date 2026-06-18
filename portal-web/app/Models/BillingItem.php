@@ -20,8 +20,8 @@ class BillingItem extends Model
         'item_type',
         'item_name',
         'quantity',
-        'unit_price',
-        'amount',
+        'unit_price_minor',
+        'amount_minor',
         'meta',
     ];
 

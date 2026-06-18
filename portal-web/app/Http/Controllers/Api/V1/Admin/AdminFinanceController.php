@@ -17,21 +17,22 @@ final class AdminFinanceController
     public function balances(): JsonResponse
     {
         // SSOT 余额在 `wallets` 表；这里 join 拿真相，users.balance_minor 仅作 fallback
-        $rows = DB::table('users as u')
-            ->leftJoin('wallets as w', 'w.user_id', '=', 'u.id')
+        $prefix = DB::getTablePrefix();
+        $rows = DB::table('users')
+            ->leftJoin('wallets', 'wallets.user_id', '=', 'users.id')
             ->select([
-                'u.id',
-                'u.username',
-                'u.email',
-                'u.plan_code',
-                'u.role',
-                'u.status',
-                DB::raw('COALESCE(w.balance, 0) as balance_minor'),
-                DB::raw("COALESCE(w.currency, u.currency, 'USD') as currency"),
-                DB::raw("COALESCE(w.updated_at, u.balance_updated_at) as balance_updated_at"),
-                'u.created_at',
+                'users.id',
+                'users.username',
+                'users.email',
+                'users.plan_code',
+                'users.role',
+                'users.status',
+                DB::raw("COALESCE({$prefix}wallets.balance, 0) as balance_minor"),
+                DB::raw("COALESCE({$prefix}wallets.currency, {$prefix}users.currency, 'USD') as currency"),
+                DB::raw("COALESCE({$prefix}wallets.updated_at, {$prefix}users.balance_updated_at) as balance_updated_at"),
+                'users.created_at',
             ])
-            ->orderBy('u.created_at', 'desc')
+            ->orderBy('users.created_at', 'desc')
             ->limit(200)
             ->get();
 

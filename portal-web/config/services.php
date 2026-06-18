@@ -55,4 +55,10 @@ return [
         'admin_token_file' => env('ADMIN_SHARED_TOKEN_FILE'),
     ],
 
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'fake' => env('STRIPE_FAKE', true),
+    ],
+
 ];

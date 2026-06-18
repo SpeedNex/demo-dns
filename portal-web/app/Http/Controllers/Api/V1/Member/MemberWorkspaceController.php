@@ -309,11 +309,11 @@ final class MemberWorkspaceController
         // Get usage from usage_records
         $currentPeriod = DB::table('usage_records')
             ->where('user_id', $user->id)
-            ->where('period', 'monthly')
+            ->where('period', now()->format('Y-m'))
             ->orderByDesc('created_at')
             ->first();
         
-        $queriesUsed = $currentPeriod ? $currentPeriod->queries : 0;
+        $queriesUsed = $currentPeriod ? (int) $currentPeriod->query_count : 0;
         
         return response()->json([
             'data' => [
@@ -331,10 +331,7 @@ final class MemberWorkspaceController
         $wallet = DB::table('wallets')->where('user_id', $user->id)->first();
         
         if (!$wallet) {
-            // Create wallet if doesn't exist
-            $walletId = 'wal_' . substr(hash('sha256', $user->id . microtime()), 0, 12);
             DB::table('wallets')->insert([
-                'id' => $walletId,
                 'user_id' => $user->id,
                 'balance' => 0,
                 'currency' => 'USD',
@@ -343,10 +340,10 @@ final class MemberWorkspaceController
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-            $balance = 0;
-        } else {
-            $balance = $wallet->balance / 100; // Convert from minor units
+            $wallet = DB::table('wallets')->where('user_id', $user->id)->first();
         }
+
+        $balance = ((int) ($wallet->balance ?? 0)) / 100;
         
         return response()->json([
             'data' => [

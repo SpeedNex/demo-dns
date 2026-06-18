@@ -21,8 +21,8 @@
                     class="setting-row"
                 >
                     <div class="setting-info">
-                        <span class="setting-label">{{ $t(list.name) }}</span>
-                        <span class="setting-desc">{{ $t(list.desc) }}</span>
+                        <span class="setting-label">{{ displayText(list.name) }}</span>
+                        <span class="setting-desc">{{ displayText(list.desc) }}</span>
                         <span class="setting-meta">{{ list.entries.toLocaleString() }} {{ $t('privacy.blocklists.entries', { count: 1 }) }} • {{ $t('privacy.blocklists.updated', { days: list.daysAgo }) }}</span>
                     </div>
                     <el-button link @click="removeBlocklist(list.key)">
@@ -164,8 +164,8 @@
                     class="blocklist-select-item"
                 >
                     <div class="blocklist-info">
-                        <div class="setting-label">{{ $t(list.name) }}</div>
-                        <div class="setting-desc">{{ $t(list.desc) }}</div>
+                        <div class="setting-label">{{ displayText(list.name) }}</div>
+                        <div class="setting-desc">{{ displayText(list.desc) }}</div>
                         <div class="setting-meta">{{ list.entries.toLocaleString() }}</div>
                     </div>
                     <el-button
@@ -215,26 +215,24 @@ const form = reactive({
     deep_tracking_devices: [],
 })
 
-const allBlocklists = [
-    { key: 'ads_tracking', name: 'privacy.blocklists.adsTracking', desc: 'privacy.blocklists.adsTrackingDesc', entries: 86222, daysAgo: 5 },
-    { key: 'third_party_tracking', name: 'privacy.blocklists.thirdPartyTracking', desc: 'privacy.blocklists.thirdPartyTrackingDesc', entries: 45678, daysAgo: 3 },
-]
+const allBlocklists = ref([
+    { key: 'ads_tracking', name: 'Ads & Tracking', desc: 'Ad and tracker protection', entries: 86222, daysAgo: 5 },
+    { key: 'third_party_tracking', name: 'Third-party Tracking', desc: 'Cross-site tracking protection', entries: 45678, daysAgo: 3 },
+])
 
-const availableBlocklists = [
-    { key: 'ads_tracking', name: 'privacy.blocklists.adsTracking', desc: 'privacy.blocklists.adsTrackingDesc', entries: 86222 },
-    { key: 'third_party_tracking', name: 'privacy.blocklists.thirdPartyTracking', desc: 'privacy.blocklists.thirdPartyTrackingDesc', entries: 45678 },
-    { key: 'phishing', name: 'privacy.blocklists.phishing', desc: 'privacy.blocklists.phishingDesc', entries: 32100 },
-    { key: 'malware', name: 'privacy.blocklists.malware', desc: 'privacy.blocklists.malwareDesc', entries: 28900 },
-    { key: 'cryptojacking', name: 'privacy.blocklists.cryptojacking', desc: 'privacy.blocklists.cryptojackingDesc', entries: 15600 },
-    { key: 'social', name: 'privacy.blocklists.social', desc: 'privacy.blocklists.socialDesc', entries: 12300 },
-]
+const availableBlocklists = ref([
+    { key: 'ads_tracking', name: 'Ads & Tracking', desc: 'Ad and tracker protection', entries: 86222 },
+    { key: 'third_party_tracking', name: 'Third-party Tracking', desc: 'Cross-site tracking protection', entries: 45678 },
+    { key: 'phishing', name: 'Phishing', desc: 'Known phishing domains', entries: 32100 },
+    { key: 'malware', name: 'Malware', desc: 'Known malware domains', entries: 28900 },
+])
 
 const filteredAvailableBlocklists = computed(() => {
-    if (!blocklistSearch.value) return availableBlocklists
+    if (!blocklistSearch.value) return availableBlocklists.value
     const search = blocklistSearch.value.toLowerCase()
-    return availableBlocklists.filter(list =>
-        list.name.toLowerCase().includes(search) ||
-        list.desc.toLowerCase().includes(search)
+    return availableBlocklists.value.filter(list =>
+        displayText(list.name).toLowerCase().includes(search) ||
+        displayText(list.desc).toLowerCase().includes(search)
     )
 })
 
@@ -245,10 +243,10 @@ const addBlocklist = (list) => {
 }
 
 const activeBlocklists = computed(() => {
-    return allBlocklists.filter(list => form.blocklists[list.key])
+    return allBlocklists.value.filter(list => form.blocklists[list.key])
 })
 
-const devices = [
+const devices = ref([
     { id: 'windows', name: 'Windows', desc: '所有版本', icon: '/static/media/windows.svg', color: '#0078d4' },
     { id: 'apple', name: '苹果', desc: 'iOS、macOS 和 tvOS', icon: '/static/media/apple.svg', color: '#555555' },
     { id: 'samsung', name: '三星', desc: '手机、平板电脑和智能电视', icon: '/static/media/samsung.svg', color: '#1428a0' },
@@ -257,11 +255,20 @@ const devices = [
     { id: 'alexa', name: '亚马逊 Alexa 助手', desc: '支持 Alexa 助手的设备', icon: '/static/media/alexa.svg', color: '#00d4ff' },
     { id: 'roku', name: 'Roku', desc: '所有 Roku 机顶盒', icon: '/static/media/roku.svg', color: '#6616d0' },
     { id: 'sonos', name: 'Sonos', desc: '音箱', icon: '/static/media/sonos.svg', color: '#e30022' },
-]
+])
 
 const addedDevices = computed(() => {
-    return devices.filter(d => form.deep_tracking_devices.includes(d.id))
+    return devices.value.filter(d => form.deep_tracking_devices.includes(d.id))
 })
+
+const displayText = (value) => {
+    if (!value) return ''
+    if (value.startsWith?.('privacy.') || value.startsWith?.('parental.') || value.startsWith?.('nav.') || value.startsWith?.('admin.')) {
+        const translated = t(value)
+        return translated !== value ? translated : value
+    }
+    return value
+}
 
 const autoSave = () => {
     if (saveTimer) clearTimeout(saveTimer)
@@ -316,6 +323,21 @@ const removeDevice = (deviceId) => {
 
 onMounted(async () => {
     try {
+        const catalogResponse = await client.get('/member/catalogs')
+        const catalogs = catalogResponse.data?.data || {}
+        if (Array.isArray(catalogs.privacy_blocklists) && catalogs.privacy_blocklists.length > 0) {
+            availableBlocklists.value = catalogs.privacy_blocklists.map((item) => ({
+                key: item.key,
+                name: item.name,
+                desc: item.desc,
+                entries: Number(item.entries || 0),
+                daysAgo: Number(item.days_ago || 0),
+            }))
+            allBlocklists.value = availableBlocklists.value.slice(0, Math.min(availableBlocklists.value.length, 3))
+        }
+        if (Array.isArray(catalogs.device_models) && catalogs.device_models.length > 0) {
+            devices.value = catalogs.device_models
+        }
         const { data } = await client.get('/member/privacy')
         Object.assign(form, data.data || form)
     } catch {}

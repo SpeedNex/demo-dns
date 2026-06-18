@@ -24,6 +24,7 @@ class Order extends Model
     protected $fillable = [
         'user_id',
         'order_no',
+        'idempotency_key',
         'plan_code',
         'status',
         'payable_amount_minor',

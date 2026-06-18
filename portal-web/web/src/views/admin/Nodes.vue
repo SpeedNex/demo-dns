@@ -174,7 +174,11 @@
             <div class="cred-grid">
                 <div class="cred-item">
                     <div class="cred-label">Token</div>
-                    <div class="cred-value mono">{{ tokenData.api_key }}</div>
+                    <div class="cred-value mono">{{ maskedToken }}</div>
+                </div>
+                <div class="cred-item">
+                    <div class="cred-label">说明</div>
+                    <div class="cred-value">页面不再明文展示令牌，请立即复制并妥善保存。</div>
                 </div>
             </div>
         </el-card>
@@ -189,7 +193,7 @@
                     </el-button>
                 </div>
             </template>
-            <pre class="deploy-code">{{ deployCmd }}</pre>
+            <pre class="deploy-code">{{ deployCmdPreview }}</pre>
         </el-card>
 
         <!-- 底部提示 -->
@@ -231,6 +235,11 @@ const editingId = ref(null)
 const formRef = ref(null)
 const issuedToken = ref('')
 const tokenData = reactive({ node_id: '', api_key: '', secret: '' })
+const maskedToken = computed(() => {
+    if (!tokenData.api_key) return ''
+    if (tokenData.api_key.length <= 10) return '********'
+    return `${tokenData.api_key.slice(0, 4)}********${tokenData.api_key.slice(-4)}`
+})
 const deployCmd = computed(() => {
     const nid = tokenData.node_id
     const ak = tokenData.api_key
@@ -238,6 +247,13 @@ const deployCmd = computed(() => {
     const loc = window.location
     const backend = loc.protocol + '//' + loc.hostname + ':8081'
     return `./dns-resolver install --server=${backend} --token=${ak} --node-id=${nid}`
+})
+const deployCmdPreview = computed(() => {
+    const nid = tokenData.node_id
+    if (!nid || !tokenData.api_key) return ''
+    const loc = window.location
+    const backend = loc.protocol + '//' + loc.hostname + ':8081'
+    return `./dns-resolver install --server=${backend} --token=${maskedToken.value} --node-id=${nid}`
 })
 
 const copyCredentials = async () => {

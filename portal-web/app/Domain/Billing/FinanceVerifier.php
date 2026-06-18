@@ -150,6 +150,7 @@ final class FinanceVerifier
                 $j->on('o.user_id', '=', 's.user_id')->where('o.status', Order::STATUS_PAID);
             })
             ->where('s.status', 'active')
+            ->where('s.plan_code', '<>', 'free')
             ->whereNull('o.id')
             ->select('s.user_id', 's.id as subscription_id')
             ->limit(5)

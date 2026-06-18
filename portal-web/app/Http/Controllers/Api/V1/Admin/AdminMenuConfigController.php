@@ -79,6 +79,7 @@ class AdminMenuConfigController extends Controller
                         'icon' => $item['icon'] ?? null,
                         'visible' => $item['visible'],
                         'sort_order' => $item['sort'],
+                        'parent_key' => null,
                     ]);
                 }
             }

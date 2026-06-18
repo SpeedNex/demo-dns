@@ -66,6 +66,7 @@
                                     <el-dropdown-item command="en">{{ $t('settings.lang.en') }}</el-dropdown-item>
                                     <el-dropdown-item command="zh-CN">{{ $t('settings.lang.zh') }}</el-dropdown-item>
                                     <el-dropdown-item command="ko">{{ $t('settings.lang.ko') }}</el-dropdown-item>
+                                    <el-dropdown-item command="ja">{{ $t('settings.lang.ja') }}</el-dropdown-item>
                                 </el-dropdown-menu>
                             </template>
                         </el-dropdown>
@@ -124,35 +125,74 @@ const defaultMenuConfig = {
         { id: 'rbac', labelKey: 'admin.rbac.title', path: '/admin/rbac', icon: 'Lock', visible: true, sort: 11 },
         { id: 'billing', labelKey: 'admin.billing.title', path: '/admin/billing', icon: 'Coin', visible: true, sort: 12 },
         { id: 'plans', labelKey: 'admin.plans.title', path: '/admin/plans', icon: 'Tickets', visible: true, sort: 13 },
-        { id: 'finance', labelKey: 'admin.finance.menu', path: 'finance', icon: 'Wallet', visible: true, sort: 14 },
-        { id: 'system-config', labelKey: 'nav.systemConfig', path: '/admin/system-config', icon: 'Tools', visible: true, sort: 15 },
-        { id: 'basic-config', labelKey: 'admin.basicConfig.title', path: '/admin/basic-config', icon: 'Setting', visible: true, sort: 16 },
-        { id: 'audit-logs', labelKey: 'nav.auditLogs', path: '/admin/audit-logs', icon: 'Tickets', visible: true, sort: 17 },
-        { id: 'menu-config', labelKey: 'admin.menuConfig.title', path: '/admin/menu-config', icon: 'List', visible: true, sort: 18 },
+        { id: 'balance', labelKey: 'admin.finance.balance', path: '/admin/balance', icon: 'Wallet', visible: true, sort: 14 },
+        { id: 'recharge', labelKey: 'admin.finance.recharge', path: '/admin/recharge', icon: 'Coin', visible: true, sort: 15 },
+        { id: 'bill', labelKey: 'admin.finance.bill', path: '/admin/bill', icon: 'Document', visible: true, sort: 16 },
+        { id: 'refund-records', labelKey: 'admin.finance.refundRecords', path: '/admin/refund-records', icon: 'Tickets', visible: true, sort: 17 },
+        { id: 'system-config', labelKey: 'nav.systemConfig', path: '/admin/system-config', icon: 'Tools', visible: true, sort: 18 },
+        { id: 'audit-logs', labelKey: 'nav.auditLogs', path: '/admin/audit-logs', icon: 'Tickets', visible: true, sort: 19 },
+        { id: 'menu-config', labelKey: 'admin.menuConfig.title', path: '/admin/menu-config', icon: 'List', visible: true, sort: 20 },
     ],
-    subMenu: [
-        { id: 'balance', labelKey: 'admin.finance.balance', path: '/admin/balance', parentId: 'finance', visible: true, sort: 1 },
-        { id: 'recharge', labelKey: 'admin.finance.recharge', path: '/admin/recharge', parentId: 'finance', visible: true, sort: 2 },
-        { id: 'bill', labelKey: 'admin.finance.bill', path: '/admin/bill', parentId: 'finance', visible: true, sort: 3 },
-        { id: 'refund-records', labelKey: 'admin.finance.refundRecords', path: '/admin/refund-records', parentId: 'finance', visible: true, sort: 4 },
-    ],
+    subMenu: [],
 }
 
 const menuConfig = ref(loadMenuConfig())
+const topLevelMenuIds = new Set(defaultMenuConfig.mainMenu.map((item) => item.id))
+const topLevelIconMap = {
+    balance: 'Wallet',
+    recharge: 'Coin',
+    bill: 'Document',
+    'refund-records': 'Tickets',
+}
 
 function loadMenuConfig() {
     try {
         const saved = localStorage.getItem(MENU_CONFIG_KEY)
         if (saved) {
-            return JSON.parse(saved)
+            return normalizeMenuConfig(JSON.parse(saved))
         }
     } catch (e) { /* ignore */ }
     return defaultMenuConfig
 }
 
+function normalizeMenuConfig(config) {
+    const mainMenu = []
+    const subMenu = []
+
+    for (const item of (config.mainMenu || [])) {
+        if (item.id === 'finance' || item.id === 'basic-config') {
+            continue
+        }
+        mainMenu.push({
+            ...item,
+            parentId: null,
+        })
+    }
+
+    for (const item of (config.subMenu || [])) {
+        if (item.parentId === 'finance' || topLevelMenuIds.has(item.id)) {
+            mainMenu.push({
+                ...item,
+                parentId: null,
+                icon: item.icon || topLevelIconMap[item.id] || 'Document',
+            })
+            continue
+        }
+        subMenu.push(item)
+    }
+
+    mainMenu.sort((a, b) => a.sort - b.sort)
+    mainMenu.forEach((item, index) => {
+        item.sort = index + 1
+    })
+
+    return { mainMenu, subMenu }
+}
+
 function saveMenuConfig(config) {
-    localStorage.setItem(MENU_CONFIG_KEY, JSON.stringify(config))
-    menuConfig.value = config
+    const normalized = normalizeMenuConfig(config)
+    localStorage.setItem(MENU_CONFIG_KEY, JSON.stringify(normalized))
+    menuConfig.value = normalized
 }
 
 // 监听菜单配置更新事件
@@ -211,11 +251,11 @@ onMounted(async () => {
 
     if (!loadedFromApi) {
         // Fallback: use hardcoded default config (only when API/data unavailable)
-        menuConfig.value = JSON.parse(JSON.stringify(defaultMenuConfig))
+        menuConfig.value = normalizeMenuConfig(JSON.parse(JSON.stringify(defaultMenuConfig)))
     }
 })
 
-const localeMap = { 'en': enLocale, 'zh-CN': zhLocale, 'ko': zhLocale }
+const localeMap = { 'en': enLocale, 'zh-CN': zhLocale, 'ko': zhLocale, 'ja': zhLocale }
 const elLocale = ref(localeMap[locale.value] || zhLocale)
 
 watch(locale, (val) => {
@@ -289,8 +329,8 @@ const navGroups = computed(() => {
     const serviceIds = ['dashboard', 'nodes', 'geo-dns', 'rules', 'publishes']
     const monitorIds = ['alerts', 'query-logs', 'audit-logs']
     const userIds = ['users', 'devices', 'member-catalogs', 'rbac']
-    const financeIds = ['billing', 'plans', 'finance']
-    const settingsIds = ['system-config', 'basic-config', 'menu-config']
+    const financeIds = ['billing', 'plans', 'balance', 'recharge', 'bill', 'refund-records']
+    const settingsIds = ['system-config', 'menu-config']
 
     return [
         {
@@ -367,6 +407,7 @@ const currentLocale = computed(() => {
         'en': i18n.global.t('settings.lang.en'),
         'zh-CN': i18n.global.t('settings.lang.zh'),
         'ko': i18n.global.t('settings.lang.ko'),
+        'ja': i18n.global.t('settings.lang.ja'),
     }
     return map[locale.value] || i18n.global.t('settings.lang.zh')
 })

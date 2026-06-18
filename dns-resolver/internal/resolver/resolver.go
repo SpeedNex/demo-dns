@@ -10,13 +10,14 @@ import (
 
 // ResolutionContext holds the full context of a DNS query resolution.
 type ResolutionContext struct {
-	ProfileUID string
-	DeviceUID  string
-	DeviceType string
-	ClientIP   net.IP
-	Domain     string
-	QueryType  string
-	Protocol   string // "doh", "dot", "udp"
+	ProfileUID        string
+	DeviceUID         string
+	DeviceType        string
+	SafeSearchEnabled bool
+	ClientIP          net.IP
+	Domain            string
+	QueryType         string
+	Protocol          string // "doh", "dot", "udp"
 }
 
 // ProfileResolutionLayer handles the complete resolution pipeline:
@@ -45,7 +46,7 @@ func (prl *ProfileResolutionLayer) Resolve(ctx *ResolutionContext) *matching.Dec
 	// the safe endpoint.  We piggy-back on Decision.Category so the
 	// caller can apply a REWRITE in a later step without touching
 	// the existing path here.
-	if decision.Action == "ALLOW" {
+	if decision.Action == "ALLOW" && ctx.SafeSearchEnabled {
 		if redirect, ok := SafeSearchRedirect(ctx.Domain); ok {
 			decision.Action = "REWRITE"
 			decision.Reason = "safesearch"

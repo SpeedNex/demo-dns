@@ -23,6 +23,7 @@
                                 <el-dropdown-item command="en">{{ $t('settings.lang.en') }}</el-dropdown-item>
                                 <el-dropdown-item command="zh-CN">{{ $t('settings.lang.zh') }}</el-dropdown-item>
                                 <el-dropdown-item command="ko">{{ $t('settings.lang.ko') }}</el-dropdown-item>
+                                <el-dropdown-item command="ja">{{ $t('settings.lang.ja') }}</el-dropdown-item>
                             </el-dropdown-menu>
                         </template>
                     </el-dropdown>
@@ -198,7 +199,7 @@ const userName = ref('User')
 const userAvatar = ref('')
 
 const currentLocale = computed(() => {
-    const map = { 'en': '🇬🇧', 'zh-CN': '🇨🇳', 'ko': '🇰🇷' }
+    const map = { 'en': '🇬🇧', 'zh-CN': '🇨🇳', 'ko': '🇰🇷', 'ja': '🇯🇵' }
     return map[locale.value] || '🇨🇳'
 })
 

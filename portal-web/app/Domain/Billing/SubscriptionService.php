@@ -121,7 +121,6 @@ final class SubscriptionService
                 'monthly_query_limit' => $monthlyLimit,
                 'grace_until' => null,
                 'updated_at' => $now,
-                'created_at' => $now,
             ]
         );
         // Write-through cache (column retained for compatibility).

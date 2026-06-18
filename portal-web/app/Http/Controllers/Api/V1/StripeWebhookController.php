@@ -37,6 +37,10 @@ final class StripeWebhookController
         $webhookSecret = (string) config('services.stripe.webhook_secret', '');
         $sigHeader = (string) $request->header('Stripe-Signature', '');
 
+        if (app()->environment('production') && ($webhookSecret === '' || ! class_exists(Webhook::class) || $sigHeader === '')) {
+            return response()->json(['message' => 'missing webhook signature'], 401);
+        }
+
         if ($webhookSecret !== '' && class_exists(Webhook::class) && $sigHeader !== '') {
             try {
                 $event = Webhook::constructEvent($rawPayload, $sigHeader, $webhookSecret);
@@ -44,7 +48,7 @@ final class StripeWebhookController
                 $eventId = (string) ($event->id ?? '');
                 $eventType = (string) ($event->type ?? '');
             } catch (SignatureVerificationException $e) {
-                return response()->json(['message' => 'invalid signature'], 400);
+                return response()->json(['message' => 'invalid signature'], 401);
             } catch (\Throwable $e) {
                 return response()->json(['message' => 'invalid payload'], 400);
             }

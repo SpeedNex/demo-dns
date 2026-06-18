@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Billing;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * UI.md #54 — 钱包系统。
@@ -45,9 +46,12 @@ final class WalletService
                 'updated_at' => now(),
             ]);
             DB::table('wallet_transactions')->insert([
+                'wallet_id' => $wallet->id,
+                'transaction_no' => 'WT' . now()->format('YmdHis') . Str::random(8),
                 'user_id' => $userId,
                 'type' => $referenceType, // charge / refund / adjustment
                 'amount_minor' => $amountMinor,
+                'balance_after' => $newBalance,
                 'currency' => $wallet->currency,
                 'description' => $description,
                 'status' => 'completed',

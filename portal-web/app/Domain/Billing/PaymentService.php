@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\PaymentTransaction;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 /**
  * UI.md #53 — 支付中心。
@@ -29,12 +30,27 @@ final class PaymentService
         $secret = (string) config('services.stripe.secret', '');
         $successUrl = (string) config('app.url') . '/user/orders/' . $order->id . '?status=success&session_id={CHECKOUT_SESSION_ID}';
         $cancelUrl  = (string) config('app.url') . '/user/orders/' . $order->id . '?status=cancel';
+        $useFake = (bool) config('services.stripe.fake', false);
+
+        if (app()->environment('production') && $useFake) {
+            throw new RuntimeException('Fake Stripe checkout is forbidden in production.');
+        }
+
+        $existing = PaymentTransaction::query()
+            ->where('order_id', $order->id)
+            ->where('provider', 'stripe')
+            ->where('status', PaymentTransaction::STATUS_PENDING)
+            ->latest('id')
+            ->first();
+        if ($existing instanceof PaymentTransaction) {
+            return $existing;
+        }
 
         // 默认：占位 session（无 Stripe 凭证时降级）
         $sessionId = 'cs_test_' . Str::random(24);
         $redirectUrl = "https://checkout.stripe.com/c/pay/{$sessionId}";
 
-        if ($secret !== '' && class_exists(\Stripe\StripeClient::class)) {
+        if ($secret !== '' && class_exists(\Stripe\StripeClient::class) && ! $useFake) {
             try {
                 /** @var \Stripe\StripeClient $stripe */
                 $stripe = new \Stripe\StripeClient($secret);

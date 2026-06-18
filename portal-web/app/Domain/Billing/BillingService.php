@@ -49,7 +49,7 @@ final class BillingService
                 userId: $userId,
                 amountMinor: $amountMinor,
                 referenceType: 'admin_manual',
-                referenceId: '',
+                referenceId: 'admin_charge_' . $now->format('YmdHisv'),
                 description: $description,
             );
             $after = $newBalance; // 兼容后续 invoice/transaction meta
@@ -59,21 +59,15 @@ final class BillingService
                 'balance_updated_at' => $now,
             ]);
 
-            $transactionId = DB::table('wallet_transactions')->insertGetId([
-                'user_id' => $userId,
-                'type' => 'charge',
-                'amount_minor' => $amountMinor,
-                'currency' => $currency,
-                'description' => $description,
-                'status' => 'completed',
-                'reference_type' => 'admin_manual',
-                'reference_id' => null,
-                'meta' => json_encode(['balance_before' => $before, 'balance_after' => $after], JSON_UNESCAPED_UNICODE),
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
+            $transaction = DB::table('wallet_transactions')
+                ->where('user_id', $userId)
+                ->where('reference_type', 'admin_manual')
+                ->where('reference_id', 'admin_charge_' . $now->format('YmdHisv'))
+                ->latest('updated_at')
+                ->first();
+            $transactionId = $transaction->id ?? null;
 
-            $invoiceNo = 'INV-' . $now->format('YmdHis') . '-' . str_pad((string) $transactionId, 6, '0', STR_PAD_LEFT);
+            $invoiceNo = 'INV-' . $now->format('YmdHis') . '-' . str_pad((string) ($transactionId ?? 0), 6, '0', STR_PAD_LEFT);
             $invoiceId = DB::table('invoices')->insertGetId([
                 'user_id' => $userId,
                 'invoice_no' => $invoiceNo,
@@ -129,7 +123,7 @@ final class BillingService
                 userId: $userId,
                 amountMinor: $amountMinor,
                 referenceType: 'admin_refund',
-                referenceId: '',
+                referenceId: 'admin_refund_' . $now->format('YmdHisv'),
                 description: $description,
             );
 
@@ -139,21 +133,15 @@ final class BillingService
             ]);
             $after = $newBalance; // 兼容后续 invoice/transaction meta
 
-            $transactionId = DB::table('wallet_transactions')->insertGetId([
-                'user_id' => $userId,
-                'type' => 'refund',
-                'amount_minor' => -$amountMinor,
-                'currency' => $currency,
-                'description' => $description,
-                'status' => 'completed',
-                'reference_type' => 'admin_manual',
-                'reference_id' => null,
-                'meta' => json_encode(['balance_before' => $before, 'balance_after' => $after], JSON_UNESCAPED_UNICODE),
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
+            $transaction = DB::table('wallet_transactions')
+                ->where('user_id', $userId)
+                ->where('reference_type', 'admin_refund')
+                ->where('reference_id', 'admin_refund_' . $now->format('YmdHisv'))
+                ->latest('updated_at')
+                ->first();
+            $transactionId = $transaction->id ?? null;
 
-            $invoiceNo = 'INV-' . $now->format('YmdHis') . '-R' . str_pad((string) $transactionId, 5, '0', STR_PAD_LEFT);
+            $invoiceNo = 'INV-' . $now->format('YmdHis') . '-R' . str_pad((string) ($transactionId ?? 0), 5, '0', STR_PAD_LEFT);
             $invoiceId = DB::table('invoices')->insertGetId([
                 'user_id' => $userId,
                 'invoice_no' => $invoiceNo,

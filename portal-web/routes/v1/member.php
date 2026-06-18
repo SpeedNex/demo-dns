@@ -106,3 +106,12 @@ Route::prefix('member')->middleware('auth:api')->group(function (): void {
         Route::post('{id}/checkout', [OrderController::class, 'checkout']);
     });
 });
+
+Route::prefix('user')->middleware('auth:api')->group(function (): void {
+    Route::prefix('orders')->group(function (): void {
+        Route::get('', [OrderController::class, 'index']);
+        Route::post('', [OrderController::class, 'create']);
+        Route::get('{id}', [OrderController::class, 'show']);
+        Route::post('{id}/checkout', [OrderController::class, 'checkout']);
+    });
+});
