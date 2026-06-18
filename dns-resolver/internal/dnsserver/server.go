@@ -155,7 +155,18 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 		firstSeen = true
 	}
 
-	profileID, blockResponse, deviceID := s.resolveRuntimeProfile(w.RemoteAddr())
+	profileID, blockResponse, deviceID, profileOK := s.resolveRuntimeProfile(w.RemoteAddr())
+	if !profileOK {
+		// UI.md #41: no IP→profile binding; refuse the query (NXDOMAIN)
+		// instead of resolving on a paid default profile.
+		reply.Rcode = dns.RcodeNameError
+		_ = w.WriteMsg(reply)
+		s.metrics.IncErrors()
+		if firstSeen {
+			s.appendLog("", "", domain, "BLOCK", "ip_not_bound", "", w.RemoteAddr().String(), queryType, reply.Rcode, startedAt)
+		}
+		return
+	}
 	decision := s.resolutionLayer.Resolve(&resolver.ResolutionContext{
 		ProfileUID: profileID,
 		DeviceUID:  deviceID,
@@ -212,16 +223,18 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 	}
 }
 
-func (s *Server) resolveRuntimeProfile(addr net.Addr) (profileID string, blockResponse string, deviceID string) {
+func (s *Server) resolveRuntimeProfile(addr net.Addr) (profileID string, blockResponse string, deviceID string, ok bool) {
 	cfg, err := s.loadActiveConfig()
 	if err != nil || len(cfg.Profiles) == 0 {
-		return "default", "nxdomain", ""
+		// UI.md #41: failure must NOT silently fall back to a paid
+		// "default" profile.  Return ok=false so the caller can degrade
+		// to public DNS or refuse the query.
+		return "", "nxdomain", "", false
 	}
 
 	sourceMap := make(map[string]string)
 	deviceMap := make(map[string]string)
 	blockMap := make(map[string]string)
-	defaultProfile := cfg.Profiles[0].ProfileID
 
 	for _, profileConfig := range cfg.Profiles {
 		if profileConfig.ProfileID == "" {
@@ -238,13 +251,15 @@ func (s *Server) resolveRuntimeProfile(addr net.Addr) (profileID string, blockRe
 	}
 
 	resolver := profile.New(sourceMap)
-	profileID, err = resolver.ResolveSourceIP(addr.String())
-	if err != nil || profileID == "" {
-		profileID = defaultProfile
+	pid, err := resolver.ResolveSourceIP(addr.String())
+	if err != nil || pid == "" {
+		// UI.md #41: no IP→device binding found.  Do not silently fall
+		// back to the first profile (which is usually a paid plan).
+		return "", "nxdomain", "", false
 	}
 
 	host := remoteHost(addr.String())
-	return profileID, firstNonEmpty(blockMap[profileID], "nxdomain"), deviceMap[host]
+	return pid, firstNonEmpty(blockMap[pid], "nxdomain"), deviceMap[host], true
 }
 
 func (s *Server) loadActiveConfig() (*activeConfig, error) {

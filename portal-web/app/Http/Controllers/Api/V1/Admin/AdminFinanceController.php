@@ -13,27 +13,29 @@ use Illuminate\Support\Facades\DB;
  */
 final class AdminFinanceController
 {
-    /** GET /admin/finance/balances — all user balances */
+    /** GET /admin/finance/balances — all user balances (SSOT: `wallets`) */
     public function balances(): JsonResponse
     {
-        $users = DB::table('users')
+        // SSOT 余额在 `wallets` 表；这里 join 拿真相，users.balance_minor 仅作 fallback
+        $rows = DB::table('users as u')
+            ->leftJoin('wallets as w', 'w.user_id', '=', 'u.id')
             ->select([
-                'id',
-                'username',
-                'email',
-                'plan_code',
-                'role',
-                'status',
-                'balance_minor',
-                'currency',
-                'balance_updated_at',
-                'created_at',
+                'u.id',
+                'u.username',
+                'u.email',
+                'u.plan_code',
+                'u.role',
+                'u.status',
+                DB::raw('COALESCE(w.balance, 0) as balance_minor'),
+                DB::raw("COALESCE(w.currency, u.currency, 'USD') as currency"),
+                DB::raw("COALESCE(w.updated_at, u.balance_updated_at) as balance_updated_at"),
+                'u.created_at',
             ])
-            ->orderBy('created_at', 'desc')
+            ->orderBy('u.created_at', 'desc')
             ->limit(200)
             ->get();
 
-        return response()->json(['data' => $users]);
+        return response()->json(['data' => $rows]);
     }
 
     /** GET /admin/finance/recharges — recharge records (placeholder) */

@@ -30,8 +30,14 @@
             </el-table-column>
             <el-table-column :label="$t('allowlist.actions')" width="180">
                 <template #default="{ row }">
-                    <el-button size="small" @click="openEditDialog(row)">{{ $t('allowlist.edit') }}</el-button>
-                    <el-button size="small" type="danger" @click="handleDelete(row.id)">{{ $t('allowlist.delete') }}</el-button>
+                    <el-button size="small" @click="openEditDialog(row)">
+                        <el-icon><Edit /></el-icon>
+                        {{ $t('allowlist.edit') }}
+                    </el-button>
+                    <el-button size="small" type="danger" @click="handleDelete(row.id)">
+                        <el-icon><Delete /></el-icon>
+                        {{ $t('allowlist.delete') }}
+                    </el-button>
                 </template>
             </el-table-column>
         </el-table>

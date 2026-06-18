@@ -1,7 +1,7 @@
 <template>
     <ListPage
         :title="$t('admin.finance.bill') || '账单'"
-        :desc="$t('admin.finance.billDesc') || '查看和管理用户账单记录'"
+        
         i18n-key="admin.finance.bill"
         icon-name="Tickets"
         :total="meta?.total ?? 0"

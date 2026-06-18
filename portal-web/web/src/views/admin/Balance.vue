@@ -1,7 +1,7 @@
 <template>
     <ListPage
         :title="$t('admin.finance.balance') || '账户余额'"
-        :desc="$t('admin.finance.balanceDesc') || '查看用户账户余额信息'"
+        
         i18n-key="admin.finance.balance"
         icon-name="Wallet"
         :total="meta?.total ?? 0"

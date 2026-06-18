@@ -52,6 +52,8 @@ type Buffer struct {
 	flushInt time.Duration
 	cred     Credentials
 	onFlush  func(time.Time)
+	direct   DirectWriter // UI.md #46 — optional ClickHouse direct writer
+	usage    []UsageEvent // UI.md #47 — independent usage-event queue
 }
 
 // NewBuffer 构造一个日志缓冲器，调用方必须传入已校验的控制面凭据。
@@ -246,5 +248,119 @@ func (b *Buffer) replayBuffer() {
 		if b.onFlush != nil {
 			b.onFlush(time.Now().UTC())
 		}
+	}
+}
+
+// ----------------------------------------------------------------------------
+// UI.md #46 / #47: ClickHouse direct write + independent UsageEvent
+// ----------------------------------------------------------------------------
+
+// CHInserter is the subset of the real ClickHouse client that the
+// logging package can call.  Decoupling it from the clickhouse.Client
+// concrete type keeps this package dependency-free.
+type CHInserter interface {
+	BatchInsertUsage(ctx context.Context, rows []UsageEvent) error
+}
+
+// DirectWriter is the contract the log buffer needs from a ClickHouse
+// client.  The real implementation lives in internal/clickhouse/client.go;
+// tests can stub it.  The two methods are intentionally tiny so wiring
+// the existing log path does not require any rewrite.
+type DirectWriter interface {
+	BatchInsert(ctx context.Context, entries []DirectLogEntry) error
+	BatchInsertUsage(ctx context.Context, events []UsageEvent) error
+}
+
+// DirectLogEntry is a stable, minimal subset of the existing LogEntry
+// shape that the ClickHouse writer understands.
+type DirectLogEntry struct {
+	Timestamp      time.Time
+	ProfileID      string
+	DeviceID       string
+	Domain         string
+	QueryType      string
+	Action         string
+	Reason         string
+	Category       string
+	ResponseTimeMs int64
+	Rcode          int
+}
+
+// UsageEvent is written to ClickHouse independently of the dedup
+// window on the query-log path (UI.md #47).  Each domain hit produces
+// exactly one usage event regardless of retransmits.
+type UsageEvent struct {
+	EventID    string
+	ProfileID  string
+	UserID     string
+	DeviceID   string
+	Domain     string
+	BytesIn    int64
+	BytesOut   int64
+	OccurredAt time.Time
+}
+
+func (b *Buffer) SetDirectWriter(w DirectWriter) { b.direct = w }
+
+// FlushDirect is the additive CH write path.  The existing Flush() /
+// sendBatch() flow is untouched; this hook is for callers that want
+// the lower-latency direct insert (UI.md #46).
+func (b *Buffer) FlushDirect(entries []LogEntry) error {
+	if b == nil || b.direct == nil {
+		return nil
+	}
+	out := make([]DirectLogEntry, 0, len(entries))
+	for _, e := range entries {
+		out = append(out, DirectLogEntry{
+			Timestamp:      time.Unix(e.QueriedAt, 0).UTC(),
+			ProfileID:      e.ProfileUID,
+			DeviceID:       e.DeviceUID,
+			Domain:         e.Domain,
+			QueryType:      e.QueryType,
+			Action:         e.Action,
+			Reason:         e.Reason,
+			Category:       e.Category,
+			ResponseTimeMs: e.ResponseTimeMs,
+			Rcode:          e.ResponseCode,
+		})
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	return b.direct.BatchInsert(ctx, out)
+}
+
+// RecordUsage appends a single usage event to the in-memory queue and
+// flushes when full.  The queue is intentionally separate from the
+// query-log dedup path so that 5-second retransmits are still counted
+// (UI.md #47).
+func (b *Buffer) RecordUsage(ev UsageEvent) {
+	if b == nil {
+		return
+	}
+	b.mu.Lock()
+	b.usage = append(b.usage, ev)
+	needFlush := len(b.usage) >= b.maxSize
+	b.mu.Unlock()
+	if needFlush {
+		go b.FlushUsage()
+	}
+}
+
+func (b *Buffer) FlushUsage() {
+	if b == nil || b.direct == nil {
+		return
+	}
+	b.mu.Lock()
+	if len(b.usage) == 0 {
+		b.mu.Unlock()
+		return
+	}
+	batch := append([]UsageEvent(nil), b.usage...)
+	b.usage = b.usage[:0]
+	b.mu.Unlock()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := b.direct.BatchInsertUsage(ctx, batch); err != nil {
+		log.Printf("usage flush failed: %v", err)
 	}
 }

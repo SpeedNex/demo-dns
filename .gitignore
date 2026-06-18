@@ -19,3 +19,4 @@
 /portal-web/.phpunit.result.cache
 /*.key
 /.envrc
+portal-web/web/node_modules

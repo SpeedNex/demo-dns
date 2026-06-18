@@ -322,7 +322,10 @@ func (a *Agent) loadBundleIntoEngine(bundle resolverConfigBundle) error {
 		return fmt.Errorf("bundle contains no profiles")
 	}
 
-	profile := bundle.Profiles[0]
+	// UI.md #38: load every profile into its own isolated engine slot.
+	// Legacy single-profile fields are still populated from the first
+	// profile so existing code paths keep working unchanged.
+	first := bundle.Profiles[0]
 	var allowExact []string
 	var allowWildcard []string
 	var denyExact []string
@@ -330,33 +333,97 @@ func (a *Agent) loadBundleIntoEngine(bundle resolverConfigBundle) error {
 	var adblockExact []string
 	var adblockWildcard []string
 
-	for _, rule := range profile.Rules {
-		if !rule.Enabled {
+	bucketByProfile := make(map[string]*profileBuckets, len(bundle.Profiles))
+	for i := range bundle.Profiles {
+		p := bundle.Profiles[i]
+		if p.ProfileID == "" {
 			continue
 		}
+		bucketByProfile[p.ProfileID] = &profileBuckets{
+			security: make(map[string][]string),
+			parental: make(map[string][]string),
+		}
+	}
 
+	emitRule := func(p resolverProfileConfig, rule resolverRule) {
+		if !rule.Enabled {
+			return
+		}
 		domain := normalizeRuleDomain(rule)
+		if domain == "" {
+			return
+		}
+		bkt, ok := bucketByProfile[p.ProfileID]
+		if !ok {
+			return
+		}
+
+		// Categorize by list type / action / category.
+		switch {
+		case strings.EqualFold(rule.ListType, "allow") || strings.EqualFold(rule.Action, "allow"):
+			if rule.MatchType == "suffix" || rule.MatchType == "wildcard" {
+				bkt.allowWildcard = append(bkt.allowWildcard, domain)
+			} else {
+				bkt.allowExact = append(bkt.allowExact, domain)
+			}
+		case strings.EqualFold(rule.ListType, "deny") || strings.EqualFold(rule.Action, "block"):
+			if rule.MatchType == "suffix" || rule.MatchType == "wildcard" {
+				bkt.denyWildcard = append(bkt.denyWildcard, domain)
+			} else {
+				bkt.denyExact = append(bkt.denyExact, domain)
+			}
+		case strings.EqualFold(rule.Category, "ads") || strings.EqualFold(rule.Category, "adblock"):
+			if rule.MatchType == "suffix" || rule.MatchType == "wildcard" {
+				bkt.adblockWildcard = append(bkt.adblockWildcard, domain)
+			} else {
+				bkt.adblockExact = append(bkt.adblockExact, domain)
+			}
+		case rule.Category != "":
+			// Category-based rule — push into security / parental buckets
+			// using the profile.Security.Privacy flags to choose the family.
+			if p.Parental != nil && boolFromMap(p.Parental, rule.Category) {
+				bkt.parental[rule.Category] = append(bkt.parental[rule.Category], domain)
+			} else {
+				bkt.security[rule.Category] = append(bkt.security[rule.Category], domain)
+			}
+		}
+	}
+
+	for i := range bundle.Profiles {
+		p := bundle.Profiles[i]
+		for j := range p.Rules {
+			emitRule(p, p.Rules[j])
+		}
+	}
+
+	// First-profile legacy copy (so old code paths still see "something").
+	for _, r := range first.Rules {
+		if !r.Enabled {
+			continue
+		}
+		domain := normalizeRuleDomain(r)
 		if domain == "" {
 			continue
 		}
-
-		target := &allowExact
-		wildTarget := &allowWildcard
-		if strings.EqualFold(rule.ListType, "deny") || strings.EqualFold(rule.Action, "block") {
-			target = &denyExact
-			wildTarget = &denyWildcard
-		}
-
-		if strings.EqualFold(rule.Category, "ads") || strings.EqualFold(rule.Category, "adblock") {
-			target = &adblockExact
-			wildTarget = &adblockWildcard
-		}
-
-		switch strings.ToLower(rule.MatchType) {
-		case "suffix", "wildcard":
-			*wildTarget = append(*wildTarget, domain)
+		switch {
+		case strings.EqualFold(r.ListType, "deny") || strings.EqualFold(r.Action, "block"):
+			if r.MatchType == "suffix" || r.MatchType == "wildcard" {
+				denyWildcard = append(denyWildcard, domain)
+			} else {
+				denyExact = append(denyExact, domain)
+			}
+		case strings.EqualFold(r.Category, "ads") || strings.EqualFold(r.Category, "adblock"):
+			if r.MatchType == "suffix" || r.MatchType == "wildcard" {
+				adblockWildcard = append(adblockWildcard, domain)
+			} else {
+				adblockExact = append(adblockExact, domain)
+			}
 		default:
-			*target = append(*target, domain)
+			if r.MatchType == "suffix" || r.MatchType == "wildcard" {
+				allowWildcard = append(allowWildcard, domain)
+			} else {
+				allowExact = append(allowExact, domain)
+			}
 		}
 	}
 
@@ -367,9 +434,47 @@ func (a *Agent) loadBundleIntoEngine(bundle resolverConfigBundle) error {
 	a.engine.LoadSecurityCategory("phishing", nil)
 	a.engine.LoadParentalCategory("adult", nil)
 
+	// Register every profile in its own slot, applying its own
+	// Security/Parental/Privacy switches (UI.md #42-#45).
+	profileVersions := make(map[string]int64, len(bundle.Profiles))
+	for i := range bundle.Profiles {
+		p := bundle.Profiles[i]
+		if p.ProfileID == "" {
+			continue
+		}
+		bkt, ok := bucketByProfile[p.ProfileID]
+		if !ok {
+			bkt = &profileBuckets{
+				security: make(map[string][]string),
+				parental: make(map[string][]string),
+			}
+		}
+
+		// UI.md #42: drop security categories whose switch is off.
+		bkt.security = filterCategoryMapBySwitch(bkt.security, p.Security)
+		// UI.md #43: drop parental categories whose switch is off.
+		bkt.parental = filterCategoryMapBySwitch(bkt.parental, p.Parental)
+		// UI.md #45: privacy sub-categories are stored under the same
+		// adblock bucket but gated by the privacy map's boolean flags.
+		if !profileFlagEnabled(p.Privacy, "adblock_enabled") {
+			bkt.adblockExact = nil
+			bkt.adblockWildcard = nil
+		}
+
+		a.engine.LoadProfileRules(p.ProfileID,
+			bkt.allowExact, bkt.allowWildcard,
+			bkt.denyExact, bkt.denyWildcard,
+			bkt.adblockExact, bkt.adblockWildcard,
+			bkt.security, bkt.parental,
+		)
+		profileVersions[p.ProfileID] = p.Version
+	}
+
 	a.mu.Lock()
-	a.localProfiles = map[string]int64{
-		profile.ProfileID: profile.Version,
+	if len(profileVersions) > 0 {
+		a.localProfiles = profileVersions
+	} else {
+		a.localProfiles = map[string]int64{first.ProfileID: first.Version}
 	}
 	a.mu.Unlock()
 
@@ -378,6 +483,58 @@ func (a *Agent) loadBundleIntoEngine(bundle resolverConfigBundle) error {
 	}
 
 	return nil
+}
+
+// profileBuckets collects per-profile rules during bundle ingestion.
+type profileBuckets struct {
+	allowExact      []string
+	allowWildcard   []string
+	denyExact       []string
+	denyWildcard    []string
+	adblockExact    []string
+	adblockWildcard []string
+	security        map[string][]string
+	parental        map[string][]string
+}
+
+// boolFromMap reads a bool flag from a generic map (profile.Security.Privacy).
+func boolFromMap(m map[string]any, key string) bool {
+	if v, ok := m[key]; ok {
+		if b, ok := v.(bool); ok {
+			return b
+		}
+	}
+	return false
+}
+
+// profileFlagEnabled returns true when the named flag is missing or
+// explicitly true.  A missing entry defaults to enabled so older
+// bundle payloads keep their previous behaviour.
+func profileFlagEnabled(m map[string]any, key string) bool {
+	if m == nil {
+		return true
+	}
+	if v, ok := m[key]; ok {
+		if b, ok := v.(bool); ok {
+			return b
+		}
+	}
+	return true
+}
+
+// filterCategoryMapBySwitch drops category buckets whose boolean
+// switch is off in the profile config (UI.md #42/#43).
+func filterCategoryMapBySwitch(cats map[string][]string, switchMap map[string]any) map[string][]string {
+	if cats == nil {
+		return nil
+	}
+	out := make(map[string][]string, len(cats))
+	for k, v := range cats {
+		if profileFlagEnabled(switchMap, k) {
+			out[k] = v
+		}
+	}
+	return out
 }
 
 func (a *Agent) storeBundle(version int64, checksum string, rawJSON []byte) error {

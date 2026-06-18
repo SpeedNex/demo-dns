@@ -1,7 +1,7 @@
 <template>
     <ListPage
         :title="$t('admin.ruleLibrary.title')"
-        :desc="$t('admin.ruleLibrary.desc')"
+        
         i18n-key="admin.ruleLibrary"
         icon-name="Collection"
         :total="meta?.total ?? 0"

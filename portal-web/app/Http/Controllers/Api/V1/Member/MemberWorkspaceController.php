@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Member;
 
 use App\Application\Member\WorkspaceRuleService;
+use App\Domain\Profile\MemberCatalogService;
 use App\Domain\Profile\MemberWorkspaceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,13 @@ final class MemberWorkspaceController
     public function __construct(
         private readonly MemberWorkspaceService $workspace,
         private readonly WorkspaceRuleService $workspaceRuleService,
+        private readonly MemberCatalogService $catalogs = new MemberCatalogService(),
     ) {
+    }
+
+    public function catalogs(): JsonResponse
+    {
+        return response()->json(['data' => $this->catalogs->get()]);
     }
 
     public function security(Request $request): JsonResponse
@@ -272,10 +279,16 @@ final class MemberWorkspaceController
     public function upgrade(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'plan' => 'required|string|max:30',
+            'plan' => 'required_without:plan_code|string|max:30',
+            'plan_code' => 'required_without:plan|string|max:30',
+            'billing_cycle' => ['sometimes', Rule::in(['monthly', 'yearly'])],
         ]);
 
-        return response()->json(['data' => $this->workspace->upgrade($request->user()->id, $validated['plan'])]);
+        return response()->json(['data' => $this->workspace->upgrade(
+            $request->user()->id,
+            $validated['plan_code'] ?? $validated['plan'],
+            $validated['billing_cycle'] ?? 'monthly',
+        )]);
     }
 
     public function dnsEndpoints(Request $request): JsonResponse

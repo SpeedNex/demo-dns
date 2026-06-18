@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\AdminMenuConfigController;
 use App\Http\Controllers\Api\V1\Admin\AdminAlertController;
 use App\Http\Controllers\Api\V1\Admin\AdminAuditLogController;
 use App\Http\Controllers\Api\V1\Admin\AdminBillingController;
@@ -8,7 +9,10 @@ use App\Http\Controllers\Api\V1\Admin\AdminConsoleAuditLogController;
 use App\Http\Controllers\Api\V1\Admin\AdminDeviceController;
 use App\Http\Controllers\Api\V1\Admin\AdminFinanceController;
 use App\Http\Controllers\Api\V1\Admin\AdminGeoDnsController;
+use App\Http\Controllers\Api\V1\Admin\AdminMemberCatalogController;
 use App\Http\Controllers\Api\V1\Admin\AdminNodeController;
+use App\Http\Controllers\Api\V1\Admin\AdminPlanController;
+use App\Http\Controllers\Api\V1\Admin\AdminPolicyController;
 use App\Http\Controllers\Api\V1\Admin\AdminPublishController;
 use App\Http\Controllers\Api\V1\Admin\AdminQueryLogController;
 use App\Http\Controllers\Api\V1\Admin\AdminRbacController;
@@ -32,6 +36,8 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'permission:admin.access'])-
     Route::middleware('permission:admin.users.read')->group(function (): void {
         Route::get('users', [AdminUserController::class, 'index']);
         Route::get('users/{user_id}', [AdminUserController::class, 'show']);
+        Route::get('member-catalogs', [AdminMemberCatalogController::class, 'show']);
+        Route::get('member-rules', [AdminMemberCatalogController::class, 'rules']);
     });
     Route::middleware('permission:admin.users.write')->group(function (): void {
         Route::post('users', [AdminUserController::class, 'store']);
@@ -39,6 +45,9 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'permission:admin.access'])-
         Route::delete('users/{user_id}', [AdminUserController::class, 'destroy']);
         Route::post('users/{user_id}/disable', [AdminUserController::class, 'disable']);
         Route::post('users/{user_id}/enable', [AdminUserController::class, 'enable']);
+        Route::put('member-catalogs', [AdminMemberCatalogController::class, 'update']);
+        Route::delete('member-rules/{id}', [AdminMemberCatalogController::class, 'destroyRule']);
+        Route::post('member-rules/batch-destroy', [AdminMemberCatalogController::class, 'batchDestroyRules']);
     });
 
     Route::middleware('permission:admin.devices.read')->group(function (): void {
@@ -72,6 +81,8 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'permission:admin.access'])-
         Route::get('audit-logs', [AdminConsoleAuditLogController::class, 'index'])->middleware('permission:admin.audit.read');
         Route::get('audit-logs/export', [AdminConsoleAuditLogController::class, 'export'])->middleware('permission:admin.audit.read');
         Route::post('audit-logs/batch-destroy', [AdminConsoleAuditLogController::class, 'batchDestroy'])->middleware('permission:admin.audit.read');
+        Route::delete('audit-logs/{id}', [AdminConsoleAuditLogController::class, 'destroy'])->middleware('permission:admin.audit.read');
+        Route::delete('audit-logs', [AdminConsoleAuditLogController::class, 'clear'])->middleware('permission:admin.audit.read');
     });
 
     // Billing
@@ -79,10 +90,14 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'permission:admin.access'])-
         Route::get('billing/balance/{user_id}', [AdminBillingController::class, 'balance']);
         Route::get('billing/invoices', [AdminBillingController::class, 'invoices']);
         Route::get('billing/export', [AdminBillingController::class, 'export']);
+        Route::get('plans', [AdminPlanController::class, 'index']);
     });
     Route::middleware('permission:admin.billing.write')->group(function (): void {
         Route::post('billing/charge', [AdminBillingController::class, 'charge']);
         Route::post('billing/refund', [AdminBillingController::class, 'refund']);
+        Route::post('plans', [AdminPlanController::class, 'store']);
+        Route::put('plans/{id}', [AdminPlanController::class, 'update']);
+        Route::delete('plans/{id}', [AdminPlanController::class, 'destroy']);
     });
 
     // Finance
@@ -175,5 +190,23 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'permission:admin.access'])-
         Route::delete('rules/{id}', [AdminRuleController::class, 'destroy']);
         Route::post('rules/{name}/sync', [AdminRuleController::class, 'sync']);
         Route::post('rules/batch-destroy', [AdminRuleController::class, 'batchDestroy']);
+    });
+
+    // Policy (UI.md #61/#62/#63) — 策略闭环
+    Route::middleware('permission:admin.policy.read')->group(function (): void {
+        Route::get('policy/nodes', [AdminPolicyController::class, 'indexNodes']);
+    });
+    Route::middleware('permission:admin.policy.write')->group(function (): void {
+        Route::post('policy/users/{userId}/snapshot', [AdminPolicyController::class, 'snapshotUser']);
+        Route::post('policy/snapshots/{id}/publish', [AdminPolicyController::class, 'publishSnapshot']);
+    });
+
+    // Menu Config — 菜单导航配置
+    Route::middleware('permission:admin.system_config.read')->group(function (): void {
+        Route::get('menu-config', [AdminMenuConfigController::class, 'index']);
+    });
+    Route::middleware('permission:admin.system_config.write')->group(function (): void {
+        Route::put('menu-config', [AdminMenuConfigController::class, 'update']);
+        Route::put('menu-config/visibility', [AdminMenuConfigController::class, 'updateVisibility']);
     });
 });

@@ -14,6 +14,16 @@
             </el-col>
         </el-row>
 
+        <!-- UI.md #32: 维度统计（GAFAM / 根域名 / 加密DNS / DNSSEC） -->
+        <el-row :gutter="16" style="margin-bottom:24px">
+            <el-col :xs="12" :sm="6" v-for="d in dimensionStats" :key="d.label">
+                <el-card shadow="never" class="stat-card" :class="d.color">
+                    <div class="stat-value">{{ d.value }}</div>
+                    <div class="stat-label">{{ d.label }}</div>
+                </el-card>
+            </el-col>
+        </el-row>
+
         <el-row :gutter="16">
             <el-col :xs="24" :sm="12" :md="8" v-for="link in quickLinks" :key="link.to">
                 <el-card shadow="never" class="quick-card" @click="$router.push(link.to)" style="cursor:pointer; margin-bottom:16px">
@@ -55,6 +65,14 @@ const stats = ref([
     { value: '-', label: t('admin.dashboard.activeUsers') || 'Active Users', color: 'purple' },
 ])
 
+// UI.md #32: 维度统计（GAFAM / 根域名 / 加密DNS / DNSSEC）
+const dimensionStats = ref([
+    { value: '-', label: 'GAFAM (24h)', color: 'red' },
+    { value: '-', label: '根域名 (24h)', color: 'blue' },
+    { value: '-', label: '加密 DNS (24h)', color: 'green' },
+    { value: '-', label: 'DNSSEC 有效 (24h)', color: 'purple' },
+])
+
 const quickLinks = computed(() => [
     { icon: 'Monitor', to: '/admin/nodes', title: t('admin.dashboard.nodeManagement') || 'Node Management', desc: t('admin.dashboard.nodeManagementDesc') || 'View and manage DNS resolver nodes' },
     { icon: 'Upload', to: '/admin/publishes', title: t('admin.dashboard.publishTasks') || 'Publish Tasks', desc: t('admin.dashboard.publishTasksDesc') || 'Configuration version deployment' },
@@ -79,6 +97,13 @@ const fetchOverview = async () => {
             { value: d.queries?.last_24h ?? '-', label: t('admin.dashboard.totalQueries') || 'Total Queries (24h)', color: 'blue' },
             { value: d.queries?.blocked_24h ?? '-', label: t('admin.dashboard.blocked') || 'Blocked (24h)', color: 'red' },
             { value: d.users?.active ?? d.users?.total ?? '-', label: t('admin.dashboard.activeUsers') || 'Active Users', color: 'purple' },
+        ]
+        // UI.md #32
+        dimensionStats.value = [
+            { value: d.queries?.gafam ?? 0, label: 'GAFAM (24h)', color: 'red' },
+            { value: d.queries?.root ?? 0, label: '根域名 (24h)', color: 'blue' },
+            { value: d.queries?.encrypted_dns ?? 0, label: '加密 DNS (24h)', color: 'green' },
+            { value: d.queries?.dnssec_valid ?? 0, label: 'DNSSEC 有效 (24h)', color: 'purple' },
         ]
     } catch {
         // Keep defaults, show error state

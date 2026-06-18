@@ -26,8 +26,14 @@
             </el-table-column>
             <el-table-column :label="$t('denylist.actions')" width="180">
                 <template #default="{ row }">
-                    <el-button size="small" @click="openEditDialog(row)">{{ $t('denylist.edit') }}</el-button>
-                    <el-button size="small" type="danger" @click="handleDelete(row.id)">{{ $t('denylist.delete') }}</el-button>
+                    <el-button size="small" @click="openEditDialog(row)">
+                        <el-icon><Edit /></el-icon>
+                        {{ $t('denylist.edit') }}
+                    </el-button>
+                    <el-button size="small" type="danger" @click="handleDelete(row.id)">
+                        <el-icon><Delete /></el-icon>
+                        {{ $t('denylist.delete') }}
+                    </el-button>
                 </template>
             </el-table-column>
         </el-table>

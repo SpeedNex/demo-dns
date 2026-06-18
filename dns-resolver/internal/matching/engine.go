@@ -26,23 +26,33 @@ type Decision struct {
 type Engine struct {
 	mu sync.RWMutex
 
-	// Level 1: Allow list
-	allowExact map[string]bool
-	allowTrie  *Trie
-
-	// Level 2: Deny list
-	denyExact map[string]bool
-	denyTrie  *Trie
-
-	// Level 3-5: Security categories
+	// Legacy single-profile fields (kept for backward compatibility).
+	allowExact         map[string]bool
+	allowTrie          *Trie
+	denyExact          map[string]bool
+	denyTrie           *Trie
 	securityCategories map[string]map[string]bool // category -> domain set
-
-	// Level 6: Parental control categories
 	parentalCategories map[string]map[string]bool // category -> domain set
+	adBlockDomains     map[string]bool
+	adBlockTrie        *Trie
 
-	// Level 7: Ad block domain set
-	adBlockDomains map[string]bool
-	adBlockTrie    *Trie
+	// profileID-isolated engines (UI.md #39).  Keyed by profile id.
+	// When present, Match(profileID, domain) routes to the per-profile engine.
+	// Falls back to legacy fields when profileID is empty / unknown.
+	profileEngines map[string]*profileEngine
+}
+
+// profileEngine is a per-profile rule set (UI.md #39).
+type profileEngine struct {
+	profileID          string
+	allowExact         map[string]bool
+	allowTrie          *Trie
+	denyExact          map[string]bool
+	denyTrie           *Trie
+	securityCategories map[string]map[string]bool
+	parentalCategories map[string]map[string]bool
+	adBlockDomains     map[string]bool
+	adBlockTrie        *Trie
 }
 
 // NewEngine creates a new rule matching engine.
@@ -56,6 +66,7 @@ func NewEngine() *Engine {
 		parentalCategories: make(map[string]map[string]bool),
 		adBlockDomains:     make(map[string]bool),
 		adBlockTrie:        NewTrie(),
+		profileEngines:     make(map[string]*profileEngine),
 	}
 }
 
@@ -191,4 +202,96 @@ func reverseDomain(domain string) string {
 		parts[i], parts[j] = parts[j], parts[i]
 	}
 	return strings.Join(parts, ".")
+}
+
+// LoadProfileRules stores a per-profile rule set keyed by profileID (UI.md #38/#39).
+// This is additive; the legacy single-profile fields are unchanged.
+func (e *Engine) LoadProfileRules(profileID string, allowExact, allowWildcard, denyExact, denyWildcard, adblockExact, adblockWildcard []string, security, parental map[string][]string) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	pe := &profileEngine{
+		profileID:          profileID,
+		allowExact:         make(map[string]bool, len(allowExact)),
+		allowTrie:          NewTrie(),
+		denyExact:          make(map[string]bool, len(denyExact)),
+		denyTrie:           NewTrie(),
+		securityCategories: make(map[string]map[string]bool, len(security)),
+		parentalCategories: make(map[string]map[string]bool, len(parental)),
+		adBlockDomains:     make(map[string]bool, len(adblockExact)),
+		adBlockTrie:        NewTrie(),
+	}
+	for _, d := range allowExact {
+		pe.allowExact[normalizeDomain(d)] = true
+	}
+	for _, d := range allowWildcard {
+		pe.allowTrie.Insert(reverseDomain(normalizeDomain(d)))
+	}
+	for _, d := range denyExact {
+		pe.denyExact[normalizeDomain(d)] = true
+	}
+	for _, d := range denyWildcard {
+		pe.denyTrie.Insert(reverseDomain(normalizeDomain(d)))
+	}
+	for k, v := range security {
+		set := make(map[string]bool, len(v))
+		for _, d := range v {
+			set[normalizeDomain(d)] = true
+		}
+		pe.securityCategories[k] = set
+	}
+	for k, v := range parental {
+		set := make(map[string]bool, len(v))
+		for _, d := range v {
+			set[normalizeDomain(d)] = true
+		}
+		pe.parentalCategories[k] = set
+	}
+	for _, d := range adblockExact {
+		pe.adBlockDomains[normalizeDomain(d)] = true
+	}
+	for _, d := range adblockWildcard {
+		pe.adBlockTrie.Insert(reverseDomain(normalizeDomain(d)))
+	}
+	e.profileEngines[profileID] = pe
+}
+
+// MatchWithProfile routes a domain through the per-profile engine (UI.md #39).
+// Falls back to legacy Match when profileID is empty or unknown.
+func (e *Engine) MatchWithProfile(profileID, domain string) *Decision {
+	if profileID != "" {
+		e.mu.RLock()
+		pe, ok := e.profileEngines[profileID]
+		e.mu.RUnlock()
+		if ok {
+			return matchProfileEngine(pe, domain)
+		}
+	}
+	return e.Match(domain)
+}
+
+func matchProfileEngine(pe *profileEngine, domain string) *Decision {
+	domain = normalizeDomain(domain)
+	rev := reverseDomain(domain)
+
+	if pe.allowExact[domain] || pe.allowTrie.Search(rev) {
+		return &Decision{Action: "ALLOW", Reason: "allowlist"}
+	}
+	if pe.denyExact[domain] || pe.denyTrie.Search(rev) {
+		return &Decision{Action: "BLOCK", Reason: "denylist"}
+	}
+	for cat, set := range pe.securityCategories {
+		if set[domain] {
+			return &Decision{Action: "BLOCK", Reason: "security", Category: cat}
+		}
+	}
+	for cat, set := range pe.parentalCategories {
+		if set[domain] {
+			return &Decision{Action: "BLOCK", Reason: "parental", Category: cat}
+		}
+	}
+	if pe.adBlockDomains[domain] || pe.adBlockTrie.Search(rev) {
+		return &Decision{Action: "BLOCK", Reason: "adblock", Category: "ads"}
+	}
+	return &Decision{Action: "ALLOW", Reason: "default"}
 }

@@ -1,7 +1,7 @@
 <template>
     <ListPage
         :title="$t('admin.devicesPage.title') || '设备管理'"
-        :desc="$t('admin.devicesPage.desc') || '管理接入平台的设备'"
+        
         i18n-key="admin.devicesPage"
         icon-name="Monitor"
         :total="meta?.total ?? 0"

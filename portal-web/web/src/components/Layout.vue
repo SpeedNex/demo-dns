@@ -12,7 +12,6 @@
                         <div class="nav-brand__mark">O</div>
                         <div class="nav-brand__text">
                             <strong>OcerDNS</strong>
-                            <span>Member Center</span>
                         </div>
                     </router-link>
                 </div>
@@ -24,19 +23,16 @@
                     </el-menu-item>
                     <el-sub-menu index="user-features">
                         <template #title>
-                            <el-icon><Setting /></el-icon>
                             <span>{{ $t('nav.security') }}</span>
+                            <el-icon class="sub-menu-arrow"><ArrowRight /></el-icon>
                         </template>
                         <el-menu-item index="/user/security" @click="$router.push('/user/security')">
-                            <el-icon><Lock /></el-icon>
                             <span>{{ $t('nav.security') }}</span>
                         </el-menu-item>
                         <el-menu-item index="/user/privacy" @click="$router.push('/user/privacy')">
-                            <el-icon><Hide /></el-icon>
                             <span>{{ $t('nav.privacy') }}</span>
                         </el-menu-item>
                         <el-menu-item index="/user/parental" @click="$router.push('/user/parental')">
-                            <el-icon><User /></el-icon>
                             <span>{{ $t('nav.parental') }}</span>
                         </el-menu-item>
                     </el-sub-menu>
@@ -57,15 +53,6 @@
                         <el-icon><Document /></el-icon>
                         <span>{{ $t('nav.logs') }}</span>
                     </el-menu-item>
-                    <el-menu-item index="/user/devices" @click="$router.push('/user/devices')">
-                        <el-icon><Connection /></el-icon>
-                        <span>{{ $t('nav.devices') }}</span>
-                    </el-menu-item>
-                    <el-menu-item index="/user/api-keys" @click="$router.push('/user/api-keys')">
-                        <el-icon><Key /></el-icon>
-                        <span>{{ $t('nav.apiKeys') }}</span>
-                    </el-menu-item>
-
                     <el-menu-item index="/user/settings" @click="$router.push('/user/settings')">
                         <el-icon><Tools /></el-icon>
                         <span>{{ $t('nav.settings') }}</span>
@@ -77,9 +64,33 @@
                 </div>
 
                 <div class="nav-right">
+                    <!-- Profiles 切换 -->
+                    <el-dropdown @command="handleProfileCommand" trigger="click">
+                        <span class="toolbar-button profile-selector">
+                            <span class="profile-name">{{ currentProfileName }}</span>
+                            <el-icon><ArrowDown /></el-icon>
+                        </span>
+                        <template #dropdown>
+                            <el-dropdown-menu>
+                                <el-dropdown-item
+                                    v-for="profile in profiles"
+                                    :key="profile.id"
+                                    :command="'switch:' + profile.id"
+                                    :class="{ 'is-active': profile.id === currentProfileId }"
+                                >
+                                    <span>{{ profile.name }}</span>
+                                    <el-icon v-if="profile.id === currentProfileId" class="check-icon"><Select /></el-icon>
+                                </el-dropdown-item>
+                                <el-dropdown-item command="create" divided>
+                                    <el-icon><Plus /></el-icon>
+                                    <span>{{ $t('common.add') || '新建' }}</span>
+                                </el-dropdown-item>
+                            </el-dropdown-menu>
+                        </template>
+                    </el-dropdown>
+
                     <el-dropdown @command="switchLocale">
                         <span class="toolbar-button">
-                            <el-icon><Iphone /></el-icon>
                             {{ currentLocale }}
                             <el-icon><ArrowDown /></el-icon>
                         </span>
@@ -100,6 +111,7 @@
                         </span>
                         <template #dropdown>
                             <el-dropdown-menu>
+                                <el-dropdown-item command="account">{{ $t('nav.account') || '账户' }}</el-dropdown-item>
                                 <el-dropdown-item command="profiles">{{ $t('nav.profiles') }}</el-dropdown-item>
                                 <el-dropdown-item command="teams">{{ $t('nav.teams') }}</el-dropdown-item>
                                 <el-dropdown-item command="membership">{{ $t('nav.membership') }}</el-dropdown-item>
@@ -115,6 +127,21 @@
         <main class="main-content">
             <slot />
         </main>
+
+        <!-- 新建 Profile 弹窗 -->
+        <el-dialog v-model="createProfileVisible" :title="$t('profile.create') || '新建配置'" width="400px">
+            <el-form :model="newProfile" label-position="top">
+                <el-form-item :label="$t('profile.name') || '配置名称'">
+                    <el-input v-model="newProfile.name" :placeholder="$t('profile.namePlaceholder') || '请输入配置名称'" />
+                </el-form-item>
+            </el-form>
+            <template #footer>
+                <el-button @click="createProfileVisible = false">{{ $t('common.cancel') }}</el-button>
+                <el-button type="primary" @click="handleCreateProfile" :loading="creatingProfile">
+                    {{ $t('common.confirm') }}
+                </el-button>
+            </template>
+        </el-dialog>
     </div>
 </template>
 
@@ -123,6 +150,7 @@ import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
+import { ArrowRight, ArrowDown, Plus, Select, Monitor, Remove, CircleCheck, DataAnalysis, Document, Tools, Coin } from '@element-plus/icons-vue'
 import client from '@/api/client'
 
 const route = useRoute()
@@ -132,6 +160,81 @@ const { locale, t } = useI18n()
 const activeRoute = computed(() => route.path)
 const userName = ref(t('common.defaultUser'))
 const userInitial = computed(() => (userName.value?.trim()?.charAt(0) || 'U').toUpperCase())
+
+// Profiles 相关
+const profiles = ref([])
+const currentProfileId = ref(null)
+const currentProfileName = computed(() => {
+    const profile = profiles.value.find(p => p.id === currentProfileId.value)
+    return profile?.name || t('common.defaultProfile') || 'Default'
+})
+
+// 新建 Profile 弹窗
+const createProfileVisible = ref(false)
+const creatingProfile = ref(false)
+const newProfile = ref({ name: '' })
+
+const loadProfiles = async () => {
+    try {
+        const { data } = await client.get('/member/profiles')
+        profiles.value = data.data || []
+        
+        // 从 localStorage 或 API 获取当前选中的 profile
+        const savedId = localStorage.getItem('current_profile_id')
+        if (savedId && profiles.value.some(p => p.id === savedId)) {
+            currentProfileId.value = savedId
+        } else if (profiles.value.length > 0) {
+            currentProfileId.value = profiles.value[0].id
+            localStorage.setItem('current_profile_id', currentProfileId.value)
+        }
+    } catch {
+        profiles.value = []
+    }
+}
+
+const switchProfile = (profileId) => {
+    currentProfileId.value = profileId
+    localStorage.setItem('current_profile_id', profileId)
+}
+
+const handleProfileCommand = (command) => {
+    if (command === 'create') {
+        newProfile.value.name = ''
+        createProfileVisible.value = true
+        return
+    }
+    
+    if (command.startsWith('switch:')) {
+        const profileId = command.replace('switch:', '')
+        switchProfile(profileId)
+    }
+}
+
+const handleCreateProfile = async () => {
+    if (!newProfile.value.name?.trim()) {
+        ElMessage.warning(t('profile.nameRequired') || '请输入配置名称')
+        return
+    }
+    
+    creatingProfile.value = true
+    try {
+        const { data } = await client.post('/member/profiles', {
+            name: newProfile.value.name.trim()
+        })
+        
+        if (data.data) {
+            profiles.value.push(data.data)
+            switchProfile(data.data.id)
+            ElMessage.success(t('profile.created') || '配置已创建')
+        }
+        
+        createProfileVisible.value = false
+    } catch (err) {
+        ElMessage.error(err.message || t('profile.createFailed') || '创建失败')
+    } finally {
+        creatingProfile.value = false
+    }
+}
 
 const currentLocale = computed(() => {
     const map = { en: '🇬🇧', 'zh-CN': '🇨🇳', ko: '🇰🇷' }
@@ -154,6 +257,11 @@ const handleLogout = async () => {
 }
 
 const handleCommand = async (command) => {
+    if (command === 'account') {
+        await router.push('/user/account')
+        return
+    }
+
     if (command === 'profiles') {
         await router.push('/user/profiles')
         return
@@ -184,6 +292,9 @@ onMounted(async () => {
         const { data } = await client.get('/member/me')
         userName.value = data.data?.username ?? t('common.defaultUser')
     } catch {}
+    
+    // 加载 profiles
+    await loadProfiles()
 })
 </script>
 
@@ -309,6 +420,17 @@ onMounted(async () => {
     font-weight: 700;
 }
 
+/* 二级菜单展开图标 */
+.sub-menu-arrow {
+    margin-left: 4px;
+    font-size: 12px;
+    transition: transform 0.2s;
+}
+
+:deep(.el-sub-menu .el-sub-menu__title:hover .sub-menu-arrow) {
+    transform: rotate(90deg);
+}
+
 .nav-right {
     display: flex;
     align-items: center;
@@ -328,6 +450,27 @@ onMounted(async () => {
     color: #334155;
     cursor: pointer;
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.profile-selector {
+    min-width: 140px;
+    max-width: 200px;
+}
+
+.profile-name {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.check-icon {
+    margin-left: 8px;
+    color: #2563eb;
+}
+
+:deep(.el-dropdown-menu__item.is-active) {
+    background-color: rgba(37, 99, 235, 0.08);
 }
 
 .main-content {

@@ -1,7 +1,7 @@
 <template>
     <ListPage
         :title="$t('admin.queryLogsPage.title') || 'Query Logs'"
-        :desc="$t('admin.queryLogsPage.desc') || 'View and analyze DNS query logs'"
+        
         i18n-key="admin.queryLogsPage"
         icon-name="Document"
         :total="meta?.total ?? 0"

@@ -35,7 +35,11 @@ class User extends Authenticatable
         'current_team_id',
         'role',
         'status',
+        // UI.md #50: plan_code moved to `subscriptions`; kept here as a
+        // write-through cache populated by SubscriptionService.
         'plan_code',
+        // UI.md #54: balance_minor is deprecated in favour of `wallets`.
+        // Retained for backward compat with existing data and reports.
         'balance_minor',
         'balance_updated_at',
         'currency',

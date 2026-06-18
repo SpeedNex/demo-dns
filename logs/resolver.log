@@ -1,0 +1,467 @@
+2026/06/17 16:08:03 main.go:111: dns-resolver using config: configs/server.yaml
+2026/06/17 16:08:03 buffer.go:241: Failed to replay buffer file /tmp/dns-logs/query-log-1781590424902861000.jsonl: http post: Post "http://127.0.0.1:8081/api/v1/agent/query-logs/batch": dial tcp 127.0.0.1:8081: connect: connection refused (will retry)
+2026/06/17 16:08:03 cache.go:36: redis: disabled by config; running in-process only
+2026/06/17 16:08:03 main.go:160: dns_cache: disabled by config
+2026/06/17 16:08:03 main.go:233: dns-resolver DoH listening on http://0.0.0.0:8443 (TLS terminated upstream)
+2026/06/17 16:08:03 main.go:234: Node: dev-node-01 (node_17cf9d283d10 v1.0.0)
+2026/06/17 16:08:03 main.go:235: Upstream DNS: [1.1.1.1 8.8.8.8]
+2026/06/17 16:08:03 server.go:104: Starting TCP DNS server on :53
+2026/06/17 16:08:03 server.go:97: Starting UDP DNS server on :53
+2026/06/17 16:08:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 16:08:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 16:08:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:08:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:09:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:09:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:09:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:09:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:10:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:10:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:10:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:10:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:11:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:11:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:11:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:11:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:12:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:12:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:12:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:12:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:13:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:13:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:13:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:13:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:14:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:14:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:14:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:14:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:15:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:15:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:15:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:15:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:16:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:16:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:16:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:16:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:17:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:17:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:17:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:17:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:18:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:18:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:18:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:18:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:19:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:19:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:19:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:19:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:20:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:20:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:20:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:20:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:21:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:21:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:21:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:21:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:22:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:22:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:22:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:22:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:23:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:23:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:23:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:23:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:24:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:24:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:24:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:24:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:25:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:25:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:25:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:25:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:26:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:26:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:26:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:26:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:27:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:27:04 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:27:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:27:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:28:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:28:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:28:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:28:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:29:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:29:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:29:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:29:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:30:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:30:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:30:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:30:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:31:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:31:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:31:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:31:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:32:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:32:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:32:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:32:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:33:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:33:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:33:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:33:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:34:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:34:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:34:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:34:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:35:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:35:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:35:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:35:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:36:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:36:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:36:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:36:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:37:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:37:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:37:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:37:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:38:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:38:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:38:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:38:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:39:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:39:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:39:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:39:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:40:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:40:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:40:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:40:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:41:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:41:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:41:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:41:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:42:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:42:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:42:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:42:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:43:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:43:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:43:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:43:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:44:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:44:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:44:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:44:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:45:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:45:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:45:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:45:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:46:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:46:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:46:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:46:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:47:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:47:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:47:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:47:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:48:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:48:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:48:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:48:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:49:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:49:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:49:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:49:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:50:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:50:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:50:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:50:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:51:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:51:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:51:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:51:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:52:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:52:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:52:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:52:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:53:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:53:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:53:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:53:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:54:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:54:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:54:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:54:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:55:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:55:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:55:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:55:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:56:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:56:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:56:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:56:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:57:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:57:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:57:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:57:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:58:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:58:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:58:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:58:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:59:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:59:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:59:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 16:59:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:00:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:00:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:00:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:00:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:01:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:01:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:01:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:01:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:02:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:02:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:02:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:02:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:03:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:03:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:03:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:03:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:04:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:04:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:04:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:04:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:05:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:05:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:05:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:05:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:06:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:06:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:06:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:06:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:07:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:07:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:07:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:07:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:08:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:08:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:08:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:08:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:09:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:09:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:09:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:09:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:10:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:10:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:10:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:10:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:11:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:11:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:11:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:11:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:12:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:12:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:12:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:12:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:13:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:13:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:13:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:13:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:14:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:14:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:14:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:14:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:15:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:15:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:15:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:15:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:16:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:16:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:16:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:16:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:17:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:17:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:17:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:17:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:18:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:18:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:18:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:18:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:19:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:19:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:19:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:19:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:20:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:20:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:20:34 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:20:34 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:21:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:21:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:21:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:21:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:22:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:22:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:22:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:22:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:23:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:23:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:23:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:23:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:24:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:24:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:24:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:24:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:25:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:25:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:25:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:25:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:26:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:26:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:26:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:26:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:27:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:27:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:27:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:27:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:28:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:28:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:28:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:28:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:29:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:29:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:29:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:29:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:30:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:30:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:30:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:30:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:31:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:31:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:31:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:31:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:32:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:32:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:32:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:32:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:33:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:33:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:33:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:33:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:34:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:34:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:34:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:34:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:35:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:35:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:35:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:35:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:36:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:36:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:36:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:36:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:37:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:37:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:37:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:37:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:38:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:38:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:38:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:38:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:39:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:39:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:39:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:39:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:40:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:40:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:40:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:40:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:41:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:41:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:41:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:41:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:42:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:42:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:42:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:42:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:43:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:43:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:43:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:43:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:44:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:44:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:44:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:44:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:45:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:45:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:45:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:45:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:46:03 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:46:03 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:46:33 agent.go:206: Heartbeat failed: Post "http://127.0.0.1:8081/api/v1/agent/nodes/heartbeat": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:46:33 agent.go:233: Config pull failed: Get "http://127.0.0.1:8081/api/v1/agent/resolver/config?node_id=node_17cf9d283d10&current_version=0": dial tcp 127.0.0.1:8081: connect: connection refused
+2026/06/17 17:47:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:47:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:47:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:47:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:48:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:48:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:48:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:48:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:49:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:49:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:49:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:49:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:50:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:50:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:50:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:50:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:51:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:51:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:51:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:51:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:52:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:52:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:52:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:52:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:53:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:53:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:53:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:53:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:54:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:54:04 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:54:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:54:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:55:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:55:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:55:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:55:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:56:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:56:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:56:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:56:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:57:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:57:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:57:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:57:34 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:58:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:58:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:58:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:58:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:59:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:59:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:59:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 17:59:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 18:00:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 18:00:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 18:00:33 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 18:00:33 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 18:01:03 agent.go:243: Config pull returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 18:01:03 agent.go:213: Heartbeat returned status 401: {"error":{"code":"unauthorized","message":"HMAC signature verification failed.","reason":"invalid_credentials"}}
+2026/06/17 18:01:07 main.go:252: Shutting down server...
+2026/06/17 18:01:07 main.go:261: Server exited gracefully
+2026/06/17 18:01:07 agent.go:177: Config sync stopped
+2026/06/17 18:01:07 agent.go:153: Heartbeat stopped

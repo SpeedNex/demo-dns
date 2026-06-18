@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Profile;
 
+use App\Domain\Billing\PlanCatalogService;
 use App\Domain\Ingest\QueryLogReadService;
 use App\Domain\Rule\ProfileRuleService;
 use App\Models\Device;
@@ -11,6 +12,7 @@ use App\Models\Profile;
 use App\Models\ProfileRule;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -74,6 +76,7 @@ final class MemberWorkspaceService
         private readonly ProfileRuleService $profileRuleService = new ProfileRuleService(),
         private readonly QueryLogReadService $queryLogReader = new QueryLogReadService(),
         private readonly \App\Infrastructure\ClickHouse\MemberAnalyticsService $clickhouseAnalytics = new \App\Infrastructure\ClickHouse\MemberAnalyticsService(),
+        private readonly PlanCatalogService $planCatalog = new PlanCatalogService(),
     ) {
     }
 
@@ -297,23 +300,63 @@ final class MemberWorkspaceService
     public function membership(string $userId): array
     {
         $user = User::findOrFail($userId);
+        $plans = $this->planCatalog->memberList();
+        $currentPlan = collect($plans)->firstWhere('code', $user->plan_code ?: 'free');
 
         return [
             'plan' => $user->plan_code ?: 'free',
+            'current_plan' => $currentPlan,
+            'plans' => $plans,
             'stats' => $this->analytics($userId),
-            'orders' => $this->orders($user->plan_code ?: 'free'),
+            'orders' => $this->orders($userId),
         ];
     }
 
-    public function upgrade(string $userId, string $plan): array
+    public function upgrade(string $userId, string $planCode, string $billingCycle = 'monthly'): array
     {
         $user = User::findOrFail($userId);
+        $plan = $this->planCatalog->activePlan($planCode);
+        $price = $plan->prices->firstWhere('billing_cycle', $billingCycle) ?? $plan->prices->first();
+        if ($price === null) {
+            throw ValidationException::withMessages([
+                'billing_cycle' => 'No active price found for this billing cycle.',
+            ]);
+        }
 
-        $nextPlan = str_starts_with($plan, 'pro') ? 'pro' : 'business';
-        $user->update(['plan_code' => $nextPlan]);
+        DB::transaction(function () use ($user, $plan, $price, $billingCycle): void {
+            $user->update(['plan_code' => $plan->code]);
+
+            DB::table('subscriptions')->updateOrInsert(
+                ['user_id' => $user->id],
+                [
+                    'plan_code' => $plan->code,
+                    'status' => 'active',
+                    'monthly_query_limit' => $plan->limits['monthly_queries'] ?? null,
+                    'current_period_start' => now(),
+                    'current_period_end' => $billingCycle === 'yearly' ? now()->addYear() : now()->addMonth(),
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ],
+            );
+
+            DB::table('invoices')->insert([
+                'user_id' => $user->id,
+                'invoice_no' => 'PLAN-' . now()->format('YmdHis') . '-' . strtoupper($plan->code) . '-' . substr(md5($user->id . microtime()), 0, 6),
+                'amount_minor' => (int) $price->amount_minor,
+                'currency' => $price->currency,
+                'status' => 'paid',
+                'type' => 'subscription',
+                'description' => $plan->name . ' ' . $billingCycle,
+                'finalized' => true,
+                'paid_at' => now(),
+                'finalized_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        });
 
         return [
-            'plan' => $nextPlan,
+            'plan' => $plan->code,
             'upgraded' => true,
         ];
     }
@@ -544,17 +587,20 @@ final class MemberWorkspaceService
     /**
      * @return array<int, array<string, mixed>>
      */
-    private function orders(string $planCode): array
+    private function orders(string $userId): array
     {
-        if ($planCode !== 'free') {
-            return [[
-                'created_at' => now()->subDay()->format('Y-m-d H:i:s'),
-                'description' => ucfirst($planCode) . ' subscription',
-                'amount_minor' => $planCode === 'business' ? 50000 : 399,
-                'status' => 'paid',
-            ]];
-        }
-
-        return [];
+        return DB::table('invoices')
+            ->where('user_id', $userId)
+            ->orderByDesc('created_at')
+            ->limit(20)
+            ->get(['created_at', 'description', 'amount_minor', 'status', 'currency'])
+            ->map(fn ($invoice): array => [
+                'created_at' => (string) $invoice->created_at,
+                'description' => (string) ($invoice->description ?? ''),
+                'amount_minor' => (int) $invoice->amount_minor,
+                'status' => (string) $invoice->status,
+                'currency' => (string) $invoice->currency,
+            ])
+            ->all();
     }
 }

@@ -1,7 +1,7 @@
 <template>
     <ListPage
         :title="$t('admin.finance.recharge') || '充值记录'"
-        :desc="$t('admin.finance.rechargeDesc') || '查看和管理用户充值记录'"
+        
         i18n-key="admin.finance.recharge"
         icon-name="CreditCard"
         :total="meta?.total ?? 0"

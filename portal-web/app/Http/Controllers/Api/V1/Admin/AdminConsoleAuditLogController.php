@@ -84,9 +84,57 @@ final class AdminConsoleAuditLogController
             'ids.*' => 'string',
         ]);
 
+        // 检查是否有 24h 内的日志被选中删除
+        $recentCount = AdminAuditLog::whereIn('id', $validated['ids'])
+            ->where('created_at', '>=', now()->subHours(24))
+            ->count();
+
+        if ($recentCount > 0) {
+            return response()->json([
+                'message' => sprintf(
+                    '%d of the selected audit logs were created within the last 24 hours and cannot be deleted.',
+                    $recentCount
+                ),
+            ], 422);
+        }
+
         $count = AdminAuditLog::whereIn('id', $validated['ids'])->delete();
 
         AdminAuditLog::record('audit_log.batch_delete', 'audit_log', null, ['ids' => $validated['ids'], 'count' => $count], $actorId, null, $request->ip(), $request->userAgent());
+
+        return response()->json(['data' => ['deleted' => $count]]);
+    }
+
+    public function destroy(Request $request, string $id): JsonResponse
+    {
+        $actorId = $request->user()?->id;
+        $log = AdminAuditLog::query()->find($id);
+
+        if (! $log) {
+            return response()->json(['message' => 'Audit log not found'], 404);
+        }
+
+        if ($log->created_at !== null && $log->created_at->gt(now()->subHours(24))) {
+            return response()->json([
+                'message' => 'Cannot delete audit logs created within the last 24 hours.',
+            ], 422);
+        }
+
+        $deleted = $log->delete();
+
+        AdminAuditLog::record('audit_log.delete', 'audit_log', $id, ['deleted' => $deleted > 0], $actorId, null, $request->ip(), $request->userAgent());
+
+        return response()->json(['data' => ['deleted' => $deleted]]);
+    }
+
+    public function clear(Request $request): JsonResponse
+    {
+        $actorId = $request->user()?->id;
+
+        // 保护 24h 内的日志不被清空
+        $count = AdminAuditLog::query()->where('created_at', '<', now()->subHours(24))->delete();
+
+        AdminAuditLog::record('audit_log.clear', 'audit_log', null, ['deleted' => $count], $actorId, null, $request->ip(), $request->userAgent());
 
         return response()->json(['data' => ['deleted' => $count]]);
     }

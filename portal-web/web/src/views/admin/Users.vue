@@ -1,7 +1,7 @@
 <template>
     <ListPage
         :title="$t('admin.usersPage.title') || '用户管理'"
-        :desc="$t('admin.usersPage.desc') || '管理平台用户与会员'"
+        
         i18n-key="admin.usersPage"
         icon-name="User"
         :total="meta?.total ?? 0"

@@ -47,6 +47,7 @@ Route::prefix('member')->middleware('auth:api')->group(function (): void {
 
     Route::get('analytics', [MemberWorkspaceController::class, 'analytics']);
     Route::get('logs', [MemberWorkspaceController::class, 'logs']);
+    Route::get('catalogs', [MemberWorkspaceController::class, 'catalogs']);
     Route::get('membership', [MemberWorkspaceController::class, 'membership']);
     Route::post('upgrade', [MemberWorkspaceController::class, 'upgrade']);
 

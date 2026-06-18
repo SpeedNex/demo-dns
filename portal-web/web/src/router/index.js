@@ -25,7 +25,6 @@ import TeamInvitations from '@/views/TeamInvitations.vue'
 import AdminLayout from '@/components/AdminLayout.vue'
 import AdminDashboard from '@/views/admin/Dashboard.vue'
 import AdminNodes from '@/views/admin/Nodes.vue'
-import AdminPublishes from '@/views/admin/Publishes.vue'
 import AdminGeoDNS from '@/views/admin/GeoDNS.vue'
 import AdminRules from '@/views/admin/RuleLibrary.vue'
 import AdminSystemConfig from '@/views/admin/SystemConfig.vue'
@@ -35,6 +34,8 @@ import AdminAlerts from '@/views/admin/Alerts.vue'
 import AdminUsers from '@/views/admin/Users.vue'
 import AdminDevices from '@/views/admin/Devices.vue'
 import AdminBilling from '@/views/admin/Billing.vue'
+import AdminPlans from '@/views/admin/Plans.vue'
+import AdminMemberCatalogs from '@/views/admin/MemberCatalogs.vue'
 import AdminLogin from '@/views/admin/AdminLogin.vue'
 import AdminBalance from '@/views/admin/Balance.vue'
 import AdminRecharge from '@/views/admin/Recharge.vue'
@@ -42,7 +43,6 @@ import AdminBill from '@/views/admin/Bill.vue'
 import AdminRefundRecords from '@/views/admin/RefundRecords.vue'
 import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
 import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
-import AdminBasicConfig from '@/views/admin/BasicConfig.vue'
 
 const routes = [
     // Public routes
@@ -80,21 +80,23 @@ const routes = [
             { path: '', redirect: { name: 'AdminDashboard' } },
             { path: 'dashboard', name: 'AdminDashboard', component: AdminDashboard },
             { path: 'nodes', name: 'AdminNodes', component: AdminNodes },
-            { path: 'publishes', name: 'AdminPublishes', component: AdminPublishes },
             { path: 'geo-dns', name: 'AdminGeoDNS', component: AdminGeoDNS },
             { path: 'rules', name: 'AdminRules', component: AdminRules },
             { path: 'query-logs', name: 'AdminQueryLogs', component: AdminQueryLogs },
             { path: 'alerts', name: 'AdminAlerts', component: AdminAlerts },
             { path: 'users', name: 'AdminUsers', component: AdminUsers },
             { path: 'devices', name: 'AdminDevices', component: AdminDevices },
+            { path: 'member-catalogs', name: 'AdminMemberCatalogs', component: AdminMemberCatalogs },
             { path: 'billing', name: 'AdminBilling', component: AdminBilling },
+            { path: 'plans', name: 'AdminPlans', component: AdminPlans },
             { path: 'balance', name: 'AdminBalance', component: AdminBalance },
             { path: 'recharge', name: 'AdminRecharge', component: AdminRecharge },
             { path: 'bill', name: 'AdminBill', component: AdminBill },
             { path: 'refund-records', name: 'AdminRefundRecords', component: AdminRefundRecords },
             { path: 'system-config', name: 'AdminSystemConfig', component: AdminSystemConfig },
-            { path: 'basic-config', name: 'AdminBasicConfig', component: AdminBasicConfig },
-            { path: 'audit-logs', name: 'AdminAuditLogs', component: AdminAuditLogs },
+            { path: 'basic-config', redirect: { name: 'AdminSystemConfig' } },
+            { path: 'audit-logs', redirect: { name: 'AdminAuditLogs' } },
+            { path: 'admin-audit-logs', name: 'AdminAuditLogs', component: AdminAuditLogs },
             { path: 'rbac', name: 'AdminRoleManagement', component: AdminRoleManagement },
             { path: 'menu-config', name: 'AdminMenuConfig', component: AdminMenuConfig },
         ],

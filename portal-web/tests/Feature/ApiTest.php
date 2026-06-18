@@ -342,13 +342,15 @@ class ApiTest extends TestCase
 
     public function test_14_member_membership()
     {
-        $this->callMemberApi('GET', '/api/v1/member/membership', [], 200);
+        $response = $this->callMemberApi('GET', '/api/v1/member/membership', [], 200);
+        $response->assertJsonStructure(['data' => ['plan', 'plans', 'orders']]);
     }
 
     public function test_15_member_upgrade()
     {
         $this->callMemberApi('POST', '/api/v1/member/upgrade', [
-            'plan' => 'pro',
+            'plan_code' => 'pro',
+            'billing_cycle' => 'monthly',
         ], 200);
     }
 
@@ -1142,6 +1144,29 @@ class ApiTest extends TestCase
         $this->callAdminApi('GET', '/api/v1/admin/billing/export', [], 200);
     }
 
+    public function test_275_admin_plans_list()
+    {
+        $response = $this->callAdminApi('GET', '/api/v1/admin/plans', [], 200);
+        $response->assertJsonStructure(['data' => [['code', 'name', 'prices']]]);
+    }
+
+    public function test_276_admin_plans_create()
+    {
+        $this->callAdminApi('POST', '/api/v1/admin/plans', [
+            'code' => 'starter',
+            'name' => 'Starter',
+            'description' => 'Starter plan',
+            'status' => 'active',
+            'sort_order' => 40,
+            'is_featured' => false,
+            'features' => ['Basic support'],
+            'limits' => ['monthly_queries' => 500000],
+            'prices' => [
+                ['billing_cycle' => 'monthly', 'currency' => 'USD', 'amount_minor' => 199, 'status' => 'active'],
+            ],
+        ], 201);
+    }
+
     // ==================== Admin Query Logs API Tests ====================
 
     public function test_280_admin_query_logs()
@@ -1160,6 +1185,13 @@ class ApiTest extends TestCase
     {
         $this->callAdminApi('PUT', '/api/v1/admin/system-config', [
             'configs' => ['maintenance_mode' => 'false'],
+        ], 200);
+    }
+
+    public function test_292_admin_system_config_update_accepts_direct_payload()
+    {
+        $this->callAdminApi('PUT', '/api/v1/admin/system-config', [
+            'dns' => ['default_upstream' => '8.8.8.8:53'],
         ], 200);
     }
 
@@ -1551,7 +1583,8 @@ class ApiTest extends TestCase
 
     public function test_606_admin_rbac_admins()
     {
-        $this->callAdminApi('GET', '/api/v1/admin/rbac/admins', [], 200);
+        $response = $this->callAdminApi('GET', '/api/v1/admin/rbac/admins', [], 200);
+        $response->assertJsonStructure(['data' => [['id', 'username', 'email', 'role_list']]]);
     }
 
     public function test_607_admin_devices_batch_destroy()
@@ -1564,16 +1597,21 @@ class ApiTest extends TestCase
         $this->callAdminApi('POST', '/api/v1/admin/alerts/batch-destroy', ['ids' => ['fake-id']], 200);
     }
 
+    public function test_609_admin_console_audit_logs()
+    {
+        $this->callAdminApi('GET', '/api/v1/admin/console/audit-logs', [], 200);
+    }
+
     // ==================== Helper Methods ====================
 
     protected function callMemberApi($method, $url, $data = [], $status = 200)
     {
-        $this->callApiWithToken($method, $url, $this->userToken, $data, $status);
+        return $this->callApiWithToken($method, $url, $this->userToken, $data, $status);
     }
 
     protected function callAdminApi($method, $url, $data = [], $status = 200)
     {
-        $this->callApiWithToken($method, $url, $this->adminToken, $data, $status);
+        return $this->callApiWithToken($method, $url, $this->adminToken, $data, $status);
     }
 
     protected function callInternalApi($method, $url, $data = [], $status = 200)

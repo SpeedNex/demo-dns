@@ -14,32 +14,48 @@ final class BillingService
     public function getBalance(string $userId): array
     {
         $user = User::findOrFail($userId);
+        // UI.md #50: SSOT for plan_code is `subscriptions`, not `users`.
+        $sub = (new SubscriptionService())->getActive($userId) ?? ['plan_code' => 'free'];
+        // UI.md #54: SSOT for balance is `wallets`, not `users.balance_minor`.
+        $wallet = (new WalletService())->balance($userId);
 
         return [
             'user_id' => $userId,
-            'balance_minor' => (int) ($user->balance_minor ?? 0),
-            'currency' => $user->currency ?? 'CNY',
-            'plan_code' => $user->plan_code ?? 'free',
+            'balance_minor' => $wallet['balance_minor'],
+            'currency' => $wallet['currency'],
+            'plan_code' => $sub['plan_code'],
             'status' => $user->status,
             'balance_updated_at' => $user->balance_updated_at?->toIso8601String(),
         ];
     }
 
     /**
-     * 充值
+     * 充值（SSOT: `wallets`，`users.balance_minor` 仅作只读缓存）
      */
     public function charge(string $userId, int $amountMinor, string $description): array
     {
         return DB::transaction(function () use ($userId, $amountMinor, $description): array {
             $user = User::lockForUpdate()->findOrFail($userId);
 
-            $before = (int) ($user->balance_minor ?? 0);
+            // 余额真相在 `wallets`：调用 WalletService 拿当前余额（已含行锁/事务）
+            $wallet = (new WalletService())->balance($userId);
+            $before = (int) $wallet['balance_minor'];
             $after = $before + $amountMinor;
-            $currency = $user->currency ?? 'CNY';
+            $currency = $wallet['currency'] ?? ($user->currency ?? 'USD');
             $now = now();
 
+            // 钱包表写入（SSOT），并同步缓存到 users.balance_minor（向后兼容）
+            $newBalance = (new WalletService())->credit(
+                userId: $userId,
+                amountMinor: $amountMinor,
+                referenceType: 'admin_manual',
+                referenceId: '',
+                description: $description,
+            );
+            $after = $newBalance; // 兼容后续 invoice/transaction meta
+
             $user->update([
-                'balance_minor' => $after,
+                'balance_minor' => $newBalance,
                 'balance_updated_at' => $now,
             ]);
 
@@ -90,28 +106,38 @@ final class BillingService
     }
 
     /**
-     * 退款
+     * 退款（SSOT: `wallets`）
      */
     public function refund(string $userId, int $amountMinor, string $description): array
     {
         return DB::transaction(function () use ($userId, $amountMinor, $description): array {
             $user = User::lockForUpdate()->findOrFail($userId);
 
-            $before = (int) ($user->balance_minor ?? 0);
+            // 余额真相在 `wallets`
+            $wallet = (new WalletService())->balance($userId);
+            $before = (int) $wallet['balance_minor'];
             if ($before < $amountMinor) {
                 throw ValidationException::withMessages([
                     'amount_minor' => 'Insufficient balance for refund.',
                 ]);
             }
-
-            $after = $before - $amountMinor;
-            $currency = $user->currency ?? 'CNY';
+            $currency = $wallet['currency'] ?? ($user->currency ?? 'USD');
             $now = now();
 
+            // 钱包表扣减（SSOT）
+            $newBalance = (new WalletService())->debit(
+                userId: $userId,
+                amountMinor: $amountMinor,
+                referenceType: 'admin_refund',
+                referenceId: '',
+                description: $description,
+            );
+
             $user->update([
-                'balance_minor' => $after,
+                'balance_minor' => $newBalance,
                 'balance_updated_at' => $now,
             ]);
+            $after = $newBalance; // 兼容后续 invoice/transaction meta
 
             $transactionId = DB::table('wallet_transactions')->insertGetId([
                 'user_id' => $userId,

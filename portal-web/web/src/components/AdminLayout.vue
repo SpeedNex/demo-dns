@@ -2,32 +2,45 @@
     <el-config-provider :locale="elLocale">
         <div class="admin-shell">
             <aside class="admin-sidebar">
-                <router-link to="/admin" class="admin-brand">
-                    <div class="admin-brand__mark">A</div>
-                    <div>
-                        <strong>{{ $t('admin.title') }}</strong>
-                        <span>Operations Console</span>
-                    </div>
-                </router-link>
-
-                <div class="admin-sidebar__panel">
-                    <span class="admin-sidebar__eyebrow">Control Plane</span>
-                    <strong>{{ $t(pageTitle) }}</strong>
-                    <p>Nodes, policies, logs, settlements and release tasks aligned in one operational view.</p>
-                </div>
-
-                <div v-for="group in navGroups" :key="group.key" class="admin-sidebar__group">
-                    <span class="admin-sidebar__group-title">{{ group.title }}</span>
-                    <router-link
-                        v-for="item in group.items"
-                        :key="item.to"
-                        :to="item.to"
-                        class="admin-nav-item"
-                        :class="{ 'is-active': activeRoute === item.to }"
-                    >
-                        <el-icon><component :is="item.icon" /></el-icon>
-                        <span>{{ item.label }}</span>
+                <div class="admin-sidebar__inner">
+                    <router-link to="/admin" class="admin-brand">
+                        <div class="admin-brand__mark">A</div>
+                        <div>
+                            <strong>{{ $t('admin.title') }}</strong>
+                            <span>Operations Console</span>
+                        </div>
                     </router-link>
+
+                    <!-- 一级菜单：分组；二级菜单：可展开/折叠 -->
+                    <div v-for="group in navGroups" :key="group.key" class="nav-group">
+                        <button
+                            type="button"
+                            class="nav-group__header"
+                            :class="{ 'is-expanded': isExpanded(group.key), 'has-active': isGroupActive(group) }"
+                            :aria-expanded="isExpanded(group.key) ? 'true' : 'false'"
+                            @click="toggleGroup(group.key)"
+                        >
+                            <el-icon class="nav-group__icon"><component :is="group.icon" /></el-icon>
+                            <span class="nav-group__title">{{ group.title }}</span>
+                            <el-icon class="nav-group__caret" :class="{ 'is-expanded': isExpanded(group.key) }">
+                                <ArrowDown />
+                            </el-icon>
+                        </button>
+                        <div class="nav-group__panel" :class="{ 'is-expanded': isExpanded(group.key) }">
+                            <div class="nav-group__panel-inner">
+                                <router-link
+                                    v-for="item in group.items"
+                                    :key="item.to"
+                                    :to="item.to"
+                                    class="nav-item"
+                                    :class="{ 'is-active': activeRoute === item.to }"
+                                >
+                                    <el-icon class="nav-item__icon"><component :is="item.icon" /></el-icon>
+                                    <span class="nav-item__label">{{ item.label }}</span>
+                                </router-link>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </aside>
 
@@ -35,7 +48,6 @@
                 <header class="admin-topbar">
                     <div>
                         <span class="admin-topbar__eyebrow">Admin Workspace</span>
-                        <h1>{{ $t(pageTitle) }}</h1>
                         <div class="admin-topbar__breadcrumb">
                             <span>{{ $t('admin.title') }}</span>
                             <el-icon><CaretRight /></el-icon>
@@ -84,15 +96,118 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import i18n from '@/locales'
 import enLocale from 'element-plus/dist/locale/en.mjs'
 import zhLocale from 'element-plus/dist/locale/zh-cn.mjs'
+import client from '@/api/client'
 
 const route = useRoute()
 const { locale } = useI18n()
+
+// === 菜单配置状态 ===
+const MENU_CONFIG_KEY = 'admin_menu_config'
+const defaultMenuConfig = {
+    mainMenu: [
+        { id: 'dashboard', labelKey: 'nav.dashboard', path: '/admin/dashboard', icon: 'DataAnalysis', visible: true, sort: 1 },
+        { id: 'nodes', labelKey: 'nav.nodes', path: '/admin/nodes', icon: 'Monitor', visible: true, sort: 2 },
+        { id: 'geo-dns', labelKey: 'nav.geoDns', path: '/admin/geo-dns', icon: 'Connection', visible: true, sort: 3 },
+        { id: 'rules', labelKey: 'nav.ruleLibrary', path: '/admin/rules', icon: 'Collection', visible: true, sort: 4 },
+        { id: 'publishes', labelKey: 'nav.publishes', path: '/admin/publishes', icon: 'Upload', visible: true, sort: 5 },
+        { id: 'alerts', labelKey: 'admin.alerts', path: '/admin/alerts', icon: 'Message', visible: true, sort: 6 },
+        { id: 'query-logs', labelKey: 'admin.queryLogs', path: '/admin/query-logs', icon: 'Document', visible: true, sort: 7 },
+        { id: 'users', labelKey: 'admin.users', path: '/admin/users', icon: 'User', visible: true, sort: 8 },
+        { id: 'devices', labelKey: 'admin.devices', path: '/admin/devices', icon: 'Avatar', visible: true, sort: 9 },
+        { id: 'member-catalogs', labelKey: 'admin.memberCatalogs.title', path: '/admin/member-catalogs', icon: 'Grid', visible: true, sort: 10 },
+        { id: 'rbac', labelKey: 'admin.rbac.title', path: '/admin/rbac', icon: 'Lock', visible: true, sort: 11 },
+        { id: 'billing', labelKey: 'admin.billing.title', path: '/admin/billing', icon: 'Coin', visible: true, sort: 12 },
+        { id: 'plans', labelKey: 'admin.plans.title', path: '/admin/plans', icon: 'Tickets', visible: true, sort: 13 },
+        { id: 'finance', labelKey: 'admin.finance.menu', path: 'finance', icon: 'Wallet', visible: true, sort: 14 },
+        { id: 'system-config', labelKey: 'nav.systemConfig', path: '/admin/system-config', icon: 'Tools', visible: true, sort: 15 },
+        { id: 'basic-config', labelKey: 'admin.basicConfig.title', path: '/admin/basic-config', icon: 'Setting', visible: true, sort: 16 },
+        { id: 'audit-logs', labelKey: 'nav.auditLogs', path: '/admin/audit-logs', icon: 'Tickets', visible: true, sort: 17 },
+        { id: 'menu-config', labelKey: 'admin.menuConfig.title', path: '/admin/menu-config', icon: 'List', visible: true, sort: 18 },
+    ],
+    subMenu: [
+        { id: 'balance', labelKey: 'admin.finance.balance', path: '/admin/balance', parentId: 'finance', visible: true, sort: 1 },
+        { id: 'recharge', labelKey: 'admin.finance.recharge', path: '/admin/recharge', parentId: 'finance', visible: true, sort: 2 },
+        { id: 'bill', labelKey: 'admin.finance.bill', path: '/admin/bill', parentId: 'finance', visible: true, sort: 3 },
+        { id: 'refund-records', labelKey: 'admin.finance.refundRecords', path: '/admin/refund-records', parentId: 'finance', visible: true, sort: 4 },
+    ],
+}
+
+const menuConfig = ref(loadMenuConfig())
+
+function loadMenuConfig() {
+    try {
+        const saved = localStorage.getItem(MENU_CONFIG_KEY)
+        if (saved) {
+            return JSON.parse(saved)
+        }
+    } catch (e) { /* ignore */ }
+    return defaultMenuConfig
+}
+
+function saveMenuConfig(config) {
+    localStorage.setItem(MENU_CONFIG_KEY, JSON.stringify(config))
+    menuConfig.value = config
+}
+
+// 监听菜单配置更新事件
+window.addEventListener('menu-config-updated', (e) => {
+    if (e.detail) {
+        saveMenuConfig(e.detail)
+    }
+})
+
+onMounted(async () => {
+    // 尝试从后端加载最新配置
+    try {
+        const response = await client.get('/admin/menu-config')
+        if (response?.data?.data) {
+            const dbData = response.data.data
+            // 转换数据库格式为主菜单和子菜单
+            const mainMenu = []
+            const subMenu = []
+            
+            dbData.forEach(item => {
+                const mainItem = {
+                    id: item.menuKey || item.id,
+                    labelKey: item.labelKey,
+                    path: item.path,
+                    icon: item.icon,
+                    visible: item.visible,
+                    sort: item.sort,
+                    permissionCode: item.permissionCode,
+                    groupKey: item.groupKey,
+                    parentId: item.parentId,
+                }
+                mainMenu.push(mainItem)
+                
+                // 处理子菜单
+                if (item.children && item.children.length > 0) {
+                    item.children.forEach(child => {
+                        subMenu.push({
+                            id: child.menuKey || child.id,
+                            labelKey: child.labelKey,
+                            path: child.path,
+                            icon: child.icon,
+                            visible: child.visible,
+                            sort: child.sort,
+                            parentId: child.parentId,
+                        })
+                    })
+                }
+            })
+            
+            saveMenuConfig({ mainMenu, subMenu })
+        }
+    } catch (err) {
+        console.warn('Failed to load menu config from API, using defaults')
+    }
+})
 
 const localeMap = { 'en': enLocale, 'zh-CN': zhLocale, 'ko': zhLocale }
 const elLocale = ref(localeMap[locale.value] || zhLocale)
@@ -104,14 +219,15 @@ watch(locale, (val) => {
 const titleMap = {
     AdminDashboard: 'admin.title',
     AdminNodes: 'nav.nodes',
-    AdminPublishes: 'nav.publishes',
     AdminGeoDNS: 'nav.geoDns',
     AdminRules: 'nav.ruleLibrary',
     AdminQueryLogs: 'admin.queryLogs',
     AdminAlerts: 'admin.alerts',
     AdminUsers: 'admin.users',
     AdminDevices: 'admin.devices',
+    AdminMemberCatalogs: 'admin.memberCatalogs.title',
     AdminBilling: 'admin.billing.title',
+    AdminPlans: 'admin.plans.title',
     AdminBalance: 'admin.finance.balance',
     AdminRecharge: 'admin.finance.recharge',
     AdminBill: 'admin.finance.bill',
@@ -126,57 +242,119 @@ const titleMap = {
 const pageTitle = computed(() => (titleMap[route.name] || 'admin.title'))
 const activeRoute = computed(() => route.path)
 
-const navGroups = computed(() => ([
-    {
-        key: 'service',
-        title: i18n.global.t('admin.menuGroup.service'),
-        items: [
-            { to: '/admin/dashboard', label: i18n.global.t('nav.dashboard'), icon: 'DataAnalysis' },
-            { to: '/admin/nodes', label: i18n.global.t('nav.nodes'), icon: 'Monitor' },
-            { to: '/admin/geo-dns', label: i18n.global.t('nav.geoDns'), icon: 'Connection' },
-            { to: '/admin/rules', label: i18n.global.t('nav.ruleLibrary'), icon: 'Collection' },
-            { to: '/admin/publishes', label: i18n.global.t('nav.publishes'), icon: 'Upload' },
-        ],
-    },
-    {
-        key: 'monitor',
-        title: i18n.global.t('admin.menuGroup.monitor'),
-        items: [
-            { to: '/admin/alerts', label: i18n.global.t('admin.alerts'), icon: 'Message' },
-            { to: '/admin/query-logs', label: i18n.global.t('admin.queryLogs'), icon: 'Document' },
-            { to: '/admin/audit-logs', label: i18n.global.t('nav.auditLogs'), icon: 'Tickets' },
-        ],
-    },
-    {
-        key: 'user',
-        title: i18n.global.t('admin.menuGroup.userMgmt'),
-        items: [
-            { to: '/admin/users', label: i18n.global.t('admin.users'), icon: 'User' },
-            { to: '/admin/devices', label: i18n.global.t('admin.devices'), icon: 'Avatar' },
-            { to: '/admin/rbac', label: i18n.global.t('admin.rbac.title'), icon: 'Lock' },
-        ],
-    },
-    {
-        key: 'finance',
-        title: i18n.global.t('admin.menuGroup.finance'),
-        items: [
-            { to: '/admin/billing', label: i18n.global.t('admin.billing.title'), icon: 'Coin' },
-            { to: '/admin/balance', label: i18n.global.t('admin.finance.balance'), icon: 'Wallet' },
-            { to: '/admin/recharge', label: i18n.global.t('admin.finance.recharge'), icon: 'Money' },
-            { to: '/admin/bill', label: i18n.global.t('admin.finance.bill'), icon: 'CreditCard' },
-            { to: '/admin/refund-records', label: i18n.global.t('admin.finance.refundRecords'), icon: 'RefreshLeft' },
-        ],
-    },
-    {
-        key: 'settings',
-        title: i18n.global.t('admin.menuGroup.settings'),
-        items: [
-            { to: '/admin/basic-config', label: i18n.global.t('admin.basicConfig.title'), icon: 'Setting' },
-            { to: '/admin/system-config', label: i18n.global.t('nav.systemConfig'), icon: 'Tools' },
-            { to: '/admin/menu-config', label: i18n.global.t('admin.menuConfig.title'), icon: 'List' },
-        ],
-    },
-]))
+// === 一/二级菜单：展开/折叠状态（localStorage 记忆） ===
+const STORAGE_KEY = 'admin_nav_expanded'
+const loadExpanded = () => {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY)
+        if (raw) {
+            return JSON.parse(raw)
+        }
+    } catch (e) { /* ignore */ }
+    return null
+}
+const expandedGroups = ref(loadExpanded() || {
+    service: true,  // 默认展开
+    monitor: false,
+    user: false,
+    finance: false,
+    settings: false,
+})
+const persistExpanded = () => {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(expandedGroups.value))
+    } catch (e) { /* ignore */ }
+}
+const isExpanded = (key) => expandedGroups.value[key] === true
+const toggleGroup = (key) => {
+    expandedGroups.value[key] = !expandedGroups.value[key]
+    persistExpanded()
+}
+const isGroupActive = (group) => {
+    return (group.items || []).some((it) => activeRoute.value === it.to)
+}
+
+// 根据菜单配置动态生成 navGroups
+const navGroups = computed(() => {
+    const mainMenu = menuConfig.value.mainMenu || []
+    const subMenu = menuConfig.value.subMenu || []
+
+    // 按分组归类菜单（基于 id）
+    const serviceIds = ['dashboard', 'nodes', 'geo-dns', 'rules', 'publishes']
+    const monitorIds = ['alerts', 'query-logs', 'audit-logs']
+    const userIds = ['users', 'devices', 'member-catalogs', 'rbac']
+    const financeIds = ['billing', 'plans', 'finance']
+    const settingsIds = ['system-config', 'basic-config', 'menu-config']
+
+    return [
+        {
+            key: 'service',
+            title: i18n.global.t('admin.menuGroup.service'),
+            icon: 'Box',
+            items: buildMenuItems(mainMenu, subMenu, serviceIds),
+        },
+        {
+            key: 'monitor',
+            title: i18n.global.t('admin.menuGroup.monitor'),
+            icon: 'View',
+            items: buildMenuItems(mainMenu, subMenu, monitorIds),
+        },
+        {
+            key: 'user',
+            title: i18n.global.t('admin.menuGroup.userMgmt'),
+            icon: 'UserFilled',
+            items: buildMenuItems(mainMenu, subMenu, userIds),
+        },
+        {
+            key: 'finance',
+            title: i18n.global.t('admin.menuGroup.finance'),
+            icon: 'Coin',
+            items: buildMenuItems(mainMenu, subMenu, financeIds),
+        },
+        {
+            key: 'settings',
+            title: i18n.global.t('admin.menuGroup.settings'),
+            icon: 'Setting',
+            items: buildMenuItems(mainMenu, subMenu, settingsIds),
+        },
+    ]
+})
+
+function buildMenuItems(mainMenu, subMenu, groupIds) {
+    const items = []
+    const mainVisible = mainMenu.filter(m => groupIds.includes(m.id) && m.visible)
+    mainVisible.sort((a, b) => a.sort - b.sort)
+
+    for (const main of mainVisible) {
+        // 主菜单项
+        items.push({
+            to: main.path,
+            label: i18n.global.t(main.labelKey) || main.labelKey,
+            icon: main.icon,
+        })
+
+        // 子菜单项
+        const children = subMenu.filter(s => s.parentId === main.id && s.visible)
+        children.sort((a, b) => a.sort - b.sort)
+        for (const child of children) {
+            items.push({
+                to: child.path,
+                label: i18n.global.t(child.labelKey) || child.labelKey,
+                icon: 'ArrowRight',
+            })
+        }
+    }
+    return items
+}
+
+// 路由切换时，自动展开所在组
+watch(activeRoute, (path) => {
+    const group = navGroups.value.find((g) => g.items.some((it) => it.to === path))
+    if (group && !expandedGroups.value[group.key]) {
+        expandedGroups.value[group.key] = true
+        persistExpanded()
+    }
+}, { immediate: true })
 
 const currentLocale = computed(() => {
     const map = {
@@ -209,7 +387,8 @@ body {
 }
 
 .admin-shell {
-    display: flex;
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
     min-height: 100vh;
     background:
         radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 20%),
@@ -217,32 +396,64 @@ body {
 }
 
 .admin-sidebar {
-    width: 296px;
-    flex-shrink: 0;
-    padding: 26px 18px;
+    /* grid 第一列；sticky 实现"浮动固定" */
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    width: 220px;
+    z-index: 100;
     background: rgba(15, 23, 42, 0.98);
     border-right: 1px solid rgba(148, 163, 184, 0.12);
+    overflow: hidden;
+}
+
+.admin-sidebar__inner {
+    height: 100%;
+    padding: 18px 14px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* 滚动条更优雅 */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+.admin-sidebar__inner::-webkit-scrollbar {
+    width: 6px;
+}
+
+.admin-sidebar__inner::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.admin-sidebar__inner::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4);
+    border-radius: 3px;
+}
+
+.admin-sidebar__inner::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.7);
 }
 
 .admin-brand {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
     color: inherit;
     text-decoration: none;
 }
 
 .admin-brand__mark {
-    width: 48px;
-    height: 48px;
-    border-radius: 18px;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
     background: linear-gradient(135deg, #2563eb, #0f172a);
     display: grid;
     place-items: center;
     color: #fff;
     font-weight: 800;
-    font-size: 20px;
-    box-shadow: 0 8px 20px rgba(37,99,235,0.3);
+    font-size: 16px;
+    box-shadow: 0 6px 14px rgba(37,99,235,0.3);
 }
 
 .admin-brand strong,
@@ -252,31 +463,31 @@ body {
 
 .admin-brand strong {
     color: #fff;
-    font-size: 18px;
+    font-size: 14px;
 }
 
 .admin-brand span {
-    margin-top: 4px;
-    font-size: 12px;
+    margin-top: 2px;
+    font-size: 11px;
     color: #94a3b8;
 }
 
 .admin-sidebar__panel {
-    margin: 26px 8px 20px;
-    padding: 18px;
-    border-radius: 20px;
+    margin: 18px 4px 14px;
+    padding: 12px 14px;
+    border-radius: 14px;
     background: linear-gradient(180deg, rgba(30, 41, 59, 0.95), rgba(30, 41, 59, 0.84));
     border: 1px solid rgba(148, 163, 184, 0.16);
 }
 
 .admin-sidebar__eyebrow {
     display: inline-flex;
-    margin-bottom: 10px;
-    padding: 4px 10px;
+    margin-bottom: 6px;
+    padding: 3px 8px;
     border-radius: 999px;
     background: rgba(59, 130, 246, 0.14);
     color: #bfdbfe;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -285,77 +496,148 @@ body {
 .admin-sidebar__panel strong {
     display: block;
     color: #fff;
-    font-size: 18px;
+    font-size: 14px;
 }
 
 .admin-sidebar__panel p {
-    margin: 8px 0 0;
+    margin: 6px 0 0;
     color: #94a3b8;
-    font-size: 13px;
-    line-height: 1.7;
+    font-size: 12px;
+    line-height: 1.6;
 }
 
 .admin-sidebar__group + .admin-sidebar__group {
-    margin-top: 18px;
+    margin-top: 12px;
 }
 
-.admin-sidebar__group-title {
-    display: block;
-    margin: 0 10px 10px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #64748b;
+/* === 一/二级折叠菜单 === */
+.nav-group {
+    margin-bottom: 6px;
 }
 
-.admin-nav-item {
+.nav-group__header {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin: 6px 0;
-    padding: 12px 12px;
-    border-radius: 14px;
-    color: #cbd5e1;
-    text-decoration: none;
-    transition: 0.2s ease;
+    width: 100%;
+    padding: 9px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: rgba(226, 232, 240, 0.95);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
 }
 
-.admin-nav-item:hover {
+.nav-group__header:hover {
+    background: rgba(59, 130, 246, 0.18);
+    color: #fff;
+}
+
+.nav-group__header.has-active {
+    color: #93c5fd;
+}
+
+.nav-group__icon {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.nav-group__title {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-group__caret {
+    font-size: 14px;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+    opacity: 0.7;
+}
+
+.nav-group__caret.is-expanded {
+    transform: rotate(180deg);
+}
+
+/* 二级面板：max-height 过渡做平滑展开 */
+.nav-group__panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+}
+
+.nav-group__panel.is-expanded {
+    max-height: 400px;
+}
+
+.nav-group__panel-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px 0 8px 28px;
+    border-left: 1px solid rgba(148, 163, 184, 0.18);
+    margin-left: 18px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border-radius: 6px;
+    color: rgba(203, 213, 225, 0.85);
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.15s ease;
+}
+
+.nav-item:hover {
     background: rgba(30, 41, 59, 0.96);
     color: #fff;
 }
 
-.admin-nav-item.is-active {
+.nav-item.is-active {
     color: #fff;
     background: linear-gradient(135deg, rgba(37, 99, 235, 0.26), rgba(14, 165, 233, 0.28));
     border: 1px solid rgba(96, 165, 250, 0.28);
+    font-weight: 600;
+}
+
+.nav-item__icon {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.nav-item__label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .admin-shell__main {
-    flex: 1;
+    min-width: 0;  /* grid 容器防止内容撑开 */
     display: flex;
     flex-direction: column;
-    min-width: 0;
 }
 
 .admin-topbar {
-    position: sticky;
-    top: 0;
-    z-index: 40;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 18px;
-    padding: 24px 28px 18px;
+    padding: 12px 28px;
     background: rgba(248, 250, 252, 0.88);
-    backdrop-filter: blur(18px);
     border-bottom: 1px solid rgba(226, 232, 240, 0.92);
 }
 
 .admin-topbar__eyebrow {
     display: inline-flex;
-    margin-bottom: 10px;
+    margin-bottom: 4px;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -363,19 +645,12 @@ body {
     color: #2563eb;
 }
 
-.admin-topbar h1 {
-    margin: 0;
-    font-size: clamp(24px, 3vw, 34px);
-    color: #0f172a;
-    line-height: 1.08;
-}
-
 .admin-topbar__breadcrumb {
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-top: 8px;
-    font-size: 13px;
+    margin-top: 6px;
+    font-size: 14px;
     color: #64748b;
 }
 
@@ -412,12 +687,18 @@ body {
 
 @media (max-width: 1120px) {
     .admin-shell {
-        flex-direction: column;
+        grid-template-columns: 1fr;
     }
 
     .admin-sidebar {
+        position: static;
         width: auto;
-        padding: 18px;
+        height: auto;
+    }
+
+    .admin-sidebar__inner {
+        height: auto;
+        max-height: 240px;
     }
 
     .admin-sidebar__group {

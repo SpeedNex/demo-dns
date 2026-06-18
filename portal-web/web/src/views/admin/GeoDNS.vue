@@ -1,7 +1,7 @@
 <template>
     <ListPage
         :title="$t('admin.geoDns.title')"
-        :desc="$t('admin.geoDns.desc')"
+        
         i18n-key="admin.geoDns"
         icon-name="Aim"
         :total="meta?.total ?? 0"

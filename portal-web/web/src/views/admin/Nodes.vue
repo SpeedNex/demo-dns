@@ -1,7 +1,6 @@
 <template>
     <ListPage
         :title="t('admin.nodes.title')"
-        :desc="t('admin.nodes.desc')"
         i18n-key="admin.nodes"
         icon-name="Monitor"
         :total="meta?.total ?? 0"

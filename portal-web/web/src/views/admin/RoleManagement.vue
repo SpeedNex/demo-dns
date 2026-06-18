@@ -1,7 +1,7 @@
 <template>
     <ListPage
         :title="$t('admin.rbac.title') || '角色权限管理'"
-        :desc="$t('admin.rbac.desc') || '管理管理员角色和权限配置'"
+        
         i18n-key="admin.rbac"
         icon-name="User"
         :total="roles.length"
@@ -75,16 +75,22 @@
                     </template>
                     <div v-loading="loadingPerms">
                         <el-checkbox-group v-model="selectedPermissions" class="permission-group">
-                            <el-row :gutter="16">
-                                <el-col :span="12" v-for="perm in allPermissions" :key="perm.code">
-                                    <el-checkbox :value="perm.code" :disabled="selectedRole.is_system">
-                                        <div class="perm-item">
-                                            <span class="perm-code">{{ perm.code }}</span>
-                                            <span class="perm-desc">{{ perm.description }}</span>
-                                        </div>
-                                    </el-checkbox>
-                                </el-col>
-                            </el-row>
+                            <div v-for="group in permissionGroups" :key="group.resource" class="permission-section">
+                                <div class="permission-section__header">
+                                    <span class="permission-section__title">{{ group.label }}</span>
+                                    <span class="permission-section__count">{{ group.items.length }} permissions</span>
+                                </div>
+                                <el-row :gutter="16">
+                                    <el-col :span="12" v-for="perm in group.items" :key="perm.id">
+                                        <el-checkbox :value="perm.id" :disabled="selectedRole.is_system">
+                                            <div class="perm-item">
+                                                <span class="perm-code">{{ perm.code }}</span>
+                                                <span class="perm-desc">{{ perm.description || `${perm.resource}.${perm.action}` }}</span>
+                                            </div>
+                                        </el-checkbox>
+                                    </el-col>
+                                </el-row>
+                            </div>
                         </el-checkbox-group>
                     </div>
                 </el-card>
@@ -160,7 +166,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { User, Search, Plus, UserFilled, Key, Avatar, Check } from '@element-plus/icons-vue'
@@ -189,6 +195,23 @@ const showAssignDialog = ref(false)
 const assignForm = reactive({ admin_id: '', username: '', role_ids: [] })
 const assigning = ref(false)
 
+const permissionGroups = computed(() => {
+    const grouped = new Map()
+    for (const permission of allPermissions.value) {
+        const resource = permission.resource || 'general'
+        if (!grouped.has(resource)) {
+            grouped.set(resource, [])
+        }
+        grouped.get(resource).push(permission)
+    }
+
+    return Array.from(grouped.entries()).map(([resource, items]) => ({
+        resource,
+        label: resource.replaceAll('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase()),
+        items,
+    }))
+})
+
 const fetchRoles = async () => {
     loadingRoles.value = true
     try {
@@ -214,7 +237,7 @@ const fetchRolePermissions = async (roleId) => {
     loadingPerms.value = true
     try {
         const { data } = await client.get(`/admin/rbac/roles/${roleId}/permissions`)
-        selectedPermissions.value = data.data ?? []
+        selectedPermissions.value = (data.data ?? []).map(permission => permission.id)
     } catch {
         selectedPermissions.value = []
     } finally {
@@ -287,7 +310,7 @@ const savePermissions = async () => {
     savingPerms.value = true
     try {
         await client.put(`/admin/rbac/roles/${selectedRole.value.id}/permissions`, {
-            permissions: selectedPermissions.value,
+            permission_ids: selectedPermissions.value,
         })
         ElMessage.success(t('admin.rbac.permissionSaved') || '权限已保存')
     } catch (err) {
@@ -376,6 +399,25 @@ onMounted(() => {
 
 .rbac-row { margin-bottom: 0 !important; }
 .permission-group { padding: 8px 0; }
+.permission-section + .permission-section { margin-top: 20px; }
+.permission-section__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+.permission-section__title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #334155;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+.permission-section__count {
+    font-size: 12px;
+    color: #94a3b8;
+}
 .perm-item { display: flex; flex-direction: column; gap: 2px; padding: 4px 0; }
 .perm-code { font-size: 12px; font-weight: 500; color: #303133; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .perm-desc { font-size: 11px; color: #94a3b8; }

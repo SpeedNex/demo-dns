@@ -1,7 +1,7 @@
 <template>
     <ListPage
         :title="$t('admin.finance.refundRecords') || '退款申请记录'"
-        :desc="$t('admin.finance.refundRecordsDesc') || '查看和管理退款申请记录'"
+        
         i18n-key="admin.finance.refundRecords"
         icon-name="Wallet"
         :total="meta?.total ?? 0"

@@ -8,8 +8,8 @@ import (
 	"encoding/json"
 	"io"
 	"log"
-	"net/http"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -22,6 +22,7 @@ import (
 	"ocer-dns/dns-resolver/internal/matching"
 	"ocer-dns/dns-resolver/internal/metrics"
 	"ocer-dns/dns-resolver/internal/resolver"
+	"ocer-dns/dns-resolver/internal/validation"
 
 	"github.com/miekg/dns"
 )
@@ -42,6 +43,7 @@ type Server struct {
 	client          *dns.Client
 	hostname        string
 	dedupTTL        time.Duration
+	validator       *validation.Validator // optional (UI.md #40)
 }
 
 // NewServer creates a new DoH server.
@@ -65,6 +67,13 @@ func NewServer(cfg *config.Config, engine *matching.Engine,
 		hostname: hostname,
 		dedupTTL: 5 * time.Second,
 	}
+}
+
+// SetValidator wires an optional profile validator (UI.md #40).  When set,
+// resolveDNS rejects requests whose profile uid fails ownership /
+// subscription checks instead of resolving them.
+func (s *Server) SetValidator(v *validation.Validator) {
+	s.validator = v
 }
 
 // upstreamAddr returns the full address with default port if not specified.
@@ -174,6 +183,20 @@ func (s *Server) handleProfileDNSQuery(w http.ResponseWriter, r *http.Request) {
 // resolveDNS performs the full DNS resolution with Profile Resolution Layer.
 func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID string) {
 	s.metrics.IncQueries()
+
+	// UI.md #40 — Validate profile ownership / subscription when a
+	// validator is wired.  Owner id is taken from the X-User-Id header
+	// (set by the DoH reverse proxy after JWT verification).  We do not
+	// modify the rest of the resolution pipeline.
+	if s.validator != nil && profileUID != "" {
+		userID := r.Header.Get("X-User-Id")
+		if err := s.validator.Validate(profileUID, userID); err != nil {
+			log.Printf("doh: profile validation failed: %v (profile=%s user=%s)", err, profileUID, userID)
+			s.metrics.IncErrors()
+			http.Error(w, "profile not authorized", http.StatusForbidden)
+			return
+		}
+	}
 
 	if r.Method != http.MethodGet && r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

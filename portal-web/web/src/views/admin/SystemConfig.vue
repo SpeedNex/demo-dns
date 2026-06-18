@@ -1,6 +1,22 @@
 <template>
     <el-card shadow="never" style="border-radius:6px">
         <el-tabs v-model="activeTab" class="config-tabs">
+            <el-tab-pane :label="$t('admin.basicConfig.title') || '基本设置'" name="basic">
+                <div style="max-width:600px">
+                    <el-form label-position="left" label-width="160px">
+                        <el-form-item :label="$t('admin.basicConfig.siteName') || '网站名称'">
+                            <el-input v-model="config.basic.site_name" placeholder="OcerDNS" />
+                        </el-form-item>
+                        <el-form-item :label="$t('admin.basicConfig.siteUrl') || '网站地址'">
+                            <el-input v-model="config.basic.site_url" placeholder="https://example.com" />
+                        </el-form-item>
+                        <el-form-item :label="$t('admin.basicConfig.siteDescription') || '网站描述'">
+                            <el-input v-model="config.basic.site_description" type="textarea" :rows="3" />
+                        </el-form-item>
+                    </el-form>
+                </div>
+            </el-tab-pane>
+
             <el-tab-pane :label="$t('admin.systemConfig.dnsParams') || 'DNS参数'" name="dns">
                 <div style="max-width:600px">
                     <el-form label-position="left" label-width="160px">
@@ -67,28 +83,34 @@
                 </div>
             </el-tab-pane>
 
-            <el-tab-pane :label="$t('admin.systemConfig.payment') || '支付接口'" name="payment">
+            <!-- UI.md #82 — Stripe 配置中心 -->
+            <el-tab-pane :label="$t('admin.systemConfig.stripe') || 'Stripe'" name="payment">
                 <div style="max-width:600px">
-                    <el-form label-position="left" label-width="160px">
-                        <el-form-item :label="$t('admin.systemConfig.paymentProvider') || '支付提供商'">
-                            <el-select v-model="config.payment.provider" style="width:100%">
-                                <el-option value="stripe" label="Stripe" />
-                                <el-option value="paypal" label="PayPal" />
-                                <el-option value="alipay" label="Alipay" />
-                                <el-option value="wechat" label="WeChat Pay" />
+                    <el-form label-position="left" label-width="180px">
+                        <el-form-item :label="$t('admin.systemConfig.stripeMode') || '运行模式'">
+                            <el-select v-model="config.payment.mode" style="width:100%">
+                                <el-option value="test" label="Test" />
+                                <el-option value="live" label="Live" />
                             </el-select>
                         </el-form-item>
-                        <el-form-item :label="$t('admin.systemConfig.merchantId') || '商户ID'">
-                            <el-input v-model="config.payment.merchant_id" placeholder="" />
+                        <el-form-item :label="$t('admin.systemConfig.stripePublishableKey') || 'Publishable Key'">
+                            <el-input v-model="config.payment.publishable_key" placeholder="pk_test_..." />
                         </el-form-item>
-                        <el-form-item :label="$t('admin.systemConfig.merchantKey') || '商户密钥'">
-                            <el-input v-model="config.payment.merchant_key" type="password" show-password placeholder="" />
+                        <el-form-item :label="$t('admin.systemConfig.stripeSecretKey') || 'Secret Key'">
+                            <el-input v-model="config.payment.secret_key" type="password" show-password placeholder="" />
                         </el-form-item>
-                        <el-form-item :label="$t('admin.systemConfig.webhookSecret') || 'Webhook密钥'">
-                            <el-input v-model="config.payment.webhook_secret" type="password" show-password placeholder="" />
+                        <el-form-item :label="$t('admin.systemConfig.stripeWebhookSecret') || 'Webhook Secret'">
+                            <el-input v-model="config.payment.webhook_secret" type="password" show-password placeholder="whsec_..." />
                         </el-form-item>
-                        <el-form-item :label="$t('admin.systemConfig.callbackUrl') || '回调地址'">
-                            <el-input v-model="config.payment.callback_url" placeholder="https://example.com/api/payment/callback" />
+                        <el-form-item :label="$t('admin.systemConfig.stripeWebhookUrl') || 'Webhook URL'">
+                            <el-input v-model="config.payment.webhook_url" placeholder="https://api.example.com/api/v1/stripe/webhook" />
+                        </el-form-item>
+                        <el-form-item :label="$t('admin.systemConfig.defaultCurrency') || '默认结算货币'">
+                            <el-select v-model="config.payment.default_currency" style="width:100%">
+                                <el-option value="USD" label="USD" />
+                                <el-option value="EUR" label="EUR" />
+                                <el-option value="CNY" label="CNY" />
+                            </el-select>
                         </el-form-item>
                     </el-form>
                 </div>
@@ -131,9 +153,6 @@
             <el-button type="primary" :loading="saving" @click="handleSave">
                 {{ $t('admin.systemConfig.save') }}
             </el-button>
-            <el-button :loading="restoring" @click="handleReset" style="margin-left:8px">
-                {{ $t('common.reset') || 'Reset' }}
-            </el-button>
         </div>
     </el-card>
 </template>
@@ -146,11 +165,15 @@ import client from '@/api/client'
 
 const { t } = useI18n()
 
-const activeTab = ref('dns')
+const activeTab = ref('basic')
 const saving = ref(false)
-const restoring = ref(false)
 
 const defaultConfig = {
+    basic: {
+        site_name: 'OcerDNS',
+        site_url: '',
+        site_description: '',
+    },
     dns: {
         default_upstream: '1.1.1.1:53',
         timeout_ms: 5000,
@@ -173,11 +196,12 @@ const defaultConfig = {
         max_execution_time: 30,
     },
     payment: {
-        provider: 'stripe',
-        merchant_id: '',
-        merchant_key: '',
+        mode: 'test',
+        publishable_key: '',
+        secret_key: '',
         webhook_secret: '',
-        callback_url: '',
+        webhook_url: '',
+        default_currency: 'USD',
     },
     mail: {
         driver: 'smtp',
@@ -195,19 +219,15 @@ const config = ref(JSON.parse(JSON.stringify(defaultConfig)))
 const handleSave = async () => {
     saving.value = true
     try {
-        await client.put('/admin/system-config', config.value)
+        await client.put('/admin/system-config', {
+            configs: config.value,
+        })
         ElMessage.success(t('admin.systemConfig.saved'))
     } catch {
         ElMessage.error(t('admin.systemConfig.saveFailed'))
     } finally {
         saving.value = false
     }
-}
-
-const handleReset = () => {
-    restoring.value = true
-    config.value = JSON.parse(JSON.stringify(defaultConfig))
-    restoring.value = false
 }
 
 onMounted(async () => {
@@ -220,6 +240,16 @@ onMounted(async () => {
             config.value = {
                 ...config.value,
                 ...data.data,
+                basic: { ...config.value.basic, ...(data.data.basic || {
+                    site_name: data.data.site_name,
+                    site_url: data.data.site_url,
+                    site_description: data.data.site_description,
+                }) },
+                dns: { ...config.value.dns, ...(data.data.dns || {}) },
+                redis: { ...config.value.redis, ...(data.data.redis || {}) },
+                clickhouse: { ...config.value.clickhouse, ...(data.data.clickhouse || {}) },
+                payment: { ...config.value.payment, ...(data.data.payment || {}) },
+                mail: { ...config.value.mail, ...(data.data.mail || {}) },
             }
         }
     } catch {}

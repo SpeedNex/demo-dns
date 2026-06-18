@@ -51,12 +51,36 @@ final class AdminRbacController
         return response()->json(['data' => $permissions]);
     }
 
-    public function admins(): JsonResponse
+    public function admins(Request $request): JsonResponse
     {
-        $admins = DB::table('admins')
-            ->select(['id', 'username', 'email', 'role', 'status', 'is_super_admin', 'last_login_at'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $admins = Admin::query()
+            ->with(['roles:id,name'])
+            ->select(['id', 'username', 'email', 'role', 'status', 'is_super_admin', 'last_login_at', 'created_at'])
+            ->when($request->filled('search'), function ($query) use ($request): void {
+                $search = '%' . (string) $request->input('search') . '%';
+                $query->where(function ($inner) use ($search): void {
+                    $inner->where('username', 'like', $search)
+                        ->orWhere('email', 'like', $search);
+                });
+            })
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function (Admin $admin): array {
+                return [
+                    'id' => $admin->id,
+                    'username' => $admin->username,
+                    'email' => $admin->email,
+                    'role' => $admin->role,
+                    'status' => $admin->status,
+                    'is_super_admin' => (bool) $admin->is_super_admin,
+                    'last_login_at' => $admin->last_login_at,
+                    'role_list' => $admin->roles->map(fn ($role) => [
+                        'id' => $role->id,
+                        'name' => $role->name,
+                    ])->values()->all(),
+                ];
+            })
+            ->values();
 
         return response()->json(['data' => $admins]);
     }
@@ -92,7 +116,6 @@ final class AdminRbacController
         ]);
 
         $role = AdminRole::create([
-            'id' => \Illuminate\Support\Str::uuid()->toString(),
             'code' => $validated['code'],
             'name' => $validated['name'],
             'description' => $validated['description'] ?? '',
@@ -131,14 +154,13 @@ final class AdminRbacController
 
         $validated = $request->validate([
             'permission_ids' => 'required|array',
-            'permission_ids.*' => 'string',
+            'permission_ids.*' => 'integer|exists:admin_permissions,id',
         ]);
 
         DB::transaction(function () use ($id, $validated): void {
             DB::table('admin_role_permissions')->where('role_id', $id)->delete();
             foreach ($validated['permission_ids'] as $permissionId) {
                 DB::table('admin_role_permissions')->insert([
-                    'id' => \Illuminate\Support\Str::uuid()->toString(),
                     'role_id' => $id,
                     'permission_id' => $permissionId,
                 ]);
@@ -161,7 +183,7 @@ final class AdminRbacController
 
         $validated = $request->validate([
             'role_ids' => 'required|array',
-            'role_ids.*' => 'string',
+            'role_ids.*' => 'integer|exists:admin_roles,id',
         ]);
 
         DB::transaction(function () use ($adminId, $validated, $request): void {

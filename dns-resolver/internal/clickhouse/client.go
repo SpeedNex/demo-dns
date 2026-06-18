@@ -73,6 +73,22 @@ func DDL() []string {
 		TTL timestamp + INTERVAL 30 DAY
 		SETTINGS index_granularity = 8192`,
 
+		// UI.md #47: independent usage event table — never deduped.
+		`CREATE TABLE IF NOT EXISTS usage_events (
+			event_id    String,
+			profile_id  String,
+			user_id     String,
+			device_id   String,
+			domain      String,
+			bytes_in    UInt64,
+			bytes_out   UInt64,
+			occurred_at DateTime
+		) ENGINE = MergeTree()
+		PARTITION BY toDate(occurred_at)
+		ORDER BY (occurred_at, profile_id)
+		TTL occurred_at + INTERVAL 90 DAY
+		SETTINGS index_granularity = 8192`,
+
 		`CREATE MATERIALIZED VIEW IF NOT EXISTS dns_hourly_stats
 		ENGINE = SummingMergeTree()
 		ORDER BY (timestamp, profile_id)
@@ -151,6 +167,36 @@ func (c *Client) BatchInsert(ctx context.Context, entries []LogEntry) error {
 		}
 	}
 
+	return batch.Send()
+}
+
+// UsageEventRow matches the usage_events table DDL above.
+type UsageEventRow struct {
+	EventID    string    `ch:"event_id"`
+	ProfileID  string    `ch:"profile_id"`
+	UserID     string    `ch:"user_id"`
+	DeviceID   string    `ch:"device_id"`
+	Domain     string    `ch:"domain"`
+	BytesIn    uint64    `ch:"bytes_in"`
+	BytesOut   uint64    `ch:"bytes_out"`
+	OccurredAt time.Time `ch:"occurred_at"`
+}
+
+// BatchInsertUsage writes a batch of usage events (UI.md #47).  This
+// call is independent of the query-log dedup path.
+func (c *Client) BatchInsertUsage(ctx context.Context, rows []UsageEventRow) error {
+	if len(rows) == 0 {
+		return nil
+	}
+	batch, err := c.conn.PrepareBatch(ctx, "INSERT INTO usage_events")
+	if err != nil {
+		return fmt.Errorf("prepare usage batch: %w", err)
+	}
+	for i := range rows {
+		if err := batch.AppendStruct(&rows[i]); err != nil {
+			return fmt.Errorf("append usage struct: %w", err)
+		}
+	}
 	return batch.Send()
 }
 

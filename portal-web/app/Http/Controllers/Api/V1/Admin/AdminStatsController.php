@@ -45,6 +45,10 @@ final class AdminStatsController
                 ],
                 'queries' => [
                     'last_24h' => $queryBatches,
+                    'gafam' => $this->countByCategory('gafam'),
+                    'root' => $this->countByCategory('root'),
+                    'encrypted_dns' => $this->countByCategory('encrypted_dns'),
+                    'dnssec_valid' => $this->countByCategory('dnssec_valid'),
                 ],
                 'system' => array_merge([
                     'uptime_hours' => 0,
@@ -52,5 +56,32 @@ final class AdminStatsController
                 ], $health),
             ],
         ]);
+    }
+
+    /**
+     * UI.md #32: 24h 维度统计（GAFAM / 根域名 / 加密DNS / DNSSEC）。
+     * CH 不可用时返回 0，避免 5xx。
+     */
+    private function countByCategory(string $bucket): int
+    {
+        try {
+            $client = new \App\Infrastructure\ClickHouse\ClickHouseClient();
+            $col = match ($bucket) {
+                'gafam' => 'gafam_hits',
+                'root' => 'root_hits',
+                'encrypted_dns' => 'encrypted_dns_hits',
+                'dnssec_valid' => 'dnssec_valid_hits',
+                default => null,
+            };
+            if ($col === null) {
+                return 0;
+            }
+            $row = $client->jsonSelect(
+                "SELECT sum({$col}) AS c FROM query_logs WHERE occurred_at >= now() - INTERVAL 24 HOUR"
+            );
+            return (int) ($row[0]['c'] ?? 0);
+        } catch (\Throwable) {
+            return 0;
+        }
     }
 }

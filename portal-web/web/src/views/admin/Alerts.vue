@@ -1,7 +1,7 @@
 <template>
     <ListPage
         :title="$t('admin.alertsPage.title')"
-        :desc="$t('admin.alertsPage.desc')"
+        
         i18n-key="admin.alertsPage"
         icon-name="Message"
         :total="alerts.length"

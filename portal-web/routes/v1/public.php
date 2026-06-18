@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Public\AuthController;
+use App\Http\Controllers\Api\V1\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,3 +15,6 @@ Route::prefix('public/auth')->group(function (): void {
 });
 
 Route::post('admin/login', [AuthController::class, 'adminLogin'])->middleware('throttle:10,1');
+
+// UI.md #74/#75 — Stripe Webhook 入口（无需 Sanctum，靠签名校验）
+Route::post('stripe/webhook', [StripeWebhookController::class, 'handle'])->middleware('throttle:120,1');
