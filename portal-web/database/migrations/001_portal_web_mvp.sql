@@ -17,20 +17,21 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE UNIQUE INDEX IF NOT EXISTS uniq_users_email ON users (lower(email));
 
-CREATE TABLE IF NOT EXISTS personal_access_tokens (
-    id uuid PRIMARY KEY,
-    tokenable_type varchar(100) NOT NULL,
-    tokenable_id uuid NOT NULL,
+CREATE TABLE IF NOT EXISTS dns_personal_access_tokens (
+    id bigserial PRIMARY KEY,
+    tokenable_type varchar(255) NOT NULL,
+    tokenable_id varchar(36) NOT NULL,
     name varchar(255) NOT NULL,
-    token_hash varchar(255) NOT NULL,
+    token varchar(64) NOT NULL,
+    abilities text NULL,
     last_used_at timestamptz NULL,
     expires_at timestamptz NULL,
     created_at timestamptz NOT NULL,
     updated_at timestamptz NOT NULL
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS uniq_personal_access_tokens_hash
-    ON personal_access_tokens (token_hash);
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_dns_personal_access_tokens_token
+    ON dns_personal_access_tokens (token);
 
 CREATE TABLE IF NOT EXISTS profiles (
     id uuid PRIMARY KEY,
