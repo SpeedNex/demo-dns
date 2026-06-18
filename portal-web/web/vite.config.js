@@ -43,6 +43,7 @@ export default defineConfig(({ mode }) => {
         },
    build: {
     emptyOutDir: true,
+    assetsDir: 'assets',
     sourcemap: mode !== 'production',
     chunkSizeWarningLimit: 1500,
     rollupOptions: {
