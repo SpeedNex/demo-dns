@@ -16,6 +16,7 @@ import Devices from '@/views/Devices.vue'
 import APIKeys from '@/views/APIKeys.vue'
 import Settings from '@/views/Settings.vue'
 import Membership from '@/views/Membership.vue'
+import Account from '@/views/user/Account.vue'
 import TeamList from '@/views/TeamList.vue'
 import TeamCreate from '@/views/TeamCreate.vue'
 import TeamDetail from '@/views/TeamDetail.vue'
@@ -65,7 +66,8 @@ const routes = [
     { path: '/user/devices', name: 'Devices', component: Devices, meta: { auth: true } },
     { path: '/user/api-keys', name: 'APIKeys', component: APIKeys, meta: { auth: true } },
     { path: '/user/settings', name: 'Settings', component: Settings, meta: { auth: true } },
-    { path: '/user/membership', name: 'Membership', component: Membership, meta: { auth: true } },
+    { path: '/user/order', name: 'Order', component: Membership, meta: { auth: true } },
+    { path: '/user/account', name: 'Account', component: Account, meta: { auth: true } },
     { path: '/user/teams', name: 'TeamList', component: TeamList, meta: { auth: true } },
     { path: '/user/teams/create', name: 'TeamCreate', component: TeamCreate, meta: { auth: true } },
     { path: '/user/teams/:id', name: 'TeamDetail', component: TeamDetail, meta: { auth: true }, props: true },

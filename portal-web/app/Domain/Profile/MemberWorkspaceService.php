@@ -284,7 +284,33 @@ final class MemberWorkspaceService
 
     public function analytics(string $userId): array
     {
-        return $this->queryLogReader->analytics($userId);
+        // Primary source: ClickHouse analytics (dns_logs)
+        $ch = $this->clickhouseAnalytics->summaryForUser($userId);
+        if (($ch['period_queries'] ?? 0) > 0) {
+            return array_merge($ch, [
+                'allowed_domains'     => $this->clickhouseAnalytics->allowedDomains($userId),
+                'blocked_domains'     => $this->clickhouseAnalytics->blockedDomains($userId),
+                'block_reasons'       => $this->clickhouseAnalytics->blockReasons($userId),
+                'devices'             => $this->clickhouseAnalytics->topDevices($userId),
+                'client_ips'          => $this->clickhouseAnalytics->topClientIps($userId),
+                'root_domains'        => $this->clickhouseAnalytics->topRootDomains($userId),
+                'encrypted_dns'       => $this->clickhouseAnalytics->encryptedDnsRatio($userId),
+                'dnssec'             => $this->clickhouseAnalytics->dnssecRatio($userId),
+            ]);
+        }
+
+        // Fallback: PostgreSQL query_log_entries (covers warm-up window)
+        $pg = $this->queryLogReader->analytics($userId);
+        return array_merge($pg, [
+            'allowed_domains' => [],
+            'blocked_domains' => [],
+            'block_reasons'   => [],
+            'devices'         => [],
+            'client_ips'      => [],
+            'root_domains'    => [],
+            'encrypted_dns'   => ['total' => 0, 'encrypted' => 0, 'ratio_percent' => 0],
+            'dnssec'          => ['total' => 0, 'validated' => 0, 'ratio_percent' => 0],
+        ]);
     }
 
     public function logs(string $userId, array $filters): array

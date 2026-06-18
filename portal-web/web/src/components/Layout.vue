@@ -57,9 +57,9 @@
                         <el-icon><Tools /></el-icon>
                         <span>{{ $t('nav.settings') }}</span>
                     </el-menu-item>
-                    <el-menu-item index="/user/membership" @click="$router.push('/user/membership')">
+                    <el-menu-item index="/user/order" @click="$router.push('/user/order')">
                         <el-icon><Coin /></el-icon>
-                        <span>{{ $t('nav.membership') }}</span>
+                        <span>{{ $t('nav.order') }}</span>
                     </el-menu-item>
                 </div>
 

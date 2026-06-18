@@ -2871,3 +2871,26 @@ AggregateError [ECONNREFUSED]:
 14:10:19 [vite] (client) page reload src/locales/en.js
 14:10:30 [vite] (client) page reload src/locales/ko.js
 14:10:44 [vite] (client) page reload src/locales/ko.js
+14:12:02 [vite] (client) page reload src/router/index.js
+14:12:11 [vite] (client) page reload src/router/index.js
+14:12:28 [vite] (client) page reload src/locales/zh-CN.js
+14:12:45 [vite] (client) page reload src/locales/en.js
+14:13:03 [vite] (client) page reload src/locales/ko.js
+14:13:07 [vite] (client) hmr update /src/views/Analytics.vue, /src/views/Analytics.vue?vue&type=style&index=0&scoped=cab07171&lang.css
+14:13:28 [vite] (client) page reload src/locales/zh-CN.js
+14:13:40 [vite] (client) hmr update /src/views/Membership.vue
+14:13:50 [vite] (client) hmr update /src/views/Membership.vue
+14:13:54 [vite] (client) page reload src/locales/en.js
+14:13:58 [vite] (client) hmr update /src/views/Membership.vue
+14:14:08 [vite] (client) page reload src/locales/ko.js
+14:14:12 [vite] (client) hmr update /src/views/Membership.vue?vue&type=style&index=0&scoped=0736ca00&lang.css
+14:16:50 [vite] (client) page reload src/router/index.js
+14:16:58 [vite] (client) hmr update /src/components/Layout.vue
+14:17:04 [vite] (client) page reload src/locales/zh-CN.js
+14:17:04 [vite] (client) page reload src/locales/zh-CN.js
+14:17:11 [vite] (client) page reload src/locales/en.js
+14:17:18 [vite] (client) page reload src/locales/ko.js
+14:17:18 [vite] (client) page reload src/locales/ko.js
+14:18:13 [vite] (client) hmr update /src/views/Membership.vue, /src/views/Membership.vue?vue&type=style&index=0&scoped=0736ca00&lang.css
+14:20:13 [vite] (client) page reload src/locales/zh-CN.js
+14:20:31 [vite] (client) page reload src/locales/zh-CN.js
