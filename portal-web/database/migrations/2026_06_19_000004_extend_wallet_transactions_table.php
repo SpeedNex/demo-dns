@@ -40,7 +40,10 @@ return new class extends Migration {
 
     private function safeIndex(string $table, string $name, string $cols, bool $unique = false): void
     {
-        $exists = DB::select("SELECT 1 FROM pg_indexes WHERE indexname = ?", [$name]);
+        $exists = DB::select(
+            "SELECT 1 FROM information_schema.statistics WHERE table_schema = DATABASE() AND index_name = ?",
+            [$name]
+        );
         if (count($exists) > 0) {
             return;
         }

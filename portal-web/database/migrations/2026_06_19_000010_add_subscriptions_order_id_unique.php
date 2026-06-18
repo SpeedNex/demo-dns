@@ -22,16 +22,17 @@ return new class extends Migration {
         });
         // 唯一索引：同一 order_id 只能产生一个 subscription
         $exists = DB::selectOne(
-            "SELECT 1 FROM pg_indexes WHERE indexname = '" . $prefix . "subscriptions_order_id_unique'"
+            "SELECT 1 FROM information_schema.statistics WHERE table_schema = DATABASE() AND index_name = ?",
+            [$prefix . 'subscriptions_order_id_unique']
         );
         if ($exists === null) {
-            DB::statement('CREATE UNIQUE INDEX ' . $prefix . 'subscriptions_order_id_unique ON ' . $prefix . 'subscriptions (order_id) WHERE order_id IS NOT NULL');
+            DB::statement('CREATE UNIQUE INDEX ' . $prefix . 'subscriptions_order_id_unique ON ' . $prefix . 'subscriptions (order_id)');
         }
     }
 
     public function down(): void
     {
         $prefix = DB::connection()->getTablePrefix();
-        DB::statement('DROP INDEX IF EXISTS ' . $prefix . 'subscriptions_order_id_unique');
+        DB::statement('DROP INDEX ' . $prefix . 'subscriptions_order_id_unique ON ' . $prefix . 'subscriptions');
     }
 };

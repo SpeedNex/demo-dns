@@ -25,7 +25,7 @@ final class AdminQueryLogController
         $query = QueryLogEntry::query();
 
         if (! empty($validated['domain'])) {
-            $query->where('query_name', 'ilike', '%' . $validated['domain'] . '%');
+            $query->where('query_name', 'like', '%' . $validated['domain'] . '%');
         }
 
         if (! empty($validated['action'])) {

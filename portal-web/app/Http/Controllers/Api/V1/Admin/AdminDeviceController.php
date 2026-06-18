@@ -14,7 +14,7 @@ final class AdminDeviceController
         $query = Device::query()->with('user:id,username,email');
 
         if ($deviceName = $request->input('device_name')) {
-            $query->where('name', 'ilike', "%{$deviceName}%");
+            $query->where('name', 'like', "%{$deviceName}%");
         }
 
         $perPage = (int) $request->input('per_page', 20);

@@ -58,7 +58,7 @@ return new class extends Migration
             $table->bigInteger('version');
             $table->string('status', 30)->default('draft');
             $table->string('checksum', 100);
-            $table->jsonb('config_json');
+            $table->json('config_json');
             $table->integer('rule_count')->default(0);
             $table->string('message', 255)->nullable();
             $table->string('published_by', 36)->nullable();

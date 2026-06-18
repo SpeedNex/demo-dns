@@ -31,13 +31,27 @@ return new class extends Migration {
             }
         });
 
-        // 补齐索引
+        // 补齐索引（MySQL 8.0 不支持 IF NOT EXISTS，用 try/catch 容错）
         $prefix = DB::connection()->getTablePrefix();
-        DB::statement('CREATE INDEX IF NOT EXISTS ' . $prefix . 'invoices_billing_period_idx ON ' . $prefix . 'invoices (billing_period_id)');
-        DB::statement('CREATE INDEX IF NOT EXISTS ' . $prefix . 'invoices_billing_type_idx ON ' . $prefix . 'invoices (billing_type)');
+        try {
+            DB::statement('CREATE INDEX ' . $prefix . 'invoices_billing_period_idx ON ' . $prefix . 'invoices (billing_period_id)');
+        } catch (\Throwable $e) {
+            // index already exists
+        }
+        try {
+            DB::statement('CREATE INDEX ' . $prefix . 'invoices_billing_type_idx ON ' . $prefix . 'invoices (billing_type)');
+        } catch (\Throwable $e) {
+            // index already exists
+        }
 
-        // 注释统一
-        DB::statement("COMMENT ON COLUMN " . $prefix . "invoices.amount_minor IS '单位:分'");
+        // 注释统一（MySQL 8.0 通过 MODIFY COLUMN COMMENT 设置）
+        $colInfo = DB::selectOne("SHOW COLUMNS FROM {$prefix}invoices WHERE Field = 'amount_minor'");
+        if ($colInfo) {
+            $colType = $colInfo->Type;
+            $nullable = ((string) $colInfo->Null) === 'YES' ? 'NULL' : 'NOT NULL';
+            $defaultClause = $colInfo->Default === null ? '' : " DEFAULT '{$colInfo->Default}'";
+            DB::statement("ALTER TABLE {$prefix}invoices MODIFY COLUMN amount_minor {$colType} {$nullable}{$defaultClause} COMMENT '单位:分'");
+        }
     }
 
     public function down(): void

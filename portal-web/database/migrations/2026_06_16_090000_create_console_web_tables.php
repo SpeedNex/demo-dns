@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('public_ipv4', 45)->nullable();
             $table->string('public_ipv6', 45)->nullable();
             $table->string('hostname', 255)->nullable();
-            $table->json('supported_protocols')->default('[]');
+            $table->json('supported_protocols');
             $table->string('version', 50)->nullable();
             $table->unsignedBigInteger('current_config_version')->default(0);
             $table->unsignedBigInteger('desired_config_version')->default(0);
@@ -28,7 +28,7 @@ return new class extends Migration
             $table->timestamp('last_heartbeat_at')->nullable();
             $table->timestamp('approved_at')->nullable();
             $table->timestamp('disabled_at')->nullable();
-            $table->json('labels')->default('{}');
+            $table->json('labels');
             $table->timestamps();
         });
 
@@ -83,7 +83,7 @@ return new class extends Migration
             $table->string('profile_id', 40);
             $table->string('status', 30)->default('queued');
             $table->string('target_scope', 30)->default('all_nodes');
-            $table->json('target_filter')->default('{}');
+            $table->json('target_filter');
             $table->unsignedInteger('target_node_count')->default(0);
             $table->unsignedInteger('applied_node_count')->default(0);
             $table->unsignedInteger('failed_node_count')->default(0);

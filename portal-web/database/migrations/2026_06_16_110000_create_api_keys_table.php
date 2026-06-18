@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('key_hash', 64);
             $table->string('key_prefix', 20);
             $table->string('status', 20)->default('active');
-            $table->json('scopes')->default('["dns:query","logs:read","stats:read"]');
+            $table->json('scopes');
             $table->timestamp('last_used_at')->nullable();
             $table->timestamp('expires_at')->nullable();
             $table->timestamps();

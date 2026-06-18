@@ -41,8 +41,18 @@ return new class extends Migration {
             }
         });
 
-        DB::statement('CREATE INDEX IF NOT EXISTS ' . DB::connection()->getTablePrefix() . 'usage_records_user_period_idx ON ' . DB::connection()->getTablePrefix() . 'usage_records (user_id, period_start)');
-        DB::statement('CREATE INDEX IF NOT EXISTS ' . DB::connection()->getTablePrefix() . 'usage_records_billing_period_idx ON ' . DB::connection()->getTablePrefix() . 'usage_records (billing_period_id)');
+        // MySQL 8.0 不支持 IF NOT EXISTS，用 try/catch 容错
+        $prefix = DB::connection()->getTablePrefix();
+        try {
+            DB::statement('CREATE INDEX ' . $prefix . 'usage_records_user_period_idx ON ' . $prefix . 'usage_records (user_id, period_start)');
+        } catch (\Throwable $e) {
+            // index already exists
+        }
+        try {
+            DB::statement('CREATE INDEX ' . $prefix . 'usage_records_billing_period_idx ON ' . $prefix . 'usage_records (billing_period_id)');
+        } catch (\Throwable $e) {
+            // index already exists
+        }
     }
 
     public function down(): void

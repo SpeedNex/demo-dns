@@ -26,7 +26,12 @@ return new class extends Migration {
         });
 
         $prefix = DB::connection()->getTablePrefix();
-        DB::statement('CREATE UNIQUE INDEX IF NOT EXISTS ' . $prefix . 'billing_periods_user_period_unique ON ' . $prefix . 'billing_periods (user_id, period_start)');
+        // MySQL 8.0 不支持 IF NOT EXISTS，用 try/catch 容错
+        try {
+            DB::statement('CREATE UNIQUE INDEX ' . $prefix . 'billing_periods_user_period_unique ON ' . $prefix . 'billing_periods (user_id, period_start)');
+        } catch (\Throwable $e) {
+            // index already exists
+        }
     }
 
     public function down(): void

@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('resource_id', 100)->nullable();
             $table->string('ip_hash', 128)->nullable();
             $table->text('user_agent')->nullable();
-            $table->jsonb('before_json')->nullable();
-            $table->jsonb('after_json')->nullable();
+            $table->json('before_json')->nullable();
+            $table->json('after_json')->nullable();
             $table->timestamp('created_at')->useCurrent();
 
             $table->index(['actor_id', 'created_at'], 'idx_audit_logs_actor');

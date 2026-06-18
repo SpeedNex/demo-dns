@@ -16,11 +16,11 @@ final class AdminUserController
         $query = User::query();
 
         if ($email = $request->input('email')) {
-            $query->where('email', 'ilike', "%{$email}%");
+            $query->where('email', 'like', "%{$email}%");
         }
 
         if ($name = $request->input('name', $request->input('username'))) {
-            $query->where('username', 'ilike', "%{$name}%");
+            $query->where('username', 'like', "%{$name}%");
         }
 
         if ($status = $request->input('status')) {
