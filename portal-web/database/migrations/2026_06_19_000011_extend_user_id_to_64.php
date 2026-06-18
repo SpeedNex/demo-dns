@@ -20,6 +20,11 @@ return new class extends Migration
             'ALTER TABLE dns_invoices           ALTER COLUMN user_id TYPE varchar(64)',
             'ALTER TABLE dns_wallet_transactions ALTER COLUMN user_id TYPE varchar(64)',
             'ALTER TABLE dns_usage_records      ALTER COLUMN user_id TYPE varchar(64)',
+            'ALTER TABLE dns_orders             ALTER COLUMN user_id TYPE varchar(64)',
+            'ALTER TABLE dns_api_keys           ALTER COLUMN user_id TYPE varchar(64)',
+            'ALTER TABLE dns_billing_periods    ALTER COLUMN user_id TYPE varchar(64)',
+            'ALTER TABLE dns_payment_transactions ALTER COLUMN user_id TYPE varchar(64)',
+            'ALTER TABLE dns_policy_snapshots   ALTER COLUMN user_id TYPE varchar(64)',
         ];
 
         foreach ($statements as $sql) {
@@ -51,6 +56,11 @@ return new class extends Migration
             'ALTER TABLE dns_invoices           ALTER COLUMN user_id TYPE varchar(30)',
             'ALTER TABLE dns_wallet_transactions ALTER COLUMN user_id TYPE varchar(30)',
             'ALTER TABLE dns_usage_records      ALTER COLUMN user_id TYPE varchar(30)',
+            'ALTER TABLE dns_orders             ALTER COLUMN user_id TYPE varchar(30)',
+            'ALTER TABLE dns_api_keys           ALTER COLUMN user_id TYPE varchar(30)',
+            'ALTER TABLE dns_billing_periods    ALTER COLUMN user_id TYPE varchar(30)',
+            'ALTER TABLE dns_payment_transactions ALTER COLUMN user_id TYPE varchar(30)',
+            'ALTER TABLE dns_policy_snapshots   ALTER COLUMN user_id TYPE varchar(30)',
         ];
         foreach ($statements as $sql) {
             try {
