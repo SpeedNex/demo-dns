@@ -2894,3 +2894,14 @@ AggregateError [ECONNREFUSED]:
 14:18:13 [vite] (client) hmr update /src/views/Membership.vue, /src/views/Membership.vue?vue&type=style&index=0&scoped=0736ca00&lang.css
 14:20:13 [vite] (client) page reload src/locales/zh-CN.js
 14:20:31 [vite] (client) page reload src/locales/zh-CN.js
+14:20:47 [vite] (client) page reload src/locales/zh-CN.js
+14:21:00 [vite] (client) page reload src/locales/zh-CN.js
+14:21:17 [vite] (client) hmr update /src/components/Layout.vue?vue&type=style&index=0&scoped=fcebc900&lang.css
+14:21:17 [vite] (client) page reload src/locales/en.js
+14:21:23 [vite] (client) hmr update /src/components/Layout.vue
+14:21:33 [vite] (client) page reload src/locales/en.js
+14:21:46 [vite] (client) page reload src/locales/ko.js
+14:21:59 [vite] (client) page reload src/locales/ko.js
+14:24:57 [vite] (client) hmr update /src/components/Layout.vue
+14:25:08 [vite] (client) hmr update /src/components/Layout.vue
+14:25:22 [vite] (client) hmr update /src/components/Layout.vue

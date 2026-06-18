@@ -57,10 +57,6 @@
                         <el-icon><Tools /></el-icon>
                         <span>{{ $t('nav.settings') }}</span>
                     </el-menu-item>
-                    <el-menu-item index="/user/order" @click="$router.push('/user/order')">
-                        <el-icon><Coin /></el-icon>
-                        <span>{{ $t('nav.order') }}</span>
-                    </el-menu-item>
                 </div>
 
                 <div class="nav-right">
@@ -112,6 +108,7 @@
                         <template #dropdown>
                             <el-dropdown-menu>
                                 <el-dropdown-item command="account">{{ $t('nav.account') || '账户' }}</el-dropdown-item>
+                                <el-dropdown-item command="order">{{ $t('nav.order') || '订单' }}</el-dropdown-item>
                                 <el-dropdown-item command="profiles">{{ $t('nav.profiles') }}</el-dropdown-item>
                                 <el-dropdown-item command="teams">{{ $t('nav.teams') }}</el-dropdown-item>
                                 <el-dropdown-item command="membership">{{ $t('nav.membership') }}</el-dropdown-item>
@@ -195,6 +192,8 @@ const loadProfiles = async () => {
 const switchProfile = (profileId) => {
     currentProfileId.value = profileId
     localStorage.setItem('current_profile_id', profileId)
+    // 切换策略后刷新页面，让所有页面按新策略重新加载数据
+    window.location.reload()
 }
 
 const handleProfileCommand = (command) => {
@@ -259,6 +258,11 @@ const handleLogout = async () => {
 const handleCommand = async (command) => {
     if (command === 'account') {
         await router.push('/user/account')
+        return
+    }
+
+    if (command === 'order') {
+        await router.push('/user/order')
         return
     }
 
@@ -445,7 +449,6 @@ onMounted(async () => {
     min-height: 42px;
     padding: 0 14px;
     border-radius: 14px;
-    border: 1px solid #dbe3ef;
     background: #fff;
     color: #334155;
     cursor: pointer;
