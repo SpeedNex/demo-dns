@@ -17,7 +17,7 @@
                 </div>
 
                 <div class="nav-center">
-                    <el-menu-item index="/user" @click="$router.push('/user')" class="brand-item">
+                    <el-menu-item index="/user" @click="navigateTo('/user')" class="brand-item">
                         <el-icon><Monitor /></el-icon>
                         <span>{{ $t('nav.dashboard') }}</span>
                     </el-menu-item>
@@ -26,27 +26,27 @@
                             <span>{{ $t('nav.security') }}</span>
                             <el-icon class="sub-menu-arrow"><ArrowRight /></el-icon>
                         </template>
-                        <el-menu-item index="/user/security" @click="$router.push('/user/security')">
+                        <el-menu-item index="/user/security" @click="navigateTo('/user/security')">
                             <span>{{ $t('nav.security') }}</span>
                         </el-menu-item>
-                        <el-menu-item index="/user/privacy" @click="$router.push('/user/privacy')">
+                        <el-menu-item index="/user/privacy" @click="navigateTo('/user/privacy')">
                             <span>{{ $t('nav.privacy') }}</span>
                         </el-menu-item>
-                        <el-menu-item index="/user/parental" @click="$router.push('/user/parental')">
+                        <el-menu-item index="/user/parental" @click="navigateTo('/user/parental')">
                             <span>{{ $t('nav.parental') }}</span>
                         </el-menu-item>
                     </el-sub-menu>
 
-                    <el-menu-item index="/user/denylist" @click="$router.push('/user/denylist')">
+                    <el-menu-item index="/user/denylist" @click="navigateTo('/user/denylist')">
                         <span>{{ $t('nav.denylist') }}</span>
                     </el-menu-item>
-                    <el-menu-item index="/user/allowlist" @click="$router.push('/user/allowlist')">
+                    <el-menu-item index="/user/allowlist" @click="navigateTo('/user/allowlist')">
                         <span>{{ $t('nav.allowlist') }}</span>
                     </el-menu-item>
-                    <el-menu-item index="/user/analytics" @click="$router.push('/user/analytics')">
+                    <el-menu-item index="/user/analytics" @click="navigateTo('/user/analytics')">
                         <span>{{ $t('nav.analytics') }}</span>
                     </el-menu-item>
-                    <el-menu-item index="/user/logs" @click="$router.push('/user/logs')">
+                    <el-menu-item index="/user/logs" @click="navigateTo('/user/logs')">
                         <span>{{ $t('nav.logs') }}</span>
                     </el-menu-item>
                 </div>
@@ -147,6 +147,10 @@ const router = useRouter()
 const { locale, t } = useI18n()
 
 const activeRoute = computed(() => route.path)
+
+const navigateTo = (path) => {
+    router.push({ path, query: { profile_id: currentProfileId.value } })
+}
 const userName = ref(t('common.defaultUser'))
 const userInitial = computed(() => (userName.value?.trim()?.charAt(0) || 'U').toUpperCase())
 
@@ -168,13 +172,22 @@ const loadProfiles = async () => {
         const { data } = await client.get('/member/profiles')
         profiles.value = data.data || []
         
-        // 从 localStorage 或 API 获取当前选中的 profile
+        // 优先从 URL 获取 profile_id，其次 localStorage，最后取第一个
+        const urlProfileId = route.query.profile_id
         const savedId = localStorage.getItem('current_profile_id')
-        if (savedId && profiles.value.some(p => p.id === savedId)) {
-            currentProfileId.value = savedId
+        const resolvedId = urlProfileId || savedId || (profiles.value.length > 0 ? profiles.value[0].id : null)
+        
+        if (resolvedId && profiles.value.some(p => p.id === resolvedId)) {
+            currentProfileId.value = resolvedId
+            localStorage.setItem('current_profile_id', resolvedId)
+            // 如果 URL 中没有 profile_id，同步到 URL
+            if (!urlProfileId) {
+                router.replace({ query: { profile_id: resolvedId } })
+            }
         } else if (profiles.value.length > 0) {
             currentProfileId.value = profiles.value[0].id
             localStorage.setItem('current_profile_id', currentProfileId.value)
+            router.replace({ query: { profile_id: currentProfileId.value } })
         }
     } catch {
         profiles.value = []
@@ -184,8 +197,9 @@ const loadProfiles = async () => {
 const switchProfile = (profileId) => {
     currentProfileId.value = profileId
     localStorage.setItem('current_profile_id', profileId)
-    // 切换策略后刷新页面，让所有页面按新策略重新加载数据
-    window.location.reload()
+    // 更新 URL 中的 profile_id 并刷新页面
+    const newUrl = router.resolve({ path: route.path, query: { profile_id: profileId } }).href
+    window.location.href = newUrl
 }
 
 const handleProfileCommand = (command) => {

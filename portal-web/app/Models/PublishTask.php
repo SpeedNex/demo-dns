@@ -40,6 +40,10 @@ class PublishTask extends Model
             if ($task->id === null || $task->id === '') {
                 $task->id = 'pub_' . substr(hash('sha256', microtime(true) . random_int(1, PHP_INT_MAX)), 0, 12);
             }
+
+            if ($task->target_filter === null) {
+                $task->target_filter = [];
+            }
         });
     }
 

@@ -107,6 +107,7 @@ import { Check } from '@element-plus/icons-vue'
 import client from '@/api/client'
 import { useI18n } from 'vue-i18n'
 import Layout from '@/components/Layout.vue'
+import { useCurrentProfile } from '@/composables/useCurrentProfile'
 
 const { locale, t } = useI18n()
 const saving = ref(false)
@@ -129,13 +130,15 @@ const dohUrl = computed(() => {
     const domain = dnsDomain.value || 'dns.ocerdns.local'
     const profileId = currentProfileId.value
     if (profileId) {
-        return `https://${domain}/prf_${profileId}`
+        // 去掉 prf_ 前缀，格式: https://dns.ocerdns.local/ec8cb1
+        const shortId = profileId.replace(/^prf_/, '')
+        return `https://${domain}/${shortId}`
     }
-    return `https://${domain}/dns-query`
+    return `https://${domain}`
 })
 const udpAddress = computed(() => '127.0.0.1:53')
 const dnsDomain = ref('dns.ocerdns.local')
-const currentProfileId = ref(localStorage.getItem('current_profile_id') || '')
+const { currentProfileId } = useCurrentProfile()
 
 const copyText = (text) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -185,9 +188,9 @@ onMounted(async () => {
         const { data } = await client.get('/member/settings')
         if (data.data) Object.assign(form, data.data)
     } catch {}
-    // 从系统配置加载 DNS 域名
+    // 从公开接口加载后台基本设置中的 DNS 域名
     try {
-        const { data } = await client.get('/admin/system-config')
+        const { data } = await client.get('/public/dns-config')
         if (data?.data?.dns_domain) {
             dnsDomain.value = data.data.dns_domain
         }

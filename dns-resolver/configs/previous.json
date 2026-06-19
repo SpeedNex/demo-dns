@@ -1,0 +1,44 @@
+{
+  "profiles": [
+    {
+      "profile_id": "prf_114e12ec8cb1",
+      "name": "test Default",
+      "block_response": "nxdomain",
+      "default_action": "allow",
+      "security_enabled": true,
+      "privacy_enabled": true,
+      "parental_enabled": false,
+      "devices": []
+    },
+    {
+      "profile_id": "prf_9457c65887a3",
+      "name": "小孩",
+      "block_response": "nxdomain",
+      "default_action": "allow",
+      "security_enabled": true,
+      "privacy_enabled": true,
+      "parental_enabled": false,
+      "devices": []
+    },
+    {
+      "profile_id": "prf_b087977ee127",
+      "name": "家用",
+      "block_response": "nxdomain",
+      "default_action": "allow",
+      "security_enabled": true,
+      "privacy_enabled": true,
+      "parental_enabled": false,
+      "devices": []
+    },
+    {
+      "profile_id": "prf_ff715aaec104",
+      "name": "公司",
+      "block_response": "nxdomain",
+      "default_action": "allow",
+      "security_enabled": true,
+      "privacy_enabled": true,
+      "parental_enabled": false,
+      "devices": []
+    }
+  ]
+}

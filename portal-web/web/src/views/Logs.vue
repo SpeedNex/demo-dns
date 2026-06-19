@@ -63,8 +63,10 @@ import { ref, reactive, onMounted } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
+import { useCurrentProfile } from '@/composables/useCurrentProfile'
 
 const { t } = useI18n()
+const { currentProfileId } = useCurrentProfile()
 
 const logs = ref([])
 const page = ref(1)
@@ -79,7 +81,7 @@ const formatTime = (ts) => {
 
 const fetchLogs = async () => {
     try {
-        const params = { page: page.value, per_page: 20 }
+        const params = { page: page.value, per_page: 20, profile_id: currentProfileId.value }
         if (filter.action) params.action = filter.action
         if (filter.domain) params.domain = filter.domain
         const { data } = await client.get('/member/logs', { params })

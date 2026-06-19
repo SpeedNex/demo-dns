@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Agent;
 
 use App\Domain\Ingest\QueryLogIngestService;
 use App\Models\ConfigVersion;
+use App\Models\Device;
 use App\Models\Node;
 use App\Models\QueryLogEntry;
 use App\Models\QueryLogIngestBatch;
@@ -58,14 +59,16 @@ final class QueryLogController
 
             $now = now();
             $entries = [];
+            $devices = [];
             foreach ($validated['items'] as $index => $item) {
                 $profileId = $item['profile_id'] ?? null;
+                $userId = $profileId !== null ? $latestUsersByProfile->get($profileId) : null;
                 $queriedAt = isset($item['queried_at']) ? now()->setTimestamp((int) $item['queried_at']) : $now;
                 $entries[] = [
                     'id' => 'qle_' . substr(hash('sha256', $validated['batch_id'] . '|' . $index . '|' . microtime(true)), 0, 12),
                     'ingest_batch_id' => $batch->id,
                     'node_id' => $node->id,
-                    'user_id' => $profileId !== null ? $latestUsersByProfile->get($profileId) : null,
+                    'user_id' => $userId,
                     'profile_id' => $profileId,
                     'device_id' => $item['device_id'] ?? null,
                     'query_name' => strtolower((string) ($item['query_name'] ?? $item['domain'] ?? '')),
@@ -79,9 +82,39 @@ final class QueryLogController
                     'queried_at' => $queriedAt,
                     'created_at' => $now,
                 ];
+
+                if ($userId !== null && $profileId !== null) {
+                    $rawDeviceId = trim((string) ($item['device_id'] ?? ''));
+                    $clientIp = trim((string) ($item['client_ip'] ?? ''));
+                    $identity = $rawDeviceId !== '' ? $rawDeviceId : ($clientIp !== '' ? 'ip:' . $clientIp : '');
+
+                    if ($identity !== '') {
+                        $devices[$userId . '|' . $profileId . '|' . $identity] = [
+                            'user_id' => $userId,
+                            'profile_id' => $profileId,
+                            'device_id' => $identity,
+                            'name' => $rawDeviceId !== '' ? $rawDeviceId : ('Device ' . $clientIp),
+                            'device_type' => 'dns-client',
+                            'public_ip' => $clientIp !== '' ? $clientIp : null,
+                            'last_seen_at' => $queriedAt,
+                            'updated_at' => $now,
+                        ];
+                    }
+                }
             }
 
             QueryLogEntry::insert($entries);
+
+            foreach ($devices as $device) {
+                Device::query()->updateOrCreate(
+                    [
+                        'user_id' => $device['user_id'],
+                        'profile_id' => $device['profile_id'],
+                        'device_id' => $device['device_id'],
+                    ],
+                    $device + ['created_at' => $now]
+                );
+            }
         });
 
         return response()->json([

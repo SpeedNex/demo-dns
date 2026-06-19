@@ -67,29 +67,29 @@
                 <div class="rules-head">
                     <strong>{{ $t('admin.memberCatalogs.rulesTitle') }}</strong>
                     <div class="rules-filters">
-                        <el-select v-model="ruleFilter.list_type" placeholder="类型" clearable style="width: 120px">
-                            <el-option value="allow" label="allow" />
-                            <el-option value="deny" label="deny" />
+                        <el-select v-model="ruleFilter.list_type" :placeholder="$t('admin.memberCatalogs.type')" clearable style="width: 120px">
+                            <el-option value="allow" :label="$t('admin.memberCatalogs.allow')" />
+                            <el-option value="deny" :label="$t('admin.memberCatalogs.deny')" />
                         </el-select>
-                        <el-input v-model="ruleFilter.domain" placeholder="搜索域名" clearable style="width: 220px" @keyup.enter="fetchRules" />
-                        <el-button @click="fetchRules">查询</el-button>
-                        <el-button type="danger" plain :disabled="selectedRules.length === 0" @click="batchDeleteRules">批量删除</el-button>
+                        <el-input v-model="ruleFilter.domain" :placeholder="$t('admin.memberCatalogs.searchDomain')" clearable style="width: 220px" @keyup.enter="fetchRules" />
+                        <el-button @click="fetchRules">{{ $t('common.search') }}</el-button>
+                        <el-button type="danger" plain :disabled="selectedRules.length === 0" @click="batchDeleteRules">{{ $t('common.batchDelete') }}</el-button>
                     </div>
                 </div>
             </template>
             <el-table :data="rules" stripe @selection-change="selectedRules = $event">
                 <el-table-column type="selection" width="44" />
-                <el-table-column prop="list_type" label="类型" width="90" />
-                <el-table-column prop="domain" label="域名" min-width="220" show-overflow-tooltip />
-                <el-table-column prop="profile_name" label="Profile" width="180" show-overflow-tooltip />
-                <el-table-column prop="user_id" label="用户" min-width="160" show-overflow-tooltip />
-                <el-table-column prop="match_type" label="匹配" width="100" />
-                <el-table-column prop="enabled" label="启用" width="80">
-                    <template #default="{ row }">{{ row.enabled ? '是' : '否' }}</template>
+                <el-table-column prop="list_type" :label="$t('admin.memberCatalogs.type')" width="90" />
+                <el-table-column prop="domain" :label="$t('admin.memberCatalogs.domain')" min-width="220" show-overflow-tooltip />
+                <el-table-column prop="profile_name" :label="$t('admin.memberCatalogs.profile')" width="180" show-overflow-tooltip />
+                <el-table-column prop="user_id" :label="$t('admin.memberCatalogs.user')" min-width="160" show-overflow-tooltip />
+                <el-table-column prop="match_type" :label="$t('admin.memberCatalogs.matchType')" width="100" />
+                <el-table-column prop="enabled" :label="$t('admin.memberCatalogs.enabled')" width="80">
+                    <template #default="{ row }">{{ row.enabled ? $t('common.yes') : $t('common.no') }}</template>
                 </el-table-column>
-                <el-table-column label="操作" width="80">
+                <el-table-column :label="$t('common.actions')" width="80">
                     <template #default="{ row }">
-                        <el-button text type="danger" @click="deleteRule(row.id)">删除</el-button>
+                        <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -114,7 +114,7 @@ const EditableTable = defineComponent({
     emits: ['add', 'remove'],
     setup(props, { emit }) {
         return () => h('div', [
-            h(ElButton, { type: 'primary', plain: true, onClick: () => emit('add'), style: 'margin-bottom:12px' }, () => '新增一行'),
+            h(ElButton, { type: 'primary', plain: true, onClick: () => emit('add'), style: 'margin-bottom:12px' }, () => t('admin.memberCatalogs.addRow')),
             h(ElTable, { data: props.rows, stripe: true, style: 'width:100%' }, () => [
                 ...props.columns.map((column) => h(ElTableColumn, {
                     label: column.label,
@@ -138,8 +138,8 @@ const EditableTable = defineComponent({
                                 'onUpdate:modelValue': (value) => { row[column.key] = value },
                             }),
                 })),
-                h(ElTableColumn, { label: '操作', width: 86 }, {
-                    default: ({ $index }) => h(ElButton, { text: true, type: 'danger', onClick: () => emit('remove', $index) }, () => '删除'),
+                h(ElTableColumn, { label: t('common.actions'), width: 86 }, {
+                    default: ({ $index }) => h(ElButton, { text: true, type: 'danger', onClick: () => emit('remove', $index) }, () => t('common.delete')),
                 }),
             ]),
         ])
@@ -213,28 +213,28 @@ const ruleFilter = reactive({ list_type: '', domain: '' })
 
 const columns = {
     device_models: [
-        { key: 'id', label: 'ID' },
-        { key: 'name', label: '名称' },
-        { key: 'desc', label: '描述', width: 220 },
-        { key: 'icon', label: '图标' },
-        { key: 'color', label: '颜色', width: 120 },
+        { key: 'id', label: t('admin.memberCatalogs.id') },
+        { key: 'name', label: t('admin.memberCatalogs.name') },
+        { key: 'desc', label: t('admin.memberCatalogs.description'), width: 220 },
+        { key: 'icon', label: t('admin.memberCatalogs.icon') },
+        { key: 'color', label: t('admin.memberCatalogs.color'), width: 120 },
     ],
     privacy_blocklists: [
         { key: 'key', label: 'Key' },
-        { key: 'name', label: '名称' },
-        { key: 'desc', label: '描述', width: 240 },
-        { key: 'entries', label: '条目数', type: 'number', width: 120 },
-        { key: 'days_ago', label: '更新时间(天)', type: 'number', width: 130 },
+        { key: 'name', label: t('admin.memberCatalogs.name') },
+        { key: 'desc', label: t('admin.memberCatalogs.description'), width: 240 },
+        { key: 'entries', label: t('admin.memberCatalogs.entries'), type: 'number', width: 120 },
+        { key: 'days_ago', label: t('admin.memberCatalogs.updatedDays'), type: 'number', width: 130 },
     ],
     parental_presets: [
-        { key: 'name', label: '名称' },
-        { key: 'icon', label: '图标', width: 240 },
-        { key: 'category', label: '类别', type: 'select', options: ['website', 'app', 'game'], width: 120 },
+        { key: 'name', label: t('admin.memberCatalogs.name') },
+        { key: 'icon', label: t('admin.memberCatalogs.icon'), width: 240 },
+        { key: 'category', label: t('admin.memberCatalogs.category'), type: 'select', options: ['website', 'app', 'game'], width: 120 },
     ],
     parental_categories: [
         { key: 'key', label: 'Key' },
-        { key: 'name', label: '名称' },
-        { key: 'desc', label: '描述', width: 260 },
+        { key: 'name', label: t('admin.memberCatalogs.name') },
+        { key: 'desc', label: t('admin.memberCatalogs.description'), width: 260 },
     ],
 }
 
@@ -280,29 +280,29 @@ const fetchRules = async () => {
 
 const deleteRule = async (id) => {
     try {
-        await ElMessageBox.confirm('确认删除该规则吗？', '提示', { type: 'warning' })
+        await ElMessageBox.confirm(t('admin.memberCatalogs.confirmDeleteRule'), t('common.notice'), { type: 'warning' })
         await client.delete(`/admin/member-rules/${id}`)
-        ElMessage.success('删除成功')
+        ElMessage.success(t('common.deleteSuccess'))
         await fetchRules()
     } catch (error) {
         if (error !== 'cancel') {
-            ElMessage.error('删除失败')
+            ElMessage.error(t('common.deleteFailed'))
         }
     }
 }
 
 const batchDeleteRules = async () => {
     try {
-        await ElMessageBox.confirm(`确认删除选中的 ${selectedRules.value.length} 条规则吗？`, '提示', { type: 'warning' })
+        await ElMessageBox.confirm(t('admin.memberCatalogs.confirmBatchDeleteRules', { count: selectedRules.value.length }), t('common.notice'), { type: 'warning' })
         await client.post('/admin/member-rules/batch-destroy', {
             ids: selectedRules.value.map((item) => item.id),
         })
-        ElMessage.success('删除成功')
+        ElMessage.success(t('common.deleteSuccess'))
         selectedRules.value = []
         await fetchRules()
     } catch (error) {
         if (error !== 'cancel') {
-            ElMessage.error('删除失败')
+            ElMessage.error(t('common.deleteFailed'))
         }
     }
 }

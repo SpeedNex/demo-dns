@@ -8,3 +8,8 @@ Route::get('/', function (): array {
         'status' => 'ok',
     ];
 });
+
+// SPA fallback - serve index.html for all non-API routes
+Route::get('/{any}', function () {
+    return file_get_contents(public_path('index.html'));
+})->where('any', '^(?!api).*$');

@@ -25,16 +25,24 @@ final class ConfigPullController
         // rather than picking the globally latest version. This ensures
         // multi-tenant isolation and supports gradual rollout.
         $configVersion = ConfigVersion::query()
-            ->whereHas('publishTasks.taskExecutions', function ($q) use ($node): void {
-                $q->where('node_id', $node->id);
-            })
-            ->orWhereHas('publishTasks', function ($q) use ($node): void {
-                // Also match publish tasks that target this node's region
-                // or have no specific target (global fallback).
-                $q->where(function ($sq) use ($node): void {
-                    $sq->where('target_node_id', $node->id)
-                        ->orWhereNull('target_node_id');
-                })->where('status', 'in_progress');
+            ->where(function ($query) use ($node): void {
+                $query
+                    ->whereHas('publishTasks.executions', function ($executionQuery) use ($node): void {
+                        $executionQuery->where('node_id', $node->id);
+                    })
+                    ->orWhereHas('publishTasks', function ($taskQuery) use ($node): void {
+                        $taskQuery
+                            ->whereIn('status', ['queued', 'in_progress', 'completed'])
+                            ->where(function ($targetQuery) use ($node): void {
+                                $targetQuery
+                                    ->where('target_scope', 'all_nodes')
+                                    ->orWhere(function ($specificNodeQuery) use ($node): void {
+                                        $specificNodeQuery
+                                            ->where('target_scope', 'specific_nodes')
+                                            ->whereJsonContains('target_filter->node_ids', $node->id);
+                                    });
+                            });
+                    });
             })
             ->orderByDesc('version')
             ->first();

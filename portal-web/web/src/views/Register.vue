@@ -12,8 +12,8 @@
     >
         <div class="auth-card">
             <el-form ref="formRef" :model="form" :rules="rules" label-position="top" @submit.prevent="handleRegister">
-                <el-form-item :label="$t('auth.name')" prop="name">
-                    <el-input v-model="form.name" size="large" class="auth-input">
+                <el-form-item :label="$t('auth.username')" prop="username">
+                    <el-input v-model="form.username" size="large" class="auth-input">
                         <template #prefix>
                             <el-icon><User /></el-icon>
                         </template>
@@ -61,22 +61,30 @@ const formRef = ref(null)
 const loading = ref(false)
 
 const form = reactive({
-    name: '',
+    username: '',
     email: '',
     password: '',
 })
 
 const rules = computed(() => ({
-    name: [{ required: true, message: t('auth.nameRequired'), trigger: 'blur' }],
+    username: [{ required: true, message: t('auth.nameRequired'), trigger: 'blur' }],
     email: [{ required: true, type: 'email', message: t('auth.emailValidRequired'), trigger: 'blur' }],
-    password: [{ required: true, min: 6, message: t('auth.passwordMin'), trigger: 'blur' }],
+    password: [{ required: true, min: 8, message: t('auth.passwordMin'), trigger: 'blur' }],
 }))
 
 const highlights = computed(() => ([
-    { value: '1', label: 'Primary profile included' },
-    { value: 'API', label: 'Keys and logs ready after signup' },
-    { value: 'Global', label: 'DoH and DoT endpoint access' },
+    { value: '1', label: t('auth.highlightPrimary') },
+    { value: 'API', label: t('auth.highlightApi') },
+    { value: 'Global', label: t('auth.highlightGlobal') },
 ]))
+
+const extractErrorMessage = (error) => {
+    const errors = error?.response?.data?.errors
+    if (errors && typeof errors === 'object') {
+        return Object.values(errors).flat().join('\n')
+    }
+    return error?.response?.data?.message || error?.message || t('auth.registerFailed')
+}
 
 const handleRegister = async () => {
     const valid = await formRef.value.validate().catch(() => false)
@@ -99,7 +107,7 @@ const handleRegister = async () => {
             await router.push('/user')
         }
     } catch (err) {
-        ElMessage.error(err.response?.data?.message || t('auth.registerFailed'))
+        ElMessage.error(extractErrorMessage(err))
     } finally {
         loading.value = false
     }

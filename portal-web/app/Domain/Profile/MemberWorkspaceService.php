@@ -10,6 +10,7 @@ use App\Domain\Rule\ProfileRuleService;
 use App\Models\Device;
 use App\Models\Profile;
 use App\Models\ProfileRule;
+use App\Models\SystemConfig;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -106,14 +107,28 @@ final class MemberWorkspaceService
         ]));
     }
 
-    public function getSecurity(string $userId): array
+    /**
+     * 根据可选 profile_id 解析 Profile，未传或无效时 fallback 到 primaryProfile
+     */
+    public function resolveProfile(string $userId, ?string $profileId = null): Profile
     {
-        return $this->securityPayload($this->primaryProfile($userId));
+        if ($profileId !== null && $profileId !== '') {
+            $profile = Profile::where('user_id', $userId)->where('id', $profileId)->first();
+            if ($profile instanceof Profile) {
+                return $this->hydrateProfileSettings($profile);
+            }
+        }
+        return $this->primaryProfile($userId);
     }
 
-    public function updateSecurity(string $userId, array $payload): array
+    public function getSecurity(string $userId, ?string $profileId = null): array
     {
-        $profile = $this->primaryProfile($userId);
+        return $this->securityPayload($this->resolveProfile($userId, $profileId));
+    }
+
+    public function updateSecurity(string $userId, array $payload, ?string $profileId = null): array
+    {
+        $profile = $this->resolveProfile($userId, $profileId);
         $settings = array_merge(self::DEFAULT_SECURITY, $profile->security_settings ?? [], $payload);
 
         $profile->update([
@@ -124,14 +139,14 @@ final class MemberWorkspaceService
         return $this->securityPayload($profile->fresh());
     }
 
-    public function getPrivacy(string $userId): array
+    public function getPrivacy(string $userId, ?string $profileId = null): array
     {
-        return $this->privacyPayload($this->primaryProfile($userId));
+        return $this->privacyPayload($this->resolveProfile($userId, $profileId));
     }
 
-    public function updatePrivacy(string $userId, array $payload): array
+    public function updatePrivacy(string $userId, array $payload, ?string $profileId = null): array
     {
-        $profile = $this->primaryProfile($userId);
+        $profile = $this->resolveProfile($userId, $profileId);
         $settings = array_merge(self::DEFAULT_PRIVACY, $profile->privacy_settings ?? [], $payload);
 
         $profile->update([
@@ -143,14 +158,14 @@ final class MemberWorkspaceService
         return $this->privacyPayload($profile->fresh());
     }
 
-    public function getParental(string $userId): array
+    public function getParental(string $userId, ?string $profileId = null): array
     {
-        return $this->parentalPayload($this->primaryProfile($userId));
+        return $this->parentalPayload($this->resolveProfile($userId, $profileId));
     }
 
-    public function updateParental(string $userId, array $payload): array
+    public function updateParental(string $userId, array $payload, ?string $profileId = null): array
     {
-        $profile = $this->primaryProfile($userId);
+        $profile = $this->resolveProfile($userId, $profileId);
         $settings = array_merge(self::DEFAULT_PARENTAL, $profile->parental_settings ?? [], $payload);
 
         $profile->update([
@@ -162,10 +177,10 @@ final class MemberWorkspaceService
         return $this->parentalPayload($profile->fresh());
     }
 
-    public function getSettings(string $userId): array
+    public function getSettings(string $userId, ?string $profileId = null): array
     {
         $user = User::findOrFail($userId);
-        $profile = $this->primaryProfile($userId);
+        $profile = $this->resolveProfile($userId, $profileId);
 
         return [
             'locale' => $user->locale,
@@ -176,10 +191,10 @@ final class MemberWorkspaceService
         ];
     }
 
-    public function updateSettings(string $userId, array $payload): array
+    public function updateSettings(string $userId, array $payload, ?string $profileId = null): array
     {
         $user = User::findOrFail($userId);
-        $profile = $this->primaryProfile($userId);
+        $profile = $this->resolveProfile($userId, $profileId);
 
         $user->update([
             'locale' => $payload['locale'] ?? $user->locale,
@@ -208,9 +223,9 @@ final class MemberWorkspaceService
         $user->update(['password' => $newPassword]);
     }
 
-    public function listRules(string $userId, string $listType): array
+    public function listRules(string $userId, string $listType, ?string $profileId = null): array
     {
-        $profile = $this->primaryProfile($userId);
+        $profile = $this->resolveProfile($userId, $profileId);
 
         return ProfileRule::where('profile_id', $profile->id)
             ->where('list_type', $listType)
@@ -219,9 +234,9 @@ final class MemberWorkspaceService
             ->toArray();
     }
 
-    public function createRule(string $userId, string $listType, array $payload): array
+    public function createRule(string $userId, string $listType, array $payload, ?string $profileId = null): array
     {
-        $profile = $this->primaryProfile($userId);
+        $profile = $this->resolveProfile($userId, $profileId);
 
         return $this->profileRuleService->create($userId, $profile->id, [
             'list_type' => $listType,
@@ -231,9 +246,9 @@ final class MemberWorkspaceService
         ]);
     }
 
-    public function deleteRule(string $userId, string $listType, string $ruleId): array
+    public function deleteRule(string $userId, string $listType, string $ruleId, ?string $profileId = null): array
     {
-        $profile = $this->primaryProfile($userId);
+        $profile = $this->resolveProfile($userId, $profileId);
         $rule = ProfileRule::where('profile_id', $profile->id)
             ->where('list_type', $listType)
             ->where('id', $ruleId)
@@ -251,9 +266,9 @@ final class MemberWorkspaceService
      * @param array<int, string> $ruleIds
      * @return array<string, mixed>
      */
-    public function batchDeleteRules(string $userId, string $listType, array $ruleIds): array
+    public function batchDeleteRules(string $userId, string $listType, array $ruleIds, ?string $profileId = null): array
     {
-        $profile = $this->primaryProfile($userId);
+        $profile = $this->resolveProfile($userId, $profileId);
 
         $existingIds = ProfileRule::where('profile_id', $profile->id)
             ->where('list_type', $listType)
@@ -387,15 +402,33 @@ final class MemberWorkspaceService
         ];
     }
 
-    public function dnsEndpoints(string $userId): array
+    public function dnsEndpoints(string $userId, ?string $profileId = null): array
     {
-        $profile = $this->primaryProfile($userId);
+        $profile = $this->resolveProfile($userId, $profileId);
+        $domain = $this->getDnsDomain();
+        // 去掉 prf_ 前缀，格式: https://dns.ocerdns.local/ec8cb1
+        $shortId = str_replace('prf_', '', $profile->id);
 
         return [
-            'doh' => sprintf('https://doh.ocerdns.local/%s/dns-query', $profile->id),
-            'dot' => sprintf('%s.dot.ocerdns.local', $profile->id),
+            'doh' => sprintf('https://%s/%s', $domain, $shortId),
+            'dot' => sprintf('%s.%s', $shortId, $domain),
             'ipv4' => '127.0.0.1',
         ];
+    }
+
+    /**
+     * 从后台基本设置中读取 DNS 域名，默认 dns.ocerdns.local
+     */
+    private function getDnsDomain(): string
+    {
+        $basic = SystemConfig::query()->find('basic');
+        if ($basic && $basic->value) {
+            $decoded = is_string($basic->value) ? json_decode($basic->value, true) : $basic->value;
+            if (is_array($decoded) && !empty($decoded['dns_domain'])) {
+                return $decoded['dns_domain'];
+            }
+        }
+        return 'dns.ocerdns.local';
     }
 
     public function devices(string $userId): array
@@ -406,10 +439,48 @@ final class MemberWorkspaceService
             ->map(fn (Device $device): array => [
                 'id' => $device->id,
                 'name' => $device->name,
+                'device_type' => $device->device_type ?: 'device',
+                'source_ip' => $device->public_ip,
+                'device_id' => $device->device_id,
                 'info' => trim(($device->device_type ?: 'device') . ' ' . ($device->public_ip ?: '')),
                 'last_seen_at' => optional($device->last_seen_at)?->toIso8601String(),
             ])
             ->all();
+    }
+
+    public function updateDevice(string $userId, string $deviceId, array $payload): array
+    {
+        $device = Device::query()
+            ->where('user_id', $userId)
+            ->where('id', $deviceId)
+            ->firstOrFail();
+
+        $device->update([
+            'name' => $payload['name'] ?? $device->name,
+        ]);
+
+        return [
+            'id' => $device->id,
+            'name' => $device->name,
+            'device_type' => $device->device_type,
+            'source_ip' => $device->public_ip,
+            'last_seen_at' => optional($device->last_seen_at)?->toIso8601String(),
+        ];
+    }
+
+    public function deleteDevice(string $userId, string $deviceId): array
+    {
+        $device = Device::query()
+            ->where('user_id', $userId)
+            ->where('id', $deviceId)
+            ->firstOrFail();
+
+        $device->delete();
+
+        return [
+            'id' => $deviceId,
+            'deleted' => true,
+        ];
     }
 
     public function topDomains(string $userId): array

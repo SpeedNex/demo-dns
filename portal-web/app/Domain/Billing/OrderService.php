@@ -91,13 +91,21 @@ final class OrderService
                 'paid_at' => now(),
                 'meta' => array_merge($order->meta ?? [], ['payment_ref' => $paymentRef]),
             ]);
-            // 联动订阅：plan_code 立即生效，order_id 用于幂等回查
-            (new SubscriptionService())->setPlan(
-                userId: $order->user_id,
-                planCode: $order->plan_code,
-                monthlyLimit: null,
-                orderId: (string) $order->id,
-            );
+            if ($order->plan_code === 'wallet_topup') {
+                (new BillingService())->charge(
+                    userId: $order->user_id,
+                    amountMinor: (int) $order->payable_amount_minor,
+                    description: $order->description ?: 'Wallet recharge',
+                );
+            } else {
+                // 联动订阅：plan_code 立即生效，order_id 用于幂等回查
+                (new SubscriptionService())->setPlan(
+                    userId: $order->user_id,
+                    planCode: $order->plan_code,
+                    monthlyLimit: null,
+                    orderId: (string) $order->id,
+                );
+            }
         });
         return $order->fresh();
     }

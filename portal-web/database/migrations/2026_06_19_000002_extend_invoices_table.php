@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
+        $driver = DB::getDriverName();
+
         Schema::table('invoices', function (Blueprint $table): void {
             if (! Schema::hasColumn('invoices', 'billing_type')) {
                 $table->string('billing_type', 30)->default('plan')
@@ -45,12 +47,14 @@ return new class extends Migration {
         }
 
         // 注释统一（MySQL 8.0 通过 MODIFY COLUMN COMMENT 设置）
-        $colInfo = DB::selectOne("SHOW COLUMNS FROM {$prefix}invoices WHERE Field = 'amount_minor'");
-        if ($colInfo) {
-            $colType = $colInfo->Type;
-            $nullable = ((string) $colInfo->Null) === 'YES' ? 'NULL' : 'NOT NULL';
-            $defaultClause = $colInfo->Default === null ? '' : " DEFAULT '{$colInfo->Default}'";
-            DB::statement("ALTER TABLE {$prefix}invoices MODIFY COLUMN amount_minor {$colType} {$nullable}{$defaultClause} COMMENT '单位:分'");
+        if ($driver === 'mysql') {
+            $colInfo = DB::selectOne("SHOW COLUMNS FROM {$prefix}invoices WHERE Field = 'amount_minor'");
+            if ($colInfo) {
+                $colType = $colInfo->Type;
+                $nullable = ((string) $colInfo->Null) === 'YES' ? 'NULL' : 'NOT NULL';
+                $defaultClause = $colInfo->Default === null ? '' : " DEFAULT '{$colInfo->Default}'";
+                DB::statement("ALTER TABLE {$prefix}invoices MODIFY COLUMN amount_minor {$colType} {$nullable}{$defaultClause} COMMENT '单位:分'");
+            }
         }
     }
 

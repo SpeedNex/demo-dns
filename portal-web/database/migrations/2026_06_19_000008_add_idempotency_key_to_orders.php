@@ -22,13 +22,25 @@ return new class extends Migration {
                 $table->string('idempotency_key', 80)->nullable()->after('order_no');
             }
         });
-        DB::statement('CREATE UNIQUE INDEX ' . $prefix . 'orders_user_idem_unique ON ' . $prefix . 'orders (user_id, idempotency_key)');
+        try {
+            DB::statement('CREATE UNIQUE INDEX ' . $prefix . 'orders_user_idem_unique ON ' . $prefix . 'orders (user_id, idempotency_key)');
+        } catch (\Throwable $e) {
+            // already exists
+        }
     }
 
     public function down(): void
     {
         $prefix = DB::connection()->getTablePrefix();
-        DB::statement('DROP INDEX ' . $prefix . 'orders_user_idem_unique ON ' . $prefix . 'orders');
+        try {
+            if (DB::getDriverName() === 'sqlite') {
+                DB::statement('DROP INDEX ' . $prefix . 'orders_user_idem_unique');
+            } else {
+                DB::statement('DROP INDEX ' . $prefix . 'orders_user_idem_unique ON ' . $prefix . 'orders');
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
         // 保留列：向前兼容
     }
 };

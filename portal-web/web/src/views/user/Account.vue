@@ -627,13 +627,22 @@ const handleRecharge = async () => {
         const { data } = await client.post('/member/wallet/recharge', {
             amount: rechargeForm.value.amount
         })
-        if (data.pay_url) {
-            window.open(data.pay_url, '_blank')
+        const payload = data?.data || data
+        if (payload.pay_url) {
+            window.open(payload.pay_url, '_blank')
+            ElMessage.info(t('account.pay.redirectTip') || '已打开支付页面，完成后请刷新本页面查看状态')
+        } else {
+            await loadAccountData()
+            ElMessage.success(t('account.recharge.success') || '充值请求已提交')
         }
         showRechargeDialog.value = false
-        ElMessage.success(t('account.recharge.success') || '充值请求已提交')
     } catch (err) {
-        ElMessage.error(err.message || t('account.recharge.failed') || '充值失败')
+        const errors = err?.response?.data?.errors
+        if (errors && typeof errors === 'object') {
+            ElMessage.error(Object.values(errors).flat().join('\n'))
+        } else {
+            ElMessage.error(err?.response?.data?.message || err.message || t('account.recharge.failed') || '充值失败')
+        }
     } finally {
         recharging.value = false
     }

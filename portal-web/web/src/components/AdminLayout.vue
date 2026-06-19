@@ -115,23 +115,22 @@ const defaultMenuConfig = {
         { id: 'dashboard', labelKey: 'nav.dashboard', path: '/admin/dashboard', icon: 'DataAnalysis', visible: true, sort: 1 },
         { id: 'nodes', labelKey: 'nav.nodes', path: '/admin/nodes', icon: 'Monitor', visible: true, sort: 2 },
         { id: 'geo-dns', labelKey: 'nav.geoDns', path: '/admin/geo-dns', icon: 'Connection', visible: true, sort: 3 },
-        { id: 'rules', labelKey: 'nav.ruleLibrary', path: '/admin/rules', icon: 'Collection', visible: true, sort: 4 },
-        { id: 'publishes', labelKey: 'nav.publishes', path: '/admin/publishes', icon: 'Upload', visible: true, sort: 5 },
-        { id: 'alerts', labelKey: 'admin.alerts', path: '/admin/alerts', icon: 'Message', visible: true, sort: 6 },
-        { id: 'query-logs', labelKey: 'admin.queryLogs', path: '/admin/query-logs', icon: 'Document', visible: true, sort: 7 },
-        { id: 'users', labelKey: 'admin.users', path: '/admin/users', icon: 'User', visible: true, sort: 8 },
-        { id: 'devices', labelKey: 'admin.devices', path: '/admin/devices', icon: 'Avatar', visible: true, sort: 9 },
-        { id: 'member-catalogs', labelKey: 'admin.memberCatalogs.title', path: '/admin/member-catalogs', icon: 'Grid', visible: true, sort: 10 },
-        { id: 'rbac', labelKey: 'admin.rbac.title', path: '/admin/rbac', icon: 'Lock', visible: true, sort: 11 },
-        { id: 'billing', labelKey: 'admin.billing.title', path: '/admin/billing', icon: 'Coin', visible: true, sort: 12 },
-        { id: 'plans', labelKey: 'admin.plans.title', path: '/admin/plans', icon: 'Tickets', visible: true, sort: 13 },
-        { id: 'balance', labelKey: 'admin.finance.balance', path: '/admin/balance', icon: 'Wallet', visible: true, sort: 14 },
-        { id: 'recharge', labelKey: 'admin.finance.recharge', path: '/admin/recharge', icon: 'Coin', visible: true, sort: 15 },
-        { id: 'bill', labelKey: 'admin.finance.bill', path: '/admin/bill', icon: 'Document', visible: true, sort: 16 },
-        { id: 'refund-records', labelKey: 'admin.finance.refundRecords', path: '/admin/refund-records', icon: 'Tickets', visible: true, sort: 17 },
-        { id: 'system-config', labelKey: 'nav.systemConfig', path: '/admin/system-config', icon: 'Tools', visible: true, sort: 18 },
-        { id: 'audit-logs', labelKey: 'nav.auditLogs', path: '/admin/audit-logs', icon: 'Tickets', visible: true, sort: 19 },
-        { id: 'menu-config', labelKey: 'admin.menuConfig.title', path: '/admin/menu-config', icon: 'List', visible: true, sort: 20 },
+        { id: 'rules', labelKey: 'nav.ruleLibrary', path: '/admin/rules', icon: 'Collection', visible: true, sort: 4, groupKey: 'service' },
+        { id: 'alerts', labelKey: 'admin.alerts', path: '/admin/alerts', icon: 'Message', visible: true, sort: 5, groupKey: 'monitor' },
+        { id: 'query-logs', labelKey: 'admin.queryLogs', path: '/admin/query-logs', icon: 'Document', visible: true, sort: 6, groupKey: 'monitor' },
+        { id: 'users', labelKey: 'admin.users', path: '/admin/users', icon: 'User', visible: true, sort: 7, groupKey: 'user' },
+        { id: 'devices', labelKey: 'admin.devices', path: '/admin/devices', icon: 'Avatar', visible: true, sort: 8, groupKey: 'user' },
+        { id: 'member-catalogs', labelKey: 'admin.memberCatalogs.title', path: '/admin/member-catalogs', icon: 'Grid', visible: true, sort: 9, groupKey: 'user' },
+        { id: 'rbac', labelKey: 'admin.rbac.title', path: '/admin/rbac', icon: 'Lock', visible: true, sort: 10, groupKey: 'user' },
+        { id: 'billing', labelKey: 'admin.billing.title', path: '/admin/billing', icon: 'Coin', visible: true, sort: 11, groupKey: 'finance' },
+        { id: 'plans', labelKey: 'admin.plans.title', path: '/admin/plans', icon: 'Tickets', visible: true, sort: 12, groupKey: 'finance' },
+        { id: 'balance', labelKey: 'admin.finance.balance', path: '/admin/balance', icon: 'Wallet', visible: true, sort: 13, groupKey: 'finance' },
+        { id: 'recharge', labelKey: 'admin.finance.recharge', path: '/admin/recharge', icon: 'Coin', visible: true, sort: 14, groupKey: 'finance' },
+        { id: 'bill', labelKey: 'admin.finance.bill', path: '/admin/bill', icon: 'Document', visible: true, sort: 15, groupKey: 'finance' },
+        { id: 'refund-records', labelKey: 'admin.finance.refundRecords', path: '/admin/refund-records', icon: 'Tickets', visible: true, sort: 16, groupKey: 'finance' },
+        { id: 'system-config', labelKey: 'nav.systemConfig', path: '/admin/system-config', icon: 'Tools', visible: true, sort: 17, groupKey: 'settings' },
+        { id: 'audit-logs', labelKey: 'nav.auditLogs', path: '/admin/audit-logs', icon: 'Tickets', visible: true, sort: 18, groupKey: 'monitor' },
+        { id: 'menu-config', labelKey: 'admin.menuConfig.title', path: '/admin/menu-config', icon: 'List', visible: true, sort: 19, groupKey: 'settings' },
     ],
     subMenu: [],
 }
@@ -160,7 +159,7 @@ function normalizeMenuConfig(config) {
     const subMenu = []
 
     for (const item of (config.mainMenu || [])) {
-        if (item.id === 'finance' || item.id === 'basic-config') {
+        if (item.id === 'finance' || item.id === 'basic-config' || item.id === 'publishes') {
             continue
         }
         mainMenu.push({
@@ -326,7 +325,7 @@ const navGroups = computed(() => {
     const subMenu = menuConfig.value.subMenu || []
 
     // 按分组归类菜单（基于 id）
-    const serviceIds = ['dashboard', 'nodes', 'geo-dns', 'rules', 'publishes']
+const serviceIds = ['dashboard', 'nodes', 'geo-dns', 'rules']
     const monitorIds = ['alerts', 'query-logs', 'audit-logs']
     const userIds = ['users', 'devices', 'member-catalogs', 'rbac']
     const financeIds = ['billing', 'plans', 'balance', 'recharge', 'bill', 'refund-records']

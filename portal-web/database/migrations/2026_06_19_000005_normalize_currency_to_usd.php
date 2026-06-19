@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
+        $driver = DB::getDriverName();
         $prefix = DB::connection()->getTablePrefix();
         $tables = [
             'wallets' => 'currency',
@@ -27,21 +28,24 @@ return new class extends Migration {
                 continue;
             }
             DB::statement("UPDATE {$prefix}{$table} SET {$col} = 'USD' WHERE {$col} IS NULL OR {$col} = ''");
-            $colInfo = DB::selectOne("SHOW COLUMNS FROM {$prefix}{$table} WHERE Field = ?", [$col]);
-            if ($colInfo) {
-                // 提取列类型（保留 Null/Default 等子句之外的部分）
-                $colType = $colInfo->Type;
-                $nullable = ((string) $colInfo->Null) === 'YES' ? 'NULL' : 'NOT NULL';
-                DB::statement("ALTER TABLE {$prefix}{$table} MODIFY COLUMN {$col} {$colType} {$nullable} DEFAULT 'USD'");
+            if ($driver === 'mysql') {
+                $colInfo = DB::selectOne("SHOW COLUMNS FROM {$prefix}{$table} WHERE Field = ?", [$col]);
+                if ($colInfo) {
+                    $colType = $colInfo->Type;
+                    $nullable = ((string) $colInfo->Null) === 'YES' ? 'NULL' : 'NOT NULL';
+                    DB::statement("ALTER TABLE {$prefix}{$table} MODIFY COLUMN {$col} {$colType} {$nullable} DEFAULT 'USD'");
+                }
             }
         }
         if (Schema::hasColumn('users', 'currency')) {
             DB::statement("UPDATE {$prefix}users SET currency = 'USD' WHERE currency IS NULL OR currency = ''");
-            $colInfo = DB::selectOne("SHOW COLUMNS FROM {$prefix}users WHERE Field = 'currency'");
-            if ($colInfo) {
-                $colType = $colInfo->Type;
-                $nullable = ((string) $colInfo->Null) === 'YES' ? 'NULL' : 'NOT NULL';
-                DB::statement("ALTER TABLE {$prefix}users MODIFY COLUMN currency {$colType} {$nullable} DEFAULT 'USD'");
+            if ($driver === 'mysql') {
+                $colInfo = DB::selectOne("SHOW COLUMNS FROM {$prefix}users WHERE Field = 'currency'");
+                if ($colInfo) {
+                    $colType = $colInfo->Type;
+                    $nullable = ((string) $colInfo->Null) === 'YES' ? 'NULL' : 'NOT NULL';
+                    DB::statement("ALTER TABLE {$prefix}users MODIFY COLUMN currency {$colType} {$nullable} DEFAULT 'USD'");
+                }
             }
         }
     }

@@ -17,7 +17,7 @@
                         <template #default="{ row }">
                             <div style="display:flex;align-items:center;gap:8px">
                                 <img :src="row.icon" alt="" style="width:16px;height:16px;border-radius:3px" @error="row.icon = ''" v-if="row.icon" />
-                                <span>{{ row.name }}</span>
+                                <span>{{ getLocalizedValue(row.name) }}</span>
                                 <el-tag v-if="row.category" size="small" :type="row.category === 'website' ? 'info' : row.category === 'app' ? 'success' : 'warning'" style="margin-left:4px">
                                     {{ $t(`parental.category.${row.category}`) }}
                                 </el-tag>
@@ -88,7 +88,7 @@
                 <div v-for="item in filteredPresets" :key="item.name" class="picker-item" :style="{ borderLeftColor: item.category === 'website' ? '#3b82f6' : item.category === 'app' ? '#10b981' : '#f59e0b' }">
                     <div class="picker-info">
                         <img v-if="item.icon" :src="item.icon" alt="" style="width:16px;height:16px;border-radius:3px" @error="item.icon = ''" />
-                        <span class="picker-name">{{ item.name }}</span>
+                        <span class="picker-name">{{ getLocalizedValue(item.name) }}</span>
                         <el-tag size="small" :type="item.category === 'website' ? 'info' : item.category === 'app' ? 'success' : 'warning'" style="margin-left:6px">
                             {{ $t(`parental.category.${item.category}`) }}
                         </el-tag>
@@ -121,8 +121,10 @@ import { Plus } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
+import { useCurrentProfile } from '@/composables/useCurrentProfile'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const { currentProfileId } = useCurrentProfile()
 const saving = ref(false)
 const showPicker = ref(false)
 const showCategoryPicker = ref(false)
@@ -137,17 +139,25 @@ const categoryPresets = ref([
     { key: 'streaming', name: 'Streaming', desc: 'Video and live streaming' },
 ])
 
+const getLocalizedValue = (value) => {
+    if (!value) return ''
+    if (typeof value === 'object') {
+        return value[locale.value] || value['zh-CN'] || value.zh || value.en || Object.values(value)[0] || ''
+    }
+    return value
+}
+
 const getCategoryName = (key) => {
     if (!key) return ''
     const preset = categoryPresets.value.find((item) => item.key === key)
-    if (preset?.name) return preset.name
+    if (preset?.name) return getLocalizedValue(preset.name)
     const name = t(`parental.categories.${key}`)
     return name && name !== `parental.categories.${key}` ? name : key
 }
 const getCategoryDesc = (key) => {
     if (!key) return ''
     const preset = categoryPresets.value.find((item) => item.key === key)
-    if (preset?.desc) return preset.desc
+    if (preset?.desc) return getLocalizedValue(preset.desc)
     const desc = t(`parental.categories.${key}Desc`)
     return desc && desc !== `parental.categories.${key}Desc` ? desc : ''
 }
@@ -223,7 +233,7 @@ const presets = ref([
 
 const blockedItems = ref([])
 
-const isBlocked = (item) => blockedItems.value.some((b) => b.name === item.name)
+const isBlocked = (item) => blockedItems.value.some((b) => getLocalizedValue(b.name) === getLocalizedValue(item.name))
 
 const blockItem = (item) => {
     if (!isBlocked(item)) {
@@ -233,14 +243,14 @@ const blockItem = (item) => {
 }
 
 const removeItem = (row) => {
-    blockedItems.value = blockedItems.value.filter((b) => b.name !== row.name)
+    blockedItems.value = blockedItems.value.filter((b) => getLocalizedValue(b.name) !== getLocalizedValue(row.name))
     autoSave()
 }
 
 const filteredPresets = computed(() => {
     const q = searchQuery.value.toLowerCase().trim()
     if (!q) return presets.value
-    return presets.value.filter((p) => p.name.toLowerCase().includes(q))
+    return presets.value.filter((p) => getLocalizedValue(p.name).toLowerCase().includes(q))
 })
 
 const categoryItems = [
@@ -261,6 +271,7 @@ const handleSave = async (forceData = null) => {
             ...form,
             blocked_items: [...blockedItems.value],
             blocked_categories: [...blockedCategories.value],
+            profile_id: currentProfileId.value,
         }
         await client.put('/member/parental', data)
     } catch {
@@ -292,7 +303,7 @@ onMounted(async () => {
         if (Array.isArray(catalogs.parental_categories) && catalogs.parental_categories.length > 0) {
             categoryPresets.value = catalogs.parental_categories
         }
-        const { data } = await client.get('/member/parental')
+        const { data } = await client.get('/member/parental', { params: { profile_id: currentProfileId.value } })
         const apiData = data.data || {}
         Object.assign(form, { ...apiData })
         if (apiData.blocked_items) {

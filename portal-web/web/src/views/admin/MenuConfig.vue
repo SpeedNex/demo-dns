@@ -23,18 +23,24 @@
             >
                 <el-table-column :label="$t('admin.menuConfig.name') || '菜单名称'" min-width="250">
                     <template #default="{ row }">
-                        <span>{{ row.labelKey.startsWith('nav.') || row.labelKey.startsWith('admin.') ? $t(row.labelKey) : row.labelKey }}</span>
+                        <span>{{ resolveLabel(row) }}</span>
                     </template>
                 </el-table-column>
-                <el-table-column :label="$t('admin.menuConfig.path') || '路径'" prop="path" min-width="180" />
+                <el-table-column :label="$t('admin.menuConfig.path') || '路径'" min-width="180">
+                    <template #default="{ row }">
+                        <span>{{ row.isGroup ? '--' : row.path }}</span>
+                    </template>
+                </el-table-column>
                 <el-table-column :label="$t('admin.menuConfig.visible') || '显示'" width="100" align="center">
                     <template #default="{ row }">
-                        <el-switch v-model="row.visible" @change="handleVisibleChange(row)" />
+                        <el-switch v-if="!row.isGroup" v-model="row.visible" @change="handleVisibleChange(row)" />
+                        <span v-else>--</span>
                     </template>
                 </el-table-column>
                 <el-table-column :label="$t('admin.menuConfig.sortOrder') || '排序'" width="150" align="center">
                     <template #default="{ row }">
-                        <el-button-group v-if="!row.parentId">
+                        <span v-if="row.isGroup">--</span>
+                        <el-button-group v-else-if="!row.parentId">
                             <el-button :disabled="isFirstMain(row)" size="small" @click="moveUp(row)" :icon="Top" />
                             <el-button :disabled="isLastMain(row)" size="small" @click="moveDown(row)" :icon="Bottom" />
                         </el-button-group>
@@ -46,7 +52,7 @@
                 </el-table-column>
                 <el-table-column :label="$t('common.actions') || '操作'" width="120" align="center">
                     <template #default="{ row }">
-                        <el-button size="small" text type="primary" @click="editMenu(row)">
+                        <el-button v-if="!row.isGroup" size="small" text type="primary" @click="editMenu(row)">
                             <el-icon><Edit /></el-icon>
                         </el-button>
                     </template>
@@ -103,6 +109,13 @@ import {
 import client from '@/api/client'
 
 const { t } = useI18n()
+const groupDefinitions = [
+    { id: 'service', labelKey: 'admin.menuConfig.group.service', sort: 1 },
+    { id: 'monitor', labelKey: 'admin.menuConfig.group.monitor', sort: 2 },
+    { id: 'user', labelKey: 'admin.menuConfig.group.user', sort: 3 },
+    { id: 'finance', labelKey: 'admin.menuConfig.group.finance', sort: 4 },
+    { id: 'settings', labelKey: 'admin.menuConfig.group.settings', sort: 5 },
+]
 
 const saving = ref(false)
 const dialogVisible = ref(false)
@@ -127,26 +140,25 @@ const iconOptions = [
 ]
 
 const defaultMainMenuItems = [
-    { id: 'dashboard', labelKey: 'nav.dashboard', path: '/admin/dashboard', icon: 'DataAnalysis', visible: true, sort: 1 },
-    { id: 'nodes', labelKey: 'nav.nodes', path: '/admin/nodes', icon: 'Monitor', visible: true, sort: 2 },
-    { id: 'geo-dns', labelKey: 'nav.geoDns', path: '/admin/geo-dns', icon: 'Connection', visible: true, sort: 3 },
-    { id: 'rules', labelKey: 'nav.ruleLibrary', path: '/admin/rules', icon: 'Collection', visible: true, sort: 4 },
-    { id: 'publishes', labelKey: 'nav.publishes', path: '/admin/publishes', icon: 'Upload', visible: true, sort: 5 },
-    { id: 'alerts', labelKey: 'admin.alerts', path: '/admin/alerts', icon: 'Message', visible: true, sort: 6 },
-    { id: 'query-logs', labelKey: 'admin.queryLogs', path: '/admin/query-logs', icon: 'Document', visible: true, sort: 7 },
-    { id: 'users', labelKey: 'admin.users', path: '/admin/users', icon: 'User', visible: true, sort: 8 },
-    { id: 'devices', labelKey: 'admin.devices', path: '/admin/devices', icon: 'Avatar', visible: true, sort: 9 },
-    { id: 'member-catalogs', labelKey: 'admin.memberCatalogs.title', path: '/admin/member-catalogs', icon: 'Grid', visible: true, sort: 10 },
-    { id: 'rbac', labelKey: 'admin.rbac.title', path: '/admin/rbac', icon: 'Lock', visible: true, sort: 11 },
-    { id: 'billing', labelKey: 'admin.billing.title', path: '/admin/billing', icon: 'Coin', visible: true, sort: 12 },
-    { id: 'plans', labelKey: 'admin.plans.title', path: '/admin/plans', icon: 'Tickets', visible: true, sort: 13 },
-    { id: 'balance', labelKey: 'admin.finance.balance', path: '/admin/balance', icon: 'Wallet', visible: true, sort: 14 },
-    { id: 'recharge', labelKey: 'admin.finance.recharge', path: '/admin/recharge', icon: 'Coin', visible: true, sort: 15 },
-    { id: 'bill', labelKey: 'admin.finance.bill', path: '/admin/bill', icon: 'Document', visible: true, sort: 16 },
-    { id: 'refund-records', labelKey: 'admin.finance.refundRecords', path: '/admin/refund-records', icon: 'Tickets', visible: true, sort: 17 },
-    { id: 'system-config', labelKey: 'nav.systemConfig', path: '/admin/system-config', icon: 'Tools', visible: true, sort: 18 },
-    { id: 'audit-logs', labelKey: 'nav.auditLogs', path: '/admin/audit-logs', icon: 'Tickets', visible: true, sort: 19 },
-    { id: 'menu-config', labelKey: 'admin.menuConfig.title', path: '/admin/menu-config', icon: 'List', visible: true, sort: 20 },
+    { id: 'dashboard', labelKey: 'nav.dashboard', path: '/admin/dashboard', icon: 'DataAnalysis', visible: true, sort: 1, groupKey: 'service' },
+    { id: 'nodes', labelKey: 'nav.nodes', path: '/admin/nodes', icon: 'Monitor', visible: true, sort: 2, groupKey: 'service' },
+    { id: 'geo-dns', labelKey: 'nav.geoDns', path: '/admin/geo-dns', icon: 'Connection', visible: true, sort: 3, groupKey: 'service' },
+    { id: 'rules', labelKey: 'nav.ruleLibrary', path: '/admin/rules', icon: 'Collection', visible: true, sort: 4, groupKey: 'service' },
+    { id: 'alerts', labelKey: 'admin.alerts', path: '/admin/alerts', icon: 'Message', visible: true, sort: 5, groupKey: 'monitor' },
+    { id: 'query-logs', labelKey: 'admin.queryLogs', path: '/admin/query-logs', icon: 'Document', visible: true, sort: 6, groupKey: 'monitor' },
+    { id: 'users', labelKey: 'admin.users', path: '/admin/users', icon: 'User', visible: true, sort: 7, groupKey: 'user' },
+    { id: 'devices', labelKey: 'admin.devices', path: '/admin/devices', icon: 'Avatar', visible: true, sort: 8, groupKey: 'user' },
+    { id: 'member-catalogs', labelKey: 'admin.memberCatalogs.title', path: '/admin/member-catalogs', icon: 'Grid', visible: true, sort: 9, groupKey: 'user' },
+    { id: 'rbac', labelKey: 'admin.rbac.title', path: '/admin/rbac', icon: 'Lock', visible: true, sort: 10, groupKey: 'user' },
+    { id: 'billing', labelKey: 'admin.billing.title', path: '/admin/billing', icon: 'Coin', visible: true, sort: 11, groupKey: 'finance' },
+    { id: 'plans', labelKey: 'admin.plans.title', path: '/admin/plans', icon: 'Tickets', visible: true, sort: 12, groupKey: 'finance' },
+    { id: 'balance', labelKey: 'admin.finance.balance', path: '/admin/balance', icon: 'Wallet', visible: true, sort: 13, groupKey: 'finance' },
+    { id: 'recharge', labelKey: 'admin.finance.recharge', path: '/admin/recharge', icon: 'Coin', visible: true, sort: 14, groupKey: 'finance' },
+    { id: 'bill', labelKey: 'admin.finance.bill', path: '/admin/bill', icon: 'Document', visible: true, sort: 15, groupKey: 'finance' },
+    { id: 'refund-records', labelKey: 'admin.finance.refundRecords', path: '/admin/refund-records', icon: 'Tickets', visible: true, sort: 16, groupKey: 'finance' },
+    { id: 'system-config', labelKey: 'nav.systemConfig', path: '/admin/system-config', icon: 'Tools', visible: true, sort: 17, groupKey: 'settings' },
+    { id: 'audit-logs', labelKey: 'nav.auditLogs', path: '/admin/audit-logs', icon: 'Tickets', visible: true, sort: 18, groupKey: 'monitor' },
+    { id: 'menu-config', labelKey: 'admin.menuConfig.title', path: '/admin/menu-config', icon: 'List', visible: true, sort: 19, groupKey: 'settings' },
 ]
 
 const defaultSubMenuItems = []
@@ -164,7 +176,7 @@ const normalizeMenuConfig = (mainMenu = [], subMenu = []) => {
     const normalizedSub = []
 
     for (const item of mainMenu) {
-        if (item.id === 'finance' || item.id === 'basic-config') {
+        if (item.id === 'finance' || item.id === 'basic-config' || item.id === 'publishes') {
             continue
         }
         normalizedMain.push({
@@ -200,16 +212,43 @@ const mainMenuItems = ref([...defaultMainMenuItems])
 const subMenuItems = ref([...defaultSubMenuItems])
 
 const menuTree = computed(() => {
-    return mainMenuItems.value.map(main => ({
-        ...main,
-        children: subMenuItems.value
-            .filter(sub => sub.parentId === main.id)
+    return groupDefinitions.map((group) => {
+        const children = mainMenuItems.value
+            .filter((main) => (main.groupKey || 'service') === group.id)
             .sort((a, b) => a.sort - b.sort)
-    })).sort((a, b) => a.sort - b.sort)
+            .map((main) => ({
+                ...main,
+                children: subMenuItems.value
+                    .filter((sub) => sub.parentId === main.id)
+                    .sort((a, b) => a.sort - b.sort),
+            }))
+
+        return {
+            id: `group-${group.id}`,
+            labelKey: group.labelKey,
+            path: '',
+            sort: group.sort,
+            visible: true,
+            isGroup: true,
+            children,
+        }
+    }).filter((group) => group.children.length > 0)
 })
 
-const mainItems = computed(() => menuTree.value.filter(item => !item.parentId))
+const mainItems = computed(() => mainMenuItems.value)
 const childItems = computed(() => subMenuItems.value)
+
+const resolveLabel = (row) => {
+    if (!row?.labelKey) {
+        return ''
+    }
+
+    if (row.labelKey.startsWith('nav.') || row.labelKey.startsWith('admin.')) {
+        return t(row.labelKey)
+    }
+
+    return row.labelKey
+}
 
 const isFirstMain = (row) => {
     const index = mainItems.value.findIndex(item => item.id === row.id)

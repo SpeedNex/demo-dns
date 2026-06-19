@@ -29,6 +29,19 @@ class ApiKey extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $apiKey): void {
+            if ($apiKey->scopes === null) {
+                $apiKey->scopes = ['dns:read'];
+            }
+
+            if (blank($apiKey->status)) {
+                $apiKey->status = 'active';
+            }
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');

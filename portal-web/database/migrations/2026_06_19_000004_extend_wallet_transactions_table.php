@@ -40,14 +40,11 @@ return new class extends Migration {
 
     private function safeIndex(string $table, string $name, string $cols, bool $unique = false): void
     {
-        $exists = DB::select(
-            "SELECT 1 FROM information_schema.statistics WHERE table_schema = DATABASE() AND index_name = ?",
-            [$name]
-        );
-        if (count($exists) > 0) {
-            return;
-        }
         $kw = $unique ? 'CREATE UNIQUE INDEX' : 'CREATE INDEX';
-        DB::statement("{$kw} {$name} ON {$table} {$cols}");
+        try {
+            DB::statement("{$kw} {$name} ON {$table} {$cols}");
+        } catch (\Throwable $e) {
+            // index already exists / unsupported duplicate create
+        }
     }
 };

@@ -16,6 +16,7 @@ control_plane:
     node_id: node_b2synjbh2thmul8q
     heartbeat_interval: 30
     config_poll_interval: 30
+    profiles_path: ./configs
 upstream:
     - 1.1.1.1
     - 8.8.8.8

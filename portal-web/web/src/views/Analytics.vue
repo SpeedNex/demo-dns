@@ -204,8 +204,10 @@ import { useI18n } from 'vue-i18n'
 import { ref, computed, onMounted } from 'vue'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
+import { useCurrentProfile } from '@/composables/useCurrentProfile'
 
 const { t } = useI18n()
+const { currentProfileId } = useCurrentProfile()
 
 const stats = ref(null)
 const topDomains = ref([])
@@ -228,7 +230,7 @@ const quotaPercent = computed(() => {
 
 onMounted(async () => {
     try {
-        const { data } = await client.get('/member/analytics')
+        const { data } = await client.get('/member/analytics', { params: { profile_id: currentProfileId.value } })
         const d = data.data || {}
         stats.value = d
         topDomains.value = d.top_domains || []

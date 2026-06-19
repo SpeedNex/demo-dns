@@ -67,11 +67,14 @@
                     </el-table-column>
                     <el-table-column :label="$t('devices.sourceIp')" width="140">
                         <template #default="{ row }">
-                            <span>{{ extractIp(row.info) }}</span>
+                            <span>{{ row.source_ip || extractIp(row.info) }}</span>
                         </template>
                     </el-table-column>
-                    <el-table-column :label="$t('devices.actions')" width="100">
+                    <el-table-column :label="$t('devices.actions')" width="170">
                         <template #default="{ row }">
+                            <el-button size="small" text type="primary" @click="openRename(row)">
+                                {{ $t('common.edit') }}
+                            </el-button>
                             <el-button type="danger" size="small" text @click="handleDelete(row)">
                                 {{ $t('devices.delete') }}
                             </el-button>
@@ -79,6 +82,18 @@
                     </el-table-column>
                 </el-table>
             </el-card>
+
+            <el-dialog v-model="showRenameDialog" :title="$t('common.edit')" width="420px">
+                <el-form label-position="top">
+                    <el-form-item :label="$t('devices.name')">
+                        <el-input v-model="renameForm.name" />
+                    </el-form-item>
+                </el-form>
+                <template #footer>
+                    <el-button @click="showRenameDialog = false">{{ $t('common.cancel') }}</el-button>
+                    <el-button type="primary" :loading="renaming" @click="handleRename">{{ $t('common.save') }}</el-button>
+                </template>
+            </el-dialog>
         </div>
     </Layout>
 </template>
@@ -95,6 +110,10 @@ const { t } = useI18n()
 
 const devices = ref([])
 const endpoints = ref(null)
+const showRenameDialog = ref(false)
+const renaming = ref(false)
+const renameTarget = ref(null)
+const renameForm = ref({ name: '' })
 const fetchDevices = async () => {
     try {
         const { data } = await client.get('/member/member-center/devices')
@@ -134,10 +153,31 @@ const handleDelete = async (row) => {
             t('devices.confirmDelete'),
             { confirmButtonText: t('devices.delete'), cancelButtonText: t('common.cancel'), type: 'warning' }
         )
-        // Devices currently have no dedicated delete endpoint at the member level.
-        // The cleaner handles it via profile device unbinding.
-        ElMessage.info(t('devices.deviceRemoval'))
+        await client.delete(`/member/devices/${row.id}`)
+        ElMessage.success(t('common.deleteSuccess') || '删除成功')
+        fetchDevices()
     } catch { /* cancelled */ }
+}
+
+const openRename = (row) => {
+    renameTarget.value = row
+    renameForm.value = { name: row.name || '' }
+    showRenameDialog.value = true
+}
+
+const handleRename = async () => {
+    if (!renameTarget.value) return
+    renaming.value = true
+    try {
+        await client.put(`/member/devices/${renameTarget.value.id}`, { name: renameForm.value.name })
+        ElMessage.success(t('common.saveSuccess') || '保存成功')
+        showRenameDialog.value = false
+        fetchDevices()
+    } catch (error) {
+        ElMessage.error(error?.response?.data?.message || t('common.saveFailed'))
+    } finally {
+        renaming.value = false
+    }
 }
 
 onMounted(() => {

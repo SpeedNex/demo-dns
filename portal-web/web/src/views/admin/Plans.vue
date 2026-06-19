@@ -48,96 +48,151 @@
         </el-table>
     </ListPage>
 
-    <el-dialog v-model="dialogVisible" :title="editingPlan ? '编辑套餐' : '新增套餐'" width="760px">
-        <el-form :model="form" label-position="top">
-            <el-row :gutter="16">
-                <el-col :span="12">
-                    <el-form-item label="编码">
-                        <el-input v-model="form.code" :disabled="Boolean(editingPlan)" />
-                    </el-form-item>
-                </el-col>
-                <el-col :span="12">
-                    <el-form-item label="名称">
-                        <el-input v-model="form.name" />
-                    </el-form-item>
-                </el-col>
-            </el-row>
-            <el-row :gutter="16">
-                <el-col :span="8">
-                    <el-form-item label="状态">
-                        <el-select v-model="form.status" style="width:100%">
-                            <el-option value="active" label="active" />
-                            <el-option value="inactive" label="inactive" />
-                        </el-select>
-                    </el-form-item>
-                </el-col>
-                <el-col :span="8">
-                    <el-form-item label="排序">
-                        <el-input-number v-model="form.sort_order" :min="0" :max="9999" style="width:100%" />
-                    </el-form-item>
-                </el-col>
-                <el-col :span="8">
-                    <el-form-item label="徽标">
-                        <el-input v-model="form.badge" placeholder="例如 Recommended" />
-                    </el-form-item>
-                </el-col>
-            </el-row>
-            <el-form-item label="描述">
-                <el-input v-model="form.description" />
-            </el-form-item>
-            <el-form-item>
-                <el-switch v-model="form.is_featured" inline-prompt active-text="推荐" inactive-text="普通" />
-            </el-form-item>
-            <el-form-item label="功能列表（每行一个）">
-                <el-input v-model="featuresText" type="textarea" :rows="6" />
-            </el-form-item>
-            <el-row :gutter="16">
-                <el-col :span="8">
-                    <el-form-item label="月查询上限">
-                        <el-input-number v-model="monthlyQueriesLimit" :min="0" style="width:100%" />
-                    </el-form-item>
-                </el-col>
-                <el-col :span="8">
-                    <el-form-item label="Profile 上限">
-                        <el-input-number v-model="profileLimit" :min="0" style="width:100%" />
-                    </el-form-item>
-                </el-col>
-                <el-col :span="8">
-                    <el-form-item label="团队成员上限">
-                        <el-input-number v-model="teamLimit" :min="0" style="width:100%" />
-                    </el-form-item>
-                </el-col>
-            </el-row>
+    <el-dialog v-model="dialogVisible" :title="editingPlan ? '编辑套餐' : '新增套餐'" width="780px" destroy-on-close>
+        <el-form :model="form" label-position="top" class="plan-form">
+            <!-- 基本信息 -->
+            <div class="form-section">
+                <div class="section-header">
+                    <el-icon><InfoFilled /></el-icon>
+                    <span>基本信息</span>
+                </div>
+                <el-row :gutter="20">
+                    <el-col :span="12">
+                        <el-form-item label="套餐编码">
+                            <el-input v-model="form.code" :disabled="Boolean(editingPlan)" placeholder="如 free, pro, business" />
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item label="套餐名称">
+                            <el-input v-model="form.name" placeholder="如 Free, Pro, Business" />
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-form-item label="描述">
+                    <el-input v-model="form.description" placeholder="简要描述套餐特点" />
+                </el-form-item>
+                <el-row :gutter="20">
+                    <el-col :span="8">
+                        <el-form-item label="状态">
+                            <el-select v-model="form.status" style="width:100%">
+                                <el-option value="active" label="上架" />
+                                <el-option value="inactive" label="下架" />
+                            </el-select>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="8">
+                        <el-form-item label="排序">
+                            <el-input-number v-model="form.sort_order" :min="0" :max="9999" style="width:100%" />
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="8">
+                        <el-form-item label="徽标">
+                            <el-input v-model="form.badge" placeholder="如 Recommended" />
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-form-item>
+                    <el-switch v-model="form.is_featured" inline-prompt active-text="推荐套餐" inactive-text="普通套餐" />
+                </el-form-item>
+            </div>
 
-            <div class="section-title">价格配置</div>
-            <el-row v-for="(price, index) in form.prices" :key="index" :gutter="12" class="price-row">
-                <el-col :span="6">
-                    <el-select v-model="price.billing_cycle" style="width:100%">
-                        <el-option value="monthly" label="monthly" />
-                        <el-option value="yearly" label="yearly" />
-                    </el-select>
-                </el-col>
-                <el-col :span="5">
-                    <el-input v-model="price.currency" />
-                </el-col>
-                <el-col :span="5">
-                    <el-input-number v-model="price.amount_major" :min="0" :precision="2" style="width:100%" />
-                </el-col>
-                <el-col :span="5">
-                    <el-select v-model="price.status" style="width:100%">
-                        <el-option value="active" label="active" />
-                        <el-option value="inactive" label="inactive" />
-                    </el-select>
-                </el-col>
-                <el-col :span="3">
-                    <el-button text type="danger" @click="removePrice(index)">删除</el-button>
-                </el-col>
-            </el-row>
-            <el-button plain @click="addPrice">新增价格</el-button>
+            <!-- 功能列表 -->
+            <div class="form-section">
+                <div class="section-header">
+                    <el-icon><List /></el-icon>
+                    <span>功能列表</span>
+                </div>
+                <el-form-item label="每行一个功能描述">
+                    <el-input v-model="featuresText" type="textarea" :rows="5" placeholder="无限制 DNS 查询&#10;支持自定义规则&#10;团队协作" />
+                </el-form-item>
+            </div>
+
+            <!-- 配额限制 -->
+            <div class="form-section">
+                <div class="section-header">
+                    <el-icon><Odometer /></el-icon>
+                    <span>配额限制</span>
+                    <span class="section-hint">0 或留空表示无限制</span>
+                </div>
+                <el-row :gutter="20">
+                    <el-col :span="8">
+                        <el-form-item>
+                            <template #label>
+                                <span class="limit-label">
+                                    月查询上限
+                                    <el-tooltip content="免费套餐的月查询额度，超出后按量计费" placement="top">
+                                        <el-icon class="help-icon"><QuestionFilled /></el-icon>
+                                    </el-tooltip>
+                                </span>
+                            </template>
+                            <el-input-number v-model="monthlyQueriesLimit" :min="0" :step="10000" style="width:100%" placeholder="如 300000" />
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="8">
+                        <el-form-item label="Profile 上限">
+                            <el-input-number v-model="profileLimit" :min="0" style="width:100%" placeholder="如 3" />
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="8">
+                        <el-form-item label="团队成员上限">
+                            <el-input-number v-model="teamLimit" :min="0" style="width:100%" placeholder="如 5" />
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+            </div>
+
+            <!-- 价格配置 -->
+            <div class="form-section">
+                <div class="section-header">
+                    <el-icon><Money /></el-icon>
+                    <span>价格配置</span>
+                </div>
+                <div class="price-table">
+                    <div class="price-header">
+                        <span class="price-col price-col-cycle">计费周期</span>
+                        <span class="price-col price-col-currency">货币</span>
+                        <span class="price-col price-col-amount">金额</span>
+                        <span class="price-col price-col-status">状态</span>
+                        <span class="price-col price-col-action">操作</span>
+                    </div>
+                    <div v-for="(price, index) in form.prices" :key="index" class="price-row">
+                        <div class="price-col price-col-cycle">
+                            <el-select v-model="price.billing_cycle" style="width:100%">
+                                <el-option value="monthly" label="月付" />
+                                <el-option value="yearly" label="年付" />
+                            </el-select>
+                        </div>
+                        <div class="price-col price-col-currency">
+                            <el-select v-model="price.currency" style="width:100%">
+                                <el-option value="USD" label="USD" />
+                                <el-option value="EUR" label="EUR" />
+                                <el-option value="CNY" label="CNY" />
+                            </el-select>
+                        </div>
+                        <div class="price-col price-col-amount">
+                            <el-input-number v-model="price.amount_major" :min="0" :precision="2" style="width:100%" :controls="false" />
+                        </div>
+                        <div class="price-col price-col-status">
+                            <el-select v-model="price.status" style="width:100%">
+                                <el-option value="active" label="启用" />
+                                <el-option value="inactive" label="停用" />
+                            </el-select>
+                        </div>
+                        <div class="price-col price-col-action">
+                            <el-button text type="danger" :icon="Delete" @click="removePrice(index)" :disabled="form.prices.length <= 1" />
+                        </div>
+                    </div>
+                </div>
+                <el-button type="primary" plain @click="addPrice" :icon="Plus" class="add-price-btn">
+                    新增价格
+                </el-button>
+            </div>
         </el-form>
         <template #footer>
-            <el-button @click="dialogVisible = false">取消</el-button>
-            <el-button type="primary" :loading="saving" @click="handleSave">保存</el-button>
+            <div class="dialog-footer">
+                <el-button @click="dialogVisible = false">取消</el-button>
+                <el-button type="primary" :loading="saving" @click="handleSave">保存套餐</el-button>
+            </div>
         </template>
     </el-dialog>
 </template>
@@ -145,7 +200,7 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Delete, InfoFilled, List, Odometer, Money, QuestionFilled } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
 
@@ -312,13 +367,147 @@ fetchPlans()
     font-size: 12px;
     font-weight: 600;
 }
-.section-title {
-    margin: 6px 0 12px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #334155;
+
+/* 弹窗表单分区 */
+.plan-form {
+    max-height: 65vh;
+    overflow-y: auto;
+    padding-right: 4px;
 }
-.price-row + .price-row {
-    margin-top: 10px;
+
+.form-section {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 20px 20px 12px;
+    margin-bottom: 16px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.section-header .el-icon {
+    color: #2563eb;
+    font-size: 16px;
+}
+
+.section-hint {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 400;
+    color: #94a3b8;
+}
+
+.limit-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.help-icon {
+    font-size: 14px;
+    color: #94a3b8;
+    cursor: help;
+}
+
+.help-icon:hover {
+    color: #2563eb;
+}
+
+/* 价格表格 */
+.price-table {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.price-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    background: #f1f5f9;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.price-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    background: #fff;
+    transition: background 0.15s;
+}
+
+.price-row:last-child {
+    border-bottom: none;
+}
+
+.price-row:hover {
+    background: #f8fafc;
+}
+
+.price-col {
+    padding: 0 6px;
+}
+
+.price-col-cycle {
+    flex: 0 0 140px;
+}
+
+.price-col-currency {
+    flex: 0 0 90px;
+}
+
+.price-col-amount {
+    flex: 0 0 140px;
+}
+
+.price-col-status {
+    flex: 0 0 90px;
+}
+
+.price-col-action {
+    flex: 0 0 48px;
+    display: flex;
+    justify-content: center;
+}
+
+.add-price-btn {
+    margin-top: 12px;
+}
+
+.dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* 滚动条 */
+.plan-form::-webkit-scrollbar {
+    width: 5px;
+}
+
+.plan-form::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.plan-form::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
 }
 </style>

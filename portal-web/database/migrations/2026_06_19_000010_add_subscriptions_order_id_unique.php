@@ -21,18 +21,24 @@ return new class extends Migration {
             }
         });
         // 唯一索引：同一 order_id 只能产生一个 subscription
-        $exists = DB::selectOne(
-            "SELECT 1 FROM information_schema.statistics WHERE table_schema = DATABASE() AND index_name = ?",
-            [$prefix . 'subscriptions_order_id_unique']
-        );
-        if ($exists === null) {
+        try {
             DB::statement('CREATE UNIQUE INDEX ' . $prefix . 'subscriptions_order_id_unique ON ' . $prefix . 'subscriptions (order_id)');
+        } catch (\Throwable $e) {
+            // already exists
         }
     }
 
     public function down(): void
     {
         $prefix = DB::connection()->getTablePrefix();
-        DB::statement('DROP INDEX ' . $prefix . 'subscriptions_order_id_unique ON ' . $prefix . 'subscriptions');
+        try {
+            if (DB::getDriverName() === 'sqlite') {
+                DB::statement('DROP INDEX ' . $prefix . 'subscriptions_order_id_unique');
+            } else {
+                DB::statement('DROP INDEX ' . $prefix . 'subscriptions_order_id_unique ON ' . $prefix . 'subscriptions');
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
     }
 };

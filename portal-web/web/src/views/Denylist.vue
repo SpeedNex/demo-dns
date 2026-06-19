@@ -89,8 +89,10 @@ import { useI18n } from 'vue-i18n'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
 import { Plus } from '@element-plus/icons-vue'
+import { useCurrentProfile } from '@/composables/useCurrentProfile'
 
 const { t } = useI18n()
+const { currentProfileId } = useCurrentProfile()
 
 const rules = ref([])
 const showDialog = ref(false)
@@ -104,7 +106,7 @@ const editForm = ref({ id: null, domain: '', match_type: 'exact', enabled: true 
 
 const fetchRules = async () => {
     try {
-        const { data } = await client.get('/member/denylist')
+        const { data } = await client.get('/member/denylist', { params: { profile_id: currentProfileId.value } })
         rules.value = data.data
     } catch {
         ElMessage.error(t('common.loadFailed'))
@@ -117,7 +119,7 @@ const handleAdd = async () => {
     if (!valid) return
     saving.value = true
     try {
-        await client.post('/member/denylist', form.value)
+        await client.post('/member/denylist', { ...form.value, profile_id: currentProfileId.value })
         ElMessage.success(t('denylist.added'))
         showDialog.value = false
         form.value = { domain: '', match_type: 'exact' }
@@ -132,7 +134,7 @@ const handleAdd = async () => {
 const handleDelete = async (id) => {
     try {
         await ElMessageBox.confirm(t('denylist.deleteConfirm'), t('common.confirm'))
-        await client.delete(`/member/denylist/${id}`)
+        await client.delete(`/member/denylist/${id}`, { params: { profile_id: currentProfileId.value } })
         ElMessage.success(t('denylist.deleted'))
         await fetchRules()
     } catch (e) {
@@ -153,6 +155,7 @@ const handleToggle = async (row, value) => {
             domain: row.domain,
             match_type: row.match_type,
             enabled: value,
+            profile_id: currentProfileId.value,
         })
         row.enabled = value
     } catch {
@@ -167,6 +170,7 @@ const handleEditSave = async () => {
     try {
         await client.put(`/member/denylist/${editForm.value.id}`, {
             domain: editForm.value.domain, match_type: editForm.value.match_type, enabled: editForm.value.enabled,
+            profile_id: currentProfileId.value,
         })
         ElMessage.success(t('common.saved'))
         showEditDialog.value = false

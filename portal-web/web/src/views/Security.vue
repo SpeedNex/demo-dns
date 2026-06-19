@@ -186,8 +186,10 @@ import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
+import { useCurrentProfile } from '@/composables/useCurrentProfile'
 
 const { t } = useI18n()
+const { currentProfileId } = useCurrentProfile()
 const saving = ref(false)
 let saveTimer = null
 
@@ -213,7 +215,7 @@ const autoSave = () => {
     saveTimer = setTimeout(async () => {
         saving.value = true
         try {
-            await client.put('/member/security', form)
+            await client.put('/member/security', { ...form, profile_id: currentProfileId.value })
         } catch {
             ElMessage.error(t('common.saveFailed'))
         } finally {
@@ -231,7 +233,7 @@ watch(
 
 onMounted(async () => {
     try {
-        const { data } = await client.get('/member/security')
+        const { data } = await client.get('/member/security', { params: { profile_id: currentProfileId.value } })
         Object.assign(form, data.data || form)
     } catch {}
 })

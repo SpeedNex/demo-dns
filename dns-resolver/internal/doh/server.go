@@ -100,17 +100,21 @@ type activeConfig struct {
 
 func (s *Server) loadActiveConfig() (*activeConfig, error) {
 	if s.cfg.ControlPlane.ProfilesPath == "" {
+		log.Printf("doh: loadActiveConfig: ProfilesPath is empty")
 		return &activeConfig{}, nil
 	}
 	path := filepath.Join(s.cfg.ControlPlane.ProfilesPath, "active.json")
 	data, err := os.ReadFile(path)
 	if err != nil {
+		log.Printf("doh: loadActiveConfig: cannot read %s: %v", path, err)
 		return &activeConfig{}, err
 	}
 	cfg := &activeConfig{}
 	if err := json.Unmarshal(data, cfg); err != nil {
+		log.Printf("doh: loadActiveConfig: json unmarshal error: %v", err)
 		return nil, err
 	}
+	log.Printf("doh: loadActiveConfig: loaded %d profiles from %s", len(cfg.Profiles), path)
 	return cfg, nil
 }
 
@@ -143,7 +147,12 @@ func (s *Server) blockResponseFor(profileUID string) string {
 
 func (s *Server) resolveRuntimeProfile(remoteAddr string, requestedProfile string) (profileID string, blockResponse string, deviceID string, safeSearch bool, ok bool) {
 	cfg, err := s.loadActiveConfig()
-	if err != nil || len(cfg.Profiles) == 0 {
+	if err != nil {
+		log.Printf("doh: resolveRuntimeProfile: loadActiveConfig error: %v", err)
+		return "", blockresponse.ModeNXDomain, "", false, false
+	}
+	if len(cfg.Profiles) == 0 {
+		log.Printf("doh: resolveRuntimeProfile: no profiles in active.json (requestedProfile=%s)", requestedProfile)
 		return "", blockresponse.ModeNXDomain, "", false, false
 	}
 
@@ -195,6 +204,7 @@ func (s *Server) handleDNSQuery(w http.ResponseWriter, r *http.Request) {
 
 // handleProfileDNSQuery handles profile-specific DoH requests.
 // URL format: /{profile_uid} or /{profile_uid}/dns-query
+// Supports both short IDs (ec8cb1) and prefixed IDs (prf_ec8cb1).
 func (s *Server) handleProfileDNSQuery(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/")
 
@@ -205,6 +215,9 @@ func (s *Server) handleProfileDNSQuery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Normalize: prepend prf_ prefix if not already present (UI.md #82)
+	profileUID = normalizeProfileUID(profileUID)
+
 	// Validate it looks like a profile UID
 	if isValidProfileUID(profileUID) {
 		s.resolveDNS(w, r, profileUID)
@@ -212,6 +225,15 @@ func (s *Server) handleProfileDNSQuery(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.NotFound(w, r)
+}
+
+// normalizeProfileUID ensures the profile UID has the prf_ prefix
+// to match the engine's internal key format.
+func normalizeProfileUID(uid string) string {
+	if strings.HasPrefix(uid, "prf_") {
+		return uid
+	}
+	return "prf_" + uid
 }
 
 // isValidProfileUID checks if a string looks like a valid profile UID.

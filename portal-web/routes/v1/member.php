@@ -53,8 +53,11 @@ Route::prefix('member')->middleware('auth:api')->group(function (): void {
     Route::post('upgrade', [MemberWorkspaceController::class, 'upgrade']);
     Route::get('usage', [MemberWorkspaceController::class, 'usage']);
     Route::get('wallet', [MemberWorkspaceController::class, 'wallet']);
+    Route::post('wallet/recharge', [MemberWorkspaceController::class, 'rechargeWallet']);
     Route::get('subscription', [MemberWorkspaceController::class, 'subscription']);
     Route::get('referral-link', [MemberWorkspaceController::class, 'referralLink']);
+    Route::put('devices/{device_id}', [MemberWorkspaceController::class, 'updateDevice']);
+    Route::delete('devices/{device_id}', [MemberWorkspaceController::class, 'deleteDevice']);
 
     Route::prefix('profiles')->group(function (): void {
         Route::get('', [ProfileController::class, 'index']);

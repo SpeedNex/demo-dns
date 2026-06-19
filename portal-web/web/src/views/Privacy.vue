@@ -190,8 +190,10 @@ import { Delete, Check, Plus, Search } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
+import { useCurrentProfile } from '@/composables/useCurrentProfile'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const { currentProfileId } = useCurrentProfile()
 const saving = ref(false)
 const showDeviceModal = ref(false)
 const showBlocklistModal = ref(false)
@@ -263,6 +265,9 @@ const addedDevices = computed(() => {
 
 const displayText = (value) => {
     if (!value) return ''
+    if (typeof value === 'object') {
+        return value[locale.value] || value['zh-CN'] || value.zh || value.en || Object.values(value)[0] || ''
+    }
     if (value.startsWith?.('privacy.') || value.startsWith?.('parental.') || value.startsWith?.('nav.') || value.startsWith?.('admin.')) {
         const translated = t(value)
         return translated !== value ? translated : value
@@ -275,7 +280,7 @@ const autoSave = () => {
     saveTimer = setTimeout(async () => {
         saving.value = true
         try {
-            await client.put('/member/privacy', form)
+            await client.put('/member/privacy', { ...form, profile_id: currentProfileId.value })
         } catch {
             ElMessage.error(t('common.saveFailed'))
         } finally {
@@ -336,9 +341,13 @@ onMounted(async () => {
             allBlocklists.value = availableBlocklists.value.slice(0, Math.min(availableBlocklists.value.length, 3))
         }
         if (Array.isArray(catalogs.device_models) && catalogs.device_models.length > 0) {
-            devices.value = catalogs.device_models
+            devices.value = catalogs.device_models.map((item) => ({
+                ...item,
+                name: displayText(item.name),
+                desc: displayText(item.desc),
+            }))
         }
-        const { data } = await client.get('/member/privacy')
+        const { data } = await client.get('/member/privacy', { params: { profile_id: currentProfileId.value } })
         Object.assign(form, data.data || form)
     } catch {}
 })

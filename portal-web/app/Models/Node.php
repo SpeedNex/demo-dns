@@ -7,8 +7,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Node extends Model
 {
-    
-
     public $incrementing = false;
 
     protected $keyType = 'string';
@@ -43,6 +41,19 @@ class Node extends Model
             'approved_at' => 'datetime',
             'last_heartbeat_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $node): void {
+            if ($node->supported_protocols === null) {
+                $node->supported_protocols = ['doh', 'dot'];
+            }
+
+            if ($node->labels === null) {
+                $node->labels = [];
+            }
+        });
     }
 
     public function tokens(): HasMany

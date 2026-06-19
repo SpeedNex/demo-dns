@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\V1\Member;
 use App\Application\Member\WorkspaceRuleService;
 use App\Domain\Profile\MemberCatalogService;
 use App\Domain\Profile\MemberWorkspaceService;
+use App\Domain\Billing\OrderService;
+use App\Domain\Billing\PaymentService;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,6 +22,12 @@ final class MemberWorkspaceController
     ) {
     }
 
+    private function profileId(Request $request): ?string
+    {
+        $id = $request->input('profile_id');
+        return is_string($id) && $id !== '' ? $id : null;
+    }
+
     public function catalogs(): JsonResponse
     {
         return response()->json(['data' => $this->catalogs->get()]);
@@ -28,7 +36,7 @@ final class MemberWorkspaceController
     public function security(Request $request): JsonResponse
     {
         if ($request->isMethod('get')) {
-            return response()->json(['data' => $this->workspace->getSecurity($request->user()->id)]);
+            return response()->json(['data' => $this->workspace->getSecurity($request->user()->id, $this->profileId($request))]);
         }
 
         return $this->updateSecurity($request);
@@ -56,13 +64,13 @@ final class MemberWorkspaceController
             'child_abuse' => 'sometimes|boolean',
         ]);
 
-        return response()->json(['data' => $this->workspace->updateSecurity($request->user()->id, $validated)]);
+        return response()->json(['data' => $this->workspace->updateSecurity($request->user()->id, $validated, $this->profileId($request))]);
     }
 
     public function privacy(Request $request): JsonResponse
     {
         if ($request->isMethod('get')) {
-            return response()->json(['data' => $this->workspace->getPrivacy($request->user()->id)]);
+            return response()->json(['data' => $this->workspace->getPrivacy($request->user()->id, $this->profileId($request))]);
         }
 
         return $this->updatePrivacy($request);
@@ -89,13 +97,13 @@ final class MemberWorkspaceController
             'deep_tracking_devices.*' => 'string',
         ]);
 
-        return response()->json(['data' => $this->workspace->updatePrivacy($request->user()->id, $validated)]);
+        return response()->json(['data' => $this->workspace->updatePrivacy($request->user()->id, $validated, $this->profileId($request))]);
     }
 
     public function parental(Request $request): JsonResponse
     {
         if ($request->isMethod('get')) {
-            return response()->json(['data' => $this->workspace->getParental($request->user()->id)]);
+            return response()->json(['data' => $this->workspace->getParental($request->user()->id, $this->profileId($request))]);
         }
 
         return $this->updateParental($request);
@@ -126,13 +134,13 @@ final class MemberWorkspaceController
             'blocked_categories.*.key' => 'sometimes|string',
         ]);
 
-        return response()->json(['data' => $this->workspace->updateParental($request->user()->id, $validated)]);
+        return response()->json(['data' => $this->workspace->updateParental($request->user()->id, $validated, $this->profileId($request))]);
     }
 
     public function settings(Request $request): JsonResponse
     {
         if ($request->isMethod('get')) {
-            return response()->json(['data' => $this->workspace->getSettings($request->user()->id)]);
+            return response()->json(['data' => $this->workspace->getSettings($request->user()->id, $this->profileId($request))]);
         }
 
         $validated = $request->validate([
@@ -143,7 +151,7 @@ final class MemberWorkspaceController
             'block_response' => ['required', Rule::in(['nxdomain', 'zero_ip', 'refused'])],
         ]);
 
-        return response()->json(['data' => $this->workspace->updateSettings($request->user()->id, $validated)]);
+        return response()->json(['data' => $this->workspace->updateSettings($request->user()->id, $validated, $this->profileId($request))]);
     }
 
     public function password(Request $request): JsonResponse
@@ -164,7 +172,7 @@ final class MemberWorkspaceController
 
     public function listRules(Request $request, string $listType): JsonResponse
     {
-        return response()->json(['data' => $this->workspace->listRules($request->user()->id, $listType)]);
+        return response()->json(['data' => $this->workspace->listRules($request->user()->id, $listType, $this->profileId($request))]);
     }
 
     public function allowlist(Request $request): JsonResponse
@@ -185,7 +193,7 @@ final class MemberWorkspaceController
         ]);
 
         return response()->json([
-            'data' => $this->workspace->createRule($request->user()->id, $listType, $validated),
+            'data' => $this->workspace->createRule($request->user()->id, $listType, $validated, $this->profileId($request)),
         ], 201);
     }
 
@@ -202,7 +210,7 @@ final class MemberWorkspaceController
     public function deleteRule(Request $request, string $listType, string $ruleId): JsonResponse
     {
         return response()->json([
-            'data' => $this->workspace->deleteRule($request->user()->id, $listType, $ruleId),
+            'data' => $this->workspace->deleteRule($request->user()->id, $listType, $ruleId, $this->profileId($request)),
         ]);
     }
 
@@ -247,7 +255,7 @@ final class MemberWorkspaceController
         ]);
 
         return response()->json([
-            'data' => $this->workspace->batchDeleteRules($request->user()->id, $listType, $validated['ids']),
+            'data' => $this->workspace->batchDeleteRules($request->user()->id, $listType, $validated['ids'], $this->profileId($request)),
         ]);
     }
 
@@ -295,7 +303,7 @@ final class MemberWorkspaceController
 
     public function dnsEndpoints(Request $request): JsonResponse
     {
-        return response()->json(['data' => $this->workspace->dnsEndpoints($request->user()->id)]);
+        return response()->json(['data' => $this->workspace->dnsEndpoints($request->user()->id, $this->profileId($request))]);
     }
 
     public function usage(Request $request): JsonResponse
@@ -307,13 +315,10 @@ final class MemberWorkspaceController
         $monthlyLimit = $plan && isset($plan->limits) ? (json_decode($plan->limits, true)['monthly_queries'] ?? null) : 300000;
         
         // Get usage from usage_records
-        $currentPeriod = DB::table('usage_records')
+        $queriesUsed = (int) DB::table('usage_records')
             ->where('user_id', $user->id)
             ->where('period', now()->format('Y-m'))
-            ->orderByDesc('created_at')
-            ->first();
-        
-        $queriesUsed = $currentPeriod ? (int) $currentPeriod->query_count : 0;
+            ->sum('query_count');
         
         return response()->json([
             'data' => [
@@ -348,7 +353,50 @@ final class MemberWorkspaceController
         return response()->json([
             'data' => [
                 'balance' => number_format($balance, 2, '.', ''),
+                'balance_minor' => (int) ($wallet->balance ?? 0),
+                'currency' => $wallet->currency ?? 'USD',
             ]
+        ]);
+    }
+
+    public function rechargeWallet(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:1|max:1000000',
+        ]);
+
+        $amountMinor = (int) round(((float) $validated['amount']) * 100);
+        $order = (new OrderService())->create(
+            userId: (string) $request->user()->id,
+            planCode: 'wallet_topup',
+            payableAmountMinor: $amountMinor,
+            currency: 'USD',
+            description: 'Wallet recharge',
+            meta: ['source' => 'member_wallet_recharge'],
+            idempotencyKey: 'wallet-topup-' . $request->user()->id . '-' . now()->format('YmdHisv'),
+        );
+
+        $tx = (new PaymentService())->createCheckout($order);
+        $redirectUrl = $tx->meta['redirect_url'] ?? null;
+
+        if (! is_string($redirectUrl) || ! str_starts_with($redirectUrl, 'https://checkout.stripe.com/')) {
+            (new PaymentService())->handleSuccess((string) $tx->provider_session_id, null);
+
+            return response()->json([
+                'data' => [
+                    'paid' => true,
+                    'simulated' => true,
+                    'order_id' => (string) $order->id,
+                ],
+            ]);
+        }
+
+        return response()->json([
+            'data' => [
+                'paid' => false,
+                'order_id' => (string) $order->id,
+                'pay_url' => $redirectUrl,
+            ],
         ]);
     }
 
@@ -396,5 +444,19 @@ final class MemberWorkspaceController
     public function devices(Request $request): JsonResponse
     {
         return response()->json(['data' => $this->workspace->devices($request->user()->id)]);
+    }
+
+    public function updateDevice(Request $request, string $deviceId): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+        ]);
+
+        return response()->json(['data' => $this->workspace->updateDevice($request->user()->id, $deviceId, $validated)]);
+    }
+
+    public function deleteDevice(Request $request, string $deviceId): JsonResponse
+    {
+        return response()->json(['data' => $this->workspace->deleteDevice($request->user()->id, $deviceId)]);
     }
 }

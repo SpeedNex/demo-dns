@@ -15,19 +15,24 @@ return new class extends Migration {
     public function up(): void
     {
         $prefix = DB::connection()->getTablePrefix();
-        // 索引已存在则跳过
-        $exists = DB::selectOne(
-            "SELECT 1 FROM information_schema.statistics WHERE table_schema = DATABASE() AND index_name = ?",
-            [$prefix . 'payment_tx_provider_session_unique']
-        );
-        if ($exists === null) {
+        try {
             DB::statement('CREATE UNIQUE INDEX ' . $prefix . 'payment_tx_provider_session_unique ON ' . $prefix . 'payment_transactions (provider, provider_session_id)');
+        } catch (\Throwable $e) {
+            // already exists
         }
     }
 
     public function down(): void
     {
         $prefix = DB::connection()->getTablePrefix();
-        DB::statement('DROP INDEX ' . $prefix . 'payment_tx_provider_session_unique ON ' . $prefix . 'payment_transactions');
+        try {
+            if (DB::getDriverName() === 'sqlite') {
+                DB::statement('DROP INDEX ' . $prefix . 'payment_tx_provider_session_unique');
+            } else {
+                DB::statement('DROP INDEX ' . $prefix . 'payment_tx_provider_session_unique ON ' . $prefix . 'payment_transactions');
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
     }
 };

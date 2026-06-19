@@ -40,6 +40,9 @@ client.interceptors.request.use((config) => {
         config.headers['X-CSRF-TOKEN'] = csrfToken
     }
 
+    const locale = localStorage.getItem('dns_locale') || 'zh-CN'
+    config.headers['Accept-Language'] = locale
+
     return config
 })
 

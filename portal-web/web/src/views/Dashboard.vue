@@ -97,7 +97,7 @@
                 <div class="card section-gap">
                     <div class="card-header">
                         <h2>{{ $t('dashboard.recentDevices') }}</h2>
-                        <button class="btn" @click="$router.push('/user/settings')">{{ $t('dashboard.manageDevices') }}</button>
+                        <button class="btn" @click="$router.push('/user/devices')">{{ $t('dashboard.manageDevices') }}</button>
                     </div>
                     <div class="card-body">
                         <div class="device-grid">
@@ -254,6 +254,9 @@ import { ElMessage } from 'element-plus'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
 import PageHeader from '@/components/PageHeader.vue'
+import { useCurrentProfile } from '@/composables/useCurrentProfile'
+
+const { currentProfileId } = useCurrentProfile()
 
 const overview = ref(null)
 const dohUrl = ref('')
@@ -290,15 +293,17 @@ async function copyText(text) {
 }
 
 onMounted(async () => {
+    const params = { profile_id: currentProfileId.value }
+
     try {
-        const { data } = await client.get('/member/member-center/overview')
+        const { data } = await client.get('/member/member-center/overview', { params })
         overview.value = data.data
     } catch {
         ElMessage.error(t('dashboard.failedToLoad'))
     }
 
     try {
-        const { data } = await client.get('/member/member-center/dns-endpoints')
+        const { data } = await client.get('/member/member-center/dns-endpoints', { params })
         const ep = data.data || {}
         dohUrl.value = ep.doh || ''
         dotUrl.value = ep.dot || ''
@@ -308,7 +313,7 @@ onMounted(async () => {
     }
 
     try {
-        const { data } = await client.get('/member/member-center/top-domains')
+        const { data } = await client.get('/member/member-center/top-domains', { params })
         const td = data.data || {}
         topVisited.value = td.visited || []
         topBlocked.value = td.blocked || []
@@ -317,7 +322,7 @@ onMounted(async () => {
     }
 
     try {
-        const { data } = await client.get('/member/member-center/devices')
+        const { data } = await client.get('/member/member-center/devices', { params })
         recentDevices.value = (data.data || []).slice(0, 3)
     } catch {
         // Devices optional

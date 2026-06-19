@@ -15,6 +15,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         $tables = [
             'dns_subscriptions',
             'dns_invoices',
@@ -55,6 +59,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         $statements = [
             'ALTER TABLE `dns_subscriptions`        MODIFY COLUMN `user_id` varchar(30)',
             'ALTER TABLE `dns_invoices`             MODIFY COLUMN `user_id` varchar(30)',
