@@ -7,18 +7,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TeamInvitation extends Model
 {
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
         'team_id',
         'email',
+        'role_key',
         'role',
         'token_hash',
+        'inviter_id',
         'invited_by',
         'expires_at',
         'accepted_at',
         'declined_at',
+        'revoked_at',
     ];
 
     protected function casts(): array
@@ -30,16 +33,6 @@ class TeamInvitation extends Model
         ];
     }
 
-    protected static function boot(): void
-    {
-        parent::boot();
-        static::creating(function (self $invitation): void {
-            if (empty($invitation->id)) {
-                $invitation->id = 'inv_' . substr(hash('sha256', $invitation->email . $invitation->team_id . microtime()), 0, 12);
-            }
-        });
-    }
-
     public function team(): BelongsTo
     {
         return $this->belongsTo(Team::class);
@@ -47,6 +40,27 @@ class TeamInvitation extends Model
 
     public function invitedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'invited_by');
+        return $this->belongsTo(User::class, 'inviter_id');
+    }
+
+    // 数据库列是 role_key，对外 API 暴露为 role
+    public function getRoleAttribute(): ?string
+    {
+        return $this->attributes['role_key'] ?? null;
+    }
+
+    public function setRoleAttribute(?string $value): void
+    {
+        $this->attributes['role_key'] = $value;
+    }
+
+    public function getInvitedByAttribute(): ?int
+    {
+        return isset($this->attributes['inviter_id']) ? (int) $this->attributes['inviter_id'] : null;
+    }
+
+    public function setInvitedByAttribute(string|int|null $value): void
+    {
+        $this->attributes['inviter_id'] = $value !== null ? (int) $value : null;
     }
 }

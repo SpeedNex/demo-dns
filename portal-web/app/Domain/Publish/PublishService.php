@@ -41,20 +41,16 @@ final class PublishService
 
         $configVersion = ConfigVersion::create([
             'version' => $globalVersion,
-            'profile_id' => $profileId,
-            'profile_version' => $profileVersion,
-            'user_id' => (string) ($configJson['user_id'] ?? 'unknown'),
-            'team_id' => $configJson['team_id'] ?? null,
-            'status' => 'ready',
-            'checksum' => $checksum,
+            'target_scope' => 'profile',
+            'target_profile_id' => $this->resolveProfilePk((string) ($configJson['profile_id'] ?? $profileId)),
             'config_json' => $configJson,
-            'config_size_bytes' => strlen($encoded),
-            'generated_by' => 'portal-web',
-            'generated_at' => now(),
-            'expires_at' => now()->addMinutes(10),
+            'checksum' => $checksum,
+            'published_at' => now(),
+            'created_at' => now(),
         ]);
 
-        $targetNodes = Node::whereNull('disabled_at')->get(['id']);
+        $activeStatuses = ['pending', 'online', 'degraded', 'maintenance'];
+        $targetNodes = Node::whereIn('status', $activeStatuses)->get(['id']);
 
         $publishTask = PublishTask::create([
             'config_version_id' => $configVersion->id,
@@ -70,13 +66,9 @@ final class PublishService
             'queued_at' => now(),
         ]);
 
-        // Pre-seed one task_execution row per eligible node so the admin
-        // publishes view can show per-node progress from t=0. The row
-        // is updated when the resolver calls /agent/resolver/config/ack.
         if ($targetNodes->isNotEmpty()) {
             $now = now();
             $rows = $targetNodes->map(fn (Node $node): array => [
-                'id' => 'texec_' . substr(hash('sha256', $publishTask->id . $node->id . $globalVersion), 0, 16),
                 'publish_task_id' => $publishTask->id,
                 'node_id' => $node->id,
                 'config_version' => $globalVersion,
@@ -87,9 +79,7 @@ final class PublishService
             TaskExecution::insert($rows);
         }
 
-        // Bump desired_config_version on every eligible node so the next
-        // heartbeat response tells the resolver to pull the new bundle.
-        Node::whereNull('disabled_at')->update([
+        Node::whereIn('status', $activeStatuses)->update([
             'desired_config_version' => $globalVersion,
         ]);
 
@@ -99,5 +89,17 @@ final class PublishService
             'config_version' => (int) $configVersion->version,
             'checksum' => (string) $configVersion->checksum,
         ];
+    }
+
+    private function resolveProfilePk(string $profileRef): ?int
+    {
+        if ($profileRef === '') {
+            return null;
+        }
+        if (ctype_digit($profileRef)) {
+            return (int) $profileRef;
+        }
+        $row = \App\Models\Profile::where('profile_uid', $profileRef)->first(['id']);
+        return $row?->id !== null ? (int) $row->id : null;
     }
 }

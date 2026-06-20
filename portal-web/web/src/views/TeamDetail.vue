@@ -211,7 +211,16 @@ const inviting = ref(false)
 const transferring = ref(false)
 const changeRoleForm = ref({ role: 'member' })
 
-const userId = computed(() => localStorage.getItem('user_id'))
+// V2.3: 当前用户主键已改为 uid，从 sessionStorage.user 中解析
+const userId = computed(() => {
+    try {
+        const raw = sessionStorage.getItem('user')
+        if (!raw) return null
+        return JSON.parse(raw).uid ?? null
+    } catch {
+        return null
+    }
+})
 const myRole = computed(() => {
     const m = members.value.find(m => m.user_id === userId.value)
     return m?.role

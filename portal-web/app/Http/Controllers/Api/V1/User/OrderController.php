@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1\User;
 
 use App\Domain\Billing\OrderService;
 use App\Domain\Billing\PaymentService;
+use App\Domain\Billing\PlanCatalogService;
 use App\Models\Order;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,38 +23,49 @@ final class OrderController
     public function __construct(
         private readonly OrderService $orders = new OrderService(),
         private readonly PaymentService $payments = new PaymentService(),
+        private readonly PlanCatalogService $plans = new PlanCatalogService(),
     ) {
+    }
+
+    /** GET /api/v1/user/plans — 当前可购买的套餐列表（用于购买入口）*/
+    public function plans(): JsonResponse
+    {
+        return response()->json(['data' => $this->plans->memberList()]);
     }
 
     /** POST /api/v1/user/orders — 创建订单（套餐购买）*/
     public function create(Request $request): JsonResponse
     {
+        // 安全约束：仅允许前端传 plan_code + billing_cycle；金额/币种由后端从 plan_prices 查表得到
         $validated = $request->validate([
             'plan_code' => 'required|string|max:30',
-            'payable_amount_minor' => 'nullable|integer|min:1',
-            'currency' => 'sometimes|string|size:3',
             'description' => 'nullable|string|max:255',
+            'billing_cycle' => 'required|string|in:monthly,yearly',
             'idempotency_key' => 'nullable|string|max:80',
             'meta' => 'sometimes|array',
         ]);
 
-        $userId = (string) $request->user()->id;
-        // header 优先，其次 body（兼容旧调用）
+        $userId = (string) $request->user()->uid;
         $idempotencyKey = (string) $request->header('Idempotency-Key', '') !== ''
             ? (string) $request->header('Idempotency-Key')
             : (string) ($validated['idempotency_key'] ?? '');
 
-        // 从 plan_prices 表计算金额，忽略前端传入的 payable_amount_minor（防篡改）
-        $billingCycle = $validated['meta']['billing_cycle'] ?? 'monthly';
-        $price = \App\Models\Plan::where('code', $validated['plan_code'])
-            ->first()
+        $plan = \App\Models\Plan::where('code', $validated['plan_code'])->first();
+        $billingCycle = $validated['billing_cycle'];
+        $price = $plan
             ?->prices()
             ->where('billing_cycle', $billingCycle)
             ->where('status', 'active')
             ->first();
 
-        $payableAmountMinor = $price ? (int) $price->amount_minor : (int) ($validated['payable_amount_minor'] ?? 0);
-        $currency = $validated['currency'] ?? ($price->currency ?? 'USD');
+        if ($price === null) {
+            return response()->json([
+                'message' => "No active price for plan [{$validated['plan_code']}] with cycle [{$billingCycle}].",
+            ], 422);
+        }
+
+        $payableAmountMinor = (int) $price->amount_minor;
+        $currency = $price->currency ?? 'USD';
 
         $order = $this->orders->create(
             userId: $userId,
@@ -61,8 +73,10 @@ final class OrderController
             payableAmountMinor: $payableAmountMinor,
             currency: $currency,
             description: $validated['description'] ?? null,
-            meta: $validated['meta'] ?? [],
+            meta: array_merge($validated['meta'] ?? [], ['billing_cycle' => $billingCycle]),
             idempotencyKey: $idempotencyKey !== '' ? $idempotencyKey : null,
+            planId: $plan?->id,
+            planPriceId: $price->id,
         );
 
         return response()->json(['data' => $this->format($order)], 201);
@@ -71,7 +85,7 @@ final class OrderController
     /** GET /api/v1/user/orders — 当前用户订单列表 */
     public function index(Request $request): JsonResponse
     {
-        $userId = (string) $request->user()->id;
+        $userId = (string) $request->user()->uid;
         $rows = Order::where('user_id', $userId)
             ->orderByDesc('created_at')
             ->limit(50)
@@ -83,7 +97,7 @@ final class OrderController
     public function show(Request $request, string $id): JsonResponse
     {
         $order = Order::where('id', $id)
-            ->where('user_id', (string) $request->user()->id)
+            ->where('user_id', (string) $request->user()->uid)
             ->firstOrFail();
         return response()->json(['data' => $this->format($order)]);
     }
@@ -92,7 +106,7 @@ final class OrderController
     public function checkout(Request $request, string $id): JsonResponse
     {
         $order = Order::where('id', $id)
-            ->where('user_id', (string) $request->user()->id)
+            ->where('user_id', (string) $request->user()->uid)
             ->firstOrFail();
         if ($order->status !== Order::STATUS_PENDING) {
             return response()->json(['message' => 'Order is not payable.'], 422);
@@ -114,11 +128,12 @@ final class OrderController
         return [
             'id' => (string) $order->id,
             'order_no' => $order->order_no,
-            'plan_code' => $order->plan_code,
+            'plan_code' => $order->plan_code_snapshot,
             'status' => $order->status,
             'payable_amount_minor' => (int) $order->payable_amount_minor,
             'currency' => $order->currency,
-            'description' => $order->description,
+            'billing_cycle' => $order->billing_cycle,
+            'description' => data_get($order->meta ?? [], 'description'),
             'paid_at' => $order->paid_at?->toIso8601String(),
             'cancelled_at' => $order->cancelled_at?->toIso8601String(),
             'created_at' => $order->created_at?->toIso8601String(),

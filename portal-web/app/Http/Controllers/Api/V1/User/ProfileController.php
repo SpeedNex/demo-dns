@@ -15,7 +15,7 @@ final class ProfileController
 
     public function index(Request $request): JsonResponse
     {
-        $profiles = $this->service->listForCurrentUser($request->user()->id);
+        $profiles = $this->service->listForCurrentUser($request->user()->uid);
 
         return response()->json([
             'data' => $profiles,
@@ -30,7 +30,7 @@ final class ProfileController
     public function store(Request $request): JsonResponse
     {
         $result = $this->service->create(
-            $request->user()->id,
+            $request->user()->uid,
             $request->only(['name', 'description', 'default_action', 'block_response', 'security_enabled', 'privacy_enabled']),
         );
 
@@ -39,7 +39,7 @@ final class ProfileController
 
     public function show(Request $request, string $profileId): JsonResponse
     {
-        $result = $this->service->get($request->user()->id, $profileId);
+        $result = $this->service->get($request->user()->uid, $profileId);
 
         return response()->json(['data' => $result]);
     }
@@ -47,7 +47,7 @@ final class ProfileController
     public function update(Request $request, string $profileId): JsonResponse
     {
         $result = $this->service->update(
-            $request->user()->id,
+            $request->user()->uid,
             $profileId,
             $request->only(['name', 'description', 'default_action', 'block_response', 'security_enabled', 'adblock_enabled', 'parental_enabled', 'privacy_enabled', 'safe_search_enabled', 'log_mode']),
         );
@@ -57,14 +57,14 @@ final class ProfileController
 
     public function destroy(Request $request, string $profileId): JsonResponse
     {
-        $result = $this->service->delete($request->user()->id, $profileId);
+        $result = $this->service->delete($request->user()->uid, $profileId);
 
         return response()->json(['data' => $result]);
     }
 
     public function copy(Request $request, string $profileId): JsonResponse
     {
-        $result = $this->service->copy($request->user()->id, $profileId);
+        $result = $this->service->copy($request->user()->uid, $profileId);
 
         return response()->json(['data' => $result], 201);
     }
@@ -76,7 +76,7 @@ final class ProfileController
             'ids.*' => 'string',
         ]);
 
-        $result = $this->service->batchDelete($request->user()->id, $validated['ids']);
+        $result = $this->service->batchDelete($request->user()->uid, $validated['ids']);
 
         return response()->json(['data' => $result]);
     }

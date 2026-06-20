@@ -14,8 +14,8 @@ class PaymentTransaction extends Model
 {
     protected $table = 'payment_transactions';
 
-    public const STATUS_PENDING = 'pending';
-    public const STATUS_SUCCESS = 'success';
+    public const STATUS_PENDING = 'created';
+    public const STATUS_SUCCESS = 'succeeded';
     public const STATUS_FAILED = 'failed';
     public const STATUS_REFUNDED = 'refunded';
 
@@ -25,16 +25,17 @@ class PaymentTransaction extends Model
         'provider',
         'provider_session_id',
         'provider_payment_intent_id',
+        'provider_charge_id',
         'status',
         'amount_minor',
         'currency',
-        'meta',
-        'completed_at',
+        'failure_code',
+        'failure_message',
+        'raw_payload',
     ];
 
     protected $casts = [
         'amount_minor' => 'int',
-        'meta' => 'array',
-        'completed_at' => 'datetime',
+        'raw_payload' => 'array',
     ];
 }

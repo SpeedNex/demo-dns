@@ -26,20 +26,32 @@ function getCsrfToken() {
 }
 
 client.interceptors.request.use((config) => {
-    // Sanctum-based token auth - 严格按路由选择 token，不互相 fallback
-    const isAdminPath = config.url?.startsWith('/admin/')
-    const isNodePath = config.url?.startsWith('/node/')
-    const adminToken = sessionStorage.getItem('admin_token')
-    const userToken = sessionStorage.getItem('user_token')
+    // Sanctum-based token auth — 严格按路由前缀选择 token
+    //   /admin/*  → admin_token
+    //   /user/*   → user_token
+    //   /node/*   → 不由前端携带 token (Node 使用 HMAC 头)
+    //   /auth/*   → 不带 token
+    //   /public/* → 不带 token
+    const url = config.url || ''
+    const isAdminPath = url.startsWith('/admin/')
+    const isUserPath = url.startsWith('/user/')
+    const isNodePath = url.startsWith('/node/')
+    const isAuthPath = url.startsWith('/auth/')
+    const isPublicPath = url.startsWith('/public/')
+
     let token = null
     if (isAdminPath) {
-        token = adminToken
-    } else if (!isNodePath) {
-        // 公开路径和用户路径使用 user_token
-        token = userToken
+        token = sessionStorage.getItem('admin_token')
+    } else if (isUserPath) {
+        token = sessionStorage.getItem('user_token')
     }
+    // /node/* /auth/* /public/* 明确不携带 token
+
     if (token) {
         config.headers.Authorization = `Bearer ${token}`
+    } else {
+        // 显式删除，避免把上一次请求的 Authorization 头带过去
+        delete config.headers.Authorization
     }
 
     // CSRF token for stateful session requests

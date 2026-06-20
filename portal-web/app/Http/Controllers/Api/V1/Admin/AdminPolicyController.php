@@ -48,7 +48,7 @@ final class AdminPolicyController
 
     public function publishSnapshot(int $id, Request $request): JsonResponse
     {
-        $actorId = (string) ($request->user()?->id ?? 'admin');
+        $actorId = (string) ($request->user()?->admin_id ?? 'admin');
         $snap = app(PolicySnapshotService::class)->publish($id, $actorId);
         $results = app(PolicyPublisher::class)->publishToAllOnlineNodes($snap->id);
         return response()->json(['data' => $snap, 'dispatch' => $results]);

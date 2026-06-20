@@ -36,7 +36,7 @@ final class UserWorkspaceController
     public function security(Request $request): JsonResponse
     {
         if ($request->isMethod('get')) {
-            return response()->json(['data' => $this->workspace->getSecurity($request->user()->id, $this->profileId($request))]);
+            return response()->json(['data' => $this->workspace->getSecurity($request->user()->uid, $this->profileId($request))]);
         }
 
         return $this->updateSecurity($request);
@@ -64,13 +64,13 @@ final class UserWorkspaceController
             'child_abuse' => 'sometimes|boolean',
         ]);
 
-        return response()->json(['data' => $this->workspace->updateSecurity($request->user()->id, $validated, $this->profileId($request))]);
+        return response()->json(['data' => $this->workspace->updateSecurity($request->user()->uid, $validated, $this->profileId($request))]);
     }
 
     public function privacy(Request $request): JsonResponse
     {
         if ($request->isMethod('get')) {
-            return response()->json(['data' => $this->workspace->getPrivacy($request->user()->id, $this->profileId($request))]);
+            return response()->json(['data' => $this->workspace->getPrivacy($request->user()->uid, $this->profileId($request))]);
         }
 
         return $this->updatePrivacy($request);
@@ -97,13 +97,13 @@ final class UserWorkspaceController
             'deep_tracking_devices.*' => 'string',
         ]);
 
-        return response()->json(['data' => $this->workspace->updatePrivacy($request->user()->id, $validated, $this->profileId($request))]);
+        return response()->json(['data' => $this->workspace->updatePrivacy($request->user()->uid, $validated, $this->profileId($request))]);
     }
 
     public function parental(Request $request): JsonResponse
     {
         if ($request->isMethod('get')) {
-            return response()->json(['data' => $this->workspace->getParental($request->user()->id, $this->profileId($request))]);
+            return response()->json(['data' => $this->workspace->getParental($request->user()->uid, $this->profileId($request))]);
         }
 
         return $this->updateParental($request);
@@ -134,13 +134,13 @@ final class UserWorkspaceController
             'blocked_categories.*.key' => 'sometimes|string',
         ]);
 
-        return response()->json(['data' => $this->workspace->updateParental($request->user()->id, $validated, $this->profileId($request))]);
+        return response()->json(['data' => $this->workspace->updateParental($request->user()->uid, $validated, $this->profileId($request))]);
     }
 
     public function settings(Request $request): JsonResponse
     {
         if ($request->isMethod('get')) {
-            return response()->json(['data' => $this->workspace->getSettings($request->user()->id, $this->profileId($request))]);
+            return response()->json(['data' => $this->workspace->getSettings($request->user()->uid, $this->profileId($request))]);
         }
 
         $validated = $request->validate([
@@ -151,7 +151,7 @@ final class UserWorkspaceController
             'block_response' => ['required', Rule::in(['nxdomain', 'zero_ip', 'refused'])],
         ]);
 
-        return response()->json(['data' => $this->workspace->updateSettings($request->user()->id, $validated, $this->profileId($request))]);
+        return response()->json(['data' => $this->workspace->updateSettings($request->user()->uid, $validated, $this->profileId($request))]);
     }
 
     public function password(Request $request): JsonResponse
@@ -162,7 +162,7 @@ final class UserWorkspaceController
         ]);
 
         $this->workspace->changePassword(
-            $request->user()->id,
+            $request->user()->uid,
             $validated['current_password'],
             $validated['new_password'],
         );
@@ -190,7 +190,7 @@ final class UserWorkspaceController
 
     public function listRules(Request $request, string $listType): JsonResponse
     {
-        return response()->json(['data' => $this->workspace->listRules($request->user()->id, $listType, $this->profileId($request))]);
+        return response()->json(['data' => $this->workspace->listRules($request->user()->uid, $listType, $this->profileId($request))]);
     }
 
     public function allowlist(Request $request): JsonResponse
@@ -211,7 +211,7 @@ final class UserWorkspaceController
         ]);
 
         return response()->json([
-            'data' => $this->workspace->createRule($request->user()->id, $listType, $validated, $this->profileId($request)),
+            'data' => $this->workspace->createRule($request->user()->uid, $listType, $validated, $this->profileId($request)),
         ], 201);
     }
 
@@ -228,7 +228,7 @@ final class UserWorkspaceController
     public function deleteRule(Request $request, string $listType, string $ruleId): JsonResponse
     {
         return response()->json([
-            'data' => $this->workspace->deleteRule($request->user()->id, $listType, $ruleId, $this->profileId($request)),
+            'data' => $this->workspace->deleteRule($request->user()->uid, $listType, $ruleId, $this->profileId($request)),
         ]);
     }
 
@@ -251,7 +251,7 @@ final class UserWorkspaceController
         ]);
 
         return response()->json([
-            'data' => $this->workspaceRuleService->updateRule($request->user()->id, $listType, $ruleId, $validated),
+            'data' => $this->workspaceRuleService->updateRule($request->user()->uid, $listType, $ruleId, $validated),
         ]);
     }
 
@@ -273,7 +273,7 @@ final class UserWorkspaceController
         ]);
 
         return response()->json([
-            'data' => $this->workspace->batchDeleteRules($request->user()->id, $listType, $validated['ids'], $this->profileId($request)),
+            'data' => $this->workspace->batchDeleteRules($request->user()->uid, $listType, $validated['ids'], $this->profileId($request)),
         ]);
     }
 
@@ -289,38 +289,43 @@ final class UserWorkspaceController
 
     public function analytics(Request $request): JsonResponse
     {
-        return response()->json(['data' => $this->workspace->analytics($request->user()->id)]);
+        return response()->json(['data' => $this->workspace->analytics($request->user()->uid)]);
     }
 
     public function logs(Request $request): JsonResponse
     {
-        $result = $this->workspace->logs($request->user()->id, $request->all());
+        $result = $this->workspace->logs($request->user()->uid, $request->all());
 
         return response()->json($result);
     }
 
     public function membership(Request $request): JsonResponse
     {
-        return response()->json(['data' => $this->workspace->membership($request->user()->id)]);
+        return response()->json(['data' => $this->workspace->membership($request->user()->uid)]);
     }
 
     public function dnsEndpoints(Request $request): JsonResponse
     {
-        return response()->json(['data' => $this->workspace->dnsEndpoints($request->user()->id, $this->profileId($request))]);
+        return response()->json(['data' => $this->workspace->dnsEndpoints($request->user()->uid, $this->profileId($request))]);
     }
 
     public function usage(Request $request): JsonResponse
     {
-        $user = User::findOrFail($request->user()->id);
-        $subscription = DB::table('subscriptions')->where('user_id', $user->id)->first();
+        $user = User::findOrFail($request->user()->uid);
+        $subscription = DB::table('subscriptions')->where('user_id', $user->uid)->first();
         $plan = $subscription ? DB::table('plans')->where('code', $subscription->plan_code ?? 'free')->first() : null;
         
         $monthlyLimit = $plan && isset($plan->limits) ? (json_decode($plan->limits, true)['monthly_queries'] ?? null) : 300000;
         
         // Get usage from usage_records
+        $periodIds = DB::table('billing_periods')
+            ->where('user_id', $user->uid)
+            ->where('period_start', '<=', now())
+            ->where('period_end', '>=', now())
+            ->pluck('id');
         $queriesUsed = (int) DB::table('usage_records')
-            ->where('user_id', $user->id)
-            ->where('period', now()->format('Y-m'))
+            ->where('user_id', $user->uid)
+            ->whereIn('billing_period_id', $periodIds)
             ->sum('query_count');
         
         return response()->json([
@@ -336,27 +341,26 @@ final class UserWorkspaceController
     public function wallet(Request $request): JsonResponse
     {
         $user = $request->user();
-        $wallet = DB::table('wallets')->where('user_id', $user->id)->first();
-        
+        $wallet = DB::table('wallets')->where('user_id', $user->uid)->first();
+
         if (!$wallet) {
             DB::table('wallets')->insert([
-                'user_id' => $user->id,
-                'balance' => 0,
+                'user_id' => $user->uid,
+                'balance_minor' => 0,
                 'currency' => 'USD',
-                'frozen' => 0,
-                'version' => 0,
+                'frozen_minor' => 0,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-            $wallet = DB::table('wallets')->where('user_id', $user->id)->first();
+            $wallet = DB::table('wallets')->where('user_id', $user->uid)->first();
         }
 
-        $balance = ((int) ($wallet->balance ?? 0)) / 100;
-        
+        $balance = ((int) ($wallet->balance_minor ?? 0)) / 100;
+
         return response()->json([
             'data' => [
                 'balance' => number_format($balance, 2, '.', ''),
-                'balance_minor' => (int) ($wallet->balance ?? 0),
+                'balance_minor' => (int) ($wallet->balance_minor ?? 0),
                 'currency' => $wallet->currency ?? 'USD',
             ]
         ]);
@@ -370,44 +374,36 @@ final class UserWorkspaceController
 
         $amountMinor = (int) round(((float) $validated['amount']) * 100);
         $order = (new OrderService())->create(
-            userId: (string) $request->user()->id,
+            userId: (string) $request->user()->uid,
             planCode: 'wallet_topup',
             payableAmountMinor: $amountMinor,
             currency: 'USD',
             description: 'Wallet recharge',
             meta: ['source' => 'member_wallet_recharge'],
-            idempotencyKey: 'wallet-topup-' . $request->user()->id . '-' . now()->format('YmdHisv'),
+            idempotencyKey: 'wallet-topup-' . $request->user()->uid . '-' . now()->format('YmdHisv'),
         );
 
+        // 必须走 Stripe Checkout；钱包入账只能由 Stripe webhook 回调确认后生效。
+        // 这里不再做任何"前端回调即入账"的模拟路径。
         $tx = (new PaymentService())->createCheckout($order);
-        $redirectUrl = $tx->meta['redirect_url'] ?? null;
-
-        if (! is_string($redirectUrl) || ! str_starts_with($redirectUrl, 'https://checkout.stripe.com/')) {
-            (new PaymentService())->handleSuccess((string) $tx->provider_session_id, null);
-
-            return response()->json([
-                'data' => [
-                    'paid' => true,
-                    'simulated' => true,
-                    'order_id' => (string) $order->id,
-                ],
-            ]);
-        }
+        $redirectUrl = $tx->raw_payload['redirect_url'] ?? null;
 
         return response()->json([
             'data' => [
                 'paid' => false,
                 'order_id' => (string) $order->id,
-                'pay_url' => $redirectUrl,
+                'payment_transaction_id' => (string) $tx->id,
+                'redirect_url' => $redirectUrl,
+                'message' => 'Redirect to Stripe to complete payment. Wallet will be credited after Stripe webhook.',
             ],
-        ]);
+        ], 201);
     }
 
     public function subscription(Request $request): JsonResponse
     {
         $user = $request->user();
         $subscription = DB::table('subscriptions')
-            ->where('user_id', $user->id)
+            ->where('user_id', $user->uid)
             ->first();
         
         if (!$subscription) {
@@ -432,7 +428,7 @@ final class UserWorkspaceController
         
         return response()->json([
             'data' => [
-                'link' => config('app.url') . '?ref=' . $user->id,
+                'link' => config('app.url') . '?ref=' . $user->uid,
                 'reward_amount' => 1.00,
                 'currency' => 'USD',
             ]
@@ -441,12 +437,12 @@ final class UserWorkspaceController
 
     public function topDomains(Request $request): JsonResponse
     {
-        return response()->json(['data' => $this->workspace->topDomains($request->user()->id)]);
+        return response()->json(['data' => $this->workspace->topDomains($request->user()->uid)]);
     }
 
     public function devices(Request $request): JsonResponse
     {
-        return response()->json(['data' => $this->workspace->devices($request->user()->id)]);
+        return response()->json(['data' => $this->workspace->devices($request->user()->uid)]);
     }
 
     public function updateDevice(Request $request, string $deviceId): JsonResponse
@@ -455,11 +451,11 @@ final class UserWorkspaceController
             'name' => 'required|string|max:100',
         ]);
 
-        return response()->json(['data' => $this->workspace->updateDevice($request->user()->id, $deviceId, $validated)]);
+        return response()->json(['data' => $this->workspace->updateDevice($request->user()->uid, $deviceId, $validated)]);
     }
 
     public function deleteDevice(Request $request, string $deviceId): JsonResponse
     {
-        return response()->json(['data' => $this->workspace->deleteDevice($request->user()->id, $deviceId)]);
+        return response()->json(['data' => $this->workspace->deleteDevice($request->user()->uid, $deviceId)]);
     }
 }

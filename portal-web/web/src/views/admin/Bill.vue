@@ -54,11 +54,11 @@
             </el-button>
         </template>
 
-        <el-table :data="bills" stripe v-loading="loading">
+        <el-table :data="bills" stripe v-loading="loading" style="width: 100%">
             <template #empty>
                 <div class="empty-state">
                     <el-icon class="empty-icon"><Tickets /></el-icon>
-                    <p class="empty-title">{{ $t('dashboard.noData') || '暂无数据' }}</p>
+                    <p class="empty-title">{{ $t('common.noData') || '暂无数据' }}</p>
                 </div>
             </template>
             <el-table-column prop="invoice_no" :label="$t('admin.finance.invoiceNo') || '账单号'" width="180" show-overflow-tooltip />

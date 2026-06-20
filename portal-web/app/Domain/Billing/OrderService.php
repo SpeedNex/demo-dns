@@ -28,28 +28,40 @@ final class OrderService
         string $currency = 'USD',
         ?string $description = null,
         array $meta = [],
-        ?string $idempotencyKey = null
+        ?string $idempotencyKey = null,
+        ?int $planId = null,
+        ?int $planPriceId = null
     ): Order {
+        // 幂等键：未传入时按 user+plan+amount+ts 自动生成
+        $idempotencyKey = $idempotencyKey ?: sprintf(
+            '%s:%s:%d:%s',
+            $userId,
+            $planCode,
+            $payableAmountMinor,
+            now()->format('YmdHis')
+        );
+
         // 幂等键：先查再写，避免双击产生双订单
-        if ($idempotencyKey !== null && $idempotencyKey !== '') {
-            $existing = Order::where('user_id', $userId)
-                ->where('idempotency_key', $idempotencyKey)
-                ->first();
-            if ($existing !== null) {
-                return $existing;
-            }
+        $existing = Order::where('user_id', $userId)
+            ->where('idempotency_key', $idempotencyKey)
+            ->first();
+        if ($existing !== null) {
+            return $existing;
         }
         try {
             return Order::create([
                 'user_id' => $userId,
                 'order_no' => $this->generateOrderNo(),
                 'idempotency_key' => $idempotencyKey,
-                'plan_code' => $planCode,
+                'plan_id' => $planId,
+                'plan_price_id' => $planPriceId,
+                'plan_code_snapshot' => $planCode,
+                'billing_cycle' => $meta['billing_cycle'] ?? 'monthly',
                 'status' => Order::STATUS_PENDING,
+                'original_amount_minor' => $payableAmountMinor,
                 'payable_amount_minor' => $payableAmountMinor,
                 'currency' => $currency,
-                'description' => $description,
-                'meta' => $meta,
+                'meta' => array_merge($meta, ['description' => $description]),
             ]);
         } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
             // 唯一约束兜底：并发双击场景
@@ -91,17 +103,19 @@ final class OrderService
                 'paid_at' => now(),
                 'meta' => array_merge($order->meta ?? [], ['payment_ref' => $paymentRef]),
             ]);
-            if ($order->plan_code === 'wallet_topup') {
+            $planCode = (string) $order->plan_code_snapshot;
+            $description = (string) data_get($order->meta ?? [], 'description', '');
+            if ($planCode === 'wallet_topup') {
                 (new BillingService())->charge(
                     userId: $order->user_id,
                     amountMinor: (int) $order->payable_amount_minor,
-                    description: $order->description ?: 'Wallet recharge',
+                    description: $description !== '' ? $description : 'Wallet recharge',
                 );
             } else {
                 // 联动订阅：plan_code 立即生效，order_id 用于幂等回查
                 (new SubscriptionService())->setPlan(
                     userId: $order->user_id,
-                    planCode: $order->plan_code,
+                    planCode: $planCode,
                     monthlyLimit: null,
                     orderId: (string) $order->id,
                 );

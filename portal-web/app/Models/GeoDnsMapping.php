@@ -11,15 +11,16 @@ class GeoDnsMapping extends Model
 {
     protected $table = 'geo_dns_mappings';
 
-    public $incrementing = false;
-
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
-        'id',
+        'domain',
         'country',
         'region',
+        'target_node_id',
         'node_id',
+        'target_endpoint',
         'priority',
         'weight',
         'enabled',
@@ -32,19 +33,18 @@ class GeoDnsMapping extends Model
         ];
     }
 
-    protected static function boot(): void
-    {
-        parent::boot();
-
-        static::creating(function (self $mapping): void {
-            if (empty($mapping->id)) {
-                $mapping->id = 'geo_' . substr(hash('sha256', microtime(true) . random_int(1, PHP_INT_MAX)), 0, 12);
-            }
-        });
-    }
-
     public function node(): BelongsTo
     {
-        return $this->belongsTo(Node::class);
+        return $this->belongsTo(Node::class, 'target_node_id');
+    }
+
+    public function getNodeIdAttribute(): ?int
+    {
+        return isset($this->attributes['target_node_id']) ? (int) $this->attributes['target_node_id'] : null;
+    }
+
+    public function setNodeIdAttribute(string|int|null $value): void
+    {
+        $this->attributes['target_node_id'] = $value !== null ? (int) $value : null;
     }
 }

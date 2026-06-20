@@ -16,7 +16,7 @@ final class AdminNodeController
 {
     public function index(): JsonResponse
     {
-        $nodes = Node::query()->orderBy('node_name')->get()->toArray();
+        $nodes = Node::query()->orderBy('node_code')->get()->toArray();
         $totalNodes = count($nodes);
         // 节点只关心 online / offline：pending/disabled 视作离线
         $onlineNodes = count(array_filter($nodes, fn (array $node): bool => $node['status'] === 'online'));
@@ -36,7 +36,8 @@ final class AdminNodeController
         $node = Node::query()->findOrFail($nodeId);
         $tokens = NodeToken::where('node_id', $nodeId)->orderByDesc('created_at')->get()->map(fn (NodeToken $token): array => [
             'id' => $token->id,
-            'name' => $token->name,
+            'token_prefix' => $token->token_prefix,
+            'status' => $token->status,
             'last_used_at' => optional($token->last_used_at)?->toIso8601String(),
             'expires_at' => optional($token->expires_at)?->toIso8601String(),
             'revoked_at' => optional($token->revoked_at)?->toIso8601String(),
@@ -51,54 +52,53 @@ final class AdminNodeController
 
     public function store(Request $request): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
+        $request->merge([
+            'node_code' => $request->input('node_code', 'nd_' . Str::lower(Str::random(10))),
+            'name' => $request->input('name', $request->input('node_name')),
+        ]);
         $validated = $request->validate([
-            'node_name' => 'required|string|max:100|unique:nodes,node_name',
-            'region' => 'required|string|max:80',
+            'node_code' => 'required|string|max:64|unique:nodes,node_code',
+            'name' => 'required|string|max:120',
+            'region' => 'nullable|string|max:40',
             'country' => 'nullable|string|size:2',
-            'city' => 'nullable|string|max:100',
-            'provider' => 'nullable|string|max:80',
+            'city' => 'nullable|string|max:80',
             'public_ipv4' => 'nullable|string|max:45',
-            'public_ipv6' => 'nullable|string|max:45',
-            'hostname' => 'nullable|string|max:255',
+            'public_ipv6' => 'nullable|string|max:64',
             'supported_protocols' => 'array',
             'supported_protocols.*' => 'string',
-            'weight' => 'integer|min:0|max:10000',
-            'capacity_qps' => 'integer|min:0',
-            'labels' => 'array',
         ]);
 
         $node = Node::create(array_merge($validated, [
-            'id' => 'node_' . Str::lower(Str::random(16)),
             'status' => 'pending',
             'current_config_version' => 0,
-            'desired_config_version' => 0,
+            'desired_config_version' => 1,
+            'created_by_admin_id' => $actorId,
         ]));
 
-        AdminAuditLog::record('node.create', 'node', $node->id, $node->toArray(), $actorId, null, $request->ip(), $request->userAgent());
+        AdminAuditLog::record('node.create', 'node', (string) $node->id, $node->toArray(), $actorId !== null ? (string) $actorId : null, null, $request->ip(), $request->userAgent());
 
         return response()->json(['data' => $node->toArray()], 201);
     }
 
     public function update(Request $request, string $nodeId): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $node = Node::query()->findOrFail($nodeId);
+        $request->merge([
+            'name' => $request->input('name', $request->input('node_name')),
+        ]);
 
         $validated = $request->validate([
-            'node_name' => 'string|max:100|unique:nodes,node_name,' . $nodeId,
-            'region' => 'string|max:80',
+            'node_code' => 'string|max:64|unique:nodes,node_code,' . $nodeId,
+            'name' => 'string|max:120',
+            'region' => 'nullable|string|max:40',
             'country' => 'nullable|string|size:2',
-            'city' => 'nullable|string|max:100',
-            'provider' => 'nullable|string|max:80',
+            'city' => 'nullable|string|max:80',
             'public_ipv4' => 'nullable|string|max:45',
-            'public_ipv6' => 'nullable|string|max:45',
-            'hostname' => 'nullable|string|max:255',
+            'public_ipv6' => 'nullable|string|max:64',
             'supported_protocols' => 'array',
             'supported_protocols.*' => 'string',
-            'weight' => 'integer|min:0|max:10000',
-            'capacity_qps' => 'integer|min:0',
-            'labels' => 'array',
         ]);
 
         $node->update($validated);
@@ -110,7 +110,7 @@ final class AdminNodeController
 
     public function destroy(Request $request, string $nodeId): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $node = Node::query()->findOrFail($nodeId);
         $node->delete();
 
@@ -121,10 +121,10 @@ final class AdminNodeController
 
     public function batchDestroy(Request $request): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $validated = $request->validate([
             'ids' => 'required|array|min:1',
-            'ids.*' => 'string',
+            'ids.*' => 'required',
         ]);
 
         $count = Node::whereIn('id', $validated['ids'])->delete();
@@ -136,10 +136,10 @@ final class AdminNodeController
 
     public function enable(Request $request, string $nodeId): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $node = Node::query()->findOrFail($nodeId);
-        // 只允许上线，不直接改 status=online — 等心跳确认真实在线
-        $node->update(['disabled_at' => null]);
+        // 只允许从 disabled → pending，等心跳确认真实在线
+        $node->update(['status' => 'pending']);
 
         AdminAuditLog::record('node.enable', 'node', $nodeId, [], $actorId, null, $request->ip(), $request->userAgent());
 
@@ -148,9 +148,9 @@ final class AdminNodeController
 
     public function disable(Request $request, string $nodeId): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $node = Node::query()->findOrFail($nodeId);
-        $node->update(['disabled_at' => now(), 'status' => 'disabled']);
+        $node->update(['status' => 'disabled']);
 
         AdminAuditLog::record('node.disable', 'node', $nodeId, [], $actorId, null, $request->ip(), $request->userAgent());
 
@@ -159,46 +159,37 @@ final class AdminNodeController
 
     public function issueToken(Request $request, string $nodeId): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $node = Node::query()->findOrFail($nodeId);
 
         $validated = $request->validate([
-            'name' => 'string|max:100',
+            'scopes' => 'array',
+            'scopes.*' => 'string',
             'expires_in_days' => 'integer|min:1|max:3650',
         ]);
 
-        // 预签发 (api_key, secret) 三元组：明文仅返回一次，服务端只存 sha256
-        // 同节点同名 token 已存在时，自动重新生成（覆盖旧凭据）
-        $plainToken = Str::random(32);
-        $plainSecret = 'sk_' . bin2hex(random_bytes(32));
-
-        $token = NodeToken::updateOrCreate(
-            [
-                'node_id' => $node->id,
-                'name' => $validated['name'] ?? 'default',
-            ],
-            [
-                'id' => 'ntk_' . bin2hex(random_bytes(8)),
-                'token_hash' => hash('sha256', $plainToken),
-                'hmac_key_hash' => hash('sha256', $plainSecret),
-                'hmac_secret_encrypted' => Crypt::encryptString($plainSecret),
-                'expires_at' => isset($validated['expires_in_days']) ? now()->addDays((int) $validated['expires_in_days']) : null,
-                'created_at' => now(),
-            ]
+        // V2.3: 预签发 plaintext token，存 SHA256 hash（与 NodeToken::createForNode 兼容）
+        $result = NodeToken::createForNode(
+            $node,
+            isset($validated['expires_in_days']) ? (int) $validated['expires_in_days'] : 365,
+            $actorId
         );
 
-        AdminAuditLog::record('node.token_issue', 'node_token', $token->id, ['node_id' => $nodeId], $actorId, null, $request->ip(), $request->userAgent());
+        if (! empty($validated['scopes'])) {
+            NodeToken::where('token_hash', hash('sha256', $result['token']))
+                ->update(['scopes' => json_encode($validated['scopes'])]);
+        }
 
-        // 明文仅返回一次，运维需用 `resolver install` 写入目标机 configs/server.yaml
-        // Cache-Control: no-store 确保浏览器/中间代理不缓存明文凭据。
+        AdminAuditLog::record('node.token_issue', 'node_token', (string) $node->id, ['node_id' => $nodeId], $actorId !== null ? (string) $actorId : null, null, $request->ip(), $request->userAgent());
+
         return response()->json([
             'data' => [
-                'id' => $token->id,
-                'name' => $token->name,
-                'node_id' => $node->id,
-                'api_key' => $plainToken,
-                'secret' => $plainSecret,
-                'expires_at' => optional($token->expires_at)?->toIso8601String(),
+                'id' => (string) $node->id,
+                'token_prefix' => $result['prefix'],
+                'api_key' => $result['token'],
+                'hmac_secret' => $result['hmac_secret'] ?? '',
+                'node_id' => $node->node_code,
+                'expires_at' => optional($result['expires_at'])?->toIso8601String(),
             ],
         ], 201)
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, private')
@@ -207,11 +198,11 @@ final class AdminNodeController
 
     public function revokeToken(Request $request, string $nodeId, string $tokenId): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $token = NodeToken::where('node_id', $nodeId)->where('id', $tokenId)->firstOrFail();
         $token->update(['revoked_at' => now()]);
 
-        AdminAuditLog::record('node.token_revoke', 'node_token', $tokenId, ['node_id' => $nodeId], $actorId, null, $request->ip(), $request->userAgent());
+        AdminAuditLog::record('node.token_revoke', 'node_token', $tokenId, ['node_id' => $nodeId], $actorId !== null ? (string) $actorId : null, null, $request->ip(), $request->userAgent());
 
         return response()->json(['data' => ['id' => $tokenId, 'revoked' => true]]);
     }

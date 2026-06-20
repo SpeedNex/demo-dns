@@ -126,15 +126,26 @@ watch(currentProfileId, () => {
     display: flex;
     gap: 12px;
     margin-bottom: 16px;
-    align-items: center;
+    align-items: stretch;
     flex-wrap: wrap;
 }
-.el-select,
-.el-input {
+.log-filters > * {
     height: 40px;
 }
 .log-filters .el-input {
     width: 240px;
+}
+.log-filters .el-select {
+    width: 140px;
+}
+.log-filters .el-input,
+.log-filters .el-select {
+    display: inline-flex;
+    align-items: center;
+}
+.log-filters .el-switch {
+    display: inline-flex;
+    align-items: center;
 }
 .log-pagination {
     margin-top: 16px;

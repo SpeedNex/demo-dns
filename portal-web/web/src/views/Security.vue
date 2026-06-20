@@ -231,12 +231,17 @@ watch(
     { deep: true }
 )
 
-onMounted(async () => {
+const fetchData = async () => {
     try {
         const { data } = await client.get('/user/security', { params: { profile_id: currentProfileId.value } })
         Object.assign(form, data.data || form)
     } catch {}
-})
+}
+
+// 切换 profile 时重新加载数据
+watch(currentProfileId, fetchData)
+
+onMounted(fetchData)
 </script>
 
 <style scoped>

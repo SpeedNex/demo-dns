@@ -66,7 +66,7 @@ final class AdminQueryLogController
 
     public function batchDestroy(Request $request): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $validated = $request->validate([
             'ids' => 'required|array|min:1',
             'ids.*' => 'string',
@@ -81,7 +81,7 @@ final class AdminQueryLogController
 
     public function clearAll(Request $request): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $deleted = QueryLogEntry::query()->delete();
 
         AdminAuditLog::record('query_logs.clear_all', 'query_log_entry', null, ['count' => $deleted], $actorId, null, $request->ip(), $request->userAgent());

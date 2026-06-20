@@ -11,10 +11,20 @@
 
         <el-card shadow="never" class="profile-card">
         <el-table :data="profiles" stripe>
-            <el-table-column prop="name" :label="$t('profile.name')" />
+            <el-table-column :label="$t('profile.name')" min-width="220">
+                <template #default="{ row }">
+                    <span class="profile-name-cell">
+                        <strong>{{ row.name }}</strong>
+                        <el-tag v-if="row.is_default" type="success" size="small" effect="light" class="default-tag">
+                            <el-icon style="margin-right:2px"><Star /></el-icon>
+                            {{ $t('common.default') }}
+                        </el-tag>
+                    </span>
+                </template>
+            </el-table-column>
             <el-table-column prop="default_action" :label="$t('profile.defaultAction')" width="140" />
             <el-table-column prop="status" :label="$t('profile.status')" width="100" />
-            <el-table-column :label="$t('profile.devices')" width="80">
+            <el-table-column :label="$t('profile.devices')" width="160">
                 <template #default="{ row }">{{ row.device_count ?? 0 }}</template>
             </el-table-column>
             <el-table-column :label="$t('profile.actions')" width="260">
@@ -54,6 +64,7 @@
 import { useI18n } from 'vue-i18n'
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Star } from '@element-plus/icons-vue'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
 
@@ -137,5 +148,13 @@ onMounted(fetchProfiles)
 }
 .profile-card .el-table {
     margin-top: 0;
+}
+.profile-name-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.default-tag {
+    flex-shrink: 0;
 }
 </style>

@@ -16,7 +16,7 @@ final class TeamController
 
     public function index(Request $request): JsonResponse
     {
-        $teams = $this->teamService->list($request->user()->id);
+        $teams = $this->teamService->list($request->user()->uid);
 
         return response()->json([
             'data' => $teams->map(fn ($team) => [
@@ -27,7 +27,7 @@ final class TeamController
                 'member_count' => $team->member_count,
                 'max_members' => $team->max_members,
                 'role' => $this->teamService->members($team->id)
-                    ->where('user_id', $request->user()->id)
+                    ->where('user_id', $request->user()->uid)
                     ->value('role'),
                 'created_at' => $team->created_at,
             ]),
@@ -43,7 +43,7 @@ final class TeamController
             'max_members' => 'nullable|integer|min:1|max:1000',
         ]);
 
-        $team = $this->teamService->create($validated, $request->user()->id);
+        $team = $this->teamService->create($validated, $request->user()->uid);
 
         return response()->json([
             'data' => [
@@ -60,7 +60,7 @@ final class TeamController
 
     public function show(Request $request, string $teamId): JsonResponse
     {
-        $team = $this->teamService->get($teamId, $request->user()->id);
+        $team = $this->teamService->get($teamId, $request->user()->uid);
 
         return response()->json([
             'data' => [
@@ -85,7 +85,7 @@ final class TeamController
             'description' => 'nullable|string|max:500',
         ]);
 
-        $team = $this->teamService->update($teamId, $validated, $request->user()->id);
+        $team = $this->teamService->update($teamId, $validated, $request->user()->uid);
 
         return response()->json([
             'data' => [
@@ -100,14 +100,14 @@ final class TeamController
 
     public function destroy(Request $request, string $teamId): JsonResponse
     {
-        $this->teamService->delete($teamId, $request->user()->id);
+        $this->teamService->delete($teamId, $request->user()->uid);
 
         return response()->json(['data' => ['deleted' => true]]);
     }
 
     public function members(Request $request, string $teamId): JsonResponse
     {
-        $this->teamService->get($teamId, $request->user()->id);
+        $this->teamService->get($teamId, $request->user()->uid);
         $members = $this->teamService->members($teamId);
 
         return response()->json([
@@ -123,7 +123,7 @@ final class TeamController
 
     public function removeMember(Request $request, string $teamId, string $userId): JsonResponse
     {
-        $this->teamService->removeMember($teamId, $userId, $request->user()->id);
+        $this->teamService->removeMember($teamId, $userId, $request->user()->uid);
 
         return response()->json(['data' => ['removed' => true]]);
     }
@@ -134,14 +134,14 @@ final class TeamController
             'role' => ['required', Rule::in(['admin', 'member'])],
         ]);
 
-        $this->teamService->updateMemberRole($teamId, $userId, $validated['role'], $request->user()->id);
+        $this->teamService->updateMemberRole($teamId, $userId, $validated['role'], $request->user()->uid);
 
         return response()->json(['data' => ['role' => $validated['role']]]);
     }
 
     public function leaveTeam(Request $request, string $teamId): JsonResponse
     {
-        $this->teamService->leaveTeam($teamId, $request->user()->id);
+        $this->teamService->leaveTeam($teamId, $request->user()->uid);
 
         return response()->json(['data' => ['left' => true]]);
     }
@@ -149,24 +149,24 @@ final class TeamController
     public function transferOwnership(Request $request, string $teamId): JsonResponse
     {
         $validated = $request->validate([
-            'new_owner_id' => 'required|string',
+            'new_owner_id' => 'required',
         ]);
 
-        $this->teamService->transferOwnership($teamId, $validated['new_owner_id'], $request->user()->id);
+        $this->teamService->transferOwnership($teamId, (string) $validated['new_owner_id'], (string) $request->user()->uid);
 
         return response()->json(['data' => ['transferred' => true]]);
     }
 
     public function switchTeam(Request $request, string $teamId): JsonResponse
     {
-        $this->teamService->switchTeam($teamId, $request->user()->id);
+        $this->teamService->switchTeam($teamId, $request->user()->uid);
 
         return response()->json(['data' => ['current_team_id' => $teamId]]);
     }
 
     public function invitations(Request $request, string $teamId): JsonResponse
     {
-        $this->teamService->get($teamId, $request->user()->id);
+        $this->teamService->get($teamId, $request->user()->uid);
         $invitations = $this->teamService->listInvitations($teamId);
 
         return response()->json([
@@ -190,7 +190,7 @@ final class TeamController
             'role' => ['sometimes', Rule::in(['admin', 'member'])],
         ]);
 
-        $invitation = $this->teamService->invite($teamId, $validated, $request->user()->id);
+        $invitation = $this->teamService->invite($teamId, $validated, $request->user()->uid);
 
         return response()->json([
             'data' => [
@@ -204,7 +204,7 @@ final class TeamController
 
     public function cancelInvitation(Request $request, string $teamId, string $invitationId): JsonResponse
     {
-        $this->teamService->cancelInvitation($teamId, $invitationId, $request->user()->id);
+        $this->teamService->cancelInvitation($teamId, $invitationId, $request->user()->uid);
 
         return response()->json(['data' => ['cancelled' => true]]);
     }
@@ -216,7 +216,7 @@ final class TeamController
             'ids.*' => 'string',
         ]);
 
-        $count = $this->teamService->batchCancelInvitations($teamId, $validated['ids'], $request->user()->id);
+        $count = $this->teamService->batchCancelInvitations($teamId, $validated['ids'], $request->user()->uid);
 
         return response()->json(['data' => ['cancelled' => $count]]);
     }
@@ -227,7 +227,7 @@ final class TeamController
             'token' => 'required|string',
         ]);
 
-        $this->teamService->acceptInvite($validated['token'], $request->user()->id);
+        $this->teamService->acceptInvite($validated['token'], $request->user()->uid);
 
         return response()->json(['data' => ['accepted' => true]]);
     }

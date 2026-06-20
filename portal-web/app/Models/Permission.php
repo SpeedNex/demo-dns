@@ -8,8 +8,8 @@ class Permission extends Model
 {
     protected $table = 'permissions';
 
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = false;
 
     protected $fillable = [
@@ -18,14 +18,4 @@ class Permission extends Model
         'description',
         'group_name',
     ];
-
-    protected static function boot(): void
-    {
-        parent::boot();
-        static::creating(function (self $permission): void {
-            if (empty($permission->id)) {
-                $permission->id = 'perm_' . substr(hash('sha256', $permission->code . microtime()), 0, 12);
-            }
-        });
-    }
 }

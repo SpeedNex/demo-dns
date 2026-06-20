@@ -56,17 +56,15 @@ final class UsageBillingService
                     [
                         'user_id' => $userId,
                         'profile_id' => $profileId,
-                        'device_id' => $deviceId,
+                        'device_id' => $deviceId !== '' ? $deviceId : null,
                         'billing_category' => $category,
                         'billing_period_id' => $period->id,
                     ],
                     [
-                        'period' => $period->period_code,
                         'plan_code' => $planCode,
                         'query_count' => DB::raw('COALESCE(usage_records.query_count, 0) + ' . (int) $count),
                         'amount_minor' => DB::raw('COALESCE(usage_records.amount_minor, 0)'),
-                        'period_start' => $period->period_start,
-                        'period_end' => $period->period_end,
+                        'last_aggregated_at' => $now,
                         'updated_at' => $now,
                         'created_at' => DB::raw('COALESCE(usage_records.created_at, NOW())'),
                     ],
@@ -101,17 +99,19 @@ final class UsageBillingService
                     foreach ($records as $r) {
                         $totalMinor += $this->priceFor($r->billing_category, (int) $r->query_count);
                     }
-                    $billingId = DB::table('invoices')->insertGetId([
+                    $billingNo = 'BIL-' . now()->format('YmdHis') . '-' . str_pad((string) $period->id, 6, '0', STR_PAD_LEFT);
+                    $billingId = DB::table('billings')->insertGetId([
+                        'billing_no' => $billingNo,
                         'user_id' => $period->user_id,
-                        'invoice_no' => 'UINV-' . now()->format('YmdHis') . '-' . str_pad((string) $period->id, 6, '0', STR_PAD_LEFT),
-                        'type' => 'usage',
-                        'billing_type' => 'usage',
-                        'billing_period_id' => $period->id,
-                        'order_id' => null,
-                        'amount_minor' => $totalMinor,
                         'currency' => 'USD',
-                        'status' => 'issued',
+                        'subtotal_minor' => $totalMinor,
+                        'discount_minor' => 0,
+                        'tax_minor' => 0,
+                        'total_minor' => $totalMinor,
+                        'status' => 'pending',
                         'issued_at' => now(),
+                        'billing_period_id' => $period->id,
+                        'meta' => json_encode(['kind' => 'usage'], JSON_UNESCAPED_UNICODE),
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
@@ -120,7 +120,9 @@ final class UsageBillingService
                         DB::table('billing_items')->insert([
                             'billing_id' => $billingId,
                             'item_type' => 'usage',
-                            'item_name' => sprintf('DNS usage (%s) %d queries', $r->billing_category, $r->query_count),
+                            'source_type' => 'usage_record',
+                            'source_id' => $r->id,
+                            'description' => sprintf('DNS usage (%s) %d queries', $r->billing_category, $r->query_count),
                             'quantity' => $r->query_count,
                             'unit_price_minor' => $this->unitPrice($r->billing_category),
                             'amount_minor' => $amount,
@@ -145,7 +147,6 @@ final class UsageBillingService
         $now = now();
         $monthStart = $now->copy()->startOfMonth();
         $monthEnd = $now->copy()->endOfMonth();
-        $periodCode = $monthStart->format('Y-m');
         $row = DB::table('billing_periods')
             ->where('user_id', $userId)
             ->where('period_start', $monthStart)
@@ -158,7 +159,6 @@ final class UsageBillingService
             'user_id' => $userId,
             'period_start' => $monthStart,
             'period_end' => $monthEnd,
-            'period_code' => $periodCode,
             'status' => 'open',
             'created_at' => $now,
             'updated_at' => $now,

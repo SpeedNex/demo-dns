@@ -28,10 +28,10 @@
                         </div>
                     </div>
                     <div class="endpoint-item">
-                        <label>IPv4 DNS</label>
+                        <label>IPv6</label>
                         <div class="code-row">
-                            <code class="code">{{ endpoints.ipv4 }}</code>
-                            <el-button size="small" @click="copyText(endpoints.ipv4)">{{ $t('devices.copy') }}</el-button>
+                            <code class="code">{{ endpoints.ipv6 || '-' }}</code>
+                            <el-button size="small" @click="copyText(endpoints.ipv6)">{{ $t('devices.copy') }}</el-button>
                         </div>
                     </div>
                 </div>
@@ -116,7 +116,7 @@ const renameTarget = ref(null)
 const renameForm = ref({ name: '' })
 const fetchDevices = async () => {
     try {
-        const { data } = await client.get('/user/member-center/devices')
+        const { data } = await client.get('/user/devices')
         devices.value = data.data ?? []
     } catch {
         devices.value = []
@@ -125,7 +125,7 @@ const fetchDevices = async () => {
 
 const fetchEndpoints = async () => {
     try {
-        const { data } = await client.get('/user/member-center/dns-endpoints')
+        const { data } = await client.get('/user/dns-endpoints')
         endpoints.value = data.data
     } catch {
         endpoints.value = null

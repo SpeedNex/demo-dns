@@ -22,9 +22,10 @@ final class WorkspaceRuleService
     public function updateRule(string $userId, string $listType, string $ruleId, array $attributes): array
     {
         $profile = $this->workspaceService->primaryProfile($userId);
+        $normalizedListType = $listType === 'allow' ? 'allowlist' : 'denylist';
 
         $rule = ProfileRule::where('profile_id', $profile->id)
-            ->where('list_type', $listType)
+            ->where('list_type', $normalizedListType)
             ->where('id', $ruleId)
             ->firstOrFail();
 

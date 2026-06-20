@@ -6,40 +6,32 @@ use Illuminate\Database\Eloquent\Model;
 
 class Alert extends Model
 {
-    public $incrementing = false;
-
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
-        'id',
+        'code',
         'level',
-        'status',
+        'source',
+        'subject_type',
+        'subject_id',
         'title',
         'message',
-        'context',
-        'source',
-        'related_type',
-        'related_id',
+        'payload',
+        'status',
         'acknowledged_by',
         'acknowledged_at',
+        'resolved_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'context' => 'array',
+            'payload' => 'array',
+            'subject_id' => 'integer',
+            'acknowledged_by' => 'integer',
             'acknowledged_at' => 'datetime',
+            'resolved_at' => 'datetime',
         ];
-    }
-
-    protected static function boot(): void
-    {
-        parent::boot();
-
-        static::creating(function (self $alert): void {
-            if (empty($alert->id)) {
-                $alert->id = 'alt_' . substr(hash('sha256', microtime(true) . random_int(1, PHP_INT_MAX)), 0, 12);
-            }
-        });
     }
 }

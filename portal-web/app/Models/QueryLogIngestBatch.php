@@ -7,44 +7,28 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class QueryLogIngestBatch extends Model
 {
-    
-
-    public $incrementing = false;
-
-    protected $keyType = 'string';
-
-    protected $fillable = [
-        'id',
-        'batch_id',
-        'node_id',
-        'item_count',
-        'content_sha256',
-        'usage_exported_at',
-        'status',
-        'error_message',
-        'received_at',
-        'written_at',
-    ];
-
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = false;
 
-    protected static function boot(): void
-    {
-        parent::boot();
-
-        static::creating(function (self $batch): void {
-            if ($batch->id === null || $batch->id === '') {
-                $batch->id = 'qlb_' . substr(hash('sha256', microtime(true) . random_int(1, PHP_INT_MAX)), 0, 12);
-            }
-        });
-    }
+    protected $fillable = [
+        'batch_id',
+        'node_id',
+        'event_count',
+        'status',
+        'error_message',
+        'forwarded_to_clickhouse',
+        'received_at',
+        'processed_at',
+    ];
 
     protected function casts(): array
     {
         return [
-            'usage_exported_at' => 'datetime',
+            'event_count' => 'integer',
+            'forwarded_to_clickhouse' => 'boolean',
             'received_at' => 'datetime',
-            'written_at' => 'datetime',
+            'processed_at' => 'datetime',
         ];
     }
 

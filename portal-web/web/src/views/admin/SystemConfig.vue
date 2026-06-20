@@ -10,9 +10,6 @@
                         <el-form-item :label="$t('admin.basicConfig.siteUrl') || '网站地址'">
                             <el-input v-model="config.basic.site_url" placeholder="https://example.com" />
                         </el-form-item>
-                        <el-form-item label="DNS 域名">
-                            <el-input v-model="config.basic.dns_domain" placeholder="dns.ocerdns.local" />
-                        </el-form-item>
                         <el-form-item :label="$t('admin.basicConfig.siteDescription') || '网站描述'">
                             <el-input v-model="config.basic.site_description" type="textarea" :rows="3" />
                         </el-form-item>
@@ -23,6 +20,10 @@
             <el-tab-pane :label="$t('admin.systemConfig.dnsParams') || 'DNS参数'" name="dns">
                 <div style="max-width:600px">
                     <el-form label-position="left" label-width="160px">
+                        <el-form-item label="DNS 域名">
+                            <el-input v-model="config.dns.dns_domain" placeholder="dns.ocerdns.local" />
+                            <span class="form-hint">{{ $t('admin.systemConfig.dnsDomainHint') || '用于 DoH/DoT 端点域名，会员中心端点展示从此获取' }}</span>
+                        </el-form-item>
                         <el-form-item :label="$t('admin.systemConfig.defaultUpstream')">
                             <el-input v-model="config.dns.default_upstream" placeholder="1.1.1.1:53" />
                         </el-form-item>
@@ -176,9 +177,9 @@ const defaultConfig = {
         site_name: 'OcerDNS',
         site_url: '',
         site_description: '',
-        dns_domain: 'dns.ocerdns.local',
     },
     dns: {
+        dns_domain: 'dns.ocerdns.local',
         default_upstream: '1.1.1.1:53',
         timeout_ms: 5000,
         log_retention_days: 90,
@@ -241,16 +242,21 @@ onMounted(async () => {
         }))
 
         if (data.data && Object.keys(data.data).length > 0) {
+            // 兼容历史：basic.dns_domain（旧版本字段）迁移到 dns.dns_domain
+            const legacyBasic = data.data.basic && data.data.basic.dns_domain
+                ? { dns_domain: data.data.basic.dns_domain }
+                : {}
+            const mergedBasic = { ...data.data.basic || {} }
+            if (legacyBasic.dns_domain && !data.data.dns) {
+                mergedBasic.dns_domain = undefined
+            }
+            delete mergedBasic.dns_domain
+
             config.value = {
                 ...config.value,
                 ...data.data,
-                basic: { ...config.value.basic, ...(data.data.basic || {
-                    site_name: data.data.site_name,
-                    site_url: data.data.site_url,
-                    site_description: data.data.site_description,
-                    dns_domain: data.data.dns_domain,
-                }) },
-                dns: { ...config.value.dns, ...(data.data.dns || {}) },
+                basic: { ...config.value.basic, ...mergedBasic },
+                dns: { ...config.value.dns, ...(data.data.dns || {}), ...legacyBasic },
                 redis: { ...config.value.redis, ...(data.data.redis || {}) },
                 clickhouse: { ...config.value.clickhouse, ...(data.data.clickhouse || {}) },
                 payment: { ...config.value.payment, ...(data.data.payment || {}) },
@@ -277,5 +283,12 @@ onMounted(async () => {
 }
 .config-tabs :deep(.el-tabs__item) {
     font-size: 14px;
+}
+.form-hint {
+    display: block;
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1.5;
+    margin-top: 4px;
 }
 </style>

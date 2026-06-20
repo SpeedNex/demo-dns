@@ -17,7 +17,7 @@ final class ProfilePublishController
 
     public function store(Request $request, string $profileId): JsonResponse
     {
-        $result = $this->service->publishForUser($request->user()->id, $profileId);
+        $result = $this->service->publishForUser((string) $request->user()->uid, $profileId);
 
         return response()->json(['data' => ['payload' => $result]]);
     }

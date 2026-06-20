@@ -32,8 +32,7 @@ final class AuthController
             'username' => $username,
             'email' => $validated['email'],
             'password' => $validated['password'],
-            'timezone' => $request->input('timezone', 'UTC'),
-            'locale' => $request->input('locale', 'en'),
+            'locale' => $request->input('locale', 'zh-CN'),
             'device_name' => $request->input('device_name', 'web'),
         ]);
 
@@ -72,7 +71,7 @@ final class AuthController
             $admin = Admin::whereRaw('LOWER(username) = ?', [strtolower($credential)])->first();
         }
 
-        if (! $admin || ! Hash::check($password, (string) $admin->password_hash)) {
+        if (! $admin || ! Hash::check($password, (string) $admin->password)) {
             throw ValidationException::withMessages(['email' => 'Invalid credentials.']);
         }
 
@@ -90,11 +89,11 @@ final class AuthController
             'data' => [
                 'token' => $token,
                 'user' => [
-                    'id' => $admin->id,
+                    'admin_id' => $admin->admin_id,
                     'username' => $admin->username,
                     'email' => $admin->email,
                     'role' => 'admin',
-                    'is_super_admin' => (bool) $admin->is_super_admin,
+                    'is_super' => (bool) $admin->is_super,
                 ],
             ],
         ]);
@@ -112,13 +111,11 @@ final class AuthController
         $user = $request->user();
 
         return response()->json(['data' => [
-            'id' => $user->id,
+            'uid' => $user->uid,
             'username' => $user->username,
             'email' => $user->email,
-            'role' => $user->role,
             'status' => $user->status,
             'plan_code' => $user->plan_code,
-            'timezone' => $user->timezone,
             'locale' => $user->locale,
             'created_at' => $user->created_at?->toIso8601String(),
             'email_verified_at' => $user->email_verified_at?->toIso8601String(),

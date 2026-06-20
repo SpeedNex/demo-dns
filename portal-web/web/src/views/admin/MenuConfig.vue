@@ -21,7 +21,15 @@
                 default-expand-all
                 :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
             >
-                <el-table-column :label="$t('admin.menuConfig.name') || '菜单名称'" min-width="250">
+                <el-table-column :label="$t('admin.menuConfig.level') || '级别'" width="100" align="center">
+                    <template #default="{ row }">
+                        <el-tag v-if="row.isGroup" type="info" size="small">{{ levelText(row) }}</el-tag>
+                        <el-tag v-else-if="!row.parentId" type="primary" size="small">{{ levelText(row) }}</el-tag>
+                        <el-tag v-else-if="getDepth(row.id) === 2" type="success" size="small">{{ levelText(row) }}</el-tag>
+                        <el-tag v-else type="warning" size="small">{{ levelText(row) }}</el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column :label="$t('admin.menuConfig.name') || '菜单名称'" min-width="220">
                     <template #default="{ row }">
                         <span>{{ resolveLabel(row) }}</span>
                     </template>
@@ -139,37 +147,9 @@ const iconOptions = [
     'UserFilled', 'Avatar', 'Grid', 'Lock', 'Tickets', 'List', 'Box', 'View',
 ]
 
-const defaultMainMenuItems = [
-    { id: 'dashboard', labelKey: 'nav.dashboard', path: '/admin/dashboard', icon: 'DataAnalysis', visible: true, sort: 1, groupKey: 'service' },
-    { id: 'nodes', labelKey: 'nav.nodes', path: '/admin/nodes', icon: 'Monitor', visible: true, sort: 2, groupKey: 'service' },
-    { id: 'geo-dns', labelKey: 'nav.geoDns', path: '/admin/geo-dns', icon: 'Connection', visible: true, sort: 3, groupKey: 'service' },
-    { id: 'rules', labelKey: 'nav.ruleLibrary', path: '/admin/rules', icon: 'Collection', visible: true, sort: 4, groupKey: 'service' },
-    { id: 'alerts', labelKey: 'admin.alerts', path: '/admin/alerts', icon: 'Message', visible: true, sort: 5, groupKey: 'monitor' },
-    { id: 'query-logs', labelKey: 'admin.queryLogs', path: '/admin/query-logs', icon: 'Document', visible: true, sort: 6, groupKey: 'monitor' },
-    { id: 'users', labelKey: 'admin.users', path: '/admin/users', icon: 'User', visible: true, sort: 7, groupKey: 'user' },
-    { id: 'devices', labelKey: 'admin.devices', path: '/admin/devices', icon: 'Avatar', visible: true, sort: 8, groupKey: 'user' },
-    { id: 'member-catalogs', labelKey: 'admin.memberCatalogs.title', path: '/admin/member-catalogs', icon: 'Grid', visible: true, sort: 9, groupKey: 'user' },
-    { id: 'rbac', labelKey: 'admin.rbac.title', path: '/admin/rbac', icon: 'Lock', visible: true, sort: 10, groupKey: 'user' },
-    { id: 'billing', labelKey: 'admin.billing.title', path: '/admin/billing', icon: 'Coin', visible: true, sort: 11, groupKey: 'finance' },
-    { id: 'plans', labelKey: 'admin.plans.title', path: '/admin/plans', icon: 'Tickets', visible: true, sort: 12, groupKey: 'finance' },
-    { id: 'balance', labelKey: 'admin.finance.balance', path: '/admin/balance', icon: 'Wallet', visible: true, sort: 13, groupKey: 'finance' },
-    { id: 'recharge', labelKey: 'admin.finance.recharge', path: '/admin/recharge', icon: 'Coin', visible: true, sort: 14, groupKey: 'finance' },
-    { id: 'bill', labelKey: 'admin.finance.bill', path: '/admin/bill', icon: 'Document', visible: true, sort: 15, groupKey: 'finance' },
-    { id: 'refund-records', labelKey: 'admin.finance.refundRecords', path: '/admin/refund-records', icon: 'Tickets', visible: true, sort: 16, groupKey: 'finance' },
-    { id: 'system-config', labelKey: 'nav.systemConfig', path: '/admin/system-config', icon: 'Tools', visible: true, sort: 17, groupKey: 'settings' },
-    { id: 'audit-logs', labelKey: 'nav.auditLogs', path: '/admin/audit-logs', icon: 'Tickets', visible: true, sort: 18, groupKey: 'monitor' },
-    { id: 'menu-config', labelKey: 'admin.menuConfig.title', path: '/admin/menu-config', icon: 'List', visible: true, sort: 19, groupKey: 'settings' },
-]
-
-const defaultSubMenuItems = []
-
-const topLevelMenuIds = new Set(defaultMainMenuItems.map((item) => item.id))
-const topLevelIconMap = {
-    balance: 'Wallet',
-    recharge: 'Coin',
-    bill: 'Document',
-    'refund-records': 'Tickets',
-}
+// 菜单数据完全来自后端 dns_admin_menu_rule 表，初始化为空
+const mainMenuItems = ref([])
+const subMenuItems = ref([])
 
 const normalizeMenuConfig = (mainMenu = [], subMenu = []) => {
     const normalizedMain = []
@@ -186,11 +166,11 @@ const normalizeMenuConfig = (mainMenu = [], subMenu = []) => {
     }
 
     for (const item of subMenu) {
-        if (item.parentId === 'finance' || topLevelMenuIds.has(item.id)) {
+        if (item.parentId === 'finance') {
             normalizedMain.push({
                 ...item,
                 parentId: null,
-                icon: item.icon || topLevelIconMap[item.id] || 'Document',
+                icon: item.icon || 'Document',
             })
             continue
         }
@@ -207,9 +187,6 @@ const normalizeMenuConfig = (mainMenu = [], subMenu = []) => {
         subMenu: normalizedSub,
     }
 }
-
-const mainMenuItems = ref([...defaultMainMenuItems])
-const subMenuItems = ref([...defaultSubMenuItems])
 
 const menuTree = computed(() => {
     return groupDefinitions.map((group) => {
@@ -248,6 +225,28 @@ const resolveLabel = (row) => {
     }
 
     return row.labelKey
+}
+
+// 0=分组, 1=一级, 2=二级, 3=三级
+const getDepth = (id) => {
+    const main = mainMenuItems.value.find((m) => m.id === id)
+    if (main) return 1
+    const sub = subMenuItems.value.find((s) => s.id === id)
+    if (sub) {
+        const isSubParentMain = mainMenuItems.value.some((m) => m.id === sub.parentId)
+        return isSubParentMain ? 2 : 3
+    }
+    return 0
+}
+
+const levelText = (row) => {
+    if (row?.isGroup) return t('admin.menuConfig.groupLabel') || '分组'
+    const depth = getDepth(row?.id)
+    return depth === 1
+        ? (t('admin.menuConfig.level1') || '一级')
+        : depth === 2
+            ? (t('admin.menuConfig.level2') || '二级')
+            : (t('admin.menuConfig.level3') || '三级')
 }
 
 const isFirstMain = (row) => {
@@ -396,16 +395,15 @@ const handleSave = async () => {
 }
 
 onMounted(async () => {
-    let loadedFromApi = false
+    // 完全依赖后端 dns_admin_menu_rule 表，失败则保持空列表
     try {
         const response = await client.get('/admin/menu-config')
-
-        if (response?.data?.data && Array.isArray(response.data.data) && response.data.data.length > 0) {
-            const dbData = response.data.data
+        const dbData = response?.data?.data
+        if (Array.isArray(dbData) && dbData.length > 0) {
             const mainMenu = []
             const subMenu = []
 
-            dbData.forEach(item => {
+            dbData.forEach((item) => {
                 mainMenu.push({
                     id: item.menuKey || item.id,
                     labelKey: item.labelKey,
@@ -413,11 +411,11 @@ onMounted(async () => {
                     icon: item.icon,
                     visible: item.visible !== false,
                     sort: item.sort || 0,
-                    parentId: item.parentId,
+                    parentId: null,
                 })
 
-                if (item.children && item.children.length > 0) {
-                    item.children.forEach(child => {
+                if (Array.isArray(item.children)) {
+                    item.children.forEach((child) => {
                         subMenu.push({
                             id: child.menuKey || child.id,
                             labelKey: child.labelKey,
@@ -431,21 +429,12 @@ onMounted(async () => {
                 }
             })
 
-            if (mainMenu.length > 0) {
-                const normalized = normalizeMenuConfig(mainMenu, subMenu)
-                mainMenuItems.value = normalized.mainMenu
-                subMenuItems.value = normalized.subMenu
-                loadedFromApi = true
-            }
+            const normalized = normalizeMenuConfig(mainMenu, subMenu)
+            mainMenuItems.value = normalized.mainMenu
+            subMenuItems.value = normalized.subMenu
         }
     } catch (err) {
-        console.warn('Failed to load menu config from API, using defaults', err)
-    }
-
-    if (!loadedFromApi) {
-        const normalized = normalizeMenuConfig([...defaultMainMenuItems], [...defaultSubMenuItems])
-        mainMenuItems.value = normalized.mainMenu
-        subMenuItems.value = normalized.subMenu
+        console.warn('Failed to load menu config from API; list will be empty until API responds.', err)
     }
 })
 </script>

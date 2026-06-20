@@ -8,47 +8,44 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Admin Finance controller (balances, recharges, bills, refunds).
- * These endpoints return data from dns_users table for balances,
- * and empty arrays for recharge/bill/refund until dedicated tables are created.
  */
 final class AdminFinanceController
 {
-    /** GET /admin/finance/balances — all user balances (SSOT: `wallets`) */
+    /** GET /admin/finance/balances — all user balances (SSOT: `dns_wallets`) */
     public function balances(): JsonResponse
     {
-        // SSOT 余额在 `wallets` 表；这里 join 拿真相，users.balance_minor 仅作 fallback
+        // SSOT 余额在 `dns_wallets` 表
         $prefix = DB::getTablePrefix();
-        $rows = DB::table('users')
-            ->leftJoin('wallets', 'wallets.user_id', '=', 'users.id')
+        $rows = DB::table('users as u')
+            ->leftJoin('wallets as w', 'w.user_id', '=', 'u.uid')
             ->select([
-                'users.id',
-                'users.username',
-                'users.email',
-                'users.plan_code',
-                'users.role',
-                'users.status',
-                DB::raw("COALESCE({$prefix}wallets.balance, 0) as balance_minor"),
-                DB::raw("COALESCE({$prefix}wallets.currency, {$prefix}users.currency, 'USD') as currency"),
-                DB::raw("COALESCE({$prefix}wallets.updated_at, {$prefix}users.balance_updated_at) as balance_updated_at"),
-                'users.created_at',
+                'u.uid as id',
+                'u.username',
+                'u.email',
+                'u.plan_code',
+                'u.status',
+                DB::raw("COALESCE({$prefix}w.balance_minor, 0) as balance_minor"),
+                DB::raw("COALESCE({$prefix}w.currency, 'USD') as currency"),
+                DB::raw("{$prefix}w.updated_at as balance_updated_at"),
+                'u.created_at',
             ])
-            ->orderBy('users.created_at', 'desc')
+            ->orderBy('u.created_at', 'desc')
             ->limit(200)
             ->get();
 
         return response()->json(['data' => $rows]);
     }
 
-    /** GET /admin/finance/recharges — recharge records (placeholder) */
+    /** GET /admin/finance/recharges */
     public function recharges(Request $request): JsonResponse
     {
-        return response()->json($this->listTransactions($request, 'charge'));
+        return response()->json($this->listTransactions($request, 'credit', 'topup'));
     }
 
     /** GET /admin/finance/recharges/export */
     public function rechargeExport(Request $request): JsonResponse
     {
-        return response()->json(['data' => $this->exportTransactions($request, 'charge')]);
+        return response()->json(['data' => $this->exportTransactions($request, 'credit', 'topup')]);
     }
 
     /** GET /admin/finance/bills — billing invoices */
@@ -60,7 +57,6 @@ final class AdminFinanceController
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
-        // Bills = invoices from the existing BillingService
         $service = new \App\Domain\Billing\BillingService();
         $result = $service->invoices(
             $validated['user_id'] ?? '',
@@ -85,7 +81,7 @@ final class AdminFinanceController
         return response()->json(['data' => $result['data'] ?? []]);
     }
 
-    /** GET /admin/finance/refunds — refund records (placeholder) */
+    /** GET /admin/finance/refunds */
     public function refunds(Request $request): JsonResponse
     {
         return response()->json($this->listTransactions($request, 'refund'));
@@ -110,14 +106,14 @@ final class AdminFinanceController
         }
 
         DB::table('wallet_transactions')->where('id', $id)->update([
-            'status' => 'completed',
+            'status' => 'succeeded',
             'updated_at' => now(),
         ]);
 
         return response()->json([
             'data' => [
                 'id' => $id,
-                'status' => 'completed',
+                'status' => 'succeeded',
                 'approved' => true,
             ],
         ]);
@@ -132,7 +128,7 @@ final class AdminFinanceController
     /**
      * @return array{data: array<int, array<string, mixed>>, meta: array<string, int>}
      */
-    private function listTransactions(Request $request, string $type): array
+    private function listTransactions(Request $request, string $type, ?string $source = null): array
     {
         $validated = $request->validate([
             'user_id' => 'nullable|string',
@@ -143,6 +139,9 @@ final class AdminFinanceController
         $page = (int) ($validated['page'] ?? 1);
         $perPage = (int) ($validated['per_page'] ?? 20);
         $query = DB::table('wallet_transactions')->where('type', $type)->orderByDesc('created_at');
+        if ($source !== null) {
+            $query->where('source', $source);
+        }
         if (! empty($validated['user_id'])) {
             $query->where('user_id', $validated['user_id']);
         }
@@ -156,8 +155,10 @@ final class AdminFinanceController
             'currency' => $row->currency,
             'description' => $row->description,
             'status' => $row->status,
-            'reference_type' => $row->reference_type,
-            'reference_id' => $row->reference_id,
+            'source' => $row->source,
+            'billing_id' => $row->billing_id,
+            'transaction_no' => $row->transaction_no,
+            'balance_after_minor' => (int) $row->balance_after_minor,
             'created_at' => $row->created_at,
             'updated_at' => $row->updated_at,
         ])->all();
@@ -175,7 +176,7 @@ final class AdminFinanceController
     /**
      * @return array<int, array<string, mixed>>
      */
-    private function exportTransactions(Request $request, string $type): array
+    private function exportTransactions(Request $request, string $type, ?string $source = null): array
     {
         $validated = $request->validate([
             'user_id' => 'nullable|string',
@@ -183,6 +184,9 @@ final class AdminFinanceController
         ]);
 
         $query = DB::table('wallet_transactions')->where('type', $type)->orderByDesc('created_at');
+        if ($source !== null) {
+            $query->where('source', $source);
+        }
         if (! empty($validated['user_id'])) {
             $query->where('user_id', $validated['user_id']);
         }
@@ -195,8 +199,10 @@ final class AdminFinanceController
             'currency' => $row->currency,
             'description' => $row->description,
             'status' => $row->status,
-            'reference_type' => $row->reference_type,
-            'reference_id' => $row->reference_id,
+            'source' => $row->source,
+            'billing_id' => $row->billing_id,
+            'transaction_no' => $row->transaction_no,
+            'balance_after_minor' => (int) $row->balance_after_minor,
             'created_at' => $row->created_at,
             'updated_at' => $row->updated_at,
         ])->all();

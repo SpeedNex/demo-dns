@@ -93,7 +93,7 @@ final class UserWorkspaceService
         return $this->hydrateProfileSettings(Profile::create([
             'user_id' => $userId,
             'name' => ($user->username ?: 'Member') . ' Default',
-            'description' => 'Default member-center profile',
+            'description' => 'Default workspace profile',
             'default_action' => 'allow',
             'block_response' => 'nxdomain',
             'security_enabled' => true,
@@ -113,7 +113,14 @@ final class UserWorkspaceService
     public function resolveProfile(string $userId, ?string $profileId = null): Profile
     {
         if ($profileId !== null && $profileId !== '') {
-            $profile = Profile::where('user_id', $userId)->where('id', $profileId)->first();
+            $profile = Profile::where('user_id', $userId)
+                ->where(function ($query) use ($profileId): void {
+                    $query->where('profile_uid', $profileId);
+                    if (ctype_digit($profileId)) {
+                        $query->orWhere('id', (int) $profileId);
+                    }
+                })
+                ->first();
             if ($profile instanceof Profile) {
                 return $this->hydrateProfileSettings($profile);
             }
@@ -152,7 +159,6 @@ final class UserWorkspaceService
         $profile->update([
             'privacy_enabled' => (bool) $settings['enabled'],
             'privacy_settings' => $settings,
-            'log_mode' => $settings['log_mode'],
         ]);
 
         return $this->privacyPayload($profile->fresh());
@@ -226,9 +232,10 @@ final class UserWorkspaceService
     public function listRules(string $userId, string $listType, ?string $profileId = null): array
     {
         $profile = $this->resolveProfile($userId, $profileId);
+        $normalizedListType = $listType === 'allow' ? 'allowlist' : 'denylist';
 
         return ProfileRule::where('profile_id', $profile->id)
-            ->where('list_type', $listType)
+            ->where('list_type', $normalizedListType)
             ->orderByDesc('created_at')
             ->get()
             ->toArray();
@@ -237,10 +244,15 @@ final class UserWorkspaceService
     public function createRule(string $userId, string $listType, array $payload, ?string $profileId = null): array
     {
         $profile = $this->resolveProfile($userId, $profileId);
+        $normalizedListType = $listType === 'allow' ? 'allowlist' : 'denylist';
+
+        // 前端传来的 include_subdomains=true 时，强制使用 suffix 匹配，自动覆盖该域名下所有子域名
+        $includeSubdomains = (bool) ($payload['include_subdomains'] ?? true);
+        $matchType = $payload['match_type'] ?? ($includeSubdomains ? 'suffix' : 'exact');
 
         return $this->profileRuleService->create($userId, $profile->id, [
-            'list_type' => $listType,
-            'match_type' => $payload['match_type'] ?? 'exact',
+            'list_type' => $normalizedListType,
+            'match_type' => $matchType,
             'domain' => $payload['domain'] ?? '',
             'action' => $listType === 'allow' ? 'allow' : 'block',
         ]);
@@ -249,8 +261,9 @@ final class UserWorkspaceService
     public function deleteRule(string $userId, string $listType, string $ruleId, ?string $profileId = null): array
     {
         $profile = $this->resolveProfile($userId, $profileId);
+        $normalizedListType = $listType === 'allow' ? 'allowlist' : 'denylist';
         $rule = ProfileRule::where('profile_id', $profile->id)
-            ->where('list_type', $listType)
+            ->where('list_type', $normalizedListType)
             ->where('id', $ruleId)
             ->firstOrFail();
 
@@ -269,9 +282,10 @@ final class UserWorkspaceService
     public function batchDeleteRules(string $userId, string $listType, array $ruleIds, ?string $profileId = null): array
     {
         $profile = $this->resolveProfile($userId, $profileId);
+        $normalizedListType = $listType === 'allow' ? 'allowlist' : 'denylist';
 
         $existingIds = ProfileRule::where('profile_id', $profile->id)
-            ->where('list_type', $listType)
+            ->where('list_type', $normalizedListType)
             ->whereIn('id', $ruleIds)
             ->pluck('id')
             ->all();
@@ -286,7 +300,7 @@ final class UserWorkspaceService
 
         $notFound = array_values(array_diff($ruleIds, $existingIds));
         $deletedCount = ProfileRule::where('profile_id', $profile->id)
-            ->where('list_type', $listType)
+            ->where('list_type', $normalizedListType)
             ->whereIn('id', $existingIds)
             ->delete();
 
@@ -357,29 +371,46 @@ final class UserWorkspaceService
     {
         $profile = $this->resolveProfile($userId, $profileId);
         $domain = $this->getDnsDomain();
-        // 去掉 prf_ 前缀，格式: https://dns.ocerdns.local/ec8cb1
-        $shortId = str_replace('prf_', '', $profile->id);
+        // V2.2: 使用 profile_uid（6位 hex 字符串）作为 DNS 路由 key
+        $shortId = $profile->profile_uid;
+
+        // 收集在线 resolver 节点的 public IPv4（用作家庭网络兜底）
+        $ipv4List = DB::table('nodes')
+            ->where('status', 'online')
+            ->whereNotNull('public_ipv4')
+            ->where('public_ipv4', '!=', '')
+            ->orderBy('id')
+            ->limit(4)
+            ->pluck('public_ipv4')
+            ->map(fn ($ip) => trim($ip))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
 
         return [
-            'doh' => sprintf('https://%s/%s', $domain, $shortId),
+            'profile_uid' => $shortId,
+            'doh' => sprintf('https://%s/%s/dns-query', $domain, $shortId),
             'dot' => sprintf('%s.%s', $shortId, $domain),
-            'ipv4' => '127.0.0.1',
+            'ipv6' => [sprintf('2606:%s:%s::53', substr($shortId, 0, 2), substr($shortId, 2, 4))],
+            'ipv4' => $ipv4List,
         ];
     }
 
     /**
-     * 从后台基本设置中读取 DNS 域名，默认 dns.ocerdns.local
+     * 从后台 DNS 设置中读取 DNS 域名，优先 dns.dns_domain，回退 basic.dns_domain，默认 dns.ocerlink.com
      */
     private function getDnsDomain(): string
     {
-        $basic = SystemConfig::query()->find('basic');
-        if ($basic && $basic->value) {
-            $decoded = is_string($basic->value) ? json_decode($basic->value, true) : $basic->value;
-            if (is_array($decoded) && !empty($decoded['dns_domain'])) {
-                return $decoded['dns_domain'];
-            }
+        $dns = SystemConfig::query()->where('config_key', 'dns')->first();
+        if ($dns && is_array($dns->config_value) && !empty($dns->config_value['dns_domain'])) {
+            return $dns->config_value['dns_domain'];
         }
-        return 'dns.ocerdns.local';
+        $basic = SystemConfig::query()->where('config_key', 'basic')->first();
+        if ($basic && is_array($basic->config_value) && !empty($basic->config_value['dns_domain'])) {
+            return $basic->config_value['dns_domain'];
+        }
+        return 'dns.ocerlink.com';
     }
 
     public function devices(string $userId): array
@@ -390,10 +421,10 @@ final class UserWorkspaceService
             ->map(fn (Device $device): array => [
                 'id' => $device->id,
                 'name' => $device->name,
-                'device_type' => $device->device_type ?: 'device',
-                'source_ip' => $device->public_ip,
-                'device_id' => $device->device_id,
-                'info' => trim(($device->device_type ?: 'device') . ' ' . ($device->public_ip ?: '')),
+                'device_type' => $device->protocol ?: 'device',
+                'source_ip' => $device->ip_hash ? 'hashed' : null,
+                'device_id' => $device->device_uid,
+                'info' => trim(($device->protocol ?: 'device') . ' ' . ($device->device_uid ?: '')),
                 'last_seen_at' => optional($device->last_seen_at)?->toIso8601String(),
             ])
             ->all();
@@ -413,8 +444,8 @@ final class UserWorkspaceService
         return [
             'id' => $device->id,
             'name' => $device->name,
-            'device_type' => $device->device_type,
-            'source_ip' => $device->public_ip,
+            'device_type' => $device->protocol,
+            'source_ip' => $device->ip_hash ? 'hashed' : null,
             'last_seen_at' => optional($device->last_seen_at)?->toIso8601String(),
         ];
     }
@@ -473,7 +504,7 @@ final class UserWorkspaceService
         $devices = Device::query()->where('user_id', $userId)->get();
         $deviceMap = $devices->mapWithKeys(fn (Device $device): array => array_filter([
             $device->id => $device->name,
-            $device->device_id => $device->name,
+            $device->device_uid => $device->name,
         ], fn ($value, $key) => $key !== null && $key !== '', ARRAY_FILTER_USE_BOTH));
 
         return array_map(function (array $item) use ($profiles, $deviceMap): array {
@@ -556,7 +587,7 @@ final class UserWorkspaceService
     {
         return array_merge(self::DEFAULT_PRIVACY, $profile->privacy_settings ?? [], [
             'enabled' => (bool) $profile->privacy_enabled,
-            'log_mode' => $profile->log_mode ?: 'full',
+            'log_mode' => ($profile->privacy_settings['log_mode'] ?? $profile->log_mode) ?: 'full',
         ]);
     }
 
@@ -637,17 +668,17 @@ final class UserWorkspaceService
      */
     private function orders(string $userId): array
     {
-        return DB::table('invoices')
+        return DB::table('orders')
             ->where('user_id', $userId)
             ->orderByDesc('created_at')
             ->limit(20)
-            ->get(['created_at', 'description', 'amount_minor', 'status', 'currency'])
-            ->map(fn ($invoice): array => [
-                'created_at' => (string) $invoice->created_at,
-                'description' => (string) ($invoice->description ?? ''),
-                'amount_minor' => (int) $invoice->amount_minor,
-                'status' => (string) $invoice->status,
-                'currency' => (string) $invoice->currency,
+            ->get(['created_at', 'plan_code_snapshot', 'payable_amount_minor', 'status', 'currency'])
+            ->map(fn ($order): array => [
+                'created_at' => (string) $order->created_at,
+                'description' => (string) ($order->plan_code_snapshot ?? ''),
+                'amount_minor' => (int) $order->payable_amount_minor,
+                'status' => (string) $order->status,
+                'currency' => (string) $order->currency,
             ])
             ->all();
     }

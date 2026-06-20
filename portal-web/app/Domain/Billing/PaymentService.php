@@ -23,7 +23,11 @@ final class PaymentService
 {
     /**
      * 创建一个支付会话 (Stripe Checkout Session)。
-     * 失败 / 无 SDK / 无 secret 时降级为占位 session（本地/测试场景）。
+     *
+     * 安全约束：
+     *  - 当 Stripe SDK + secret 都可用时，必须真的调用 Stripe API 拿到真实 session。
+     *    SDK 抛异常 → 抛回 RuntimeException，禁止 fallback 成占位 session。
+     *  - 没有 SDK / secret 时：仅允许 fake 模式（仅在非 production）使用占位 session。
      */
     public function createCheckout(Order $order): PaymentTransaction
     {
@@ -46,11 +50,16 @@ final class PaymentService
             return $existing;
         }
 
-        // 默认：占位 session（无 Stripe 凭证时降级）
+        $hasStripe = $secret !== '' && class_exists(\Stripe\StripeClient::class) && ! $useFake;
+        if (! $hasStripe && ! $useFake) {
+            // 没有 Stripe SDK 也未启用 fake：拒绝创建 pending 假流水
+            throw new RuntimeException('Stripe is not configured. Set STRIPE_SECRET or enable STRIPE_FAKE for local dev.');
+        }
+
         $sessionId = 'cs_test_' . Str::random(24);
         $redirectUrl = "https://checkout.stripe.com/c/pay/{$sessionId}";
 
-        if ($secret !== '' && class_exists(\Stripe\StripeClient::class) && ! $useFake) {
+        if ($hasStripe) {
             try {
                 /** @var \Stripe\StripeClient $stripe */
                 $stripe = new \Stripe\StripeClient($secret);
@@ -74,7 +83,8 @@ final class PaymentService
                 $sessionId = $session->id;
                 $redirectUrl = (string) $session->url;
             } catch (\Throwable $e) {
-                $redirectUrl = $cancelUrl . '&stripe_error=1';
+                // Stripe API 失败：直接抛回，不创建占位 pending 交易
+                throw new RuntimeException('Stripe checkout session creation failed: ' . $e->getMessage(), 0, $e);
             }
         }
 
@@ -86,7 +96,7 @@ final class PaymentService
             'status' => PaymentTransaction::STATUS_PENDING,
             'amount_minor' => $order->payable_amount_minor,
             'currency' => $order->currency,
-            'meta' => [
+            'raw_payload' => [
                 'redirect_url' => $redirectUrl,
             ],
         ]);
@@ -104,7 +114,7 @@ final class PaymentService
         $tx->update([
             'status' => PaymentTransaction::STATUS_SUCCESS,
             'provider_payment_intent_id' => $paymentIntentId,
-            'completed_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
         ]);
         if ($tx->order_id) {
             (new OrderService())->markPaid((string) $tx->order_id, $paymentIntentId);
@@ -120,8 +130,30 @@ final class PaymentService
         }
         $tx->update([
             'status' => PaymentTransaction::STATUS_FAILED,
-            'completed_at' => Carbon::now(),
-            'meta' => array_merge($tx->meta ?? [], ['failure_reason' => $reason]),
+            'failure_message' => $reason,
+            'updated_at' => Carbon::now(),
+        ]);
+        return $tx;
+    }
+
+    /**
+     * 用于 payment_intent.* 事件，ID 形如 pi_xxx。
+     * 必须按 provider_payment_intent_id 查找，不能与 checkout session id (cs_xxx) 混用。
+     */
+    public function handleFailureByPaymentIntent(string $paymentIntentId, ?string $reason = null): PaymentTransaction
+    {
+        $tx = PaymentTransaction::where('provider_payment_intent_id', $paymentIntentId)->first();
+        if (! $tx instanceof PaymentTransaction) {
+            // payment_intent 事件先于 webhook 落库的兜底：记录失败但不抛 500
+            throw new \RuntimeException("No payment transaction found for payment_intent [{$paymentIntentId}]");
+        }
+        if ($tx->status === PaymentTransaction::STATUS_SUCCESS) {
+            return $tx;
+        }
+        $tx->update([
+            'status' => PaymentTransaction::STATUS_FAILED,
+            'failure_message' => $reason,
+            'updated_at' => Carbon::now(),
         ]);
         return $tx;
     }

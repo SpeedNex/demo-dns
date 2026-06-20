@@ -8,14 +8,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PublishTask extends Model
 {
-    
-
-    public $incrementing = false;
-
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
-        'id',
         'config_version_id',
         'profile_id',
         'status',
@@ -31,21 +27,6 @@ class PublishTask extends Model
         'started_at',
         'completed_at',
     ];
-
-    protected static function boot(): void
-    {
-        parent::boot();
-
-        static::creating(function (self $task): void {
-            if ($task->id === null || $task->id === '') {
-                $task->id = 'pub_' . substr(hash('sha256', microtime(true) . random_int(1, PHP_INT_MAX)), 0, 12);
-            }
-
-            if ($task->target_filter === null) {
-                $task->target_filter = [];
-            }
-        });
-    }
 
     protected function casts(): array
     {

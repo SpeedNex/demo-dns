@@ -15,7 +15,7 @@ final class ProfileRuleController
 
     public function index(Request $request, string $profileId): JsonResponse
     {
-        $rules = $this->service->list($request->user()->id, $profileId);
+        $rules = $this->service->list($request->user()->uid, $profileId);
 
         return response()->json(['data' => $rules]);
     }
@@ -23,7 +23,7 @@ final class ProfileRuleController
     public function store(Request $request, string $profileId): JsonResponse
     {
         try {
-            $rule = $this->service->create($request->user()->id, $profileId, $request->all());
+            $rule = $this->service->create($request->user()->uid, $profileId, $request->all());
         } catch (\InvalidArgumentException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
@@ -33,7 +33,7 @@ final class ProfileRuleController
 
     public function destroy(Request $request, string $profileId, string $ruleId): JsonResponse
     {
-        $result = $this->service->delete($request->user()->id, $profileId, $ruleId);
+        $result = $this->service->delete($request->user()->uid, $profileId, $ruleId);
 
         return response()->json(['data' => $result]);
     }
@@ -48,7 +48,7 @@ final class ProfileRuleController
             'note' => 'nullable|string|max:500',
         ]);
 
-        $result = $this->service->update($request->user()->id, $profileId, $ruleId, $validated);
+        $result = $this->service->update($request->user()->uid, $profileId, $ruleId, $validated);
 
         return response()->json(['data' => $result]);
     }
@@ -60,7 +60,7 @@ final class ProfileRuleController
             'ids.*' => 'string',
         ]);
 
-        $result = $this->service->batchDelete($request->user()->id, $profileId, $validated['ids']);
+        $result = $this->service->batchDelete($request->user()->uid, $profileId, $validated['ids']);
 
         return response()->json(['data' => $result]);
     }

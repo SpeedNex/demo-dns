@@ -34,7 +34,7 @@
                             </span>
                             <template #dropdown>
                                 <el-dropdown-menu>
-                                    <el-dropdown-item @click="router.push('/user')">{{ $t('nav.dashboard') }}</el-dropdown-item>
+                                    <el-dropdown-item @click="goConsole">{{ $t('nav.dashboard') }}</el-dropdown-item>
                                     <el-dropdown-item divided @click="handleLogout">{{ $t('nav.logout') }}</el-dropdown-item>
                                 </el-dropdown-menu>
                             </template>
@@ -216,6 +216,27 @@ const handleLogout = async () => {
     isLoggedIn.value = false
     userName.value = 'User'
     ElMessage.success(t('auth.logoutSuccess') || 'Logged out')
+}
+
+const goConsole = async () => {
+    const savedId = localStorage.getItem('current_profile_id')
+    try {
+        const { data } = await client.get('/user/profiles')
+        const list = data.data || []
+        const target = list.find(p => (p.profile_uid || p.id) === savedId) || list[0]
+        if (target) {
+            const key = target.profile_uid || target.id
+            localStorage.setItem('current_profile_id', key)
+            await router.push(`/user/${key}`)
+            return
+        }
+    } catch (e) {
+        if (savedId) {
+            await router.push(`/user/${savedId}`)
+            return
+        }
+    }
+    await router.push('/user/profiles')
 }
 
 onMounted(async () => {

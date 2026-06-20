@@ -52,7 +52,7 @@ final class AdminConsoleAuditLogController
 
     public function export(Request $request): StreamedResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $query = AdminAuditLog::query();
 
         if ($request->filled('action')) {
@@ -78,7 +78,7 @@ final class AdminConsoleAuditLogController
 
     public function batchDestroy(Request $request): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $validated = $request->validate([
             'ids' => 'required|array|min:1',
             'ids.*' => 'string',
@@ -107,7 +107,7 @@ final class AdminConsoleAuditLogController
 
     public function destroy(Request $request, string $id): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $log = AdminAuditLog::query()->find($id);
 
         if (! $log) {
@@ -129,7 +129,7 @@ final class AdminConsoleAuditLogController
 
     public function clear(Request $request): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
 
         // 保护 24h 内的日志不被清空
         $count = AdminAuditLog::query()->where('created_at', '<', now()->subHours(24))->delete();

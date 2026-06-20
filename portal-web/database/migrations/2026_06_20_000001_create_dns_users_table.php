@@ -8,7 +8,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigIncrements('uid');
             $table->string('username', 100);
             $table->string('email', 190);
             $table->timestamp('email_verified_at')->nullable();
@@ -24,12 +24,7 @@ return new class extends Migration {
             $table->unique('email', 'uniq_users_email');
             $table->index('plan_code', 'idx_users_plan');
         });
-
-        Schema::table('users', function (Blueprint $table) {
-            $table->foreign('current_team_id', 'fk_users_team')
-                ->references('id')->on('teams')
-                ->nullOnDelete()->cascadeOnUpdate();
-        });
+        // V2.3: fk_users_team 由 2026_06_20_000004_create_dns_teams_table 添加，避免顺序依赖
     }
 
     public function down(): void

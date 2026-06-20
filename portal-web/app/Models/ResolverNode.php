@@ -15,6 +15,8 @@ class ResolverNode extends Model
     public const STATUS_OFFLINE = 'offline';
     public const STATUS_ERROR = 'error';
 
+    protected $table = 'resolver_nodes_view';
+
     protected $fillable = [
         'node_id',
         'node_name',

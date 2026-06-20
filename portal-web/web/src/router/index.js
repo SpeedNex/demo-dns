@@ -21,6 +21,7 @@ import TeamList from '@/views/TeamList.vue'
 import TeamCreate from '@/views/TeamCreate.vue'
 import TeamDetail from '@/views/TeamDetail.vue'
 import TeamInvitations from '@/views/TeamInvitations.vue'
+import Plans from '@/views/Plans.vue'
 
 // Admin views
 import AdminLayout from '@/components/AdminLayout.vue'
@@ -44,6 +45,7 @@ import AdminBill from '@/views/admin/Bill.vue'
 import AdminRefundRecords from '@/views/admin/RefundRecords.vue'
 import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
 import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+import AdminAdmins from '@/views/admin/AdminAdmins.vue'
 
 const routes = [
     // Public routes
@@ -53,6 +55,17 @@ const routes = [
     { path: '/admin/login', name: 'AdminLogin', component: AdminLogin, meta: { guest: true } },
 
     // User / Member Center routes (require auth) - 新 URL 格式 /user/:profile_id/xxx
+    // 注意: 不依赖 profile_id 的静态路径必须先声明, 否则会被 /user/:profile_id 抢占
+    { path: '/user/profiles', name: 'Profiles', component: ProfileList, meta: { auth: true } },
+    { path: '/user/profiles/:id', name: 'ProfileDetail', component: ProfileDetail, meta: { auth: true }, props: true },
+    { path: '/user/order', name: 'Order', component: Membership, meta: { auth: true } },
+    { path: '/user/account', name: 'Account', component: Account, meta: { auth: true } },
+    { path: '/user/teams', name: 'TeamList', component: TeamList, meta: { auth: true } },
+    { path: '/user/teams/create', name: 'TeamCreate', component: TeamCreate, meta: { auth: true } },
+    { path: '/user/teams/:id', name: 'TeamDetail', component: TeamDetail, meta: { auth: true }, props: true },
+    { path: '/user/invitations', name: 'TeamInvitations', component: TeamInvitations, meta: { auth: true } },
+    { path: '/user/plans', name: 'Plans', component: Plans, meta: { auth: true } },
+
     { path: '/user/:profile_id', name: 'MemberDashboard', component: Dashboard, meta: { auth: true } },
     { path: '/user/:profile_id/security', name: 'Security', component: Security, meta: { auth: true } },
     { path: '/user/:profile_id/privacy', name: 'Privacy', component: Privacy, meta: { auth: true } },
@@ -64,16 +77,6 @@ const routes = [
     { path: '/user/:profile_id/settings', name: 'Settings', component: Settings, meta: { auth: true } },
     { path: '/user/:profile_id/devices', name: 'Devices', component: Devices, meta: { auth: true } },
     { path: '/user/:profile_id/api-keys', name: 'APIKeys', component: APIKeys, meta: { auth: true } },
-
-    // 不依赖 profile_id 的页面
-    { path: '/user/profiles', name: 'Profiles', component: ProfileList, meta: { auth: true } },
-    { path: '/user/profiles/:id', name: 'ProfileDetail', component: ProfileDetail, meta: { auth: true }, props: true },
-    { path: '/user/order', name: 'Order', component: Membership, meta: { auth: true } },
-    { path: '/user/account', name: 'Account', component: Account, meta: { auth: true } },
-    { path: '/user/teams', name: 'TeamList', component: TeamList, meta: { auth: true } },
-    { path: '/user/teams/create', name: 'TeamCreate', component: TeamCreate, meta: { auth: true } },
-    { path: '/user/teams/:id', name: 'TeamDetail', component: TeamDetail, meta: { auth: true }, props: true },
-    { path: '/user/invitations', name: 'TeamInvitations', component: TeamInvitations, meta: { auth: true } },
 
     // ---------- Admin routes ----------
     {
@@ -103,6 +106,7 @@ const routes = [
             { path: 'admin-audit-logs', name: 'AdminAuditLogs', component: AdminAuditLogs },
             { path: 'rbac', name: 'AdminRoleManagement', component: AdminRoleManagement },
             { path: 'menu-config', name: 'AdminMenuConfig', component: AdminMenuConfig },
+            { path: 'admins', name: 'AdminAdmins', component: AdminAdmins },
         ],
     },
 
@@ -145,7 +149,7 @@ router.beforeEach((to, from, next) => {
             return next('/login')
         }
         // 如果路由有 :profile_id 参数但没传，跳转到默认 profile
-        if (to.params.profile_id === undefined && to.path.startsWith('/user/') && !to.path.startsWith('/user/profiles') && !to.path.startsWith('/user/teams') && !to.path.startsWith('/user/invitations') && to.path !== '/user/order' && to.path !== '/user/account') {
+        if (to.params.profile_id === undefined && to.path.startsWith('/user/') && !to.path.startsWith('/user/profiles') && !to.path.startsWith('/user/teams') && !to.path.startsWith('/user/invitations') && to.path !== '/user/order' && to.path !== '/user/account' && to.path !== '/user/plans') {
             const savedId = localStorage.getItem('current_profile_id')
             if (savedId) {
                 return next({ path: `/user/${savedId}${to.path.replace(/^\/user/, '') || ''}` })

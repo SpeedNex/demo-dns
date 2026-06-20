@@ -42,7 +42,7 @@ final class AdminAlertController
         if ($alert) {
             $alert->update([
                 'status' => 'acknowledged',
-                'acknowledged_by' => $request->user()?->id,
+                'acknowledged_by' => $request->user()?->admin_id,
                 'acknowledged_at' => now(),
             ]);
         }

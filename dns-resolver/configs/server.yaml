@@ -1,5 +1,5 @@
 node:
-    node_uid: node_b2synjbh2thmul8q
+    node_uid: node_dev_local_01
     name: dev-local-01
     version: 1.0.0
     region: ap-northeast-1
@@ -11,9 +11,9 @@ listen:
     udp: 5355
 control_plane:
     endpoint: http://localhost:8081
-    api_key: ntk_nh7g84bnumt3s26wdsx2ngzrigwoqfkp
-    secret: hmk_dwhhwdbcuosjzrtpaa2pyrvtvksy5ofx
-    node_id: node_b2synjbh2thmul8q
+    api_key: ocnd_GkFMufKwzFT54AMzwI0QlI38eZ8tUD32OBQH4uAt
+    secret: v2-no-hmac
+    node_id: 1
     heartbeat_interval: 30
     config_poll_interval: 30
     profiles_path: ./configs

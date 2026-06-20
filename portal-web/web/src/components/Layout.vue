@@ -63,12 +63,12 @@
                             <el-dropdown-menu>
                                 <el-dropdown-item
                                     v-for="profile in profiles"
-                                    :key="profile.id"
-                                    :command="'switch:' + profile.id"
-                                    :class="{ 'is-active': profile.id === currentProfileId }"
+                                    :key="profileKey(profile)"
+                                    :command="'switch:' + profileKey(profile)"
+                                    :class="{ 'is-active': profileKey(profile) === currentProfileId }"
                                 >
                                     <span>{{ profile.name }}</span>
-                                    <el-icon v-if="profile.id === currentProfileId" class="check-icon"><Select /></el-icon>
+                                    <el-icon v-if="profileKey(profile) === currentProfileId" class="check-icon"><Select /></el-icon>
                                 </el-dropdown-item>
                                 <el-dropdown-item command="create" divided>
                                     <el-icon><Plus /></el-icon>
@@ -102,6 +102,7 @@
                             <el-dropdown-menu>
                                 <el-dropdown-item command="account">{{ $t('nav.account') || '账户' }}</el-dropdown-item>
                                 <el-dropdown-item command="order">{{ $t('nav.order') || '订单' }}</el-dropdown-item>
+                                <el-dropdown-item command="plans">{{ $t('nav.upgrade') || '升级套餐' }}</el-dropdown-item>
                                 <el-dropdown-item command="settings">{{ $t('nav.settings') }}</el-dropdown-item>
                                 <el-dropdown-item command="profiles">{{ $t('nav.profiles') }}</el-dropdown-item>
                                 <el-dropdown-item command="teams">{{ $t('nav.teams') }}</el-dropdown-item>
@@ -180,7 +181,7 @@ const userInitial = computed(() => (userName.value?.trim()?.charAt(0) || 'U').to
 const profiles = ref([])
 const currentProfileId = ref(null)
 const currentProfileName = computed(() => {
-    const profile = profiles.value.find(p => p.id === currentProfileId.value)
+    const profile = profiles.value.find(p => (p.profile_uid || p.id) === currentProfileId.value)
     return profile?.name || t('common.defaultProfile') || 'Default'
 })
 
@@ -189,27 +190,73 @@ const createProfileVisible = ref(false)
 const creatingProfile = ref(false)
 const newProfile = ref({ name: '' })
 
+const profileKey = (p) => (p?.profile_uid ?? p?.id)
+
+// 在当前路径上替换 profile_id，保留子路径（/security、/privacy 等）
+const buildProfileUrl = (newId) => {
+    const currentPath = route.path || ''
+    const oldId = route.params.profile_id
+    // 路径不是 profile-scoped 路径时（如 /user/profiles、/user/account），不替换
+    if (!oldId || !isProfileScopedPath()) {
+        return currentPath
+    }
+    if (currentPath.startsWith(`/user/${oldId}`)) {
+        return `/user/${newId}${currentPath.substring(`/user/${oldId}`.length)}`
+    }
+    return `/user/${newId}`
+}
+
+// 非 profile 路径（不需要重定向到 /user/{profile_id}）
+const NON_PROFILE_PATHS = ['/user/profiles', '/user/order', '/user/account', '/user/teams', '/user/invitations', '/user/plans']
+const isProfileScopedPath = () => {
+    const path = route.path || ''
+    if (NON_PROFILE_PATHS.includes(path)) return false
+    // 形如 /user/5a76e3 或 /user/5a76e3/security 才算 profile 路径
+    return /^\/user\/[^/]+/.test(path)
+}
+
 const loadProfiles = async () => {
     try {
         const { data } = await client.get('/user/profiles')
         profiles.value = data.data || []
-        
+
         // 优先从 URL params 获取 profile_id，其次 localStorage，最后取第一个
         const urlProfileId = route.params.profile_id
         const savedId = localStorage.getItem('current_profile_id')
-        const resolvedId = urlProfileId || savedId || (profiles.value.length > 0 ? profiles.value[0].id : null)
-        
-        if (resolvedId && profiles.value.some(p => p.id === resolvedId)) {
-            currentProfileId.value = resolvedId
-            localStorage.setItem('current_profile_id', resolvedId)
-            // 如果 URL 中没有 profile_id，跳转到新格式 URL
-            if (!urlProfileId) {
-                router.replace(`/user/${resolvedId}`)
+        const firstKey = profiles.value.length > 0 ? profileKey(profiles.value[0]) : null
+        const resolvedId = urlProfileId || savedId || firstKey
+
+        // 匹配规则：优先匹配 profile_uid，回退匹配数字 id（兼容旧 URL / 旧 localStorage）
+        const matchProfile = (id) => profiles.value.find(p =>
+            profileKey(p) === id || String(p.id) === String(id)
+        )
+
+        // 当前在非 profile 路径（如 /user/profiles /user/account）时，仅设置 currentProfileId，不重定向
+        if (!isProfileScopedPath()) {
+            const fallback = (savedId && matchProfile(savedId)) || firstKey
+            if (fallback) {
+                currentProfileId.value = profileKey(matchProfile(savedId) || profiles.value[0])
+                if (!urlProfileId) {
+                    localStorage.setItem('current_profile_id', currentProfileId.value)
+                }
             }
-        } else if (profiles.value.length > 0) {
-            currentProfileId.value = profiles.value[0].id
+            return
+        }
+
+        const matched = resolvedId ? matchProfile(resolvedId) : null
+        if (matched) {
+            const matchedKey = profileKey(matched)
+            currentProfileId.value = matchedKey
+            localStorage.setItem('current_profile_id', matchedKey)
+            // URL 中的 id 不是 profile_uid 时，重定向到 6 位 hex 形式，保留子路径
+            if (urlProfileId && urlProfileId !== matchedKey) {
+                router.replace(buildProfileUrl(matchedKey))
+            }
+        } else if (firstKey) {
+            currentProfileId.value = firstKey
             localStorage.setItem('current_profile_id', currentProfileId.value)
-            router.replace(`/user/${currentProfileId.value}`)
+            // 保留当前子路径（如 /security），仅替换 profile_id
+            router.replace(buildProfileUrl(firstKey))
         }
     } catch {
         profiles.value = []
@@ -219,7 +266,8 @@ const loadProfiles = async () => {
 const switchProfile = (profileId) => {
     currentProfileId.value = profileId
     localStorage.setItem('current_profile_id', profileId)
-    router.push(`/user/${profileId}`)
+    // 保留当前子路径（如 /security），仅替换 profile_id
+    router.push(buildProfileUrl(profileId))
 }
 
 const handleProfileCommand = (command) => {
@@ -228,7 +276,7 @@ const handleProfileCommand = (command) => {
         createProfileVisible.value = true
         return
     }
-    
+
     if (command.startsWith('switch:')) {
         const profileId = command.replace('switch:', '')
         switchProfile(profileId)
@@ -240,19 +288,19 @@ const handleCreateProfile = async () => {
         ElMessage.warning(t('profile.nameRequired') || '请输入配置名称')
         return
     }
-    
+
     creatingProfile.value = true
     try {
         const { data } = await client.post('/user/profiles', {
             name: newProfile.value.name.trim()
         })
-        
+
         if (data.data) {
             profiles.value.push(data.data)
-            switchProfile(data.data.id)
+            switchProfile(profileKey(data.data))
             ElMessage.success(t('profile.created') || '配置已创建')
         }
-        
+
         createProfileVisible.value = false
     } catch (err) {
         ElMessage.error(err.message || t('profile.createFailed') || '创建失败')
@@ -304,6 +352,11 @@ const handleCommand = async (command) => {
 
     if (command === 'membership') {
         await router.push('/user/membership')
+        return
+    }
+
+    if (command === 'plans') {
+        await router.push('/user/plans')
         return
     }
 

@@ -79,22 +79,27 @@ final class StripeWebhookController
             'event_type' => $eventType,
             'payload' => $payload,
             'status' => StripeWebhookLog::STATUS_RECEIVED,
+            'signature_ok' => (bool) ($payload['_signature_ok'] ?? true),
+            'received_at' => now(),
         ]);
 
         try {
             switch ($eventType) {
                 case 'checkout.session.completed':
+                    // 来自 checkout.session.* 的事件 ID 形如 cs_xxx
                     $sessionId = (string) ($payload['data']['object']['id'] ?? '');
                     $intentId = (string) ($payload['data']['object']['payment_intent'] ?? '');
-                    $this->payments->handleSuccess($sessionId, $intentId ?: null);
+                    $this->payments->handleSuccess($sessionId, $intentId !== '' ? $intentId : null);
                     break;
                 case 'charge.refunded':
                     // V1: 后台手工退款为主，此处仅记录
                     break;
                 case 'payment_intent.payment_failed':
-                    $sessionId = (string) ($payload['data']['object']['id'] ?? '');
+                    // 来自 payment_intent.* 的事件 ID 形如 pi_xxx
+                    // 必须按 provider_payment_intent_id 查，不是 cs_xxx
+                    $intentId = (string) ($payload['data']['object']['id'] ?? '');
                     $reason = (string) ($payload['data']['object']['last_payment_error']['message'] ?? '');
-                    $this->payments->handleFailure($sessionId, $reason ?: null);
+                    $this->payments->handleFailureByPaymentIntent($intentId, $reason !== '' ? $reason : null);
                     break;
                 default:
                     $log->update(['status' => StripeWebhookLog::STATUS_IGNORED, 'processed_at' => now()]);
@@ -110,11 +115,13 @@ final class StripeWebhookController
             ]);
             Log::error('stripe_webhook_failed', ['event_id' => $eventId, 'error' => $e->getMessage()]);
             Alert::create([
-                'id' => 'alert_' . Str::random(16),
+                'code' => 'stripe_webhook_failed',
                 'level' => 'critical',
-                'status' => 'open',
+                'source' => 'billing',
                 'title' => '支付处理失败',
                 'message' => "Webhook 处理异常: {$e->getMessage()}",
+                'payload' => ['event_id' => $eventId, 'event_type' => $eventType],
+                'status' => 'open',
             ]);
             return response()->json(['message' => 'webhook handler failed'], 500);
         }

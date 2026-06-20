@@ -15,7 +15,7 @@ final class UserDashboardController
 
     public function overview(Request $request): JsonResponse
     {
-        $overview = $this->service->getOverview($request->user()->id);
+        $overview = $this->service->getOverview($request->user()->uid);
 
         return response()->json(['data' => $overview]);
     }

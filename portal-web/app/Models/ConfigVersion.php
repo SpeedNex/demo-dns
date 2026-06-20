@@ -7,45 +7,31 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ConfigVersion extends Model
 {
-    
+    public $incrementing = true;
 
-    public $incrementing = false;
+    protected $keyType = 'int';
 
-    protected $keyType = 'string';
+    public $timestamps = false;
 
     protected $fillable = [
         'id',
         'version',
-        'profile_id',
-        'profile_version',
-        'user_id',
-        'team_id',
-        'status',
-        'checksum',
+        'target_scope',
+        'target_node_id',
+        'target_profile_id',
         'config_json',
-        'config_size_bytes',
-        'generated_by',
-        'generated_at',
-        'expires_at',
+        'checksum',
+        'published_by',
+        'published_at',
+        'created_at',
     ];
-
-    protected static function boot(): void
-    {
-        parent::boot();
-
-        static::creating(function (self $configVersion): void {
-            if ($configVersion->id === null || $configVersion->id === '') {
-                $configVersion->id = 'cfg_' . substr(hash('sha256', microtime(true) . random_int(1, PHP_INT_MAX)), 0, 12);
-            }
-        });
-    }
 
     protected function casts(): array
     {
         return [
             'config_json' => 'array',
-            'generated_at' => 'datetime',
-            'expires_at' => 'datetime',
+            'published_at' => 'datetime',
+            'created_at' => 'datetime',
         ];
     }
 

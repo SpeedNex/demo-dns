@@ -11,7 +11,7 @@ final class ProfileRuleService
     /**
      * @return array<int, array<string, mixed>>
      */
-    public function list(string $userId, string $profileId): array
+    public function list(string $userId, int|string $profileId): array
     {
         $profile = Profile::where('user_id', $userId)
             ->where('id', $profileId)
@@ -27,7 +27,7 @@ final class ProfileRuleService
      * @param array<string, mixed> $payload
      * @return array<string, mixed>
      */
-    public function create(string $userId, string $profileId, array $payload): array
+    public function create(string $userId, int|string $profileId, array $payload): array
     {
         $profile = Profile::where('user_id', $userId)
             ->where('id', $profileId)
@@ -127,7 +127,7 @@ final class ProfileRuleService
      * @param array<int, string> $ruleIds
      * @return array<string, mixed>
      */
-    public function batchDelete(string $userId, string $profileId, array $ruleIds): array
+    public function batchDelete(string $userId, int|string $profileId, array $ruleIds): array
     {
         $profile = Profile::where('user_id', $userId)
             ->where('id', $profileId)

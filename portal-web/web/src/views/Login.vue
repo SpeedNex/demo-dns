@@ -88,13 +88,34 @@ const handleLogin = async () => {
         if (user.role === 'admin') {
             await router.push('/admin')
         } else {
-            await router.push('/user')
+            await redirectToConsole()
         }
     } catch (err) {
         ElMessage.error(err.response?.data?.message || t('auth.loginFailed'))
     } finally {
         loading.value = false
     }
+}
+
+async function redirectToConsole() {
+    const savedId = localStorage.getItem('current_profile_id')
+    try {
+        const { data } = await client.get('/user/profiles')
+        const list = data.data || []
+        const target = list.find(p => (p.profile_uid || p.id) === savedId) || list[0]
+        if (target) {
+            const key = target.profile_uid || target.id
+            localStorage.setItem('current_profile_id', key)
+            await router.push(`/user/${key}`)
+            return
+        }
+    } catch (e) {
+        if (savedId) {
+            await router.push(`/user/${savedId}`)
+            return
+        }
+    }
+    await router.push('/user/profiles')
 }
 </script>
 

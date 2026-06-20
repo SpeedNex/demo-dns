@@ -65,7 +65,7 @@ final class AdminPublishController
 
     public function store(Request $request): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $validated = $request->validate([
             'message' => 'required|string|max:500',
             'config_version_id' => 'required_without:profile_id|string|nullable',
@@ -125,7 +125,7 @@ final class AdminPublishController
 
     public function retry(Request $request, string $taskId): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $task = PublishTask::query()->findOrFail($taskId);
         $task->update([
             'status' => 'queued',
@@ -149,7 +149,7 @@ final class AdminPublishController
 
     public function cancel(Request $request, string $taskId): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $task = PublishTask::query()->findOrFail($taskId);
 
         if (in_array($task->status, ['completed', 'cancelled'], true)) {
@@ -175,7 +175,7 @@ final class AdminPublishController
 
     public function batchRetry(Request $request): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $validated = $request->validate([
             'ids' => 'required|array|min:1',
             'ids.*' => 'string',
@@ -198,7 +198,7 @@ final class AdminPublishController
 
     public function batchCancel(Request $request): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $validated = $request->validate([
             'ids' => 'required|array|min:1',
             'ids.*' => 'string',
@@ -220,7 +220,7 @@ final class AdminPublishController
 
     public function cleanupCompleted(Request $request): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $validated = $request->validate([
             'older_than_days' => 'integer|min:1|max:3650',
         ]);

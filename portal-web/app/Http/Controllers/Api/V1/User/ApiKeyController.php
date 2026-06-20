@@ -16,7 +16,7 @@ final class ApiKeyController
 
     public function index(Request $request): JsonResponse
     {
-        $keys = $this->service->list($request->user()->id);
+        $keys = $this->service->list($request->user()->uid);
 
         return response()->json(['data' => $keys]);
     }
@@ -32,7 +32,7 @@ final class ApiKeyController
         $scopes = $validated['scopes'] ?? ['dns:query', 'logs:read', 'stats:read'];
 
         $result = $this->service->create(
-            $request->user()->id,
+            $request->user()->uid,
             $validated['name'],
             $scopes,
         );
@@ -43,7 +43,7 @@ final class ApiKeyController
     public function destroy(Request $request, int $keyId): JsonResponse
     {
         try {
-            $this->service->revoke($request->user()->id, $keyId);
+            $this->service->revoke($request->user()->uid, $keyId);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
             throw ValidationException::withMessages(['key' => 'API key not found.']);
         }

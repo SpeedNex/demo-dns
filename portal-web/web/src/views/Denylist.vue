@@ -17,7 +17,6 @@
 
         <el-table :data="rules" stripe style="margin-top:20px">
             <el-table-column prop="domain" :label="$t('denylist.domain')" min-width="280" show-overflow-tooltip />
-            <el-table-column prop="match_type" :label="$t('denylist.matchType')" width="120" />
             <el-table-column prop="action" :label="$t('denylist.action')" width="100" />
             <el-table-column :label="$t('denylist.enabled')" width="110">
                 <template #default="{ row }">
@@ -44,12 +43,8 @@
                 <el-form-item :label="$t('denylist.domain')" prop="domain" :rules="[{ required: true, message: $t('common.required') }]">
                     <el-input v-model="form.domain" :placeholder="$t('denylist.placeholder')" />
                 </el-form-item>
-                <el-form-item :label="$t('denylist.matchType')">
-                    <el-select v-model="form.match_type">
-                        <el-option :label="$t('denylist.exact')" value="exact" />
-                        <el-option :label="$t('denylist.suffix')" value="suffix" />
-                        <el-option :label="$t('denylist.wildcard')" value="wildcard" />
-                    </el-select>
+                <el-form-item>
+                    <el-checkbox v-model="form.include_subdomains">{{ $t('denylist.includeSubdomains') || '同时匹配所有子域名' }}</el-checkbox>
                 </el-form-item>
             </el-form>
             <template #footer>
@@ -63,12 +58,8 @@
                 <el-form-item :label="$t('denylist.domain')" prop="domain" :rules="[{ required: true, message: $t('common.required') }]">
                     <el-input v-model="editForm.domain" />
                 </el-form-item>
-                <el-form-item :label="$t('denylist.matchType')">
-                    <el-select v-model="editForm.match_type">
-                        <el-option :label="$t('denylist.exact')" value="exact" />
-                        <el-option :label="$t('denylist.suffix')" value="suffix" />
-                        <el-option :label="$t('denylist.wildcard')" value="wildcard" />
-                    </el-select>
+                <el-form-item>
+                    <el-checkbox v-model="editForm.include_subdomains">{{ $t('denylist.includeSubdomains') || '同时匹配所有子域名' }}</el-checkbox>
                 </el-form-item>
                 <el-form-item :label="$t('denylist.enabled')">
                     <el-switch v-model="editForm.enabled" />
@@ -83,12 +74,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete } from '@element-plus/icons-vue'
 import { useCurrentProfile } from '@/composables/useCurrentProfile'
 
 const { t } = useI18n()
@@ -101,8 +92,8 @@ const saving = ref(false)
 const editSaving = ref(false)
 const formRef = ref(null)
 const editFormRef = ref(null)
-const form = ref({ domain: '', match_type: 'exact' })
-const editForm = ref({ id: null, domain: '', match_type: 'exact', enabled: true })
+const form = ref({ domain: '', include_subdomains: true })
+const editForm = ref({ id: null, domain: '', include_subdomains: true, enabled: true })
 
 const fetchRules = async () => {
     try {
@@ -122,7 +113,7 @@ const handleAdd = async () => {
         await client.post('/user/denylist', { ...form.value, profile_id: currentProfileId.value })
         ElMessage.success(t('denylist.added'))
         showDialog.value = false
-        form.value = { domain: '', match_type: 'exact' }
+        form.value = { domain: '', include_subdomains: true }
         await fetchRules()
     } catch {
         ElMessage.error(t('common.saveFailed'))
@@ -145,7 +136,12 @@ const handleDelete = async (id) => {
 }
 
 const openEditDialog = (row) => {
-    editForm.value = { id: row.id, domain: row.domain, match_type: row.match_type, enabled: !!row.enabled }
+    editForm.value = {
+        id: row.id,
+        domain: row.domain,
+        include_subdomains: row.match_type === 'suffix',
+        enabled: !!row.enabled
+    }
     showEditDialog.value = true
 }
 
@@ -169,7 +165,9 @@ const handleEditSave = async () => {
     editSaving.value = true
     try {
         await client.put(`/user/denylist/${editForm.value.id}`, {
-            domain: editForm.value.domain, match_type: editForm.value.match_type, enabled: editForm.value.enabled,
+            domain: editForm.value.domain,
+            match_type: editForm.value.include_subdomains ? 'suffix' : 'exact',
+            enabled: editForm.value.enabled,
             profile_id: currentProfileId.value,
         })
         ElMessage.success(t('common.saved'))
@@ -183,4 +181,7 @@ const handleEditSave = async () => {
 }
 
 onMounted(fetchRules)
+
+// 切换 profile 时重新加载数据
+watch(currentProfileId, fetchRules)
 </script>

@@ -8,7 +8,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('admins', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigIncrements('admin_id');
             $table->string('username', 100);
             $table->string('email', 190);
             $table->timestamp('email_verified_at')->nullable();

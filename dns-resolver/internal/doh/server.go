@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -98,6 +99,8 @@ type activeConfig struct {
 	} `json:"profiles"`
 }
 
+var profileUIDPattern = regexp.MustCompile(`^[0-9a-f]{6}$`)
+
 func (s *Server) loadActiveConfig() (*activeConfig, error) {
 	if s.cfg.ControlPlane.ProfilesPath == "" {
 		log.Printf("doh: loadActiveConfig: ProfilesPath is empty")
@@ -119,8 +122,7 @@ func (s *Server) loadActiveConfig() (*activeConfig, error) {
 }
 
 // blockResponseFor returns the configured block_response for the given
-// profile UID. Falls back to the first profile's setting, then nxdomain,
-// matching the UDP-side fallback chain.
+// profile UID. Unknown profiles never fall back to another user's config.
 func (s *Server) blockResponseFor(profileUID string) string {
 	cfg, err := s.loadActiveConfig()
 	if err != nil || len(cfg.Profiles) == 0 {
@@ -136,12 +138,6 @@ func (s *Server) blockResponseFor(profileUID string) string {
 		}
 	}
 
-	// Profile not found — use the first profile's setting (matches the
-	// "default" behavior on the UDP side).
-	first := cfg.Profiles[0]
-	if first.BlockResponse != "" {
-		return first.BlockResponse
-	}
 	return blockresponse.ModeNXDomain
 }
 
@@ -204,7 +200,7 @@ func (s *Server) handleDNSQuery(w http.ResponseWriter, r *http.Request) {
 
 // handleProfileDNSQuery handles profile-specific DoH requests.
 // URL format: /{profile_uid} or /{profile_uid}/dns-query
-// Supports both short IDs (ec8cb1) and prefixed IDs (prf_ec8cb1).
+// Only stable 6-char hex profile_uid values are accepted.
 func (s *Server) handleProfileDNSQuery(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/")
 
@@ -215,9 +211,6 @@ func (s *Server) handleProfileDNSQuery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Normalize: prepend prf_ prefix if not already present (UI.md #82)
-	profileUID = normalizeProfileUID(profileUID)
-
 	// Validate it looks like a profile UID
 	if isValidProfileUID(profileUID) {
 		s.resolveDNS(w, r, profileUID)
@@ -227,26 +220,9 @@ func (s *Server) handleProfileDNSQuery(w http.ResponseWriter, r *http.Request) {
 	http.NotFound(w, r)
 }
 
-// normalizeProfileUID ensures the profile UID has the prf_ prefix
-// to match the engine's internal key format.
-func normalizeProfileUID(uid string) string {
-	if strings.HasPrefix(uid, "prf_") {
-		return uid
-	}
-	return "prf_" + uid
-}
-
 // isValidProfileUID checks if a string looks like a valid profile UID.
 func isValidProfileUID(uid string) bool {
-	if len(uid) < 4 || len(uid) > 64 {
-		return false
-	}
-	for _, c := range uid {
-		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_') {
-			return false
-		}
-	}
-	return true
+	return profileUIDPattern.MatchString(uid)
 }
 
 // resolveDNS performs the full DNS resolution with Profile Resolution Layer.

@@ -3,14 +3,1840 @@
 > vite --host 0.0.0.0 --port 5173
 
 
-  VITE v6.4.3  ready in 304 ms
+  VITE v6.4.3  ready in 308 ms
 
   ➜  Local:   http://localhost:5173/
   ➜  Network: http://192.168.100.125:5173/
   ➜  Network: http://192.168.64.1:5173/
-17:16:36 [vite] (client) ✨ new dependencies optimized: element-plus/dist/locale/ko.mjs
-17:16:36 [vite] (client) ✨ optimized dependencies changed. reloading
-[Vite Proxy] POST /api/v1/auth/login -> /api/v1/auth/login
-[Vite Proxy] POST /api/v1/auth/login -> /api/v1/auth/login
-[Vite Proxy] POST /api/v1/auth/login -> /api/v1/auth/login
 [Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+22:46:26 [vite] http proxy error: /api/v1/user/me
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+22:46:26 [vite] http proxy error: /api/v1/user/profiles
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/catalogs -> /api/v1/user/catalogs
+22:46:26 [vite] http proxy error: /api/v1/user/me
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+22:46:26 [vite] http proxy error: /api/v1/user/catalogs
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+22:46:26 [vite] http proxy error: /api/v1/user/profiles
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[Vite Proxy] POST /api/v1/admin/login -> /api/v1/admin/login
+[Vite Proxy] GET /api/v1/admin/overview -> /api/v1/admin/overview
+[Vite Proxy] GET /api/v1/admin/billing-stats -> /api/v1/admin/billing-stats
+[Vite Proxy] GET /api/v1/admin/finance/balances -> /api/v1/admin/finance/balances
+[Vite Proxy] GET /api/v1/admin/billing/balance/3 -> /api/v1/admin/billing/balance/3
+[Vite Proxy] GET /api/v1/admin/billing/invoices -> /api/v1/admin/billing/invoices
+[Vite Proxy] GET /api/v1/admin/finance/bills -> /api/v1/admin/finance/bills
+[Vite Proxy] GET /api/v1/admin/rbac/roles -> /api/v1/admin/rbac/roles
+[Vite Proxy] GET /api/v1/admin/rbac/admins -> /api/v1/admin/rbac/admins
+[Vite Proxy] GET /api/v1/admin/geo-dns -> /api/v1/admin/geo-dns
+[Vite Proxy] GET /api/v1/admin/policy/nodes -> /api/v1/admin/policy/nodes
+[Vite Proxy] POST /api/v1/admin/login -> /api/v1/admin/login
+[Vite Proxy] GET /api/v1/admin/overview -> /api/v1/admin/overview
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/nodes?page=1&per_page=20 -> /api/v1/admin/nodes?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/rules -> /api/v1/admin/rules
+[Vite Proxy] GET /api/v1/admin/alerts -> /api/v1/admin/alerts
+[Vite Proxy] GET /api/v1/admin/query-logs?page=1&per_page=20 -> /api/v1/admin/query-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/console/audit-logs?page=1&per_page=20 -> /api/v1/admin/console/audit-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/devices?page=1&per_page=20 -> /api/v1/admin/devices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/rbac/roles -> /api/v1/admin/rbac/roles
+[Vite Proxy] GET /api/v1/admin/rbac/permissions -> /api/v1/admin/rbac/permissions
+[Vite Proxy] GET /api/v1/admin/rbac/admins -> /api/v1/admin/rbac/admins
+[Vite Proxy] GET /api/v1/admin/finance/balances?page=1&per_page=20 -> /api/v1/admin/finance/balances?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/finance/recharges?page=1&per_page=20 -> /api/v1/admin/finance/recharges?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/finance/refunds?page=1&per_page=20 -> /api/v1/admin/finance/refunds?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/finance/refunds?page=1&per_page=20 -> /api/v1/admin/finance/refunds?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+23:06:36 [vite] (client) page reload src/locales/zh-CN.js
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/catalogs -> /api/v1/user/catalogs
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+23:06:43 [vite] (client) page reload src/locales/zh-CN.js
+23:06:43 [vite] (client) page reload src/locales/zh-CN.js
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/system-config -> /api/v1/admin/system-config
+23:06:51 [vite] (client) page reload src/locales/en.js
+[Vite Proxy] GET /api/v1/admin/system-config -> /api/v1/admin/system-config
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+23:06:59 [vite] (client) page reload src/locales/en.js
+[Vite Proxy] GET /api/v1/admin/system-config -> /api/v1/admin/system-config
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/refunds?page=1&per_page=20 -> /api/v1/admin/finance/refunds?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+23:07:07 [vite] (client) page reload src/locales/ko.js
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+23:07:15 [vite] (client) page reload src/locales/ko.js
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] POST /api/v1/admin/login -> /api/v1/admin/login
+[Vite Proxy] GET /api/v1/admin/overview -> /api/v1/admin/overview
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+23:09:36 [vite] (client) hmr update /src/views/admin/MemberCatalogs.vue
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/overview -> /api/v1/admin/overview
+[Vite Proxy] GET /api/v1/admin/nodes?page=1&per_page=20 -> /api/v1/admin/nodes?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/geo-dns -> /api/v1/admin/geo-dns
+[Vite Proxy] GET /api/v1/admin/nodes -> /api/v1/admin/nodes
+[Vite Proxy] GET /api/v1/admin/rules -> /api/v1/admin/rules
+[Vite Proxy] GET /api/v1/admin/rules -> /api/v1/admin/rules
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/overview -> /api/v1/admin/overview
+[Vite Proxy] GET /api/v1/admin/nodes?page=1&per_page=20 -> /api/v1/admin/nodes?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/nodes?page=1&per_page=20 -> /api/v1/admin/nodes?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/rules -> /api/v1/admin/rules
+[Vite Proxy] GET /api/v1/admin/geo-dns -> /api/v1/admin/geo-dns
+[Vite Proxy] GET /api/v1/admin/nodes -> /api/v1/admin/nodes
+[Vite Proxy] GET /api/v1/admin/nodes?page=1&per_page=20 -> /api/v1/admin/nodes?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/alerts -> /api/v1/admin/alerts
+[Vite Proxy] GET /api/v1/admin/query-logs?page=1&per_page=20 -> /api/v1/admin/query-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/console/audit-logs?page=1&per_page=20 -> /api/v1/admin/console/audit-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+23:16:07 [vite] (client) hmr update /src/views/admin/RoleManagement.vue
+23:16:20 [vite] (client) hmr update /src/views/admin/RoleManagement.vue
+23:16:34 [vite] (client) hmr update /src/views/admin/Bill.vue
+23:16:46 [vite] (client) hmr update /src/views/admin/Billing.vue
+23:16:59 [vite] (client) hmr update /src/views/admin/Billing.vue
+23:17:09 [vite] (client) page reload src/locales/zh-CN.js
+[Vite Proxy] GET /api/v1/admin/console/audit-logs?page=1&per_page=20 -> /api/v1/admin/console/audit-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+23:17:24 [vite] (client) page reload src/locales/zh-CN.js
+[Vite Proxy] GET /api/v1/admin/console/audit-logs?page=1&per_page=20 -> /api/v1/admin/console/audit-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+23:17:41 [vite] (client) page reload src/locales/zh-CN.js
+[Vite Proxy] GET /api/v1/admin/console/audit-logs?page=1&per_page=20 -> /api/v1/admin/console/audit-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+23:18:00 [vite] (client) page reload src/locales/en.js
+[Vite Proxy] GET /api/v1/admin/console/audit-logs?page=1&per_page=20 -> /api/v1/admin/console/audit-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+23:18:14 [vite] (client) page reload src/locales/en.js
+[Vite Proxy] GET /api/v1/admin/console/audit-logs?page=1&per_page=20 -> /api/v1/admin/console/audit-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+23:18:27 [vite] (client) page reload src/locales/en.js
+[Vite Proxy] GET /api/v1/admin/console/audit-logs?page=1&per_page=20 -> /api/v1/admin/console/audit-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+23:18:44 [vite] (client) page reload src/locales/en.js
+[Vite Proxy] GET /api/v1/admin/console/audit-logs?page=1&per_page=20 -> /api/v1/admin/console/audit-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+23:18:53 [vite] (client) page reload src/locales/ko.js
+[Vite Proxy] GET /api/v1/admin/console/audit-logs?page=1&per_page=20 -> /api/v1/admin/console/audit-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/console/audit-logs?page=1&per_page=20 -> /api/v1/admin/console/audit-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/overview -> /api/v1/admin/overview
+[Vite Proxy] GET /api/v1/admin/nodes?page=1&per_page=20 -> /api/v1/admin/nodes?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/geo-dns -> /api/v1/admin/geo-dns
+[Vite Proxy] GET /api/v1/admin/nodes -> /api/v1/admin/nodes
+[Vite Proxy] GET /api/v1/admin/rules -> /api/v1/admin/rules
+[Vite Proxy] GET /api/v1/admin/alerts -> /api/v1/admin/alerts
+[Vite Proxy] GET /api/v1/admin/query-logs?page=1&per_page=20 -> /api/v1/admin/query-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/console/audit-logs?page=1&per_page=20 -> /api/v1/admin/console/audit-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/devices?page=1&per_page=20 -> /api/v1/admin/devices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/rbac/roles -> /api/v1/admin/rbac/roles
+[Vite Proxy] GET /api/v1/admin/rbac/permissions -> /api/v1/admin/rbac/permissions
+[Vite Proxy] GET /api/v1/admin/rbac/admins -> /api/v1/admin/rbac/admins
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/devices?page=1&per_page=20 -> /api/v1/admin/devices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/console/audit-logs?page=1&per_page=20 -> /api/v1/admin/console/audit-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/query-logs?page=1&per_page=20 -> /api/v1/admin/query-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/alerts -> /api/v1/admin/alerts
+[Vite Proxy] GET /api/v1/admin/geo-dns -> /api/v1/admin/geo-dns
+[Vite Proxy] GET /api/v1/admin/nodes -> /api/v1/admin/nodes
+[Vite Proxy] GET /api/v1/admin/nodes?page=1&per_page=20 -> /api/v1/admin/nodes?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/overview -> /api/v1/admin/overview
+[Vite Proxy] GET /api/v1/admin/geo-dns -> /api/v1/admin/geo-dns
+[Vite Proxy] GET /api/v1/admin/nodes -> /api/v1/admin/nodes
+[Vite Proxy] GET /api/v1/admin/rules -> /api/v1/admin/rules
+[Vite Proxy] GET /api/v1/admin/geo-dns -> /api/v1/admin/geo-dns
+[Vite Proxy] GET /api/v1/admin/nodes -> /api/v1/admin/nodes
+23:19:10 [vite] (client) page reload src/locales/ko.js
+[Vite Proxy] GET /api/v1/admin/geo-dns -> /api/v1/admin/geo-dns
+[Vite Proxy] GET /api/v1/admin/nodes -> /api/v1/admin/nodes
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/alerts -> /api/v1/admin/alerts
+[Vite Proxy] GET /api/v1/admin/query-logs?page=1&per_page=20 -> /api/v1/admin/query-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/console/audit-logs?page=1&per_page=20 -> /api/v1/admin/console/audit-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/devices?page=1&per_page=20 -> /api/v1/admin/devices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+23:19:23 [vite] (client) page reload src/locales/ko.js
+23:19:23 [vite] (client) page reload src/locales/ko.js
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+23:19:40 [vite] (client) page reload src/locales/ko.js
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+23:20:46 [vite] (client) page reload src/locales/en.js
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+23:20:53 [vite] (client) page reload src/locales/ko.js
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+23:21:13 [vite] (client) page reload src/locales/zh-CN.js
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/finance/bills?page=1&per_page=20 -> /api/v1/admin/finance/bills?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/rbac/roles -> /api/v1/admin/rbac/roles
+[Vite Proxy] GET /api/v1/admin/rbac/permissions -> /api/v1/admin/rbac/permissions
+[Vite Proxy] GET /api/v1/admin/rbac/admins -> /api/v1/admin/rbac/admins
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+23:46:10 [vite] (client) hmr update /src/views/Privacy.vue, /src/views/ParentalControl.vue, /src/views/Security.vue, /src/views/Dashboard.vue, /src/views/Allowlist.vue, /src/views/Logs.vue, /src/views/Denylist.vue, /src/views/Settings.vue, /src/views/Analytics.vue
+23:46:24 [vite] (client) hmr update /src/views/Settings.vue
+23:46:29 [vite] (client) hmr update /src/views/Devices.vue
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] POST /api/v1/auth/login -> /api/v1/auth/login
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] POST /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] POST /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] POST /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/usage -> /api/v1/user/usage
+[Vite Proxy] GET /api/v1/user/wallet -> /api/v1/user/wallet
+[Vite Proxy] GET /api/v1/user/subscription -> /api/v1/user/subscription
+[Vite Proxy] GET /api/v1/user/referral-link -> /api/v1/user/referral-link
+[Vite Proxy] GET /api/v1/user/membership -> /api/v1/user/membership
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/orders -> /api/v1/user/orders
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/plans -> /api/v1/user/plans
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/settings -> /api/v1/user/settings
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/dns-config -> /api/v1/dns-config
+[Vite Proxy] GET /api/v1/user/membership -> /api/v1/user/membership
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/teams -> /api/v1/user/teams
+[Vite Proxy] GET /api/v1/user/teams/invitations/pending -> /api/v1/user/teams/invitations/pending
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] POST /api/v1/user/teams -> /api/v1/user/teams
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/teams -> /api/v1/user/teams
+[Vite Proxy] GET /api/v1/user/teams/invitations/pending -> /api/v1/user/teams/invitations/pending
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/teams/2 -> /api/v1/user/teams/2
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/teams/2/members -> /api/v1/user/teams/2/members
+[Vite Proxy] GET /api/v1/user/teams/2/invitations -> /api/v1/user/teams/2/invitations
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/teams -> /api/v1/user/teams
+[Vite Proxy] GET /api/v1/user/teams/invitations/pending -> /api/v1/user/teams/invitations/pending
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/logs?page=1&per_page=20&profile_id=b2d137 -> /api/v1/user/logs?page=1&per_page=20&profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/analytics?profile_id=b2d137 -> /api/v1/user/analytics?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/allowlist?profile_id=b2d137 -> /api/v1/user/allowlist?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/denylist?profile_id=b2d137 -> /api/v1/user/denylist?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b2d137 -> /api/v1/user/dashboard?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b2d137 -> /api/v1/user/dns-endpoints?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b2d137 -> /api/v1/user/top-domains?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b2d137 -> /api/v1/user/devices?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=bae475 -> /api/v1/user/dashboard?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=bae475 -> /api/v1/user/dns-endpoints?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=bae475 -> /api/v1/user/top-domains?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/devices?profile_id=bae475 -> /api/v1/user/devices?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b2d137 -> /api/v1/user/dashboard?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b2d137 -> /api/v1/user/dns-endpoints?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b2d137 -> /api/v1/user/top-domains?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b2d137 -> /api/v1/user/devices?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=bae475 -> /api/v1/user/dashboard?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=bae475 -> /api/v1/user/dns-endpoints?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=bae475 -> /api/v1/user/top-domains?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/devices?profile_id=bae475 -> /api/v1/user/devices?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/allowlist?profile_id=bae475 -> /api/v1/user/allowlist?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] POST /api/v1/user/allowlist -> /api/v1/user/allowlist
+[Vite Proxy] GET /api/v1/user/allowlist?profile_id=bae475 -> /api/v1/user/allowlist?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/allowlist?profile_id=b2d137 -> /api/v1/user/allowlist?profile_id=b2d137
+[Vite Proxy] POST /api/v1/user/allowlist -> /api/v1/user/allowlist
+[Vite Proxy] GET /api/v1/user/allowlist?profile_id=b2d137 -> /api/v1/user/allowlist?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/allowlist?profile_id=b669c1 -> /api/v1/user/allowlist?profile_id=b669c1
+[Vite Proxy] POST /api/v1/user/allowlist -> /api/v1/user/allowlist
+[Vite Proxy] GET /api/v1/user/allowlist?profile_id=b669c1 -> /api/v1/user/allowlist?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/allowlist?profile_id=b2d137 -> /api/v1/user/allowlist?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/allowlist?profile_id=bae475 -> /api/v1/user/allowlist?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/allowlist?profile_id=b669c1 -> /api/v1/user/allowlist?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/denylist?profile_id=b669c1 -> /api/v1/user/denylist?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/analytics?profile_id=b669c1 -> /api/v1/user/analytics?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/security?profile_id=b669c1 -> /api/v1/user/security?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] PUT /api/v1/user/security -> /api/v1/user/security
+[Vite Proxy] PUT /api/v1/user/security -> /api/v1/user/security
+[Vite Proxy] PUT /api/v1/user/security -> /api/v1/user/security
+[Vite Proxy] GET /api/v1/user/security?profile_id=b2d137 -> /api/v1/user/security?profile_id=b2d137
+[Vite Proxy] PUT /api/v1/user/security -> /api/v1/user/security
+[Vite Proxy] GET /api/v1/user/security?profile_id=bae475 -> /api/v1/user/security?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/security?profile_id=b669c1 -> /api/v1/user/security?profile_id=b669c1
+[Vite Proxy] PUT /api/v1/user/security -> /api/v1/user/security
+[Vite Proxy] GET /api/v1/user/security?profile_id=bae475 -> /api/v1/user/security?profile_id=bae475
+[Vite Proxy] PUT /api/v1/user/security -> /api/v1/user/security
+[Vite Proxy] PUT /api/v1/user/security -> /api/v1/user/security
+[Vite Proxy] GET /api/v1/user/security?profile_id=b2d137 -> /api/v1/user/security?profile_id=b2d137
+[Vite Proxy] PUT /api/v1/user/security -> /api/v1/user/security
+[Vite Proxy] GET /api/v1/user/security?profile_id=bae475 -> /api/v1/user/security?profile_id=bae475
+[Vite Proxy] PUT /api/v1/user/security -> /api/v1/user/security
+[Vite Proxy] GET /api/v1/user/security?profile_id=b669c1 -> /api/v1/user/security?profile_id=b669c1
+[Vite Proxy] PUT /api/v1/user/security -> /api/v1/user/security
+[Vite Proxy] PUT /api/v1/user/security -> /api/v1/user/security
+[Vite Proxy] PUT /api/v1/user/security -> /api/v1/user/security
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/security?profile_id=b669c1 -> /api/v1/user/security?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] PUT /api/v1/user/security -> /api/v1/user/security
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/catalogs -> /api/v1/user/catalogs
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/privacy?profile_id=b669c1 -> /api/v1/user/privacy?profile_id=b669c1
+[Vite Proxy] PUT /api/v1/user/privacy -> /api/v1/user/privacy
+[Vite Proxy] PUT /api/v1/user/privacy -> /api/v1/user/privacy
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/catalogs -> /api/v1/user/catalogs
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/privacy?profile_id=b669c1 -> /api/v1/user/privacy?profile_id=b669c1
+[Vite Proxy] PUT /api/v1/user/privacy -> /api/v1/user/privacy
+[Vite Proxy] PUT /api/v1/user/privacy -> /api/v1/user/privacy
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/catalogs -> /api/v1/user/catalogs
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/privacy?profile_id=b669c1 -> /api/v1/user/privacy?profile_id=b669c1
+[Vite Proxy] PUT /api/v1/user/privacy -> /api/v1/user/privacy
+[Vite Proxy] PUT /api/v1/user/privacy -> /api/v1/user/privacy
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/catalogs -> /api/v1/user/catalogs
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/privacy?profile_id=b669c1 -> /api/v1/user/privacy?profile_id=b669c1
+[Vite Proxy] PUT /api/v1/user/privacy -> /api/v1/user/privacy
+[Vite Proxy] PUT /api/v1/user/privacy -> /api/v1/user/privacy
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+08:49:59 [vite] (client) hmr update /src/views/Plans.vue?vue&type=style&index=0&scoped=30852dee&lang.css
+08:50:06 [vite] (client) page reload src/locales/ko.js
+08:50:07 [vite] (client) page reload src/locales/zh-CN.js
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+08:50:07 [vite] (client) page reload src/locales/en.js
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/catalogs -> /api/v1/user/catalogs
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/privacy?profile_id=b669c1 -> /api/v1/user/privacy?profile_id=b669c1
+[Vite Proxy] PUT /api/v1/user/privacy -> /api/v1/user/privacy
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/plans -> /api/v1/user/plans
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] POST /api/v1/user/orders -> /api/v1/user/orders
+[Vite Proxy] POST /api/v1/user/orders -> /api/v1/user/orders
+08:50:30 [vite] (client) hmr update /src/views/Allowlist.vue
+08:50:53 [vite] (client) hmr update /src/views/Denylist.vue
+[Vite Proxy] GET /api/v1/admin/alerts -> /api/v1/admin/alerts
+[Vite Proxy] GET /api/v1/admin/query-logs?page=1&per_page=20 -> /api/v1/admin/query-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/console/audit-logs?page=1&per_page=20 -> /api/v1/admin/console/audit-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/devices?page=1&per_page=20 -> /api/v1/admin/devices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=&domain= -> /api/v1/admin/member-rules?list_type=&domain=
+[Vite Proxy] GET /api/v1/admin/devices?page=1&per_page=20 -> /api/v1/admin/devices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/rbac/roles -> /api/v1/admin/rbac/roles
+[Vite Proxy] GET /api/v1/admin/rbac/permissions -> /api/v1/admin/rbac/permissions
+[Vite Proxy] GET /api/v1/admin/rbac/admins -> /api/v1/admin/rbac/admins
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+08:54:16 [vite] (client) hmr update /src/views/admin/MemberCatalogs.vue, /src/views/admin/MemberCatalogs.vue?vue&type=style&index=0&scoped=d3737bfe&lang.css
+08:54:16 [vite] Internal server error: Element is missing end tag.
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:16 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:16 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:16 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:16 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:16 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:16 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:16 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:16 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:32 [vite] (client) page reload src/locales/zh-CN.js
+08:54:32 [vite] (client) Pre-transform error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+08:54:33 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:33 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:33 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:33 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:33 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:33 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:33 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:48 [vite] (client) page reload src/locales/en.js
+08:54:48 [vite] (client) Pre-transform error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+08:54:49 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:49 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:49 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:49 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:50 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:50 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:50 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:50 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:53 [vite] (client) page reload src/locales/ko.js
+08:54:53 [vite] (client) Pre-transform error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+08:54:53 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:53 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:53 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:53 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:53 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:53 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:53 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:54:54 [vite] Internal server error: Element is missing end tag.
+  Plugin: vite:vue
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue:43:29
+  41 |                          </el-table-column>
+  42 |                          <el-table-column :label="$t('common.actions')" width="80">
+  43 |                              <template #default="{ row }">
+     |                               ^
+  44 |                                  <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+  45 |                              </el-table-column>
+      at createCompilerError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1378:17)
+      at emitError (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3014:5)
+      at Object.onclosetag (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:2381:13)
+      at Tokenizer.stateInClosingTagName (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:799:16)
+      at Tokenizer.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:1157:16)
+      at Object.baseParse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-core/dist/compiler-core.cjs.js:3053:13)
+      at Object.parse (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js:910:23)
+      at Object.parse$1 [as parse] (/Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js:1824:24)
+      at createDescriptor (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+      at handleHotUpdate (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/@vitejs/plugin-vue/dist/index.mjs:2198:26)
+08:55:05 [vite] (client) hmr update /src/views/admin/MemberCatalogs.vue
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/plans -> /api/v1/user/plans
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+08:55:26 [vite] (client) hmr update /src/views/Dashboard.vue
+08:55:35 [vite] (client) hmr update /src/views/ProfileList.vue
+08:55:41 [vite] (client) hmr update /src/views/ProfileList.vue
+08:55:48 [vite] (client) hmr update /src/views/ProfileList.vue?vue&type=style&index=0&scoped=33cf778f&lang.css
+08:55:58 [vite] (client) hmr update /src/views/Logs.vue?vue&type=style&index=0&scoped=8c2906e0&lang.css
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/profiles/2 -> /api/v1/user/profiles/2
+[Vite Proxy] GET /api/v1/user/profiles/2/rules -> /api/v1/user/profiles/2/rules
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+08:56:06 [vite] (client) page reload src/locales/zh-CN.js
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/profiles/2 -> /api/v1/user/profiles/2
+[Vite Proxy] GET /api/v1/user/profiles/2/rules -> /api/v1/user/profiles/2/rules
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+08:56:16 [vite] (client) page reload src/locales/en.js
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/profiles/2 -> /api/v1/user/profiles/2
+[Vite Proxy] GET /api/v1/user/profiles/2/rules -> /api/v1/user/profiles/2/rules
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+08:56:27 [vite] (client) page reload src/locales/ko.js
+08:56:27 [vite] (client) page reload src/locales/ko.js
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/profiles/2 -> /api/v1/user/profiles/2
+[Vite Proxy] GET /api/v1/user/profiles/2/rules -> /api/v1/user/profiles/2/rules
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/profiles/3 -> /api/v1/user/profiles/3
+[Vite Proxy] GET /api/v1/user/profiles/3/rules -> /api/v1/user/profiles/3/rules
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+08:57:11 [vite] (client) page reload src/locales/en.js
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+08:57:14 [vite] (client) hmr update /src/views/ProfileDetail.vue
+08:57:18 [vite] (client) page reload src/locales/zh-CN.js
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+08:57:27 [vite] (client) page reload src/locales/ko.js
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+08:57:30 [vite] (client) page reload src/locales/zh-CN.js
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+08:57:43 [vite] (client) page reload src/locales/en.js
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+08:57:46 [vite] (client) page reload src/locales/ko.js
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/usage -> /api/v1/user/usage
+[Vite Proxy] GET /api/v1/user/wallet -> /api/v1/user/wallet
+[Vite Proxy] GET /api/v1/user/subscription -> /api/v1/user/subscription
+[Vite Proxy] GET /api/v1/user/referral-link -> /api/v1/user/referral-link
+[Vite Proxy] GET /api/v1/user/membership -> /api/v1/user/membership
+[Vite Proxy] POST /api/v1/user/wallet/recharge -> /api/v1/user/wallet/recharge
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/usage -> /api/v1/user/usage
+[Vite Proxy] GET /api/v1/user/wallet -> /api/v1/user/wallet
+[Vite Proxy] GET /api/v1/user/subscription -> /api/v1/user/subscription
+[Vite Proxy] GET /api/v1/user/referral-link -> /api/v1/user/referral-link
+[Vite Proxy] GET /api/v1/user/membership -> /api/v1/user/membership
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/settings -> /api/v1/user/settings
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/dns-config -> /api/v1/dns-config
+[Vite Proxy] GET /api/v1/user/membership -> /api/v1/user/membership
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+09:00:20 [vite] (client) hmr update /src/views/Dashboard.vue
+09:00:27 [vite] (client) hmr update /src/views/Dashboard.vue
+09:00:28 [vite] (client) hmr update /src/views/Dashboard.vue
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+09:00:39 [vite] (client) hmr update /src/views/Dashboard.vue
+09:00:57 [vite] (client) hmr update /src/views/Dashboard.vue?vue&type=style&index=0&scoped=7f773d42&lang.css
+09:01:07 [vite] (client) page reload src/locales/zh-CN.js
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+09:01:15 [vite] (client) page reload src/locales/ko.js
+09:01:16 [vite] (client) page reload src/locales/en.js
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=deny&domain= -> /api/v1/admin/member-rules?list_type=deny&domain=
+[Vite Proxy] PUT /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] PUT /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/system-config -> /api/v1/admin/system-config
+[Vite Proxy] PUT /api/v1/admin/system-config -> /api/v1/admin/system-config
+[Vite Proxy] PUT /api/v1/admin/system-config -> /api/v1/admin/system-config
+[Vite Proxy] PUT /api/v1/admin/system-config -> /api/v1/admin/system-config
+09:09:32 [vite] (client) hmr update /src/views/Dashboard.vue
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+09:10:53 [vite] (client) hmr update /src/views/Dashboard.vue
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+09:11:15 [vite] (client) hmr update /src/views/Dashboard.vue
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+09:11:20 [vite] (client) hmr update /src/views/Dashboard.vue?vue&type=style&index=0&scoped=7f773d42&lang.css
+09:11:26 [vite] (client) hmr update /src/views/Dashboard.vue?vue&type=style&index=0&scoped=7f773d42&lang.css
+09:11:39 [vite] (client) page reload src/locales/zh-CN.js
+09:11:39 [vite] (client) page reload src/locales/zh-CN.js
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/admin/system-config -> /api/v1/admin/system-config
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+09:11:50 [vite] (client) page reload src/locales/en.js
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/admin/system-config -> /api/v1/admin/system-config
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+09:12:02 [vite] (client) page reload src/locales/ko.js
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/admin/system-config -> /api/v1/admin/system-config
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b2d137 -> /api/v1/user/dashboard?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b2d137 -> /api/v1/user/dns-endpoints?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b2d137 -> /api/v1/user/top-domains?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b2d137 -> /api/v1/user/devices?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=bae475 -> /api/v1/user/dashboard?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=bae475 -> /api/v1/user/dns-endpoints?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=bae475 -> /api/v1/user/top-domains?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/devices?profile_id=bae475 -> /api/v1/user/devices?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b2d137 -> /api/v1/user/dashboard?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b2d137 -> /api/v1/user/dns-endpoints?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b2d137 -> /api/v1/user/top-domains?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b2d137 -> /api/v1/user/devices?profile_id=b2d137
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=bae475 -> /api/v1/user/dashboard?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=bae475 -> /api/v1/user/dns-endpoints?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=bae475 -> /api/v1/user/top-domains?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/devices?profile_id=bae475 -> /api/v1/user/devices?profile_id=bae475
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+[Vite Proxy] GET /api/v1/admin/console/audit-logs?page=1&per_page=20 -> /api/v1/admin/console/audit-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/query-logs?page=1&per_page=20 -> /api/v1/admin/query-logs?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/console/audit-logs?page=1&per_page=20 -> /api/v1/admin/console/audit-logs?page=1&per_page=20
+09:14:57 [vite] (client) hmr update /src/views/admin/SystemConfig.vue
+09:15:07 [vite] (client) hmr update /src/views/admin/SystemConfig.vue
+09:15:08 [vite] (client) hmr update /src/views/admin/SystemConfig.vue
+09:15:14 [vite] (client) hmr update /src/views/admin/SystemConfig.vue?vue&type=style&index=0&scoped=d1830df4&lang.css
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/security?profile_id=b669c1 -> /api/v1/user/security?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] PUT /api/v1/user/security -> /api/v1/user/security
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/catalogs -> /api/v1/user/catalogs
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/privacy?profile_id=b669c1 -> /api/v1/user/privacy?profile_id=b669c1
+[Vite Proxy] PUT /api/v1/user/privacy -> /api/v1/user/privacy
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/catalogs -> /api/v1/user/catalogs
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/parental?profile_id=b669c1 -> /api/v1/user/parental?profile_id=b669c1
+[Vite Proxy] PUT /api/v1/user/parental -> /api/v1/user/parental
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/catalogs -> /api/v1/user/catalogs
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/privacy?profile_id=b669c1 -> /api/v1/user/privacy?profile_id=b669c1
+[Vite Proxy] PUT /api/v1/user/privacy -> /api/v1/user/privacy
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+09:18:40 [vite] (client) hmr update /src/components/AdminLayout.vue
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/geo-dns -> /api/v1/admin/geo-dns
+[Vite Proxy] GET /api/v1/admin/nodes -> /api/v1/admin/nodes
+09:19:01 [vite] (client) hmr update /src/components/AdminLayout.vue
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/geo-dns -> /api/v1/admin/geo-dns
+[Vite Proxy] GET /api/v1/admin/nodes -> /api/v1/admin/nodes
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+09:19:15 [vite] (client) hmr update /src/components/AdminLayout.vue
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/geo-dns -> /api/v1/admin/geo-dns
+[Vite Proxy] GET /api/v1/admin/nodes -> /api/v1/admin/nodes
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+09:19:20 [vite] (client) page reload src/locales/zh-CN.js
+[Vite Proxy] GET /api/v1/admin/geo-dns -> /api/v1/admin/geo-dns
+[Vite Proxy] GET /api/v1/admin/nodes -> /api/v1/admin/nodes
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+09:19:27 [vite] (client) hmr update /src/components/AdminLayout.vue
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/geo-dns -> /api/v1/admin/geo-dns
+[Vite Proxy] GET /api/v1/admin/nodes -> /api/v1/admin/nodes
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+09:19:29 [vite] (client) page reload src/locales/ko.js
+09:19:30 [vite] (client) page reload src/locales/ko.js
+09:19:30 [vite] (client) page reload src/locales/en.js
+[Vite Proxy] GET /api/v1/admin/geo-dns -> /api/v1/admin/geo-dns
+[Vite Proxy] GET /api/v1/admin/nodes -> /api/v1/admin/nodes
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+09:19:39 [vite] (client) page reload src/router/index.js
+09:19:39 [vite] (client) Pre-transform error: Failed to resolve import "@/views/admin/AdminAdmins.vue" from "src/router/index.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/router/index.js:48:26
+  46 |  import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
+  47 |  import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+  48 |  import AdminAdmins from '@/views/admin/AdminAdmins.vue'
+     |                           ^
+  49 |  
+  50 |  const routes = [
+09:19:39 [vite] Internal server error: Failed to resolve import "@/views/admin/AdminAdmins.vue" from "src/router/index.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/router/index.js:48:26
+  46 |  import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
+  47 |  import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+  48 |  import AdminAdmins from '@/views/admin/AdminAdmins.vue'
+     |                           ^
+  49 |  
+  50 |  const routes = [
+      at TransformPluginContext._formatLog (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at async file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37
+      at async Promise.all (index 45)
+      at async TransformPluginContext.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+09:19:39 [vite] Internal server error: Failed to resolve import "@/views/admin/AdminAdmins.vue" from "src/router/index.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/router/index.js:48:26
+  46 |  import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
+  47 |  import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+  48 |  import AdminAdmins from '@/views/admin/AdminAdmins.vue'
+     |                           ^
+  49 |  
+  50 |  const routes = [
+      at TransformPluginContext._formatLog (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at async file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37
+      at async Promise.all (index 45)
+      at async TransformPluginContext.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+09:19:39 [vite] Internal server error: Failed to resolve import "@/views/admin/AdminAdmins.vue" from "src/router/index.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/router/index.js:48:26
+  46 |  import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
+  47 |  import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+  48 |  import AdminAdmins from '@/views/admin/AdminAdmins.vue'
+     |                           ^
+  49 |  
+  50 |  const routes = [
+      at TransformPluginContext._formatLog (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at async file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37
+      at async Promise.all (index 45)
+      at async TransformPluginContext.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+09:19:39 [vite] Internal server error: Failed to resolve import "@/views/admin/AdminAdmins.vue" from "src/router/index.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/router/index.js:48:26
+  46 |  import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
+  47 |  import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+  48 |  import AdminAdmins from '@/views/admin/AdminAdmins.vue'
+     |                           ^
+  49 |  
+  50 |  const routes = [
+      at TransformPluginContext._formatLog (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at async file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37
+      at async Promise.all (index 45)
+      at async TransformPluginContext.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+09:19:39 [vite] Internal server error: Failed to resolve import "@/views/admin/AdminAdmins.vue" from "src/router/index.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/router/index.js:48:26
+  46 |  import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
+  47 |  import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+  48 |  import AdminAdmins from '@/views/admin/AdminAdmins.vue'
+     |                           ^
+  49 |  
+  50 |  const routes = [
+      at TransformPluginContext._formatLog (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at async file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37
+      at async Promise.all (index 45)
+      at async TransformPluginContext.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+09:19:39 [vite] Internal server error: Failed to resolve import "@/views/admin/AdminAdmins.vue" from "src/router/index.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/router/index.js:48:26
+  46 |  import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
+  47 |  import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+  48 |  import AdminAdmins from '@/views/admin/AdminAdmins.vue'
+     |                           ^
+  49 |  
+  50 |  const routes = [
+      at TransformPluginContext._formatLog (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at async file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37
+      at async Promise.all (index 45)
+      at async TransformPluginContext.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+09:19:40 [vite] Internal server error: Failed to resolve import "@/views/admin/AdminAdmins.vue" from "src/router/index.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/router/index.js:48:26
+  46 |  import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
+  47 |  import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+  48 |  import AdminAdmins from '@/views/admin/AdminAdmins.vue'
+     |                           ^
+  49 |  
+  50 |  const routes = [
+      at TransformPluginContext._formatLog (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at async file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37
+      at async Promise.all (index 45)
+      at async TransformPluginContext.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+09:19:40 [vite] Internal server error: Failed to resolve import "@/views/admin/AdminAdmins.vue" from "src/router/index.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/router/index.js:48:26
+  46 |  import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
+  47 |  import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+  48 |  import AdminAdmins from '@/views/admin/AdminAdmins.vue'
+     |                           ^
+  49 |  
+  50 |  const routes = [
+      at TransformPluginContext._formatLog (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at async file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37
+      at async Promise.all (index 45)
+      at async TransformPluginContext.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+09:19:52 [vite] (client) page reload src/router/index.js
+09:19:52 [vite] (client) Pre-transform error: Failed to resolve import "@/views/admin/AdminAdmins.vue" from "src/router/index.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/router/index.js:48:26
+  46 |  import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
+  47 |  import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+  48 |  import AdminAdmins from '@/views/admin/AdminAdmins.vue'
+     |                           ^
+  49 |  
+  50 |  const routes = [
+09:19:53 [vite] Internal server error: Failed to resolve import "@/views/admin/AdminAdmins.vue" from "src/router/index.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/router/index.js:48:26
+  46 |  import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
+  47 |  import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+  48 |  import AdminAdmins from '@/views/admin/AdminAdmins.vue'
+     |                           ^
+  49 |  
+  50 |  const routes = [
+      at TransformPluginContext._formatLog (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at async file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37
+      at async Promise.all (index 45)
+      at async TransformPluginContext.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+09:19:53 [vite] Internal server error: Failed to resolve import "@/views/admin/AdminAdmins.vue" from "src/router/index.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/router/index.js:48:26
+  46 |  import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
+  47 |  import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+  48 |  import AdminAdmins from '@/views/admin/AdminAdmins.vue'
+     |                           ^
+  49 |  
+  50 |  const routes = [
+      at TransformPluginContext._formatLog (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at async file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37
+      at async Promise.all (index 45)
+      at async TransformPluginContext.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+09:19:53 [vite] Internal server error: Failed to resolve import "@/views/admin/AdminAdmins.vue" from "src/router/index.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/router/index.js:48:26
+  46 |  import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
+  47 |  import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+  48 |  import AdminAdmins from '@/views/admin/AdminAdmins.vue'
+     |                           ^
+  49 |  
+  50 |  const routes = [
+      at TransformPluginContext._formatLog (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at async file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37
+      at async Promise.all (index 45)
+      at async TransformPluginContext.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+09:19:53 [vite] Internal server error: Failed to resolve import "@/views/admin/AdminAdmins.vue" from "src/router/index.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/router/index.js:48:26
+  46 |  import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
+  47 |  import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+  48 |  import AdminAdmins from '@/views/admin/AdminAdmins.vue'
+     |                           ^
+  49 |  
+  50 |  const routes = [
+      at TransformPluginContext._formatLog (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at async file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37
+      at async Promise.all (index 45)
+      at async TransformPluginContext.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+09:19:53 [vite] Internal server error: Failed to resolve import "@/views/admin/AdminAdmins.vue" from "src/router/index.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/router/index.js:48:26
+  46 |  import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
+  47 |  import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+  48 |  import AdminAdmins from '@/views/admin/AdminAdmins.vue'
+     |                           ^
+  49 |  
+  50 |  const routes = [
+      at TransformPluginContext._formatLog (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at async file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37
+      at async Promise.all (index 45)
+      at async TransformPluginContext.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+09:19:53 [vite] Internal server error: Failed to resolve import "@/views/admin/AdminAdmins.vue" from "src/router/index.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/router/index.js:48:26
+  46 |  import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
+  47 |  import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+  48 |  import AdminAdmins from '@/views/admin/AdminAdmins.vue'
+     |                           ^
+  49 |  
+  50 |  const routes = [
+      at TransformPluginContext._formatLog (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at async file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37
+      at async Promise.all (index 45)
+      at async TransformPluginContext.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+09:19:53 [vite] Internal server error: Failed to resolve import "@/views/admin/AdminAdmins.vue" from "src/router/index.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/router/index.js:48:26
+  46 |  import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
+  47 |  import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+  48 |  import AdminAdmins from '@/views/admin/AdminAdmins.vue'
+     |                           ^
+  49 |  
+  50 |  const routes = [
+      at TransformPluginContext._formatLog (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at async file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37
+      at async Promise.all (index 45)
+      at async TransformPluginContext.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+09:19:53 [vite] Internal server error: Failed to resolve import "@/views/admin/AdminAdmins.vue" from "src/router/index.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/472733389qq.com/Desktop/ai agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/src/router/index.js:48:26
+  46 |  import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
+  47 |  import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
+  48 |  import AdminAdmins from '@/views/admin/AdminAdmins.vue'
+     |                           ^
+  49 |  
+  50 |  const routes = [
+      at TransformPluginContext._formatLog (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at async file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37
+      at async Promise.all (index 45)
+      at async TransformPluginContext.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (file:///Users/472733389qq.com/Desktop/ai%20agent/docs/ai-doc/ai-doc/ocer-dns/portal-web/web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+09:20:09 [vite] (client) page reload src/router/index.js
+09:20:15 [vite] (client) page reload src/router/index.js
+09:21:21 [vite] (client) hmr update /src/views/admin/MenuConfig.vue
+09:21:36 [vite] (client) hmr update /src/views/admin/MenuConfig.vue
+09:21:53 [vite] (client) hmr update /src/views/admin/RoleManagement.vue
+09:22:09 [vite] (client) hmr update /src/views/admin/RoleManagement.vue
+09:22:17 [vite] (client) hmr update /src/views/admin/RoleManagement.vue
+09:22:32 [vite] (client) hmr update /src/views/admin/RoleManagement.vue
+09:22:46 [vite] (client) hmr update /src/views/admin/RoleManagement.vue
+09:23:07 [vite] (client) hmr update /src/views/admin/RoleManagement.vue?vue&type=style&index=0&scoped=fe7ab6b2&lang.css
+09:24:04 [vite] (client) page reload src/locales/zh-CN.js
+09:24:17 [vite] (client) page reload src/locales/en.js
+09:24:30 [vite] (client) page reload src/locales/ko.js
+09:27:34 [vite] (client) hmr update /src/components/AdminLayout.vue
+09:28:21 [vite] (client) hmr update /src/views/admin/MenuConfig.vue
+09:28:39 [vite] (client) hmr update /src/views/admin/MenuConfig.vue
+09:29:47 [vite] (client) page reload src/router/index.js
+[Vite Proxy] GET /api/v1/admin/geo-dns -> /api/v1/admin/geo-dns
+[Vite Proxy] GET /api/v1/admin/nodes -> /api/v1/admin/nodes
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/menu-config -> /api/v1/admin/menu-config
+[Vite Proxy] GET /api/v1/admin/billing/invoices?page=1&per_page=20 -> /api/v1/admin/billing/invoices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1
+[Vite Proxy] GET /api/v1/admin/member-catalogs -> /api/v1/admin/member-catalogs
+[Vite Proxy] GET /api/v1/admin/member-rules?list_type=deny&domain= -> /api/v1/admin/member-rules?list_type=deny&domain=
+[Vite Proxy] GET /api/v1/admin/finance/balances?page=1&per_page=20 -> /api/v1/admin/finance/balances?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/users?page=1&per_page=20 -> /api/v1/admin/users?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/devices?page=1&per_page=20 -> /api/v1/admin/devices?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/alerts -> /api/v1/admin/alerts
+[Vite Proxy] GET /api/v1/admin/nodes?page=1&per_page=20 -> /api/v1/admin/nodes?page=1&per_page=20
+[Vite Proxy] GET /api/v1/admin/overview -> /api/v1/admin/overview
+[Vite Proxy] GET /api/v1/admin/rbac/roles -> /api/v1/admin/rbac/roles
+[Vite Proxy] GET /api/v1/admin/rbac/permissions -> /api/v1/admin/rbac/permissions
+[Vite Proxy] GET /api/v1/admin/rbac/admins -> /api/v1/admin/rbac/admins
+[Vite Proxy] GET /api/v1/admin/system-config -> /api/v1/admin/system-config
+[Vite Proxy] PUT /api/v1/admin/system-config -> /api/v1/admin/system-config
+[Vite Proxy] GET /api/v1/user/me -> /api/v1/user/me
+[Vite Proxy] GET /api/v1/user/dashboard?profile_id=b669c1 -> /api/v1/user/dashboard?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/profiles -> /api/v1/user/profiles
+[Vite Proxy] GET /api/v1/user/dns-endpoints?profile_id=b669c1 -> /api/v1/user/dns-endpoints?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/top-domains?profile_id=b669c1 -> /api/v1/user/top-domains?profile_id=b669c1
+[Vite Proxy] GET /api/v1/user/devices?profile_id=b669c1 -> /api/v1/user/devices?profile_id=b669c1

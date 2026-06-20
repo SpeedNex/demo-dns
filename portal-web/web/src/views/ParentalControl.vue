@@ -293,16 +293,8 @@ watch(
     { deep: true }
 )
 
-onMounted(async () => {
+const fetchData = async () => {
     try {
-        const catalogResponse = await client.get('/user/catalogs')
-        const catalogs = catalogResponse.data?.data || {}
-        if (Array.isArray(catalogs.parental_presets) && catalogs.parental_presets.length > 0) {
-            presets.value = catalogs.parental_presets
-        }
-        if (Array.isArray(catalogs.parental_categories) && catalogs.parental_categories.length > 0) {
-            categoryPresets.value = catalogs.parental_categories
-        }
         const { data } = await client.get('/user/parental', { params: { profile_id: currentProfileId.value } })
         const apiData = data.data || {}
         Object.assign(form, { ...apiData })
@@ -313,6 +305,23 @@ onMounted(async () => {
             blockedCategories.value = apiData.blocked_categories
         }
     } catch {}
+}
+
+// 切换 profile 时重新加载数据
+watch(currentProfileId, fetchData)
+
+onMounted(async () => {
+    try {
+        const catalogResponse = await client.get('/user/catalogs')
+        const catalogs = catalogResponse.data?.data || {}
+        if (Array.isArray(catalogs.parental_presets) && catalogs.parental_presets.length > 0) {
+            presets.value = catalogs.parental_presets
+        }
+        if (Array.isArray(catalogs.parental_categories) && catalogs.parental_categories.length > 0) {
+            categoryPresets.value = catalogs.parental_categories
+        }
+    } catch {}
+    await fetchData()
 })
 </script>
 

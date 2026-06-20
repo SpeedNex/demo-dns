@@ -131,7 +131,7 @@ final class TeamService
             $member = TeamMember::create([
                 'team_id' => $teamId,
                 'user_id' => $userId,
-                'role' => $role,
+                'role_key' => $role,
                 'joined_at' => now(),
             ]);
 
@@ -210,7 +210,7 @@ final class TeamService
         return TeamInvitation::create([
             'team_id' => $teamId,
             'email' => $email,
-            'role' => $role,
+            'role_key' => $role,
             'token_hash' => Hash::make($token),
             'invited_by' => $invitedBy,
             'expires_at' => now()->addDays(7),
@@ -339,7 +339,7 @@ final class TeamService
         DB::transaction(function () use ($teamId, $userId, $role): void {
             TeamMember::where('team_id', $teamId)
                 ->where('user_id', $userId)
-                ->update(['role' => $role]);
+                ->update(['role_key' => $role]);
         });
     }
 
@@ -407,10 +407,10 @@ final class TeamService
         DB::transaction(function () use ($teamId, $actorId, $newOwnerId): void {
             TeamMember::where('team_id', $teamId)
                 ->where('user_id', $actorId)
-                ->update(['role' => 'admin']);
+                ->update(['role_key' => 'admin']);
             TeamMember::where('team_id', $teamId)
                 ->where('user_id', $newOwnerId)
-                ->update(['role' => 'owner']);
+                ->update(['role_key' => 'owner']);
             Team::where('id', $teamId)->update(['owner_id' => $newOwnerId]);
         });
     }
@@ -422,6 +422,6 @@ final class TeamService
     {
         return TeamMember::where('team_id', $teamId)
             ->where('user_id', $userId)
-            ->value('role');
+            ->value('role_key');
     }
 }

@@ -8,28 +8,26 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class NavigationCatalog extends Model
 {
-    protected $primaryKey = "key";
-    public $incrementing = false;
-    protected $keyType = "string";
-    
+    public $incrementing = true;
+    protected $keyType = 'int';
 
-    protected $fillable = ["key","parent_key","title","path","icon","sort_order","is_active","permission_code"];
+    protected $fillable = ['key', 'label_key', 'parent_key', 'group_key', 'path', 'icon', 'sort_order', 'visible'];
 
     protected function casts(): array
     {
         return [
-            "is_active" => "boolean",
-            "sort_order" => "integer",
+            'visible' => 'boolean',
+            'sort_order' => 'integer',
         ];
     }
 
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(self::class, "parent_key", "key");
+        return $this->belongsTo(self::class, 'parent_key', 'key');
     }
 
     public function children(): HasMany
     {
-        return $this->hasMany(self::class, "parent_key", "key");
+        return $this->hasMany(self::class, 'parent_key', 'key');
     }
 }

@@ -122,12 +122,16 @@ final class MemberWorkspaceTest extends TestCase
 
         $profileId = $this->getJson('/api/v1/user/profiles')->json('data.0.id');
         Device::create([
-            'user_id' => $user->id,
+            'user_id' => $user->getKey(),
             'profile_id' => $profileId,
             'name' => 'Family iPad',
-            'device_type' => 'tablet',
-            'device_id' => 'dev-ipad-01',
-            'public_ip' => '203.0.113.25',
+            'device_uid' => 'dev-ipad-01',
+            'fingerprint' => hash('sha256', 'dev-ipad-01'),
+            'source' => 'manual',
+            'protocol' => 'doh',
+            'ip_hash' => hash('sha256', '203.0.113.25'),
+            'first_seen_at' => now(),
+            'last_seen_at' => now(),
         ]);
 
         $publishResponse = $this->postJson("/api/v1/user/profiles/{$profileId}/publish", [
@@ -168,39 +172,40 @@ final class MemberWorkspaceTest extends TestCase
             'safe_search_enabled' => false,
             'log_mode' => 'full',
         ]);
-        Device::create([
-            'user_id' => $user->id,
+        $device = Device::create([
+            'user_id' => $user->getKey(),
             'profile_id' => $profile->id,
             'name' => 'MacBook',
-            'device_type' => 'desktop',
-            'device_id' => 'dev-home-01',
+            'device_uid' => 'dev-home-01',
+            'fingerprint' => hash('sha256', 'dev-home-01'),
+            'source' => 'manual',
+            'protocol' => 'doh',
+            'first_seen_at' => now(),
+            'last_seen_at' => now(),
         ]);
 
         $node = Node::create([
-            'id' => 'node-test-01',
-            'node_name' => 'test-node',
-            'status' => 'active',
+            'node_code' => 'node-test-01',
+            'name' => 'test-node',
+            'status' => 'online',
             'region' => 'ap-northeast-1',
-            'approved_at' => now(),
         ]);
         $batch = QueryLogIngestBatch::create([
-            'id' => 'qlb-test-01',
             'batch_id' => 'batch-test-01',
             'node_id' => $node->id,
-            'item_count' => 2,
-            'content_sha256' => str_repeat('a', 64),
-            'status' => 'written',
+            'event_count' => 2,
+            'status' => 'succeeded',
             'received_at' => now(),
-            'written_at' => now(),
+            'processed_at' => now(),
         ]);
 
         $now = now();
         QueryLogEntry::create([
             'ingest_batch_id' => $batch->id,
             'node_id' => $node->id,
-            'user_id' => $user->id,
+            'user_id' => $user->getKey(),
             'profile_id' => $profile->id,
-            'device_id' => 'dev-home-01',
+            'device_id' => $device->id,
             'query_name' => 'tracker.example.com',
             'query_type' => 'A',
             'action' => 'blocked',
@@ -214,9 +219,9 @@ final class MemberWorkspaceTest extends TestCase
         QueryLogEntry::create([
             'ingest_batch_id' => $batch->id,
             'node_id' => $node->id,
-            'user_id' => $user->id,
+            'user_id' => $user->getKey(),
             'profile_id' => $profile->id,
-            'device_id' => 'dev-home-01',
+            'device_id' => $device->id,
             'query_name' => 'openai.com',
             'query_type' => 'A',
             'action' => 'allowed',

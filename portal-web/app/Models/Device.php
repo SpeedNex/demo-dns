@@ -7,41 +7,41 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Device extends Model
 {
-    
-
-    public $incrementing = false;
-    protected $keyType = 'string';
-
-    protected static function boot(): void
-    {
-        parent::boot();
-        static::creating(function (self $device): void {
-            if (empty($device->id)) {
-                $device->id = 'dev_' . substr(hash('sha256', $device->name . microtime()), 0, 12);
-            }
-        });
-    }
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
         'user_id',
         'profile_id',
+        'device_uid',
         'name',
-        'device_type',
-        'device_id',
-        'public_ip',
+        'fingerprint',
+        'source',
+        'protocol',
+        'user_agent',
+        'sni',
+        'ip_hash',
+        'country',
+        'first_seen_at',
         'last_seen_at',
+        'last_query_at',
+        'query_count',
+        'status',
     ];
 
     protected function casts(): array
     {
         return [
+            'first_seen_at' => 'datetime',
             'last_seen_at' => 'datetime',
+            'last_query_at' => 'datetime',
+            'query_count' => 'integer',
         ];
     }
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function profile(): BelongsTo

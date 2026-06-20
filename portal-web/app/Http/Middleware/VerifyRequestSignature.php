@@ -59,7 +59,9 @@ final class VerifyRequestSignature
         }
 
         // Resolve token + HMAC secret from DB (encrypted at rest).
-        $resolved = $this->tokens->resolveWithSecret($bearer);
+        // V2 兼容：客户端可通过 X-Hmac-Key 头传递共享 secret。
+        $clientHmacKey = $request->header('X-Hmac-Key');
+        $resolved = $this->tokens->resolveWithSecret($bearer, $clientHmacKey);
         if ($resolved === null) {
             return $this->reject('invalid_credentials');
         }

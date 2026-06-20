@@ -108,110 +108,57 @@ import client from '@/api/client'
 const route = useRoute()
 const { locale } = useI18n()
 
-// === 菜单配置状态 ===
-const MENU_CONFIG_KEY = 'admin_menu_config'
-const defaultMenuConfig = {
-    mainMenu: [
-        { id: 'dashboard', labelKey: 'nav.dashboard', path: '/admin/dashboard', icon: 'DataAnalysis', visible: true, sort: 1 },
-        { id: 'nodes', labelKey: 'nav.nodes', path: '/admin/nodes', icon: 'Monitor', visible: true, sort: 2 },
-        { id: 'geo-dns', labelKey: 'nav.geoDns', path: '/admin/geo-dns', icon: 'Connection', visible: false, sort: 3 },
-        { id: 'rules', labelKey: 'nav.ruleLibrary', path: '/admin/rules', icon: 'Collection', visible: true, sort: 4, groupKey: 'service' },
-        { id: 'alerts', labelKey: 'admin.alerts', path: '/admin/alerts', icon: 'Message', visible: true, sort: 5, groupKey: 'monitor' },
-        { id: 'query-logs', labelKey: 'admin.queryLogs', path: '/admin/query-logs', icon: 'Document', visible: true, sort: 6, groupKey: 'monitor' },
-        { id: 'users', labelKey: 'admin.users', path: '/admin/users', icon: 'User', visible: true, sort: 7, groupKey: 'user' },
-        { id: 'devices', labelKey: 'admin.devices', path: '/admin/devices', icon: 'Avatar', visible: true, sort: 8, groupKey: 'user' },
-        { id: 'member-catalogs', labelKey: 'admin.memberCatalogs.title', path: '/admin/member-catalogs', icon: 'Grid', visible: true, sort: 9, groupKey: 'user' },
-        { id: 'rbac', labelKey: 'admin.rbac.title', path: '/admin/rbac', icon: 'Lock', visible: true, sort: 10, groupKey: 'user' },
-        { id: 'billing', labelKey: 'admin.billing.title', path: '/admin/billing', icon: 'Coin', visible: true, sort: 11, groupKey: 'finance' },
-        { id: 'plans', labelKey: 'admin.plans.title', path: '/admin/plans', icon: 'Tickets', visible: true, sort: 12, groupKey: 'finance' },
-        { id: 'balance', labelKey: 'admin.finance.balance', path: '/admin/balance', icon: 'Wallet', visible: true, sort: 13, groupKey: 'finance' },
-        { id: 'recharge', labelKey: 'admin.finance.recharge', path: '/admin/recharge', icon: 'Coin', visible: true, sort: 14, groupKey: 'finance' },
-        { id: 'bill', labelKey: 'admin.finance.bill', path: '/admin/bill', icon: 'Document', visible: true, sort: 15, groupKey: 'finance' },
-        { id: 'refund-records', labelKey: 'admin.finance.refundRecords', path: '/admin/refund-records', icon: 'Tickets', visible: true, sort: 16, groupKey: 'finance' },
-        { id: 'system-config', labelKey: 'nav.systemConfig', path: '/admin/system-config', icon: 'Tools', visible: true, sort: 17, groupKey: 'settings' },
-        { id: 'audit-logs', labelKey: 'nav.auditLogs', path: '/admin/audit-logs', icon: 'Tickets', visible: true, sort: 18, groupKey: 'monitor' },
-        { id: 'menu-config', labelKey: 'admin.menuConfig.title', path: '/admin/menu-config', icon: 'List', visible: true, sort: 19, groupKey: 'settings' },
-    ],
-    subMenu: [],
-}
-
-const menuConfig = ref(loadMenuConfig())
-const topLevelMenuIds = new Set(defaultMenuConfig.mainMenu.map((item) => item.id))
-const topLevelIconMap = {
-    balance: 'Wallet',
-    recharge: 'Coin',
-    bill: 'Document',
-    'refund-records': 'Tickets',
-}
-
-function loadMenuConfig() {
-    try {
-        const saved = localStorage.getItem(MENU_CONFIG_KEY)
-        if (saved) {
-            return normalizeMenuConfig(JSON.parse(saved))
-        }
-    } catch (e) { /* ignore */ }
-    return defaultMenuConfig
-}
+// === 菜单配置状态：完全从后端 dns_admin_menu_rule 表加载，不使用任何静态兜底 ===
+const menuConfig = ref({ mainMenu: [], subMenu: [] })
 
 function normalizeMenuConfig(config) {
     const mainMenu = []
     const subMenu = []
+    const seen = new Set()
 
     for (const item of (config.mainMenu || [])) {
-        if (item.id === 'finance' || item.id === 'basic-config' || item.id === 'publishes') {
-            continue
-        }
-        mainMenu.push({
-            ...item,
-            parentId: null,
-        })
+        if (item.id === 'finance' || item.id === 'basic-config' || item.id === 'publishes') continue
+        if (seen.has(item.id)) continue
+        seen.add(item.id)
+        mainMenu.push({ ...item, parentId: null })
     }
 
     for (const item of (config.subMenu || [])) {
-        if (item.parentId === 'finance' || topLevelMenuIds.has(item.id)) {
-            mainMenu.push({
-                ...item,
-                parentId: null,
-                icon: item.icon || topLevelIconMap[item.id] || 'Document',
-            })
-            continue
+        if (seen.has(item.id)) continue
+        seen.add(item.id)
+        if (mainMenu.some((m) => m.id === item.parentId)) {
+            subMenu.push(item)
+        } else {
+            // 孤儿子项：按主菜单收纳
+            mainMenu.push({ ...item, parentId: null, icon: item.icon || 'Document' })
         }
-        subMenu.push(item)
     }
 
     mainMenu.sort((a, b) => a.sort - b.sort)
-    mainMenu.forEach((item, index) => {
-        item.sort = index + 1
-    })
+    mainMenu.forEach((item, index) => { item.sort = index + 1 })
 
     return { mainMenu, subMenu }
 }
 
-function saveMenuConfig(config) {
-    const normalized = normalizeMenuConfig(config)
-    localStorage.setItem(MENU_CONFIG_KEY, JSON.stringify(normalized))
-    menuConfig.value = normalized
+function setMenuConfig(config) {
+    menuConfig.value = normalizeMenuConfig(config)
 }
 
-// 监听菜单配置更新事件
+// 监听菜单配置更新事件（来自 MenuConfig.vue 同步派发）
 window.addEventListener('menu-config-updated', (e) => {
-    if (e.detail) {
-        saveMenuConfig(e.detail)
-    }
+    if (e.detail) setMenuConfig(e.detail)
 })
 
 onMounted(async () => {
-    // 优先从后端 dns_admin_menu_rule 表加载最新配置
-    let loadedFromApi = false
+    // 完全依赖后端：失败则保持空菜单，不再使用任何静态默认数据
     try {
         const response = await client.get('/admin/menu-config')
-        if (response?.data?.data && Array.isArray(response.data.data) && response.data.data.length > 0) {
-            const dbData = response.data.data
+        const dbData = response?.data?.data
+        if (Array.isArray(dbData) && dbData.length > 0) {
             const mainMenu = []
             const subMenu = []
 
-            dbData.forEach(item => {
+            dbData.forEach((item) => {
                 mainMenu.push({
                     id: item.menuKey || item.id,
                     labelKey: item.labelKey,
@@ -221,11 +168,11 @@ onMounted(async () => {
                     sort: item.sort || 0,
                     permissionCode: item.permissionCode,
                     groupKey: item.groupKey,
-                    parentId: item.parentId,
+                    parentId: null,
                 })
 
-                if (item.children && item.children.length > 0) {
-                    item.children.forEach(child => {
+                if (Array.isArray(item.children)) {
+                    item.children.forEach((child) => {
                         subMenu.push({
                             id: child.menuKey || child.id,
                             labelKey: child.labelKey,
@@ -239,18 +186,10 @@ onMounted(async () => {
                 }
             })
 
-            if (mainMenu.length > 0) {
-                saveMenuConfig({ mainMenu, subMenu })
-                loadedFromApi = true
-            }
+            setMenuConfig({ mainMenu, subMenu })
         }
     } catch (err) {
-        console.warn('Failed to load menu config from API, using defaults', err)
-    }
-
-    if (!loadedFromApi) {
-        // Fallback: use hardcoded default config (only when API/data unavailable)
-        menuConfig.value = normalizeMenuConfig(JSON.parse(JSON.stringify(defaultMenuConfig)))
+        console.warn('Failed to load menu config from API; sidebar will be empty until API responds.', err)
     }
 })
 
@@ -282,6 +221,7 @@ const titleMap = {
     AdminAuditLogs: 'nav.auditLogs',
     AdminRoleManagement: 'admin.rbac.title',
     AdminMenuConfig: 'admin.menuConfig.title',
+    AdminAdmins: 'admin.adminUsers.title',
 }
 
 const pageTitle = computed(() => (titleMap[route.name] || 'admin.title'))
@@ -303,6 +243,7 @@ const expandedGroups = ref(loadExpanded() || {
     monitor: false,
     user: false,
     finance: false,
+    admin: true,
     settings: false,
 })
 const persistExpanded = () => {
@@ -327,9 +268,10 @@ const navGroups = computed(() => {
     // 按分组归类菜单（基于 id）
 const serviceIds = ['dashboard', 'nodes', 'geo-dns', 'rules']
     const monitorIds = ['alerts', 'query-logs', 'audit-logs']
-    const userIds = ['users', 'devices', 'member-catalogs', 'rbac']
+    const userIds = ['users', 'devices', 'member-catalogs']
     const financeIds = ['billing', 'plans', 'balance', 'recharge', 'bill', 'refund-records']
-    const settingsIds = ['system-config', 'menu-config']
+    const settingsIds = ['system-config']
+    const adminIds = ['admins', 'rbac', 'menu-config']
 
     return [
         {
@@ -355,6 +297,12 @@ const serviceIds = ['dashboard', 'nodes', 'geo-dns', 'rules']
             title: i18n.global.t('admin.menuGroup.finance'),
             icon: 'Coin',
             items: buildMenuItems(mainMenu, subMenu, financeIds),
+        },
+        {
+            key: 'admin',
+            title: i18n.global.t('admin.menuGroup.admin') || '管理员管理',
+            icon: 'Avatar',
+            items: buildMenuItems(mainMenu, subMenu, adminIds),
         },
         {
             key: 'settings',

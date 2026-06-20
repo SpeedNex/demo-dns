@@ -45,6 +45,10 @@ final class HeartbeatController
             'created_at' => now(),
         ]);
 
+        // 在 update node 之前记录"旧"心跳时间，用于超时告警判断
+        $previousLastHeartbeatAt = $node->last_heartbeat_at;
+        $previousNodeStatus = $node->status;
+
         $node->update([
             'status' => $service->computeStatus($heartbeat),
             'version' => $heartbeat['version'] ?? $node->version,
@@ -58,20 +62,38 @@ final class HeartbeatController
             ]),
         ]);
 
-        // 检测节点是否长时间未心跳
-        if (!$request->attributes->has('node')) {
-            return $result;
-        }
-        $node = $request->attributes->get('node');
-        $threshold = now()->subSeconds(300);
-        if ($node->last_heartbeat_at && $node->last_heartbeat_at->lt($threshold) && $node->status !== 'offline') {
-            $node->update(['status' => 'offline']);
+        // 告警场景 1: 节点上报 status=degraded 或 offline (自身报告异常)
+        $reportedStatus = (string) ($heartbeat['status'] ?? HeartbeatService::STATUS_ONLINE);
+        if (in_array($reportedStatus, ['degraded', 'offline'], true)) {
             Alert::create([
-                'id' => 'alert_' . Str::random(16),
-                'level' => 'warning',
+                'code' => 'node_reported_' . $reportedStatus,
+                'level' => $reportedStatus === 'offline' ? 'error' : 'warning',
+                'source' => 'node',
+                'subject_type' => 'node',
+                'subject_id' => $node->id,
+                'title' => '节点上报异常',
+                'message' => "节点 {$node->name} (id={$node->id}) 上报 status={$reportedStatus}",
                 'status' => 'open',
-                'title' => '节点离线',
-                'message' => "节点 {$node->name} ({$node->id}) 超过 5 分钟未心跳",
+            ]);
+        }
+
+        // 告警场景 2: 节点超时（之前 last_heartbeat_at 超过 5 分钟未更新，但刚收到心跳）
+        // 即: 这是节点超时后第一次恢复心跳，记录超时事件
+        $threshold = now()->subSeconds(300);
+        if (
+            $previousLastHeartbeatAt instanceof \Carbon\Carbon
+            && $previousLastHeartbeatAt->lt($threshold)
+            && $previousNodeStatus !== 'online'
+        ) {
+            Alert::create([
+                'code' => 'node_heartbeat_timeout',
+                'level' => 'warning',
+                'source' => 'node',
+                'subject_type' => 'node',
+                'subject_id' => $node->id,
+                'title' => '节点心跳超时',
+                'message' => "节点 {$node->name} (id={$node->id}) 距离上次心跳已超 5 分钟",
+                'status' => 'open',
             ]);
         }
 

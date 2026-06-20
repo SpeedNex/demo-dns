@@ -13,93 +13,97 @@
             </el-button>
         </template>
 
-        <!-- 顶部下拉导航：滚动到锚点（不滚动页面） -->
-        <div class="catalog-anchor-nav">
-            <el-select
-                v-model="activeAnchor"
-                :placeholder="$t('admin.memberCatalogs.navPlaceholder')"
-                style="width: 260px"
-                @change="scrollToAnchor"
-            >
-                <el-option
-                    v-for="item in anchorList"
-                    :key="item.key"
-                    :label="item.label"
-                    :value="item.key"
-                />
-            </el-select>
-            <div class="anchor-tabs">
-                <span
-                    v-for="item in anchorList"
-                    :key="item.key"
-                    class="anchor-chip"
-                    :class="{ active: activeAnchor === item.key }"
-                    @click="scrollToAnchor(item.key)"
-                >
-                    {{ item.label }}
-                </span>
-            </div>
-        </div>
-
-        <div class="catalog-sections">
-            <div
-                v-for="item in anchorList"
-                :key="item.key"
-                :ref="(el) => setSectionRef(item.key, el)"
-                class="catalog-section"
-            >
-                <el-card shadow="never" class="section-card">
+        <el-tabs v-model="activeTab" class="catalog-tabs">
+            <!-- 黑名单 Tab：用户 deny 规则 -->
+            <el-tab-pane :label="$t('admin.memberCatalogs.tabDenyList')" name="denylist">
+                <el-card shadow="never">
                     <template #header>
-                        <strong>{{ item.label }}</strong>
+                        <div class="rules-head">
+                            <strong>{{ $t('admin.memberCatalogs.rulesTitle') }}</strong>
+                            <div class="rules-filters">
+                                <el-input v-model="ruleFilter.domain" :placeholder="$t('admin.memberCatalogs.searchDomain')" clearable style="width: 220px" @keyup.enter="fetchRules" />
+                                <el-button @click="fetchRules">{{ $t('common.search') }}</el-button>
+                                <el-button type="danger" plain :disabled="selectedRules.length === 0" @click="batchDeleteRules">
+                                    {{ $t('common.batchDelete') }}
+                                </el-button>
+                            </div>
+                        </div>
                     </template>
+                    <el-table :data="rules" stripe @selection-change="selectedRules = $event">
+                        <el-table-column type="selection" width="44" />
+                        <el-table-column prop="list_type" :label="$t('admin.memberCatalogs.type')" width="90" />
+                        <el-table-column prop="domain" :label="$t('admin.memberCatalogs.domain')" min-width="220" show-overflow-tooltip />
+                        <el-table-column prop="profile_name" :label="$t('admin.memberCatalogs.profile')" width="180" show-overflow-tooltip />
+                        <el-table-column prop="user_id" :label="$t('admin.memberCatalogs.user')" min-width="160" show-overflow-tooltip />
+                        <el-table-column prop="match_type" :label="$t('admin.memberCatalogs.matchType')" width="100" />
+                        <el-table-column prop="enabled" :label="$t('admin.memberCatalogs.enabled')" width="80">
+                            <template #default="{ row }">{{ row.enabled ? $t('common.yes') : $t('common.no') }}</template>
+                        </el-table-column>
+                        <el-table-column :label="$t('common.actions')" width="80">
+                            <template #default="{ row }">
+                                <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </el-card>
+            </el-tab-pane>
+
+            <!-- 设备型号 Tab -->
+            <el-tab-pane :label="$t('admin.memberCatalogs.tabDeviceModels')" name="device_models">
+                <el-card shadow="never">
                     <EditableTable
-                        :rows="catalogs[item.dataKey]"
-                        :columns="columns[item.dataKey]"
-                        @add="addRow(item.dataKey)"
-                        @remove="removeRow(item.dataKey, $event)"
+                        :rows="catalogs.device_models"
+                        :columns="columns.device_models"
+                        @add="addRow('device_models')"
+                        @remove="removeRow('device_models', $event)"
                     />
                 </el-card>
-            </div>
-        </div>
+            </el-tab-pane>
 
-        <el-card shadow="never" style="margin-top: 20px;">
-            <template #header>
-                <div class="rules-head">
-                    <strong>{{ $t('admin.memberCatalogs.rulesTitle') }}</strong>
-                    <div class="rules-filters">
-                        <el-select v-model="ruleFilter.list_type" :placeholder="$t('admin.memberCatalogs.type')" clearable style="width: 120px">
-                            <el-option value="allow" :label="$t('admin.memberCatalogs.allow')" />
-                            <el-option value="deny" :label="$t('admin.memberCatalogs.deny')" />
-                        </el-select>
-                        <el-input v-model="ruleFilter.domain" :placeholder="$t('admin.memberCatalogs.searchDomain')" clearable style="width: 220px" @keyup.enter="fetchRules" />
-                        <el-button @click="fetchRules">{{ $t('common.search') }}</el-button>
-                        <el-button type="danger" plain :disabled="selectedRules.length === 0" @click="batchDeleteRules">{{ $t('common.batchDelete') }}</el-button>
-                    </div>
-                </div>
-            </template>
-            <el-table :data="rules" stripe @selection-change="selectedRules = $event">
-                <el-table-column type="selection" width="44" />
-                <el-table-column prop="list_type" :label="$t('admin.memberCatalogs.type')" width="90" />
-                <el-table-column prop="domain" :label="$t('admin.memberCatalogs.domain')" min-width="220" show-overflow-tooltip />
-                <el-table-column prop="profile_name" :label="$t('admin.memberCatalogs.profile')" width="180" show-overflow-tooltip />
-                <el-table-column prop="user_id" :label="$t('admin.memberCatalogs.user')" min-width="160" show-overflow-tooltip />
-                <el-table-column prop="match_type" :label="$t('admin.memberCatalogs.matchType')" width="100" />
-                <el-table-column prop="enabled" :label="$t('admin.memberCatalogs.enabled')" width="80">
-                    <template #default="{ row }">{{ row.enabled ? $t('common.yes') : $t('common.no') }}</template>
-                </el-table-column>
-                <el-table-column :label="$t('common.actions')" width="80">
-                    <template #default="{ row }">
-                        <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
+            <!-- 隐私 Blocklists Tab -->
+            <el-tab-pane :label="$t('admin.memberCatalogs.tabBlocklists')" name="privacy_blocklists">
+                <el-card shadow="never">
+                    <EditableTable
+                        :rows="catalogs.privacy_blocklists"
+                        :columns="columns.privacy_blocklists"
+                        @add="addRow('privacy_blocklists')"
+                        @remove="removeRow('privacy_blocklists', $event)"
+                    />
+                </el-card>
+            </el-tab-pane>
+
+            <!-- 家长（预设 + 分类）Tab -->
+            <el-tab-pane :label="$t('admin.memberCatalogs.tabParental')" name="parental">
+                <el-card shadow="never" style="margin-bottom: 16px;">
+                    <template #header>
+                        <strong>{{ $t('admin.memberCatalogs.presets') }}</strong>
                     </template>
-                </el-table-column>
-            </el-table>
-        </el-card>
+                    <EditableTable
+                        :rows="catalogs.parental_presets"
+                        :columns="columns.parental_presets"
+                        @add="addRow('parental_presets')"
+                        @remove="removeRow('parental_presets', $event)"
+                    />
+                </el-card>
+                <el-card shadow="never">
+                    <template #header>
+                        <strong>{{ $t('admin.memberCatalogs.categories') }}</strong>
+                    </template>
+                    <EditableTable
+                        :rows="catalogs.parental_categories"
+                        :columns="columns.parental_categories"
+                        @add="addRow('parental_categories')"
+                        @remove="removeRow('parental_categories', $event)"
+                    />
+                </el-card>
+            </el-tab-pane>
+        </el-tabs>
     </ListPage>
 </template>
 
 <script setup>
-import { computed, defineComponent, h, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue'
-import { ElButton, ElInput, ElInputNumber, ElMessage, ElMessageBox, ElOption, ElSelect, ElTable, ElTableColumn } from 'element-plus'
+import { computed, defineComponent, h, ref, reactive } from 'vue'
+import { ElButton, ElInput, ElInputNumber, ElMessage, ElMessageBox, ElOption, ElSelect, ElTable, ElTableColumn, ElTabs, ElTabPane } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
@@ -146,59 +150,7 @@ const EditableTable = defineComponent({
     },
 })
 
-const anchorList = computed(() => [
-    { key: 'devices', label: t('admin.memberCatalogs.deviceModels'), dataKey: 'device_models' },
-    { key: 'blocklists', label: t('admin.memberCatalogs.blocklists'), dataKey: 'privacy_blocklists' },
-    { key: 'presets', label: t('admin.memberCatalogs.presets'), dataKey: 'parental_presets' },
-    { key: 'categories', label: t('admin.memberCatalogs.categories'), dataKey: 'parental_categories' },
-])
-
-const activeAnchor = ref('devices')
-const sectionRefs = ref({})
-const setSectionRef = (key, el) => {
-    if (el) {
-        sectionRefs.value[key] = el
-    }
-}
-
-// 滚动到锚点：仅滚动「目录区块」容器，**不滚动整个页面**
-const scrollToAnchor = async (key) => {
-    activeAnchor.value = key
-    await nextTick()
-    const target = sectionRefs.value[key]
-    if (target && typeof target.scrollIntoView === 'function') {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-}
-
-// 监听区块进入视口 → 自动高亮当前下拉
-let observer = null
-onMounted(() => {
-    observer = new IntersectionObserver((entries) => {
-        // 选中「距离顶部最近且可见」的 section
-        const visible = entries
-            .filter((e) => e.isIntersecting)
-            .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
-        if (visible.length > 0) {
-            const key = visible[0].target.dataset.key
-            if (key) {
-                activeAnchor.value = key
-            }
-        }
-    }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 })
-    Object.entries(sectionRefs.value).forEach(([key, el]) => {
-        if (el) {
-            el.dataset.key = key
-            observer.observe(el)
-        }
-    })
-})
-onUnmounted(() => {
-    if (observer) {
-        observer.disconnect()
-        observer = null
-    }
-})
+const activeTab = ref('denylist')
 
 const saving = ref(false)
 const catalogs = reactive({
@@ -209,9 +161,10 @@ const catalogs = reactive({
 })
 const rules = ref([])
 const selectedRules = ref([])
-const ruleFilter = reactive({ list_type: '', domain: '' })
+const ruleFilter = reactive({ list_type: 'deny', domain: '' })
 
-const columns = {
+// 转为 computed，让 i18n 切换语言时列头同步刷新
+const columns = computed(() => ({
     device_models: [
         { key: 'id', label: t('admin.memberCatalogs.id') },
         { key: 'name', label: t('admin.memberCatalogs.name') },
@@ -236,7 +189,7 @@ const columns = {
         { key: 'name', label: t('admin.memberCatalogs.name') },
         { key: 'desc', label: t('admin.memberCatalogs.description'), width: 260 },
     ],
-}
+}))
 
 const totalItems = computed(() => catalogs.device_models.length + catalogs.privacy_blocklists.length + catalogs.parental_presets.length + catalogs.parental_categories.length)
 
@@ -312,53 +265,9 @@ fetchRules()
 </script>
 
 <style scoped>
-.catalog-anchor-nav {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-}
-.anchor-tabs {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-.anchor-chip {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 12px;
-    border: 1px solid #dcdfe6;
-    border-radius: 16px;
-    font-size: 13px;
-    color: #606266;
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.15s ease;
-}
-.anchor-chip:hover {
-    border-color: #409eff;
-    color: #409eff;
-}
-.anchor-chip.active {
-    background: #409eff;
-    border-color: #409eff;
-    color: #fff;
-}
-.catalog-sections {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    /* 限制滚动范围在区块容器内 */
-    max-height: 60vh;
-    overflow-y: auto;
-    padding-right: 4px;
-    scroll-behavior: smooth;
-}
-.catalog-section {
-    scroll-margin-top: 12px;
-}
-.section-card {
+.catalog-tabs {
+    background: #fff;
+    padding: 16px;
     border-radius: 6px;
 }
 .rules-head {

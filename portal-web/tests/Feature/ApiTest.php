@@ -55,32 +55,29 @@ class ApiTest extends TestCase
     protected function seedDatabase()
     {
         $user = User::create([
-            'id' => 'usr_test_member',
-            'name' => 'Test User',
+            'username' => 'test-user',
             'email' => 'user@example.com',
-            'password' => '123456', // Model cast will hash automatically
-            'role' => 'member',
+            'password' => '123456',
             'plan_code' => 'free',
-            'timezone' => 'Asia/Shanghai',
             'locale' => 'zh-CN',
             'email_verified_at' => now(),
+            'status' => 'active',
         ]);
-        $this->userId = $user->id;
+        $this->userId = $user->getKey();
 
         $admin = Admin::create([
-            'id' => 'adm_test_admin',
-            'name' => 'Admin User',
+            'username' => 'admin',
             'email' => 'admin@example.com',
-            'password_hash' => bcrypt('123456'),
-            'role' => 'super_admin',
+            'password' => '123456',
             'status' => 'active',
-            'is_super_admin' => true,
+            'is_super' => true,
+            'locale' => 'zh-CN',
         ]);
-        $this->adminId = $admin->id;
+        $this->adminId = $admin->getKey();
 
         SystemConfig::create([
-            'key' => 'maintenance_mode',
-            'value' => 'false',
+            'config_key' => 'maintenance_mode',
+            'config_value' => ['enabled' => false],
         ]);
     }
 
@@ -121,7 +118,8 @@ class ApiTest extends TestCase
         TeamMember::create([
             'team_id' => $this->teamId,
             'user_id' => $this->userId,
-            'role' => 'owner',
+            'role_key' => 'owner',
+            'joined_at' => now(),
         ]);
 
         $apiKey = ApiKey::create([
@@ -1089,13 +1087,16 @@ class ApiTest extends TestCase
 
     public function test_262_admin_device_delete()
     {
+        $deviceUid = 'dev_test_' . time();
         $device = Device::create([
             'user_id' => $this->userId,
             'profile_id' => $this->profileId,
             'name' => 'Test Device ' . time(),
-            'device_type' => 'desktop',
-            'device_id' => 'dev_test_' . time(),
-            'public_ip' => '127.0.0.1',
+            'device_uid' => $deviceUid,
+            'fingerprint' => hash('sha256', $deviceUid),
+            'source' => 'manual',
+            'protocol' => 'doh',
+            'ip_hash' => hash('sha256', '127.0.0.1'),
             'last_seen_at' => now(),
         ]);
         $this->callAdminApi('DELETE', "/api/v1/admin/devices/{$device->id}", [], 200);

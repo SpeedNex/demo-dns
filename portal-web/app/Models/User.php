@@ -6,6 +6,8 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -13,45 +15,29 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    // 表名走 Laravel 默认（snake_case 复数） + config/database.php 的 `prefix`。
-    // 历史上曾短暂写死 `dns_users` / `users`，现在统一交给 prefix 配置；
-    // 想要改前缀只需调整 DB_TABLE_PREFIX，不用动模型。
-    // protected $table = 'users';
-
-
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
-    public $incrementing = false;
-    protected $keyType = 'string';
+    // V2.3: 主键名改为 uid
+    protected $table = 'users';
+    protected $primaryKey = 'uid';
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
-        'name',
         'username',
         'email',
         'password',
-        'timezone',
-        'locale',
-        'current_team_id',
-        'role',
-        'status',
-        // UI.md #50: plan_code moved to `subscriptions`; kept here as a
-        // write-through cache populated by SubscriptionService.
         'plan_code',
-        // UI.md #54: balance_minor is deprecated in favour of `wallets`.
-        // Retained for backward compat with existing data and reports.
-        'balance_minor',
-        'balance_updated_at',
-        'currency',
+        'locale',
+        'status',
+        'current_team_id',
     ];
 
     protected static function boot(): void
     {
         parent::boot();
         static::creating(function (self $user): void {
-            if (empty($user->id)) {
-                $user->id = 'usr_' . substr(hash('sha256', $user->email . microtime()), 0, 12);
-            }
             if (empty($user->username)) {
                 $user->username = self::buildUsernameFromEmail($user->email);
             }
@@ -69,7 +55,6 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'last_login_at' => 'datetime',
-            'balance_updated_at' => 'datetime',
         ];
     }
 
@@ -78,28 +63,35 @@ class User extends Authenticatable
         return $this->attributes['username'] ?? null;
     }
 
+    public function getIdAttribute(): ?int
+    {
+        return $this->getKey();
+    }
+
     public function setNameAttribute(?string $value): void
     {
         $username = is_string($value) ? trim($value) : '';
         $this->attributes['username'] = $username !== '' ? $username : self::buildUsernameFromEmail((string) ($this->attributes['email'] ?? ''));
     }
 
-    private static function buildUsernameFromEmail(?string $email): string
-    {
-        $localPart = strtolower((string) Str::before((string) $email, '@'));
-        $normalized = preg_replace('/[^a-z0-9._-]+/', '-', $localPart) ?: 'user';
-
-        return trim($normalized, '-._') !== '' ? trim($normalized, '-._') : 'user';
-    }
-
     public function profiles(): HasMany
     {
-        return $this->hasMany(Profile::class);
+        return $this->hasMany(Profile::class, 'user_id');
     }
 
-    public function teams(): HasMany
+    public function devices(): HasMany
     {
-        return $this->hasMany(TeamMember::class);
+        return $this->hasMany(Device::class, 'user_id');
+    }
+
+    public function wallet(): HasOne
+    {
+        return $this->hasOne(Wallet::class, 'user_id');
+    }
+
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(Team::class, 'team_members', 'user_id', 'team_id')->withPivot('role_key', 'joined_at');
     }
 
     public function ownedTeams(): HasMany
@@ -110,5 +102,28 @@ class User extends Authenticatable
     public function currentTeam(): BelongsTo
     {
         return $this->belongsTo(Team::class, 'current_team_id');
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class, 'user_id');
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'user_id');
+    }
+
+    public function billings(): HasMany
+    {
+        return $this->hasMany(Billing::class, 'user_id');
+    }
+
+    private static function buildUsernameFromEmail(?string $email): string
+    {
+        $localPart = strtolower((string) Str::before((string) $email, '@'));
+        $normalized = preg_replace('/[^a-z0-9._-]+/', '-', $localPart) ?: 'user';
+
+        return trim($normalized, '-._') !== '' ? trim($normalized, '-._') : 'user';
     }
 }

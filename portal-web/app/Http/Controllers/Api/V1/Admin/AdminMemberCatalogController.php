@@ -48,14 +48,14 @@ final class AdminMemberCatalogController
             'parental_categories.*.desc' => 'nullable|string|max:255',
         ]);
 
-        $payload = $this->catalogs->update($validated, $request->user()?->id);
+        $payload = $this->catalogs->update($validated, $request->user()?->admin_id);
 
         AdminAuditLog::record(
             'member_catalogs.update',
             'system_config',
             'member_feature_catalogs',
             ['counts' => array_map('count', $payload)],
-            $request->user()?->id,
+            $request->user()?->admin_id,
             null,
             $request->ip(),
             $request->userAgent(),
@@ -105,7 +105,7 @@ final class AdminMemberCatalogController
         $rule = ProfileRule::query()->findOrFail($id);
         $rule->delete();
 
-        AdminAuditLog::record('member_rule.delete', 'profile_rule', $id, [], $request->user()?->id, null, $request->ip(), $request->userAgent());
+        AdminAuditLog::record('member_rule.delete', 'profile_rule', $id, [], $request->user()?->admin_id, null, $request->ip(), $request->userAgent());
 
         return response()->json(['data' => ['deleted' => true]]);
     }
@@ -119,7 +119,7 @@ final class AdminMemberCatalogController
 
         $deleted = ProfileRule::query()->whereIn('id', $validated['ids'])->delete();
 
-        AdminAuditLog::record('member_rule.batch_delete', 'profile_rule', null, ['count' => $deleted], $request->user()?->id, null, $request->ip(), $request->userAgent());
+        AdminAuditLog::record('member_rule.batch_delete', 'profile_rule', null, ['count' => $deleted], $request->user()?->admin_id, null, $request->ip(), $request->userAgent());
 
         return response()->json(['data' => ['deleted' => $deleted]]);
     }

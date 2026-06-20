@@ -21,7 +21,16 @@ final class UserDashboardService
         $this->workspace->primaryProfile($userId);
         $profiles = Profile::where('user_id', $userId)->get();
         $deviceCount = Device::where('user_id', $userId)->count();
-        $analytics = $this->workspace->analytics($userId);
+
+        try {
+            $analytics = $this->workspace->analytics($userId);
+        } catch (\Throwable) {
+            $analytics = [
+                'today_queries' => 0,
+                'today_blocked' => 0,
+                'period_queries' => 0,
+            ];
+        }
 
         $profileCount = $profiles->count();
 
@@ -33,8 +42,8 @@ final class UserDashboardService
             'stats' => [
                 'profile_count' => $profileCount,
                 'device_count' => $deviceCount,
-                'today_queries' => $analytics['today_queries'],
-                'today_blocked' => $analytics['today_blocked'],
+                'today_queries' => $analytics['today_queries'] ?? 0,
+                'today_blocked' => $analytics['today_blocked'] ?? 0,
             ],
             'profiles' => $profiles->toArray(),
         ];

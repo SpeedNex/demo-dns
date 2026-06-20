@@ -24,8 +24,8 @@ final class AdminDeviceController
             return [
                 'id' => $d['id'],
                 'device_name' => $d['name'],
-                'device_type' => $d['device_type'],
-                'source_ip' => $d['public_ip'],
+                'device_type' => $d['protocol'],
+                'source_ip' => $d['ip_hash'] ? 'hashed' : null,
                 'is_online' => $d['last_seen_at'] !== null && Carbon::parse($d['last_seen_at'])->gt(now()->subMinutes(5)),
                 'last_seen_at' => $d['last_seen_at'],
                 'user_email' => $d['user']['email'] ?? null,
@@ -54,8 +54,8 @@ final class AdminDeviceController
             'data' => [
                 'id' => $device['id'],
                 'device_name' => $device['name'],
-                'device_type' => $device['device_type'],
-                'source_ip' => $device['public_ip'],
+                'device_type' => $device['protocol'],
+                'source_ip' => $device['ip_hash'] ? 'hashed' : null,
                 'is_online' => $device['last_seen_at'] !== null && $device['last_seen_at']->gt(now()->subMinutes(5)),
                 'last_seen_at' => $device['last_seen_at'],
                 'user_email' => $device['user']['email'] ?? null,

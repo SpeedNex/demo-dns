@@ -16,12 +16,18 @@ class StripeWebhookLog extends Model
     public const STATUS_FAILED = 'failed';
     public const STATUS_IGNORED = 'ignored';
 
+    public $incrementing = true;
+    protected $keyType = 'int';
+    public $timestamps = false;
+
     protected $fillable = [
         'event_id',
         'event_type',
         'payload',
+        'signature_ok',
         'status',
         'error_message',
+        'received_at',
         'processed_at',
     ];
 
@@ -29,6 +35,8 @@ class StripeWebhookLog extends Model
     {
         return [
             'payload' => 'array',
+            'signature_ok' => 'boolean',
+            'received_at' => 'datetime',
             'processed_at' => 'datetime',
         ];
     }

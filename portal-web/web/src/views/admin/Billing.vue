@@ -28,7 +28,7 @@
                 </div>
             </template>
 
-            <el-table :data="transactions" stripe :empty-text="$t('dashboard.noData')" style="width: 100%">
+            <el-table :data="transactions" stripe :empty-text="$t('common.noData')" style="width: 100%">
                 <el-table-column prop="type" :label="$t('admin.billing.type') || 'Type'" width="110">
                     <template #default="{ row }">
                         <el-tag :type="row.type === 'charge' ? 'success' : 'danger'" size="small" effect="light">{{ row.type }}</el-tag>
@@ -54,7 +54,7 @@
 
             <div class="pagination-bar" v-if="invoiceMeta?.total > invoicePageSize">
                 <div class="pagination-total">
-                    {{ $t('common.total') || '共' }} <strong>{{ invoiceMeta.total ?? 0 }}</strong> {{ $t('common.items') || '条' }}
+                    {{ $t('common.totalPrefix') || '共' }} <strong>{{ invoiceMeta.total ?? 0 }}</strong> {{ $t('common.itemsSuffix') || '条' }}
                 </div>
                 <el-pagination
                     v-model:current-page="invoicePage"

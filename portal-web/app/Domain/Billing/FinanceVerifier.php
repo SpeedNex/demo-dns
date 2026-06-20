@@ -41,13 +41,22 @@ final class FinanceVerifier
 
     private function checkWalletBalance(): array
     {
-        $wallets = DB::table('wallets')->get(['id', 'user_id', 'balance']);
+        $wallets = DB::table('wallets')->get(['id', 'user_id', 'balance_minor']);
         $bad = [];
         foreach ($wallets as $w) {
             $sum = (int) DB::table('wallet_transactions')
                 ->where('user_id', $w->user_id)
-                ->sum('amount_minor');
-            $expected = (int) $w->balance;
+                ->selectRaw("
+                    COALESCE(SUM(
+                        CASE
+                            WHEN type IN ('credit', 'refund', 'adjustment') THEN amount_minor
+                            WHEN type = 'debit' THEN -amount_minor
+                            ELSE 0
+                        END
+                    ), 0) AS balance_delta
+                ")
+                ->value('balance_delta');
+            $expected = (int) $w->balance_minor;
             if ($expected !== $sum) {
                 $bad[] = [
                     'user_id' => $w->user_id,
@@ -59,7 +68,7 @@ final class FinanceVerifier
             }
         }
         return [
-            'check' => 'wallets.balance == sum(wallet_transactions)',
+            'check' => 'wallets.balance_minor == signed sum(wallet_transactions)',
             'ok' => $bad === [],
             'detail' => $bad === [] ? 'all wallets consistent' : sprintf('%d wallets mismatched', count($bad)),
             'samples' => array_slice($bad, 0, 5),
@@ -100,11 +109,11 @@ final class FinanceVerifier
 
     private function checkBillingVsItems(): array
     {
-        $bad = DB::table('invoices as b')
+        $bad = DB::table('billings as b')
             ->leftJoin('billing_items as bi', 'bi.billing_id', '=', 'b.id')
-            ->groupBy('b.id', 'b.user_id', 'b.amount_minor')
-            ->havingRaw('b.amount_minor <> COALESCE(SUM(bi.amount_minor), 0)')
-            ->select('b.id', 'b.user_id', 'b.amount_minor', DB::raw('COALESCE(SUM(bi.amount_minor), 0) as items_sum'))
+            ->groupBy('b.id', 'b.user_id', 'b.total_minor')
+            ->havingRaw('b.total_minor <> COALESCE(SUM(bi.amount_minor), 0)')
+            ->select('b.id', 'b.user_id', 'b.total_minor', DB::raw('COALESCE(SUM(bi.amount_minor), 0) as items_sum'))
             ->limit(5)
             ->get();
         $samples = [];
@@ -112,15 +121,15 @@ final class FinanceVerifier
             $samples[] = [
                 'billing_id' => (int) $b->id,
                 'user_id' => $b->user_id,
-                'expected' => (int) $b->amount_minor,
+                'expected' => (int) $b->total_minor,
                 'actual' => (int) $b->items_sum,
-                'diff' => (int) $b->items_sum - (int) $b->amount_minor,
+                'diff' => (int) $b->items_sum - (int) $b->total_minor,
             ];
         }
         return [
-            'check' => 'invoices.amount_minor == sum(billing_items.amount_minor)',
+            'check' => 'billings.total_minor == sum(billing_items.amount_minor)',
             'ok' => $bad->isEmpty(),
-            'detail' => $bad->isEmpty() ? 'all invoices match items' : sprintf('%d invoices mismatched', $bad->count()),
+            'detail' => $bad->isEmpty() ? 'all billings match items' : sprintf('%d billings mismatched', $bad->count()),
             'samples' => $samples,
         ];
     }
@@ -174,23 +183,23 @@ final class FinanceVerifier
 
     private function checkBillingRelation(): array
     {
-        $bad = DB::table('invoices as b')
+        $bad = DB::table('billings as b')
             ->where(function ($q) {
-                $q->whereNull('b.order_id')->whereNull('b.billing_period_id');
+                $q->whereNull('b.subscription_id')->whereNull('b.billing_period_id');
             })
-            ->where('b.billing_type', 'plan')
+            ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(COALESCE(b.meta, '{}'), '$.kind')) = 'plan'")
             ->limit(5)
-            ->get(['b.id', 'b.user_id', 'b.billing_type']);
+            ->get(['b.id', 'b.user_id', 'b.subscription_id']);
         $samples = [];
         foreach ($bad as $b) {
             $samples[] = [
                 'billing_id' => (int) $b->id,
                 'user_id' => $b->user_id,
-                'billing_type' => $b->billing_type,
+                'subscription_id' => $b->subscription_id,
             ];
         }
         return [
-            'check' => 'invoices (plan) link to order or billing_period',
+            'check' => 'billings (plan) link to subscription or billing_period',
             'ok' => $bad->isEmpty(),
             'detail' => $bad->isEmpty() ? 'all plan invoices linked' : sprintf('%d unlinked', $bad->count()),
             'samples' => $samples,

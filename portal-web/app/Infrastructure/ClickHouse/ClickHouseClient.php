@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\ClickHouse;
 
+use App\Support\SystemConfigValue;
+
 /**
  * Lightweight, dependency-free HTTP client for the ClickHouse
  * `SELECT ... FORMAT JSON` endpoint.
@@ -54,7 +56,7 @@ final class ClickHouseClient
     private $enabled = true;
 
     public function __construct() {
-        $cfg = (array) config('clickhouse');
+        $cfg = SystemConfigValue::clickhouse();
         $this->enabled = (bool) ($cfg['enabled'] ?? true);
         $this->host = (string) ($cfg['host'] ?? '');
         $this->port = (int) ($cfg['port'] ?? 8123);
@@ -72,7 +74,11 @@ final class ClickHouseClient
         if (! $this->enabled || $this->host === '') {
             return false;
         }
-        $body = $this->send('SELECT 1 FORMAT TabSeparated', []);
+        try {
+            $body = $this->send('SELECT 1 FORMAT TabSeparated', []);
+        } catch (\RuntimeException) {
+            return false;
+        }
         return $body === '1' || $body === "1\n";
     }
 
@@ -94,6 +100,27 @@ final class ClickHouseClient
     }
 
     /**
+     * @param array<int,array<string,mixed>> $rows
+     */
+    public function insertJsonEachRow(string $table, array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+
+        $payload = '';
+        foreach ($rows as $row) {
+            $encoded = json_encode($row, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            if ($encoded === false) {
+                throw new \RuntimeException('clickhouse json encode failed: ' . json_last_error_msg());
+            }
+            $payload .= $encoded . "\n";
+        }
+
+        $this->sendRaw("INSERT INTO {$table} FORMAT JSONEachRow", $payload);
+    }
+
+    /**
      * @param  array<string,scalar>  $params
      */
     public function send(string $query, array $params = []): string
@@ -108,6 +135,16 @@ final class ClickHouseClient
             $body .= ' -- ' . http_build_query($params, '', ';');
         }
 
+        return $this->sendRaw($query, $body);
+    }
+
+    public function sendRaw(string $query, string $body): string
+    {
+        if ($this->host === '') {
+            throw new \RuntimeException('clickhouse host is not configured');
+        }
+
+        $url = sprintf('http://%s:%d/', $this->host, $this->port);
         $ch = curl_init($url);
         if ($ch === false) {
             throw new \RuntimeException('curl init failed');

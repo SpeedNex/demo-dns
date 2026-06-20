@@ -11,12 +11,13 @@ class TeamMember extends Model
 {
     // SoftDeletes 已移除：成员退出直接 DELETE
 
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
         'team_id',
         'user_id',
+        'role_key',
         'role',
         'joined_at',
     ];
@@ -28,16 +29,6 @@ class TeamMember extends Model
         ];
     }
 
-    protected static function boot(): void
-    {
-        parent::boot();
-        static::creating(function (self $member): void {
-            if (empty($member->id)) {
-                $member->id = 'tmb_' . substr(hash('sha256', $member->team_id . $member->user_id . microtime()), 0, 12);
-            }
-        });
-    }
-
     public function team(): BelongsTo
     {
         return $this->belongsTo(Team::class);
@@ -45,6 +36,17 @@ class TeamMember extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // 数据库列是 role_key，对外 API 暴露为 role（兼容 TeamController / TeamService 旧字段）
+    public function getRoleAttribute(): ?string
+    {
+        return $this->attributes['role_key'] ?? null;
+    }
+
+    public function setRoleAttribute(?string $value): void
+    {
+        $this->attributes['role_key'] = $value;
     }
 }

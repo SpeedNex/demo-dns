@@ -14,10 +14,10 @@ final class ProfileConfigBuilder
     public function build(array $profile, array $rules, array $featureSettings, array $quota): array
     {
         return [
-            'profile_id' => $profile['id'],
-            'user_id' => $profile['user_id'],
+            'profile_id' => (string) ($profile['profile_uid'] ?? $profile['id']),
+            'user_id' => (string) ($profile['user_id']),
             'team_id' => $profile['team_id'] ?? null,
-            'version' => (int) ($profile['draft_version'] ?? 0) + 1,
+            'version' => (int) ($profile['version'] ?? $profile['draft_version'] ?? 0) + 1,
             'default_action' => $profile['default_action'] ?? 'allow',
             'block_response' => $profile['block_response'] ?? 'nxdomain',
             'security' => $featureSettings['security'] ?? ['enabled' => true],
@@ -57,10 +57,10 @@ final class ProfileConfigBuilder
     private function mapDevice(array $device): array
     {
         return [
-            'device_id' => $device['device_id'] ?? $device['id'],
+            'device_id' => $device['device_uid'] ?? $device['id'],
             'name' => $device['name'] ?? 'device',
-            'device_type' => $device['device_type'] ?? null,
-            'source_ip' => $device['public_ip'] ?? null,
+            'device_type' => $device['protocol'] ?? null,
+            'source_ip' => $device['source_ip'] ?? null,
             'device_key_hash' => null,
         ];
     }

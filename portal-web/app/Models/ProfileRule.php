@@ -7,20 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProfileRule extends Model
 {
-    
 
-    public $incrementing = false;
-    protected $keyType = 'string';
-
-    protected static function boot(): void
-    {
-        parent::boot();
-        static::creating(function (self $rule): void {
-            if (empty($rule->id)) {
-                $rule->id = 'rul_' . substr(hash('sha256', $rule->domain . microtime()), 0, 12);
-            }
-        });
-    }
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
         'profile_id',
@@ -40,6 +29,15 @@ class ProfileRule extends Model
         return [
             'enabled' => 'boolean',
         ];
+    }
+
+    public function setListTypeAttribute(?string $value): void
+    {
+        $this->attributes['list_type'] = match ($value) {
+            'allow' => 'allowlist',
+            'deny' => 'denylist',
+            default => $value,
+        };
     }
 
     public function profile(): BelongsTo

@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use App\Models\Admin;
+use App\Models\User;
 use App\Domain\Auth\PermissionService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -12,31 +12,29 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Admin account for management backend - super_admin role
+        // Super admin account for management backend.
+        // V2.2: BIGINT auto-increment id, no ULID/string primary key.
         Admin::firstOrCreate(
             ['email' => 'admin@example.com'],
             [
-                'id' => 'adm_01H00000000000000000000000001',
                 'username' => 'admin',
                 'email' => 'admin@example.com',
-                'password_hash' => Hash::make('123456'),
-                'role' => 'super_admin',
+                'password' => Hash::make('123456'),
                 'status' => 'active',
-                'is_super_admin' => true,
+                'is_super' => true,
+                'locale' => 'zh-CN',
             ]
         );
 
-        // Member account for user member center
+        // Default user account for member center smoke testing.
         User::firstOrCreate(
             ['email' => 'user@example.com'],
             [
-                'id' => 'usr_01H00000000000000000000000001',
                 'username' => 'user',
                 'email' => 'user@example.com',
                 'password' => Hash::make('123456'),
-                'role' => 'member',
                 'status' => 'active',
-                'timezone' => 'Asia/Shanghai',
+                'plan_code' => 'free',
                 'locale' => 'zh-CN',
             ]
         );

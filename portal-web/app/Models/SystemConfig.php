@@ -10,22 +10,42 @@ class SystemConfig extends Model
 {
     protected $table = 'system_configs';
 
-    public $incrementing = false;
+    public $incrementing = true;
 
-    protected $primaryKey = 'key';
+    protected $primaryKey = 'id';
 
-    protected $keyType = 'string';
+    protected $keyType = 'int';
 
     protected $fillable = [
-        'key',
-        'value',
-        'updated_by',
+        'config_key',
+        'config_value',
+        'description',
+        'is_secret',
     ];
 
     protected function casts(): array
     {
         return [
-            'value' => 'array',
+            'config_value' => 'array',
+            'is_secret' => 'boolean',
         ];
+    }
+
+    /**
+     * Alias for config_key — preserves $row->key access patterns
+     * from the legacy code path.
+     */
+    public function getKeyAttribute(): ?string
+    {
+        return $this->attributes['config_key'] ?? null;
+    }
+
+    /**
+     * Alias for config_value — preserves $row->value access patterns
+     * from the legacy code path.
+     */
+    public function getValueAttribute(): mixed
+    {
+        return $this->attributes['config_value'] ?? null;
     }
 }

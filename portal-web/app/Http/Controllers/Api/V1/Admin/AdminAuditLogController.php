@@ -2,20 +2,15 @@
 
 namespace App\Http\Controllers\Api\V1\Admin;
 
-use App\Domain\Audit\AuditService;
+use App\Models\AdminAuditLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 final class AdminAuditLogController
 {
-    public function __construct(
-        private readonly AuditService $auditService = new AuditService(),
-    ) {
-    }
-
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->validate([
+        $request->validate([
             'actor_id' => 'nullable|string',
             'action' => 'nullable|string|max:100',
             'from' => 'nullable|date',
@@ -24,14 +19,30 @@ final class AdminAuditLogController
             'page' => 'nullable|integer|min:1',
         ]);
 
-        $logs = $this->auditService->search($filters);
+        $query = AdminAuditLog::query();
+        if ($request->filled('action')) {
+            $query->where('action', 'like', '%' . (string) $request->input('action') . '%');
+        }
+        if ($request->filled('actor_id')) {
+            $query->where('actor_admin_id', (string) $request->input('actor_id'));
+        }
+        if ($request->filled('from')) {
+            $query->where('created_at', '>=', (string) $request->input('from'));
+        }
+        if ($request->filled('to')) {
+            $query->where('created_at', '<=', (string) $request->input('to'));
+        }
+        $page = max(1, (int) $request->input('page', 1));
+        $perPage = max(1, min(100, (int) $request->input('per_page', 50)));
+        $total = (clone $query)->count();
+        $items = $query->orderByDesc('created_at')->forPage($page, $perPage)->get()->toArray();
 
         return response()->json([
-            'data' => $logs->items(),
+            'data' => $items,
             'meta' => [
-                'page' => $logs->currentPage(),
-                'per_page' => $logs->perPage(),
-                'total' => $logs->total(),
+                'page' => $page,
+                'per_page' => $perPage,
+                'total' => $total,
             ],
         ]);
     }

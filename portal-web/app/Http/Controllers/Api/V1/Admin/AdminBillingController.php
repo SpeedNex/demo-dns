@@ -21,13 +21,13 @@ final class AdminBillingController
     public function charge(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'user_id' => 'required|string|max:40',
+            'user_id' => 'required',
             'amount_minor' => 'required|integer|min:1',
             'description' => 'nullable|string|max:255',
         ]);
 
         $result = $this->service->charge(
-            $validated['user_id'],
+            (string) $validated['user_id'],
             (int) $validated['amount_minor'],
             $validated['description'] ?? 'Admin manual charge',
         );
@@ -38,13 +38,13 @@ final class AdminBillingController
     public function refund(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'user_id' => 'required|string|max:40',
+            'user_id' => 'required',
             'amount_minor' => 'required|integer|min:1',
             'description' => 'nullable|string|max:255',
         ]);
 
         $result = $this->service->refund(
-            $validated['user_id'],
+            (string) $validated['user_id'],
             (int) $validated['amount_minor'],
             $validated['description'] ?? 'Admin manual refund',
         );

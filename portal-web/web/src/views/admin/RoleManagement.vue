@@ -43,7 +43,7 @@
                             </div>
                         </div>
                     </template>
-                    <el-table :data="roles" stripe :empty-text="$t('dashboard.noData')" v-loading="loadingRoles" highlight-current-row @row-click="selectRole">
+                    <el-table :data="roles" stripe :empty-text="$t('common.noData')" v-loading="loadingRoles" highlight-current-row @row-click="selectRole">
                         <el-table-column prop="code" :label="$t('admin.rbac.roleCode') || '角色代码'" width="120">
                             <template #default="{ row }">
                                 <el-tag size="small" effect="light">{{ row.code }}</el-tag>
@@ -67,10 +67,12 @@
                                 <el-icon class="title-icon is-warning"><Key /></el-icon>
                                 <span class="title-text">{{ $t('admin.rbac.rolePermissions') || '角色权限' }}: {{ selectedRole.name }}</span>
                             </div>
-                            <el-button size="small" type="success" @click="savePermissions" :loading="savingPerms">
-                                <el-icon class="el-icon--left"><Check /></el-icon>
-                                <span>{{ $t('common.save') || '保存' }}</span>
-                            </el-button>
+                            <div class="header-actions">
+                                <el-button size="small" type="success" @click="savePermissions" :loading="savingPerms">
+                                    <el-icon class="el-icon--left"><Check /></el-icon>
+                                    <span>{{ $t('common.save') || '保存' }}</span>
+                                </el-button>
+                            </div>
                         </div>
                     </template>
                     <div v-loading="loadingPerms">
@@ -93,6 +95,39 @@
                             </div>
                         </el-checkbox-group>
                     </div>
+
+                    <el-divider content-position="left">{{ $t('admin.rbac.menuRules') || '菜单规则' }}</el-divider>
+                    <div v-loading="loadingMenuRules">
+                        <div class="menu-rules-toolbar">
+                            <el-checkbox v-model="menuRulesCheckAll" :indeterminate="menuRulesIndeterminate" @change="handleMenuRulesAll">
+                                {{ $t('admin.rbac.menuRulesAll') || '全选' }}
+                            </el-checkbox>
+                            <el-button size="small" type="primary" :loading="savingMenuRules" :disabled="selectedRole.is_system" @click="saveMenuRules">
+                                <el-icon class="el-icon--left"><Check /></el-icon>
+                                <span>{{ $t('admin.rbac.menuRulesSave') || '保存菜单规则' }}</span>
+                            </el-button>
+                        </div>
+                        <el-checkbox-group v-model="selectedMenuRules" class="menu-rules-tree">
+                            <div v-for="root in menuTree" :key="root.id" class="menu-rules-group">
+                                <el-checkbox
+                                    :value="root.id"
+                                    :label="root.label"
+                                    :disabled="selectedRole.is_system"
+                                    @change="(v) => toggleGroupMenu(root, v)"
+                                />
+                                <div v-if="root.children && root.children.length" class="menu-rules-children">
+                                    <el-checkbox
+                                        v-for="child in root.children"
+                                        :key="child.id"
+                                        :value="child.id"
+                                        :label="child.label"
+                                        :disabled="selectedRole.is_system"
+                                    />
+                                </div>
+                            </div>
+                        </el-checkbox-group>
+                        <p v-if="!menuTree.length" class="empty-hint">{{ $t('admin.rbac.menuRulesEmpty') || '暂无可配置的菜单' }}</p>
+                    </div>
                 </el-card>
                 <el-card shadow="never" class="list-card" v-else>
                     <div class="empty-state">
@@ -112,7 +147,7 @@
                     </div>
                 </div>
             </template>
-            <el-table :data="admins" stripe :empty-text="$t('dashboard.noData')" v-loading="loadingAdmins">
+            <el-table :data="admins" stripe :empty-text="$t('common.noData')" v-loading="loadingAdmins">
                 <el-table-column prop="username" :label="$t('admin.rbac.username') || '用户名'" width="150" />
                 <el-table-column prop="email" :label="$t('admin.rbac.email') || '邮箱'" min-width="180" />
                 <el-table-column :label="$t('admin.rbac.roles') || '角色'" min-width="200">
@@ -166,7 +201,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { User, Search, Plus, UserFilled, Key, Avatar, Check } from '@element-plus/icons-vue'
@@ -194,6 +229,14 @@ const savingRole = ref(false)
 const showAssignDialog = ref(false)
 const assignForm = reactive({ admin_id: '', username: '', role_ids: [] })
 const assigning = ref(false)
+
+// 菜单规则
+const menuTree = ref([])
+const selectedMenuRules = ref([])
+const loadingMenuRules = ref(false)
+const savingMenuRules = ref(false)
+const menuRulesCheckAll = ref(false)
+const menuRulesIndeterminate = ref(false)
 
 const permissionGroups = computed(() => {
     const grouped = new Map()
@@ -262,6 +305,8 @@ const fetchAdmins = async () => {
 const selectRole = (row) => {
     selectedRole.value = row
     fetchRolePermissions(row.id)
+    fetchMenuRules()
+    fetchMenuConfig()
 }
 
 const showAddRole = () => {
@@ -342,6 +387,105 @@ const handleAssignRole = async () => {
         assigning.value = false
     }
 }
+
+// === 菜单规则 ===
+const resolveMenuLabel = (labelKey) => {
+    if (!labelKey) return ''
+    if (labelKey.startsWith('nav.') || labelKey.startsWith('admin.')) {
+        const translated = t(labelKey)
+        return translated !== labelKey ? translated : labelKey
+    }
+    return labelKey
+}
+
+const fetchMenuConfig = async () => {
+    try {
+        const { data } = await client.get('/admin/menu-config')
+        const list = data.data ?? []
+        menuTree.value = list
+            .filter((m) => m.visible !== false)
+            .map((m) => ({
+                id: m.id,
+                label: resolveMenuLabel(m.labelKey),
+                children: (m.children || [])
+                    .filter((c) => c.visible !== false)
+                    .map((c) => ({ id: c.id, label: resolveMenuLabel(c.labelKey) })),
+            }))
+    } catch {
+        if (menuTree.value.length === 0) {
+            menuTree.value = []
+        }
+    }
+}
+
+const fetchMenuRules = async () => {
+    if (!selectedRole.value) return
+    loadingMenuRules.value = true
+    try {
+        const { data } = await client.get(`/admin/rbac/roles/${selectedRole.value.id}/menu-rules`)
+        const list = data.data ?? []
+        selectedMenuRules.value = list.map((r) => r.nav_key || r.navKey).filter(Boolean)
+    } catch {
+        selectedMenuRules.value = []
+    } finally {
+        loadingMenuRules.value = false
+        syncMenuRulesCheckAll()
+    }
+}
+
+const toggleGroupMenu = (root, checked) => {
+    if (!root?.children) return
+    const ids = root.children.map((c) => c.id)
+    if (checked) {
+        const merged = new Set(selectedMenuRules.value)
+        merged.add(root.id)
+        ids.forEach((id) => merged.add(id))
+        selectedMenuRules.value = Array.from(merged)
+    } else {
+        const filtered = selectedMenuRules.value.filter((id) => id !== root.id && !ids.includes(id))
+        selectedMenuRules.value = filtered
+    }
+    syncMenuRulesCheckAll()
+}
+
+const handleMenuRulesAll = (checked) => {
+    const all = []
+    for (const root of menuTree.value) {
+        all.push(root.id)
+        for (const c of root.children || []) all.push(c.id)
+    }
+    selectedMenuRules.value = checked ? all : []
+    menuRulesIndeterminate.value = false
+}
+
+const syncMenuRulesCheckAll = () => {
+    const all = []
+    for (const root of menuTree.value) {
+        all.push(root.id)
+        for (const c of root.children || []) all.push(c.id)
+    }
+    const total = all.length
+    const sel = selectedMenuRules.value.length
+    menuRulesCheckAll.value = total > 0 && sel === total
+    menuRulesIndeterminate.value = sel > 0 && sel < total
+}
+
+const saveMenuRules = async () => {
+    if (!selectedRole.value) return
+    savingMenuRules.value = true
+    try {
+        await client.put(`/admin/rbac/roles/${selectedRole.value.id}/menu-rules`, {
+            nav_keys: selectedMenuRules.value,
+        })
+        ElMessage.success(t('admin.rbac.menuRulesSaved') || '菜单规则已保存')
+    } catch (err) {
+        ElMessage.error(err.response?.data?.message || (t('admin.rbac.saveFailed') || '保存失败'))
+    } finally {
+        savingMenuRules.value = false
+    }
+}
+
+watch(selectedMenuRules, () => syncMenuRulesCheckAll())
 
 onMounted(() => {
     fetchRoles()
@@ -425,4 +569,23 @@ onMounted(() => {
 .empty-state { padding: 40px 0; text-align: center; color: #64748b; }
 .empty-icon { font-size: 48px; color: #cbd5e1; margin-bottom: 12px; }
 .empty-title { font-size: 16px; font-weight: 600; color: #475569; margin: 0 0 4px; }
+
+.header-actions { display: flex; gap: 8px; }
+.menu-rules-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0 12px;
+}
+.menu-rules-tree { padding: 4px 0; }
+.menu-rules-group { padding: 6px 0; }
+.menu-rules-group > .el-checkbox { font-weight: 600; }
+.menu-rules-children {
+    margin-left: 28px;
+    margin-top: 6px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 16px;
+}
+.empty-hint { padding: 16px 0; color: #94a3b8; font-size: 13px; }
 </style>

@@ -53,9 +53,9 @@ class AdminRbacSeeder extends Seeder
         }
 
         $roles = [
-            ['code' => 'super_admin', 'name' => 'Super Admin', 'description' => 'Full access to all admin functions', 'is_system' => true],
-            ['code' => 'ops_admin', 'name' => 'Ops Admin', 'description' => 'Node and config operations', 'is_system' => true],
-            ['code' => 'billing_admin', 'name' => 'Billing Admin', 'description' => 'Plans, wallets, refunds', 'is_system' => true],
+            ['code' => 'super_admin', 'name' => 'Super Admin', 'description' => 'Full access to all admin functions', 'is_builtin' => true],
+            ['code' => 'ops_admin', 'name' => 'Ops Admin', 'description' => 'Node and config operations', 'is_builtin' => true],
+            ['code' => 'billing_admin', 'name' => 'Billing Admin', 'description' => 'Plans, wallets, refunds', 'is_builtin' => true],
         ];
 
         $roleIds = [];
@@ -64,8 +64,7 @@ class AdminRbacSeeder extends Seeder
                 'code' => $role['code'],
                 'name' => $role['name'],
                 'description' => $role['description'],
-                'is_system' => $role['is_system'],
-                'status' => 'active',
+                'is_builtin' => $role['is_builtin'],
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -76,8 +75,8 @@ class AdminRbacSeeder extends Seeder
         foreach ($permissionIds as $permCode => $permId) {
             if (isset($roleIds['super_admin'])) {
                 \Illuminate\Support\Facades\DB::table('admin_role_permissions')->insertOrIgnore([
-                    'permission_id' => $permId,
-                    'role_id' => $roleIds['super_admin'],
+                    'admin_role_id' => $roleIds['super_admin'],
+                    'admin_permission_id' => $permId,
                 ]);
             }
         }
@@ -87,8 +86,8 @@ class AdminRbacSeeder extends Seeder
         foreach ($opsPerms as $permCode) {
             if (isset($permissionIds[$permCode], $roleIds['ops_admin'])) {
                 \Illuminate\Support\Facades\DB::table('admin_role_permissions')->insertOrIgnore([
-                    'permission_id' => $permissionIds[$permCode],
-                    'role_id' => $roleIds['ops_admin'],
+                    'admin_role_id' => $roleIds['ops_admin'],
+                    'admin_permission_id' => $permissionIds[$permCode],
                 ]);
             }
         }
@@ -98,8 +97,8 @@ class AdminRbacSeeder extends Seeder
         foreach ($billingPerms as $permCode) {
             if (isset($permissionIds[$permCode], $roleIds['billing_admin'])) {
                 \Illuminate\Support\Facades\DB::table('admin_role_permissions')->insertOrIgnore([
-                    'permission_id' => $permissionIds[$permCode],
-                    'role_id' => $roleIds['billing_admin'],
+                    'admin_role_id' => $roleIds['billing_admin'],
+                    'admin_permission_id' => $permissionIds[$permCode],
                 ]);
             }
         }

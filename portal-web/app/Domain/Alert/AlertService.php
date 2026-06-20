@@ -9,14 +9,26 @@ use Illuminate\Support\Str;
 
 final class AlertService
 {
-    public static function create(string $level, string $title, string $message): Alert
-    {
+    public static function create(
+        string $level,
+        string $title,
+        string $message,
+        string $code = 'generic',
+        string $source = 'system',
+        ?string $subjectType = null,
+        ?int $subjectId = null,
+        array $payload = [],
+    ): Alert {
         return Alert::create([
-            'id' => 'alert_' . Str::random(16),
+            'code' => $code,
             'level' => $level,
-            'status' => 'open',
+            'source' => $source,
+            'subject_type' => $subjectType,
+            'subject_id' => $subjectId,
             'title' => $title,
             'message' => $message,
+            'payload' => $payload ?: null,
+            'status' => 'open',
         ]);
     }
 }

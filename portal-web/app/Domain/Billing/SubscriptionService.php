@@ -47,10 +47,13 @@ final class SubscriptionService
             if (! User::whereKey($userId)->exists()) {
                 return null;
             }
+            $planId = $this->resolvePlanId('free');
             DB::table('subscriptions')->insert([
                 'user_id' => $userId,
+                'plan_id' => $planId,
                 'plan_code' => 'free',
                 'status' => self::STATUS_ACTIVE,
+                'started_at' => now(),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -111,16 +114,20 @@ final class SubscriptionService
         }
 
         $oldCode = DB::table('subscriptions')->where('user_id', $userId)->value('plan_code');
+        $planId = $this->resolvePlanId($planCode);
         DB::table('subscriptions')->updateOrInsert(
             ['user_id' => $userId],
             [
+                'plan_id' => $planId,
                 'plan_code' => $planCode,
                 'plan_code_old' => $oldCode,
                 'order_id' => $orderId,
                 'status' => self::STATUS_ACTIVE,
                 'monthly_query_limit' => $monthlyLimit,
+                'started_at' => $now,
                 'grace_until' => null,
                 'updated_at' => $now,
+                'created_at' => $now,
             ]
         );
         // Write-through cache (column retained for compatibility).
@@ -164,5 +171,22 @@ final class SubscriptionService
             'expired_at' => $now,
             'updated_at' => $now,
         ]);
+    }
+
+    private function resolvePlanId(string $planCode): int
+    {
+        (new PlanCatalogService())->ensureDefaults();
+
+        $planId = DB::table('plans')->where('code', $planCode)->value('id');
+
+        if ($planId === null) {
+            $planId = DB::table('plans')->where('code', 'free')->value('id');
+        }
+
+        if ($planId === null) {
+            throw new \RuntimeException('No available plan found for subscription bootstrap.');
+        }
+
+        return (int) $planId;
     }
 }

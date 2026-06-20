@@ -7,20 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProfileVersion extends Model
 {
-    
-
-    public $incrementing = false;
-    protected $keyType = 'string';
-
-    protected static function boot(): void
-    {
-        parent::boot();
-        static::creating(function (self $version): void {
-            if (empty($version->id)) {
-                $version->id = 'pvr_' . substr(hash('sha256', microtime()), 0, 12);
-            }
-        });
-    }
+    public $incrementing = true;
+    protected $keyType = 'int';
+    public $timestamps = false;
 
     protected $fillable = [
         'profile_id',
@@ -33,6 +22,7 @@ class ProfileVersion extends Model
         'published_by',
         'external_publish_id',
         'published_at',
+        'created_at',
     ];
 
     protected function casts(): array

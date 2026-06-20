@@ -20,10 +20,16 @@ Route::prefix('user')->middleware(['auth:api', 'user.only'])->group(function ():
     Route::get('me', [AuthController::class, 'me']);
     Route::post('logout', [AuthController::class, 'logout']);
 
-    Route::get('member-center/overview', [UserDashboardController::class, 'overview']);
-    Route::get('member-center/dns-endpoints', [UserWorkspaceController::class, 'dnsEndpoints']);
-    Route::get('member-center/top-domains', [UserWorkspaceController::class, 'topDomains']);
-    Route::get('member-center/devices', [UserWorkspaceController::class, 'devices']);
+    Route::get('dashboard', [UserDashboardController::class, 'overview']);
+    Route::get('dns-endpoints', [UserWorkspaceController::class, 'dnsEndpoints']);
+    Route::get('top-domains', [UserWorkspaceController::class, 'topDomains']);
+    Route::get('devices', [UserWorkspaceController::class, 'devices']);
+    Route::prefix('member-center')->group(function (): void {
+        Route::get('overview', [UserDashboardController::class, 'overview']);
+        Route::get('dns-endpoints', [UserWorkspaceController::class, 'dnsEndpoints']);
+        Route::get('devices', [UserWorkspaceController::class, 'devices']);
+        Route::get('top-domains', [UserWorkspaceController::class, 'topDomains']);
+    });
 
     Route::match(['get', 'put'], 'settings', [UserWorkspaceController::class, 'settings']);
     Route::put('settings/security', [UserWorkspaceController::class, 'updateSecurity']);
@@ -109,4 +115,7 @@ Route::prefix('user')->middleware(['auth:api', 'user.only'])->group(function ():
         Route::get('{id}', [OrderController::class, 'show']);
         Route::post('{id}/checkout', [OrderController::class, 'checkout']);
     });
+
+    // 套餐购买入口
+    Route::get('plans', [OrderController::class, 'plans']);
 });

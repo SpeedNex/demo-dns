@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\V1\Node;
 
 use App\Domain\Ingest\QueryLogIngestService;
-use App\Models\ConfigVersion;
+use App\Infrastructure\ClickHouse\ClickHouseClient;
 use App\Models\Device;
 use App\Models\Node;
+use App\Models\Profile;
 use App\Models\QueryLogEntry;
 use App\Models\QueryLogIngestBatch;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +20,8 @@ final class QueryLogController
     public function batch(Request $request): JsonResponse
     {
         $service = new QueryLogIngestService();
+        $clickhouse = new ClickHouseClient();
+
         /** @var Node $node */
         $node = $request->attributes->get('node');
         $validated = $request->validate([
@@ -38,82 +43,143 @@ final class QueryLogController
 
         $result = $service->accept($validated);
 
-        DB::transaction(function () use ($validated, $result, $node): void {
+        DB::transaction(function () use ($validated, $node, $clickhouse): void {
+            $now = now();
             $batch = QueryLogIngestBatch::create([
                 'batch_id' => $validated['batch_id'],
                 'node_id' => $node->id,
-                'item_count' => count($validated['items']),
-                'content_sha256' => $result['content_sha256'],
-                'status' => 'accepted',
-                'received_at' => now(),
-                'written_at' => now(),
+                'event_count' => count($validated['items']),
+                'status' => 'processing',
+                'received_at' => $now,
             ]);
 
-            $latestUsersByProfile = ConfigVersion::query()
-                ->select('profile_id', 'user_id')
-                ->whereIn('profile_id', collect($validated['items'])->pluck('profile_id')->filter()->unique()->values())
-                ->orderByDesc('version')
-                ->get()
-                ->unique('profile_id')
-                ->pluck('user_id', 'profile_id');
+            $profiles = Profile::query()
+                ->whereIn('profile_uid', collect($validated['items'])->pluck('profile_id')->filter()->unique()->values())
+                ->get(['id', 'profile_uid', 'user_id'])
+                ->keyBy('profile_uid');
 
-            $now = now();
             $entries = [];
-            $devices = [];
-            foreach ($validated['items'] as $index => $item) {
-                $profileId = $item['profile_id'] ?? null;
-                $userId = $profileId !== null ? $latestUsersByProfile->get($profileId) : null;
+            $dnsLogs = [];
+            $usageEvents = [];
+
+            foreach ($validated['items'] as $item) {
+                $profileUid = $item['profile_id'] ?? null;
+                $profile = $profileUid !== null ? $profiles->get($profileUid) : null;
+                $profilePk = $profile?->id;
+                $userPk = $profile?->user_id;
                 $queriedAt = isset($item['queried_at']) ? now()->setTimestamp((int) $item['queried_at']) : $now;
+                $queryName = strtolower((string) ($item['query_name'] ?? $item['domain'] ?? ''));
+                $domain = strtolower((string) ($item['domain'] ?? $item['query_name'] ?? ''));
+                $clientIp = trim((string) ($item['client_ip'] ?? ''));
+                $devicePk = null;
+                $deviceUid = trim((string) ($item['device_id'] ?? ''));
+
+                if ($userPk !== null && $profilePk !== null) {
+                    $fingerprint = hash('sha256', implode('|', [
+                        (string) $profilePk,
+                        'doh',
+                        $clientIp,
+                        $deviceUid,
+                    ]));
+                    $device = Device::query()->updateOrCreate(
+                        [
+                            'profile_id' => $profilePk,
+                            'fingerprint' => $fingerprint,
+                        ],
+                        [
+                            'user_id' => $userPk,
+                            'device_uid' => $deviceUid !== '' ? $deviceUid : 'dev_' . substr($fingerprint, 0, 16),
+                            'name' => $deviceUid !== '' ? $deviceUid : ('Device ' . ($clientIp !== '' ? $clientIp : substr($fingerprint, 0, 6))),
+                            'source' => 'auto',
+                            'protocol' => 'doh',
+                            'ip_hash' => $clientIp !== '' ? hash('sha256', $clientIp) : null,
+                            'first_seen_at' => DB::raw('COALESCE(first_seen_at, NOW())'),
+                            'last_seen_at' => $queriedAt,
+                            'last_query_at' => $queriedAt,
+                            'query_count' => DB::raw('COALESCE(query_count, 0) + 1'),
+                            'status' => 'active',
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ],
+                    );
+                    $devicePk = $device->id;
+                    $deviceUid = $device->device_uid;
+                }
+
                 $entries[] = [
-                    'id' => 'qle_' . substr(hash('sha256', $validated['batch_id'] . '|' . $index . '|' . microtime(true)), 0, 12),
                     'ingest_batch_id' => $batch->id,
                     'node_id' => $node->id,
-                    'user_id' => $userId,
-                    'profile_id' => $profileId,
-                    'device_id' => $item['device_id'] ?? null,
-                    'query_name' => strtolower((string) ($item['query_name'] ?? $item['domain'] ?? '')),
-                    'query_type' => $item['query_type'] ?? null,
+                    'user_id' => $userPk,
+                    'profile_id' => $profilePk,
+                    'device_id' => $devicePk,
+                    'query_name' => $queryName,
+                    'query_type' => strtoupper((string) ($item['query_type'] ?? 'A')),
                     'action' => strtolower((string) $item['action']),
                     'reason' => $item['reason'] ?? null,
                     'category' => $item['category'] ?? null,
-                    'client_ip' => $item['client_ip'] ?? null,
+                    'client_ip' => $clientIp !== '' ? $clientIp : null,
                     'rcode' => (int) ($item['rcode'] ?? 0),
                     'latency_ms' => (int) ($item['latency_ms'] ?? 0),
                     'queried_at' => $queriedAt,
                     'created_at' => $now,
                 ];
 
-                if ($userId !== null && $profileId !== null) {
-                    $rawDeviceId = trim((string) ($item['device_id'] ?? ''));
-                    $clientIp = trim((string) ($item['client_ip'] ?? ''));
-                    $identity = $rawDeviceId !== '' ? $rawDeviceId : ($clientIp !== '' ? 'ip:' . $clientIp : '');
+                $dnsLogs[] = [
+                    'event_time' => $queriedAt->format('Y-m-d H:i:s'),
+                    'timestamp' => $queriedAt->format('Y-m-d H:i:s'),
+                    'node_id' => (string) $node->id,
+                    'user_id' => $userPk !== null ? (string) $userPk : '',
+                    'profile_id' => $profileUid ?? '',
+                    'device_id' => $deviceUid,
+                    'query_name' => $queryName,
+                    'domain' => $domain,
+                    'query_type' => strtoupper((string) ($item['query_type'] ?? 'A')),
+                    'action' => strtoupper((string) $item['action']),
+                    'reason' => (string) ($item['reason'] ?? ''),
+                    'category' => (string) ($item['category'] ?? ''),
+                    'client_ip' => $clientIp,
+                    'rcode' => (int) ($item['rcode'] ?? 0),
+                    'latency_ms' => (int) ($item['latency_ms'] ?? 0),
+                ];
 
-                    if ($identity !== '') {
-                        $devices[$userId . '|' . $profileId . '|' . $identity] = [
-                            'user_id' => $userId,
-                            'profile_id' => $profileId,
-                            'device_id' => $identity,
-                            'name' => $rawDeviceId !== '' ? $rawDeviceId : ('Device ' . $clientIp),
-                            'device_type' => 'dns-client',
-                            'public_ip' => $clientIp !== '' ? $clientIp : null,
-                            'last_seen_at' => $queriedAt,
-                            'updated_at' => $now,
-                        ];
-                    }
+                if ($userPk !== null && $profilePk !== null) {
+                    $usageEvents[] = [
+                        'timestamp' => $queriedAt->format('Y-m-d H:i:s'),
+                        'user_id' => (string) $userPk,
+                        'profile_id' => (int) $profilePk,
+                        'device_id' => $devicePk,
+                        'billing_category' => strtolower((string) ($item['category'] ?? 'query')),
+                    ];
                 }
             }
 
             QueryLogEntry::insert($entries);
 
-            foreach ($devices as $device) {
-                Device::query()->updateOrCreate(
-                    [
-                        'user_id' => $device['user_id'],
-                        'profile_id' => $device['profile_id'],
-                        'device_id' => $device['device_id'],
-                    ],
-                    $device + ['created_at' => $now]
-                );
+            try {
+                $clickhouse->insertJsonEachRow('dns_logs', $dnsLogs);
+                $clickhouse->insertJsonEachRow('usage_events', $usageEvents);
+                $batch->update([
+                    'status' => 'succeeded',
+                    'forwarded_to_clickhouse' => true,
+                    'processed_at' => $now,
+                    'updated_at' => $now,
+                ]);
+            } catch (\Throwable $e) {
+                DB::table('query_log_ingest_errors')->insert([
+                    'batch_id' => $batch->id,
+                    'node_id' => $node->id,
+                    'error_type' => 'clickhouse_insert_failed',
+                    'error_message' => $e->getMessage(),
+                    'raw_payload' => json_encode($validated['items'], JSON_UNESCAPED_UNICODE),
+                    'occurred_at' => $now,
+                    'created_at' => $now,
+                ]);
+                $batch->update([
+                    'status' => 'partial',
+                    'error_message' => $e->getMessage(),
+                    'processed_at' => $now,
+                    'updated_at' => $now,
+                ]);
             }
         });
 

@@ -46,7 +46,7 @@ final class AdminRuleController
 
     public function store(Request $request): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $validated = $request->validate([
             'name' => 'required|string|max:100',
             'type' => ['required', Rule::in(['domain_list', 'adblock', 'hosts', 'rpz'])],
@@ -68,7 +68,7 @@ final class AdminRuleController
 
     public function update(Request $request, string $id): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $source = RuleSource::findOrFail($id);
 
         $validated = $request->validate([
@@ -87,7 +87,7 @@ final class AdminRuleController
 
     public function destroy(Request $request, string $id): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $source = RuleSource::findOrFail($id);
         $source->delete();
 
@@ -98,7 +98,7 @@ final class AdminRuleController
 
     public function sync(Request $request, string $id): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $source = RuleSource::findOrFail($id);
 
         $source->update([
@@ -244,7 +244,7 @@ final class AdminRuleController
 
     public function batchDestroy(Request $request): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $validated = $request->validate([
             'ids' => 'required|array|min:1',
             'ids.*' => 'string',

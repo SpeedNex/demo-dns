@@ -11,24 +11,27 @@ use Illuminate\Database\Eloquent\Model;
  */
 class BillingItem extends Model
 {
-    public const ITEM_TYPE_PLAN = 'plan';
+    public const ITEM_TYPE_PLAN = 'subscription';
     public const ITEM_TYPE_USAGE = 'usage';
     public const ITEM_TYPE_ADJUSTMENT = 'adjustment';
 
     protected $fillable = [
         'billing_id',
         'item_type',
-        'item_name',
+        'source_type',
+        'source_id',
+        'description',
         'quantity',
         'unit_price_minor',
         'amount_minor',
-        'meta',
     ];
 
     protected function casts(): array
     {
         return [
-            'meta' => 'array',
+            'quantity' => 'decimal:4',
+            'unit_price_minor' => 'integer',
+            'amount_minor' => 'integer',
         ];
     }
 }

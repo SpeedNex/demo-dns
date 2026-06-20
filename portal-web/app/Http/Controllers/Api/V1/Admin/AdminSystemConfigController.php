@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Models\AdminAuditLog;
 use App\Models\SystemConfig;
+use App\Support\SystemConfigValue;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -71,19 +72,19 @@ final class AdminSystemConfigController
             return response()->json(['message' => 'No configuration payload provided.'], 422);
         }
 
-        $actorId = $request->user()?->id ?? 'system';
+        $actorId = $request->user()?->admin_id ?? 'system';
         $updated = [];
         foreach ($configs as $key => $value) {
             $keyStr = (string) $key;
-            $current = SystemConfig::query()->find($keyStr);
+            $current = SystemConfig::query()->where('config_key', $keyStr)->first();
             $resolvedValue = $this->restoreMaskedSensitiveValues($value, $current?->value, $keyStr);
             // 加密入库
             $storedValue = $this->isSensitiveKey($keyStr)
                 ? $this->encryptSensitive($resolvedValue)
                 : $resolvedValue;
             SystemConfig::updateOrCreate(
-                ['key' => $keyStr],
-                ['value' => $storedValue, 'updated_by' => $actorId],
+                ['config_key' => $keyStr],
+                ['config_value' => $storedValue],
             );
             $updated[] = $keyStr;
         }
@@ -179,5 +180,31 @@ final class AdminSystemConfigController
         } catch (\Throwable) {
             return $value;
         }
+    }
+
+    /**
+     * 一次性迁移：basic.dns_domain（旧版本字段）→ dns.dns_domain
+     */
+    private function migrateLegacyDnsDomain(): void
+    {
+        $basic = SystemConfig::query()->where('config_key', 'basic')->first();
+        if (! $basic || ! is_array($basic->config_value) || empty($basic->config_value['dns_domain'])) {
+            return;
+        }
+        $legacyDomain = (string) $basic->config_value['dns_domain'];
+
+        $dns = SystemConfig::query()->where('config_key', 'dns')->first();
+        $dnsValue = is_array($dns?->config_value) ? $dns->config_value : [];
+
+        if (empty($dnsValue['dns_domain'])) {
+            $dnsValue['dns_domain'] = $legacyDomain;
+            SystemConfig::updateOrCreate(
+                ['config_key' => 'dns'],
+                ['config_value' => $dnsValue],
+            );
+        }
+
+        unset($basic->config_value['dns_domain']);
+        $basic->save();
     }
 }

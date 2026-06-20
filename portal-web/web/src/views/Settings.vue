@@ -69,10 +69,17 @@
                                 </template>
                             </el-input>
                         </el-form-item>
-                        <el-form-item :label="$t('settings.udpAddress')">
-                            <el-input :model-value="udpAddress" readonly>
+                        <el-form-item :label="$t('settings.dotHost')">
+                            <el-input :model-value="dotHost" readonly>
                                 <template #append>
-                                    <el-button @click="copyText(udpAddress)">{{ $t('common.copy') }}</el-button>
+                                    <el-button @click="copyText(dotHost)">{{ $t('common.copy') }}</el-button>
+                                </template>
+                            </el-input>
+                        </el-form-item>
+                        <el-form-item :label="$t('settings.ipv6Endpoint')">
+                            <el-input :model-value="ipv6Endpoint" readonly>
+                                <template #append>
+                                    <el-button @click="copyText(ipv6Endpoint)">{{ $t('common.copy') }}</el-button>
                                 </template>
                             </el-input>
                         </el-form-item>
@@ -133,19 +140,25 @@ const passwordForm = reactive({
     confirm: '',
 })
 
-const dohUrl = computed(() => {
-    const domain = dnsDomain.value || 'dns.ocerdns.local'
-    const profileId = currentProfileId.value
-    if (profileId) {
-        // 去掉 prf_ 前缀，格式: https://dns.ocerdns.local/ec8cb1
-        const shortId = profileId.replace(/^prf_/, '')
-        return `https://${domain}/${shortId}`
-    }
-    return `https://${domain}`
+// V2 产品展示：移除 IPv4 / 127.0.0.1:53 / prf_ 前缀 / dns.ocerdns.local
+// DNS 节点域名由后端 system_config.dns_domain 提供，缺省值 dns.ocerlink.com
+const dnsDomain = ref('dns.ocerlink.com')
+const { currentProfileUid } = useCurrentProfile()
+
+// 6 位 hex profile_uid 拆成 IPv6 风格后缀：bcfe3a → bc:fe3a
+const ipv6Suffix = computed(() => {
+    const pid = currentProfileUid.value || ''
+    if (pid.length < 6) return ''
+    return `${pid.slice(0, 2)}:${pid.slice(2, 6)}`
 })
-const udpAddress = computed(() => '127.0.0.1:53')
-const dnsDomain = ref('dns.ocerdns.local')
-const { currentProfileId } = useCurrentProfile()
+
+const dohUrl = computed(() => `https://${dnsDomain.value}/${currentProfileUid.value || ''}/dns-query`)
+const dotHost = computed(() => `${currentProfileUid.value || ''}.${dnsDomain.value}`)
+const ipv6Endpoint = computed(() => {
+    const suffix = ipv6Suffix.value
+    if (!suffix) return ''
+    return `你的 IPv6 前缀::${suffix}`
+})
 
 const copyText = (text) => {
     navigator.clipboard.writeText(text).then(() => {

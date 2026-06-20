@@ -10,12 +10,10 @@ class RuleSource extends Model
 {
     protected $table = 'rule_sources';
 
-    public $incrementing = false;
-
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
-        'id',
         'name',
         'type',
         'url',
@@ -32,16 +30,5 @@ class RuleSource extends Model
             'enabled' => 'boolean',
             'last_synced_at' => 'datetime',
         ];
-    }
-
-    protected static function boot(): void
-    {
-        parent::boot();
-
-        static::creating(function (self $source): void {
-            if (empty($source->id)) {
-                $source->id = 'rsrc_' . substr(hash('sha256', microtime(true) . random_int(1, PHP_INT_MAX)), 0, 12);
-            }
-        });
     }
 }

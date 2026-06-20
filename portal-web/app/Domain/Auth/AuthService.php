@@ -31,24 +31,26 @@ final class AuthService
             'username' => $username,
             'email' => $email,
             'password' => Hash::make($password),
-            'timezone' => $payload['timezone'] ?? 'UTC',
-            'locale' => $payload['locale'] ?? 'en',
-            'role' => 'member',
+            'locale' => $payload['locale'] ?? 'zh-CN',
             'status' => 'active',
             'plan_code' => 'free',
         ]);
+
+        // V2.4: 新用户注册即自动创建一个默认 Profile「第一个配置文件」，
+        // 确保用户进入控制台后立即拥有可管理的 DNS 策略。
+        $this->createDefaultProfile($user->uid, $user->username);
 
         $deviceName = (string) ($payload['device_name'] ?? 'web');
         $token = $user->createToken($deviceName)->plainTextToken;
 
         return [
             'user' => [
-                'id' => $user->id,
+                'uid' => $user->uid,
                 'username' => $user->username,
                 'email' => $user->email,
-                'timezone' => $user->timezone,
                 'locale' => $user->locale,
-                'role' => $user->role,
+                'plan_code' => $user->plan_code,
+                'status' => $user->status,
             ],
             'token' => $token,
         ];
@@ -86,10 +88,11 @@ final class AuthService
         return [
             'token' => $token,
             'user' => [
-                'id' => $user->id,
+                'uid' => $user->uid,
                 'username' => $user->username,
                 'email' => $user->email,
-                'role' => $user->role,
+                'plan_code' => $user->plan_code,
+                'status' => $user->status,
             ],
         ];
     }
@@ -110,5 +113,29 @@ final class AuthService
         } while (User::where('username', $candidate)->exists());
 
         return $candidate;
+    }
+
+    /**
+     * V2.4: 新用户注册时自动创建默认 Profile「第一个配置文件」。
+     * 该 Profile 作为 is_default=true 的种子策略，所有统计、规则、设备都将按 Profile 隔离。
+     */
+    private function createDefaultProfile(int $userId, ?string $username): \App\Models\Profile
+    {
+        return \App\Models\Profile::create([
+            'user_id' => $userId,
+            'name' => $username ? ($username . ' 的第一个配置文件') : '第一个配置文件',
+            'description' => '系统自动创建',
+            'default_action' => 'allow',
+            'block_response' => 'nxdomain',
+            'is_default' => true,
+            'status' => 'active',
+            'security_enabled' => true,
+            'privacy_enabled' => true,
+            'parental_enabled' => false,
+            'safe_search_enabled' => false,
+            'log_mode' => 'full',
+            'log_retention_days' => 24,
+            'version' => 1,
+        ]);
     }
 }

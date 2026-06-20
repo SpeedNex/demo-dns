@@ -16,9 +16,9 @@ final class AdminRbacController
 {
     public function roles(): JsonResponse
     {
-        $roles = DB::table('admin_roles')
-            ->select(['id', 'code', 'name', 'description', 'is_system', 'status', 'created_at'])
-            ->orderBy('created_at', 'desc')
+        $roles = DB::table('admin_roles as r')
+            ->select(['r.id', 'r.code', 'r.name', 'r.description', 'r.is_system', 'r.status', 'r.created_at'])
+            ->orderBy('r.created_at', 'desc')
             ->get();
 
         return response()->json(['data' => $roles]);
@@ -26,10 +26,10 @@ final class AdminRbacController
 
     public function permissions(): JsonResponse
     {
-        $permissions = DB::table('admin_permissions')
-            ->select(['id', 'code', 'resource', 'action', 'description', 'created_at'])
-            ->orderBy('resource')
-            ->orderBy('action')
+        $permissions = DB::table('admin_permissions as p')
+            ->select(['p.id', 'p.code', 'p.resource', 'p.action', 'p.description', 'p.created_at'])
+            ->orderBy('p.resource')
+            ->orderBy('p.action')
             ->get();
 
         return response()->json(['data' => $permissions]);
@@ -43,8 +43,8 @@ final class AdminRbacController
         }
 
         $permissions = DB::table('admin_role_permissions as rp')
-            ->join('admin_permissions as p', 'p.id', '=', 'rp.permission_id')
-            ->where('rp.role_id', $id)
+            ->join('admin_permissions as p', 'p.id', '=', 'rp.admin_permission_id')
+            ->where('rp.admin_role_id', $id)
             ->select(['p.id', 'p.code', 'p.resource', 'p.action', 'p.description'])
             ->get();
 
@@ -54,8 +54,7 @@ final class AdminRbacController
     public function admins(Request $request): JsonResponse
     {
         $admins = Admin::query()
-            ->with(['roles:id,name'])
-            ->select(['id', 'username', 'email', 'role', 'status', 'is_super_admin', 'last_login_at', 'created_at'])
+            ->select(['admin_id', 'username', 'email', 'status', 'is_super', 'last_login_at', 'created_at'])
             ->when($request->filled('search'), function ($query) use ($request): void {
                 $search = '%' . (string) $request->input('search') . '%';
                 $query->where(function ($inner) use ($search): void {
@@ -67,17 +66,13 @@ final class AdminRbacController
             ->get()
             ->map(function (Admin $admin): array {
                 return [
-                    'id' => $admin->id,
+                    'id' => $admin->admin_id,
                     'username' => $admin->username,
                     'email' => $admin->email,
-                    'role' => $admin->role,
                     'status' => $admin->status,
-                    'is_super_admin' => (bool) $admin->is_super_admin,
+                    'is_super_admin' => (bool) $admin->is_super,
                     'last_login_at' => $admin->last_login_at,
-                    'role_list' => $admin->roles->map(fn ($role) => [
-                        'id' => $role->id,
-                        'name' => $role->name,
-                    ])->values()->all(),
+                    'role_list' => [],
                 ];
             })
             ->values();
@@ -192,12 +187,65 @@ final class AdminRbacController
                 DB::table('admin_user_roles')->insert([
                     'admin_id' => $adminId,
                     'role_id' => $roleId,
-                    'assigned_by' => $request->user()?->id,
+                    'assigned_by' => $request->user()?->admin_id,
                     'assigned_at' => now(),
                 ]);
             }
         });
 
         return response()->json(['message' => 'Admin roles updated.']);
+    }
+
+    /**
+     * 角色已配置的菜单规则（nav_key 列表）
+     */
+    public function menuRules(string $id): JsonResponse
+    {
+        $role = AdminRole::find($id);
+        if (! $role) {
+            return response()->json(['message' => 'Role not found.'], 404);
+        }
+
+        $rows = DB::table('admin_role_nav_rules')
+            ->where('admin_role_id', $id)
+            ->select(['id', 'admin_role_id', 'nav_key', 'visible'])
+            ->get();
+
+        return response()->json(['data' => $rows]);
+    }
+
+    /**
+     * 写入角色的菜单规则（支持 1/2/3 级）
+     */
+    public function setMenuRules(Request $request, string $id): JsonResponse
+    {
+        $role = AdminRole::find($id);
+        if (! $role) {
+            return response()->json(['message' => 'Role not found.'], 404);
+        }
+        if ($role->is_system) {
+            return response()->json(['message' => 'Cannot modify system role.'], 422);
+        }
+
+        $validated = $request->validate([
+            'nav_keys' => 'required|array',
+            'nav_keys.*' => 'string|max:100',
+        ]);
+
+        DB::transaction(function () use ($id, $validated): void {
+            DB::table('admin_role_nav_rules')->where('admin_role_id', $id)->delete();
+            $now = now();
+            foreach (array_values(array_unique($validated['nav_keys'])) as $navKey) {
+                DB::table('admin_role_nav_rules')->insert([
+                    'admin_role_id' => (int) $id,
+                    'nav_key' => $navKey,
+                    'visible' => true,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+            }
+        });
+
+        return response()->json(['message' => 'Menu rules updated.']);
     }
 }

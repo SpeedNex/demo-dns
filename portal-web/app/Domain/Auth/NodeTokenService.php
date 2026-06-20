@@ -75,9 +75,12 @@ final class NodeTokenService
      * Resolve a node token record from a bearer token.
      * Returns null if not found or revoked.
      *
+     * V2.3 适配：V2 schema 删除了 hmac_secret_encrypted 列，
+     * 改由 resolver 通过 X-Hmac-Key 头传递共享 secret（HMAC-SHA256 验签仍然要求）。
+     *
      * @return array{node:Node, token:NodeToken, hmacSecret:string}|null
      */
-    public function resolveWithSecret(string $bearerToken): ?array
+    public function resolveWithSecret(string $bearerToken, ?string $clientHmacKey = null): ?array
     {
         $hash = hash('sha256', $bearerToken);
         $token = NodeToken::with('node')
@@ -85,13 +88,24 @@ final class NodeTokenService
             ->whereNull('revoked_at')
             ->first();
 
-        if ($token === null || $token->hmac_secret_encrypted === null) {
+        if ($token === null) {
             return null;
         }
 
-        try {
-            $hmacSecret = Crypt::decryptString($token->hmac_secret_encrypted);
-        } catch (\Exception) {
+        // 优先级：V1 加密列 > V2 X-Hmac-Key 头
+        $hmacSecret = null;
+        if (! empty($token->hmac_secret_encrypted)) {
+            try {
+                $hmacSecret = Crypt::decryptString($token->hmac_secret_encrypted);
+            } catch (\Exception) {
+                $hmacSecret = null;
+            }
+        }
+        if ($hmacSecret === null && $clientHmacKey !== null && $clientHmacKey !== '') {
+            $hmacSecret = $clientHmacKey;
+        }
+
+        if ($hmacSecret === null) {
             return null;
         }
 

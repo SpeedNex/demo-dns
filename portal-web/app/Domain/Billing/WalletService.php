@@ -10,9 +10,9 @@ use Illuminate\Support\Str;
 /**
  * UI.md #54 — 钱包系统。
  *
- * 设计：钱包余额真相在 `wallets` 表，`users.balance_minor` 已废弃。
- * 余额变化 = 流水变化，每次都写 `wallet_transactions`。
- * 乐观锁：`wallets.version`，避免并发充值丢失。
+ * 设计：钱包余额真相在 `wallets.balance_minor` / `wallets.frozen_minor`。
+ * 每次变更都必须生成一条 `wallet_transactions`，状态统一为
+ * pending/succeeded/failed/cancelled。
  */
 final class WalletService
 {
@@ -21,9 +21,11 @@ final class WalletService
         $row = $this->getOrCreate($userId);
         return [
             'user_id' => $userId,
-            'balance_minor' => (int) $row->balance,
-            'frozen_minor' => (int) $row->frozen,
+            'wallet_id' => (int) $row->id,
+            'balance_minor' => (int) $row->balance_minor,
+            'frozen_minor' => (int) $row->frozen_minor,
             'currency' => $row->currency,
+            'status' => $row->status,
         ];
     }
 
@@ -33,37 +35,40 @@ final class WalletService
     public function credit(
         string $userId,
         int $amountMinor,
-        string $referenceType,
-        string $referenceId,
-        ?string $description = null
+        string $source,
+        string $idempotencyKey,
+        ?string $description = null,
+        ?int $billingId = null,
     ): int {
-        return DB::transaction(function () use ($userId, $amountMinor, $referenceType, $referenceId, $description): int {
+        return DB::transaction(function () use ($userId, $amountMinor, $source, $idempotencyKey, $description, $billingId): int {
+            $existing = DB::table('wallet_transactions')
+                ->where('idempotency_key', $idempotencyKey)
+                ->first();
+            if ($existing !== null) {
+                return (int) $existing->balance_after_minor;
+            }
+
             $wallet = $this->lock($userId);
-            $newBalance = (int) $wallet->balance + $amountMinor;
+            $newBalance = (int) $wallet->balance_minor + $amountMinor;
             DB::table('wallets')->where('id', $wallet->id)->update([
-                'balance' => $newBalance,
-                'version' => $wallet->version + 1,
+                'balance_minor' => $newBalance,
                 'updated_at' => now(),
             ]);
             DB::table('wallet_transactions')->insert([
                 'wallet_id' => $wallet->id,
                 'transaction_no' => 'WT' . now()->format('YmdHis') . Str::random(8),
                 'user_id' => $userId,
-                'type' => $referenceType, // charge / refund / adjustment
+                'billing_id' => $billingId,
+                'type' => $source === 'refund' ? 'refund' : 'credit',
                 'amount_minor' => $amountMinor,
-                'balance_after' => $newBalance,
+                'balance_after_minor' => $newBalance,
                 'currency' => $wallet->currency,
+                'source' => $source,
                 'description' => $description,
-                'status' => 'completed',
-                'reference_type' => $referenceType,
-                'reference_id' => $referenceId,
+                'idempotency_key' => $idempotencyKey,
+                'status' => 'succeeded',
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]);
-            // 同步到 users.balance_minor 只读缓存
-            DB::table('users')->where('id', $userId)->update([
-                'balance_minor' => $newBalance,
-                'balance_updated_at' => now(),
             ]);
             return $newBalance;
         });
@@ -75,39 +80,43 @@ final class WalletService
     public function debit(
         string $userId,
         int $amountMinor,
-        string $referenceType,
-        string $referenceId,
-        ?string $description = null
+        string $source,
+        string $idempotencyKey,
+        ?string $description = null,
+        ?int $billingId = null,
     ): int {
-        return DB::transaction(function () use ($userId, $amountMinor, $referenceType, $referenceId, $description): int {
+        return DB::transaction(function () use ($userId, $amountMinor, $source, $idempotencyKey, $description, $billingId): int {
+            $existing = DB::table('wallet_transactions')
+                ->where('idempotency_key', $idempotencyKey)
+                ->first();
+            if ($existing !== null) {
+                return (int) $existing->balance_after_minor;
+            }
+
             $wallet = $this->lock($userId);
-            if ((int) $wallet->balance < $amountMinor) {
+            if ((int) $wallet->balance_minor < $amountMinor) {
                 throw new \RuntimeException('Insufficient balance');
             }
-            $newBalance = (int) $wallet->balance - $amountMinor;
+            $newBalance = (int) $wallet->balance_minor - $amountMinor;
             DB::table('wallets')->where('id', $wallet->id)->update([
-                'balance' => $newBalance,
-                'version' => $wallet->version + 1,
+                'balance_minor' => $newBalance,
                 'updated_at' => now(),
             ]);
             DB::table('wallet_transactions')->insert([
                 'wallet_id' => $wallet->id,
-                'transaction_no' => 'WT' . now()->format('YmdHis') . \Illuminate\Support\Str::random(8),
+                'transaction_no' => 'WT' . now()->format('YmdHis') . Str::random(8),
                 'user_id' => $userId,
-                'type' => $referenceType, // usage_deduction
-                'amount_minor' => -$amountMinor,
-                'balance_after' => $newBalance,
+                'billing_id' => $billingId,
+                'type' => $source === 'refund' ? 'refund' : 'debit',
+                'amount_minor' => $amountMinor,
+                'balance_after_minor' => $newBalance,
                 'currency' => $wallet->currency,
+                'source' => $source,
                 'description' => $description,
-                'status' => 'completed',
-                'reference_type' => $referenceType,
-                'reference_id' => $referenceId,
+                'idempotency_key' => $idempotencyKey,
+                'status' => 'succeeded',
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]);
-            DB::table('users')->where('id', $userId)->update([
-                'balance_minor' => $newBalance,
-                'balance_updated_at' => now(),
             ]);
             return $newBalance;
         });
@@ -117,13 +126,13 @@ final class WalletService
     {
         $row = DB::table('wallets')->where('user_id', $userId)->first();
         if ($row === null) {
-            $currency = DB::table('users')->where('id', $userId)->value('currency') ?? 'USD';
+            $currency = 'USD';
             DB::table('wallets')->insert([
                 'user_id' => $userId,
                 'currency' => $currency,
-                'balance' => 0,
-                'frozen' => 0,
-                'version' => 0,
+                'balance_minor' => 0,
+                'frozen_minor' => 0,
+                'status' => 'active',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

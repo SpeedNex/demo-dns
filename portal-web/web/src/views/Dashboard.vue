@@ -26,58 +26,89 @@
             </div>
         </section>
 
+        <!-- DNS Access Endpoints (Middle Row) -->
+        <section class="endpoint-row">
+            <!-- Left: Endpoints (ID / DoT / DoH) -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>{{ $t('dashboard.endpointsTitle') }}</h2>
+                    <span class="badge-endpoint">{{ $t('dashboard.endpointsTag') }}</span>
+                </div>
+                <div class="card-body">
+                    <!-- ID -->
+                    <div class="endpoint-block">
+                        <div class="endpoint-label">{{ $t('dashboard.endpointId') }}</div>
+                        <div class="code-row">
+                            <div class="code">{{ endpoints.profile_uid || '—' }}</div>
+                            <button class="copy-btn" @click="copyText(endpoints.profile_uid)">{{ $t('dashboard.copy') }}</button>
+                        </div>
+                    </div>
+
+                    <!-- DoT / DoQ -->
+                    <div class="endpoint-block">
+                        <div class="endpoint-label">{{ $t('dashboard.endpointDot') }}</div>
+                        <div class="code-row">
+                            <div class="code">{{ endpoints.dot || '—' }}</div>
+                            <button class="copy-btn" @click="copyText(endpoints.dot)">{{ $t('dashboard.copy') }}</button>
+                        </div>
+                    </div>
+
+                    <!-- DoH -->
+                    <div class="endpoint-block">
+                        <div class="endpoint-label">{{ $t('dashboard.endpointDoh') }}</div>
+                        <div class="code-row">
+                            <div class="code">{{ endpoints.doh || '—' }}</div>
+                            <button class="copy-btn" @click="copyText(endpoints.doh)">{{ $t('dashboard.copy') }}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Bound IP (IPv4 / IPv6) -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>{{ $t('dashboard.boundIpTitle') || '绑定 IP' }}</h2>
+                    <span class="badge-endpoint">{{ $t('dashboard.boundIpTag') || 'Bound IPs' }}</span>
+                </div>
+                <div class="card-body">
+                    <!-- IPv6 -->
+                    <div class="endpoint-block">
+                        <div class="endpoint-label">{{ $t('dashboard.endpointIpv6') }}</div>
+                        <div v-if="endpoints.ipv6 && endpoints.ipv6.length">
+                            <div v-for="(ip, idx) in endpoints.ipv6" :key="'v6-' + idx" class="code-row" :class="{ 'mt-6': idx > 0 }">
+                                <div class="code">{{ ip }}</div>
+                                <button class="copy-btn" @click="copyText(ip)">{{ $t('dashboard.copy') }}</button>
+                            </div>
+                        </div>
+                        <div v-else class="code-row">
+                            <div class="code">—</div>
+                        </div>
+                    </div>
+
+                    <!-- IPv4 (Bound IP) -->
+                    <div class="endpoint-block">
+                        <div class="endpoint-label">
+                            {{ $t('dashboard.endpointIpv4') }}
+                            <span class="endpoint-hint">{{ $t('dashboard.endpointIpv4Hint') }}</span>
+                        </div>
+                        <div v-if="endpoints.ipv4 && endpoints.ipv4.length">
+                            <div v-for="(ip, idx) in endpoints.ipv4" :key="'v4-' + idx" class="code-row" :class="{ 'mt-6': idx > 0 }">
+                                <div class="code">{{ ip }}</div>
+                                <button class="copy-btn" @click="copyText(ip)">{{ $t('dashboard.copy') }}</button>
+                            </div>
+                        </div>
+                        <div v-else class="code-row">
+                            <div class="code">—</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Main Content Grid -->
         <section class="content-grid">
             <!-- Left Column -->
             <div class="left-col">
-                <!-- DNS Profiles Table -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2>{{ $t('dashboard.yourProfiles') }}</h2>
-                        <button class="btn btn-primary" @click="$router.push('/user/profiles')">
-                            {{ $t('dashboard.createProfile') }}
-                        </button>
-                    </div>
-                    <div class="card-body p-0">
-                        <table class="profile-table">
-                            <thead>
-                                <tr>
-                                    <th>{{ $t('dashboard.profileCol') }}</th>
-                                    <th>{{ $t('dashboard.profileId') }}</th>
-                                    <th>{{ $t('dashboard.defaultAction') }}</th>
-                                    <th>{{ $t('dashboard.status') }}</th>
-                                    <th>{{ $t('dashboard.security') }}</th>
-                                    <th>{{ $t('dashboard.actions') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-if="!overview?.profiles?.length">
-                                    <td colspan="6" class="empty-row">{{ $t('dashboard.noData') }}</td>
-                                </tr>
-                                <tr v-for="p in (overview?.profiles ?? [])" :key="p.id">
-                                    <td><strong>{{ p.name }}</strong></td>
-                                    <td class="mono">{{ p.profile_id || p.id }}</td>
-                                    <td>
-                                        <span :class="p.default_action === 'block' ? 'badge-danger' : 'badge-allow'">
-                                            {{ p.default_action === 'block' ? $t('dashboard.block') : $t('dashboard.allow') }}
-                                        </span>
-                                    </td>
-                                    <td><span class="badge-active">{{ $t('dashboard.active') }}</span></td>
-                                    <td>
-                                        <span v-if="p.security_enabled" class="badge-on">{{ $t('dashboard.on') }}</span>
-                                        <span v-else class="badge-off">{{ $t('dashboard.off') }}</span>
-                                    </td>
-                                    <td>
-                                        <div class="actions">
-                                            <button class="small-btn" @click="$router.push(`/user/profiles/${p.id}`)">{{ $t('dashboard.edit') }}</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
                 <!-- 7-Day Query Trend -->
                 <div class="card section-gap">
                     <div class="card-header">
@@ -116,22 +147,6 @@
 
             <!-- Right Column -->
             <aside class="right-col">
-                <!-- Quick Access -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2>{{ $t('dashboard.quickAccess') }}</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="access-item">
-                            <label>{{ $t('dashboard.dnsOverHttps') }}</label>
-                            <div class="code-row">
-                                <div class="code">{{ dohUrl || '—' }}</div>
-                                <button class="copy-btn" @click="copyText(dohUrl)">{{ $t('dashboard.copy') }}</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Top Visited Domains -->
                 <div class="card section-gap">
                     <div class="card-header">
@@ -210,8 +225,8 @@
                                 <strong>{{ $t('dashboard.guideStep3Title') }}</strong>
                                 <span>{{ $t('dashboard.guideStep3Desc') }}</span>
                                 <div class="code-row guide-code">
-                                    <div class="code">{{ dohUrl || '—' }}</div>
-                                    <button class="copy-btn" @click="copyText(dohUrl)">{{ $t('dashboard.copy') }}</button>
+                                    <div class="code">{{ endpoints.doh || '—' }}</div>
+                                    <button class="copy-btn" @click="copyText(endpoints.doh)">{{ $t('dashboard.copy') }}</button>
                                 </div>
                             </div>
                         </li>
@@ -236,17 +251,18 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import { useCurrentProfile } from '@/composables/useCurrentProfile'
 
+const { t } = useI18n()
 const { currentProfileId } = useCurrentProfile()
 
 const overview = ref(null)
-const dohUrl = ref('')
-const dotUrl = ref('')
+const endpoints = ref({ profile_uid: '', doh: '', dot: '', ipv4: [], ipv6: [] })
 const topVisited = ref([])
 const topBlocked = ref([])
 const recentDevices = ref([])
@@ -281,23 +297,28 @@ const fetchData = async () => {
     const params = { profile_id: currentProfileId.value }
 
     try {
-        const { data } = await client.get('/user/member-center/overview', { params })
+        const { data } = await client.get('/user/dashboard', { params })
         overview.value = data.data
     } catch {
         ElMessage.error(t('dashboard.failedToLoad'))
     }
 
     try {
-        const { data } = await client.get('/user/member-center/dns-endpoints', { params })
+        const { data } = await client.get('/user/dns-endpoints', { params })
         const ep = data.data || {}
-        dohUrl.value = ep.doh || ''
-        dotUrl.value = ep.dot || ''
+        endpoints.value = {
+            profile_uid: ep.profile_uid || '',
+            doh: ep.doh || '',
+            dot: ep.dot || '',
+            ipv4: Array.isArray(ep.ipv4) ? ep.ipv4 : [],
+            ipv6: Array.isArray(ep.ipv6) ? ep.ipv6 : [],
+        }
     } catch {
         // Endpoints optional
     }
 
     try {
-        const { data } = await client.get('/user/member-center/top-domains', { params })
+        const { data } = await client.get('/user/top-domains', { params })
         const td = data.data || {}
         topVisited.value = td.visited || []
         topBlocked.value = td.blocked || []
@@ -306,7 +327,7 @@ const fetchData = async () => {
     }
 
     try {
-        const { data } = await client.get('/user/member-center/devices', { params })
+        const { data } = await client.get('/user/devices', { params })
         recentDevices.value = (data.data || []).slice(0, 3)
     } catch {
         // Devices optional
@@ -364,6 +385,17 @@ watch(currentProfileId, fetchData)
 }
 .stat-card .stat-value.danger {
     color: var(--color-danger, #dc2626);
+}
+
+/* ========== Endpoint Row (Middle) ========== */
+.endpoint-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    margin-bottom: 26px;
+}
+.endpoint-row > .card {
+    height: 100%;
 }
 
 /* ========== Content Grid ========== */
@@ -561,7 +593,47 @@ watch(currentProfileId, fetchData)
     gap: 24px;
 }
 
-/* ========== Quick Access ========== */
+/* ========== Endpoints (NextDNS 风格) ========== */
+.badge-endpoint {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.3px;
+}
+.endpoint-block {
+    margin-bottom: 16px;
+}
+.endpoint-block:last-child {
+    margin-bottom: 0;
+}
+.endpoint-label {
+    color: var(--color-text-muted, #64748b);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.endpoint-hint {
+    color: #94a3b8;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 11px;
+    background: #f1f5f9;
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+.mt-6 { margin-top: 6px; }
+
+/* 保留 access-item 兼容老样式 */
 .access-item {
     background: var(--color-bg-secondary);
     border: 1px solid var(--color-border);
@@ -777,7 +849,8 @@ watch(currentProfileId, fetchData)
 @media (max-width: 1080px) {
     .stats-grid,
     .content-grid,
-    .device-grid {
+    .device-grid,
+    .endpoint-row {
         grid-template-columns: 1fr;
     }
 }

@@ -22,54 +22,72 @@ final class ProfilePublishApplicationService
     /**
      * @return array<string, mixed>
      */
-    public function publishForUser(string $userId, string $profileId): array
+    public function publishForUser(string $userId, string $profileUid): array
     {
         $profile = Profile::where('user_id', $userId)
-            ->where('id', $profileId)
-            ->firstOrFail()
-            ->load(['rules', 'devices']);
+            ->where(function ($query) use ($profileUid): void {
+                $query->where('profile_uid', $profileUid);
+                if (ctype_digit($profileUid)) {
+                    $query->orWhere('id', (int) $profileUid);
+                }
+            })
+            ->firstOrFail();
+
+        $rules = $profile->rules()->get()->toArray();
+        $devices = $profile->devices()->get()->toArray();
 
         $featureSettings = [
-            'security' => array_merge(
-                ['enabled' => (bool) $profile->security_enabled],
-                $profile->security_settings ?? [],
-            ),
-            'privacy' => array_merge(
-                ['enabled' => (bool) $profile->privacy_enabled, 'log_mode' => $profile->log_mode],
-                $profile->privacy_settings ?? [],
-            ),
-            'parental' => array_merge(
-                ['enabled' => (bool) $profile->parental_enabled, 'safe_search' => (bool) $profile->safe_search_enabled],
-                $profile->parental_settings ?? [],
-            ),
+            'security' => [
+                'enabled' => (bool) $profile->security_enabled,
+                'categories' => [
+                    'malware' => (bool) ($profile->security_settings['malware'] ?? true),
+                    'phishing' => (bool) ($profile->security_settings['phishing'] ?? true),
+                ],
+            ],
+            'privacy' => [
+                'enabled' => (bool) $profile->privacy_enabled,
+                'log_mode' => 'full',
+                'adblock_enabled' => false,
+            ],
+            'parental' => [
+                'enabled' => (bool) $profile->parental_enabled,
+                'safe_search' => (bool) $profile->safesearch_enabled,
+                'adult' => true,
+            ],
         ];
 
         $profilePublishService = new ProfilePublishService($this->configBuilder, $this->publishService);
 
-        return DB::transaction(function () use ($profile, $profilePublishService, $featureSettings): array {
+        return DB::transaction(function () use ($profile, $profilePublishService, $featureSettings, $rules, $devices): array {
             $publishResult = $profilePublishService->publish(
-                $profile->toArray(),
-                $profile->rules->toArray(),
+                array_merge($profile->toArray(), [
+                    'devices' => $devices,
+                    'security_settings' => $featureSettings['security'],
+                    'privacy_settings' => $featureSettings['privacy'],
+                    'parental_settings' => $featureSettings['parental'],
+                ]),
+                $rules,
                 $featureSettings,
                 [],
             );
 
+            $newVersion = (int) ($profile->version ?? 1) + 1;
+
             ProfileVersion::create([
                 'profile_id' => $profile->id,
-                'version' => $publishResult['profile_version'],
+                'version' => $newVersion,
                 'status' => 'published',
-                'checksum' => $publishResult['checksum'],
+                'rule_count' => count($rules),
                 'config_json' => $publishResult['config_json'],
-                'rule_count' => $profile->rules->count(),
-                'published_by' => $profile->user_id,
-                'external_publish_id' => $publishResult['publish_id'] ?? null,
+                'checksum' => $publishResult['checksum'],
+                'message' => 'Published by member workspace',
                 'published_at' => now(),
+                'created_at' => now(),
             ]);
 
             $profile->update([
-                'draft_version' => $publishResult['profile_version'],
-                'current_version' => $publishResult['profile_version'],
-                'last_published_at' => now(),
+                'version' => $newVersion,
+                'published_at' => now(),
             ]);
 
             return $publishResult;

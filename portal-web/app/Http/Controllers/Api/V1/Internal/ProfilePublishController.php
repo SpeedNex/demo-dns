@@ -18,11 +18,18 @@ final class ProfilePublishController
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'profile_id' => 'required|string|max:40',
+            'profile_id' => 'required',
             'profile_version' => 'required|integer|min:1',
             'checksum' => 'required|string|max:100',
             'config_json' => 'required|array',
         ]);
+
+        if (! is_string($validated['profile_id']) && ! is_int($validated['profile_id'])) {
+            return response()->json([
+                'message' => 'The profile id field must be a string or integer.',
+                'errors' => ['profile_id' => ['The profile id field must be a string or integer.']],
+            ], 422);
+        }
 
         $result = $this->publishService->recordPublish(
             (string) $validated['profile_id'],

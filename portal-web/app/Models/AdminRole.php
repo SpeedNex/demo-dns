@@ -18,14 +18,14 @@ class AdminRole extends Model
             AdminPermission::class,
             // pivot 表走默认 + config/database.php 的 `prefix`
             "admin_role_permissions",
-            "role_id",
-            "permission_id"
+            "admin_role_id",
+            "admin_permission_id"
         );
     }
 
     public function navRules(): HasMany
     {
-        return $this->hasMany(AdminRoleNavRule::class, "role_id");
+        return $this->hasMany(AdminRoleNavRule::class, "admin_role_id");
     }
 
     public function admins(): BelongsToMany
@@ -34,7 +34,7 @@ class AdminRole extends Model
             Admin::class,
             // pivot 表走默认 + config/database.php 的 `prefix`
             "admin_user_roles",
-            "role_id",
+            "admin_role_id",
             "admin_id"
         )->withPivot("assigned_by","assigned_at");
     }

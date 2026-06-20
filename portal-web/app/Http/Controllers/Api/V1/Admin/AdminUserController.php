@@ -42,14 +42,13 @@ final class AdminUserController
 
     public function store(Request $request): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $username = trim((string) $request->input('username', $request->input('name', '')));
         $validator = Validator::make($request->all(), [
             'username' => 'nullable|string|max:100',
             'name' => 'nullable|string|max:100',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'sometimes|string|in:member,admin',
         ]);
 
         if ($validator->fails() || $username === '') {
@@ -60,11 +59,10 @@ final class AdminUserController
             'username' => $username,
             'email' => $request->input('email'),
             'password' => Hash::make($request->input('password')),
-            'role' => $request->input('role', 'member'),
             'status' => 'active',
         ]);
 
-        AdminAuditLog::record('user.create', 'user', $user->id, ['email' => $user->email, 'role' => $user->role], $actorId, null, $request->ip(), $request->userAgent());
+        AdminAuditLog::record('user.create', 'user', $user->uid, ['email' => $user->email], $actorId, null, $request->ip(), $request->userAgent());
 
         return response()->json(['data' => $user->toArray()], 201);
     }
@@ -77,7 +75,7 @@ final class AdminUserController
 
     public function update(Request $request, string $userId): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $user = User::query()->findOrFail($userId);
         $username = $request->has('username') || $request->has('name')
             ? trim((string) $request->input('username', $request->input('name', '')))
@@ -88,7 +86,6 @@ final class AdminUserController
             'name' => 'nullable|string|max:100',
             'email' => 'sometimes|email|unique:users,email,' . $userId,
             'password' => 'sometimes|string|min:8|confirmed',
-            'role' => 'sometimes|string|in:member,admin',
         ]);
 
         if ($validator->fails() || ($username !== null && $username === '')) {
@@ -99,28 +96,27 @@ final class AdminUserController
         if ($username !== null) $updateData['username'] = $username;
         if ($request->has('email')) $updateData['email'] = $request->input('email');
         if ($request->has('password')) $updateData['password'] = Hash::make($request->input('password'));
-        if ($request->has('role')) $updateData['role'] = $request->input('role');
 
         if (!empty($updateData)) {
             $user->update($updateData);
         }
 
-        AdminAuditLog::record('user.update', 'user', $user->id, array_keys($updateData), $actorId, null, $request->ip(), $request->userAgent());
+        AdminAuditLog::record('user.update', 'user', $user->uid, array_keys($updateData), $actorId, null, $request->ip(), $request->userAgent());
 
         return response()->json(['data' => $user->fresh()->toArray()]);
     }
 
     public function destroy(Request $request, string $userId): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $user = User::query()->findOrFail($userId);
 
         // Prevent self-delete
-        if ($actorId === $userId) {
+        if ($actorId == $userId) {
             return response()->json(['error' => ['code' => 'CANNOT_DELETE_SELF', 'message' => 'Cannot delete your own account']], 422);
         }
 
-        AdminAuditLog::record('user.delete', 'user', $user->id, ['email' => $user->email], $actorId, null, $request->ip(), $request->userAgent());
+        AdminAuditLog::record('user.delete', 'user', $user->uid, ['email' => $user->email], $actorId, null, $request->ip(), $request->userAgent());
 
         $user->delete();
 

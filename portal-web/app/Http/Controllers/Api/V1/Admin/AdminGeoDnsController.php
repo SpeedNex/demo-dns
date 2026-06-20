@@ -52,20 +52,21 @@ final class AdminGeoDnsController
 
     public function store(Request $request): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $validated = $request->validate([
             'country' => 'required|string|size:2',
             'region' => 'required|string|max:80',
-            'node_id' => 'required|string|exists:nodes,id',
+            'node_id' => 'required|exists:nodes,id',
             'priority' => 'integer|min:0|max:1000',
             'weight' => 'integer|min:0|max:10000',
             'enabled' => 'boolean',
         ]);
 
         $mapping = GeoDnsMapping::create([
+            'domain' => $request->input('domain', 'resolver.ocerlink.com'),
             'country' => strtoupper($validated['country']),
             'region' => $validated['region'],
-            'node_id' => $validated['node_id'],
+            'target_node_id' => (int) $validated['node_id'],
             'priority' => $validated['priority'] ?? 0,
             'weight' => $validated['weight'] ?? 100,
             'enabled' => $validated['enabled'] ?? true,
@@ -78,13 +79,13 @@ final class AdminGeoDnsController
 
     public function update(Request $request, string $id): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $mapping = GeoDnsMapping::findOrFail($id);
 
         $validated = $request->validate([
             'country' => 'string|size:2',
             'region' => 'string|max:80',
-            'node_id' => 'string|exists:nodes,id',
+            'node_id' => 'exists:nodes,id',
             'priority' => 'integer|min:0|max:1000',
             'weight' => 'integer|min:0|max:10000',
             'enabled' => 'boolean',
@@ -92,6 +93,10 @@ final class AdminGeoDnsController
 
         if (isset($validated['country'])) {
             $validated['country'] = strtoupper($validated['country']);
+        }
+        if (array_key_exists('node_id', $validated)) {
+            $validated['target_node_id'] = (int) $validated['node_id'];
+            unset($validated['node_id']);
         }
 
         $mapping->update($validated);
@@ -103,7 +108,7 @@ final class AdminGeoDnsController
 
     public function destroy(Request $request, string $id): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $mapping = GeoDnsMapping::findOrFail($id);
         $mapping->delete();
 
@@ -114,10 +119,10 @@ final class AdminGeoDnsController
 
     public function batchDestroy(Request $request): JsonResponse
     {
-        $actorId = $request->user()?->id;
+        $actorId = $request->user()?->admin_id;
         $validated = $request->validate([
             'ids' => 'required|array|min:1',
-            'ids.*' => 'string',
+            'ids.*' => 'required',
         ]);
 
         $count = GeoDnsMapping::whereIn('id', $validated['ids'])->delete();
