@@ -32,6 +32,8 @@ final class AdminGeoDnsController
             $row['node_alias'] = $mapping->node_alias;
             $row['public_ipv4'] = $mapping->public_ipv4 ?? $mapping->node?->public_ipv4;
             $row['node_count'] = 1;
+            $row['node_status'] = $mapping->node?->status;
+            $row['node_last_heartbeat_at'] = $mapping->node?->last_heartbeat_at?->toIso8601String();
 
             return $row;
         })->all();

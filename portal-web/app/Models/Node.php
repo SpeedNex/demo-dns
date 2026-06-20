@@ -19,7 +19,7 @@ class Node extends Model
 
     protected $table = 'nodes';
     protected $fillable = [
-        'node_code', 'node_type', 'name', 'domain', 'region', 'city', 'weight',
+        'node_code', 'node_type', 'name', 'domain', 'region', 'city', 'weight', 'capacity_qps',
         'public_ipv4', 'public_ipv6', 'supported_protocols',
         'status', 'desired_config_version', 'current_config_version',
         'last_heartbeat_at', 'last_log_flush_at', 'meta', 'created_by_admin_id',

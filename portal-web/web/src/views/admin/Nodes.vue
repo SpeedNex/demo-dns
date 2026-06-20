@@ -89,8 +89,8 @@
                         <el-button size="small" text type="primary" @click="openEditDialog(row)">
                             <el-icon><Edit /></el-icon>
                         </el-button>
-                        <el-button v-if="row.status !== 'online'" size="small" text type="primary" plain @click="openKeyDialog(row)">
-                            <el-icon><Key /></el-icon>
+                        <el-button size="small" text type="success" @click="openKeyDialog(row)">
+                            <el-icon><Connection /></el-icon>
                             <span>{{ t('admin.nodes.deploy') }}</span>
                         </el-button>
                         <el-button size="small" text type="danger" @click="handleDelete(row.id)">
@@ -104,6 +104,9 @@
 
     <el-dialog v-model="showEditDialog" :title="editingId ? t('admin.nodes.edit') : t('admin.nodes.create')" width="600">
         <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
+            <el-form-item :label="t('admin.nodes.name')" prop="name">
+                <el-input v-model="form.name" :placeholder="t('admin.nodes.namePlaceholder') || '节点名称'" />
+            </el-form-item>
             <el-form-item :label="t('admin.nodes.nodeAlias')" prop="node_alias">
                 <el-input v-model="form.node_alias" />
             </el-form-item>
@@ -160,6 +163,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { CircleCheck, Connection, CopyDocument, Delete, Download, Edit, InfoFilled, Key, Plus, VideoPause, VideoPlay, WarningFilled } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
+import { useSystemConfig } from '@/composables/useSystemConfig'
 
 const { t } = useI18n()
 
@@ -183,14 +187,12 @@ const nodeTokenCache = new Map()
 const keyExpiresAt = ref(null)
 const keyNodeId = ref(null)
 const stripPrefix = (s, p) => (s ? s.replace(new RegExp('^' + p), '') : '')
+const { siteUrl, loadSystemConfig } = useSystemConfig()
 const deployCmdPreview = computed(() => {
     const nid = tokenData.node_id
     if (!nid || !tokenData.api_key) return ''
-    const loc = window.location
-    const backend = loc.protocol + '//' + loc.hostname + ':8081'
-    const tokenPart = stripPrefix(tokenData.api_key, 'ocnd_')
-    const nidPart = stripPrefix(nid, 'nd_')
-    return `./dns-resolver install --server=${backend} --token=${tokenPart} --node-id=${nidPart}`
+    const base = siteUrl.value || (window.location.protocol + '//' + window.location.host)
+    return `curl -sSL ${base}/dist/install.sh | sh -s -- --server=${base} --token=${stripPrefix(tokenData.api_key, 'ocnd_')} --node-id=${stripPrefix(nid, 'nd_')}`
 })
 
 const copyDeployCmd = async () => {
@@ -248,6 +250,7 @@ const handleExport = async () => {
 const onSelectionChange = (rows) => { selected.value = rows }
 
 const resetForm = () => {
+    form.name = ''
     form.node_alias = ''
     form.region = ''
     form.public_ipv4 = ''
@@ -386,7 +389,10 @@ const handleRegenerate = async () => {
     }
 }
 
-onMounted(fetchNodes)
+onMounted(() => {
+    loadSystemConfig()
+    fetchNodes()
+})
 </script>
 
 <style scoped>

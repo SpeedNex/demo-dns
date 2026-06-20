@@ -53,15 +53,27 @@
                     <el-tag size="small" effect="light">{{ row.node_count || 1 }}</el-tag>
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.geoDns.status')" width="100">
+            <el-table-column :label="$t('admin.geoDns.installStatus') || '安装状态'" width="110">
                 <template #default="{ row }">
-                    <el-tag :type="row.enabled ? 'success' : 'info'" size="small" effect="light">
-                        {{ row.enabled ? $t('admin.geoDns.enabled') : $t('admin.geoDns.disabled') }}
-                    </el-tag>
+                    <el-tag v-if="!row.node_status" type="info" size="small" effect="plain">{{ $t('admin.geoDns.notLinked') || '未关联' }}</el-tag>
+                    <el-tag v-else-if="row.node_status === 'pending'" type="warning" size="small" effect="light">{{ $t('admin.geoDns.statusPending') || '待安装' }}</el-tag>
+                    <el-tag v-else-if="row.node_status === 'online'" type="success" size="small" effect="light">{{ $t('admin.geoDns.statusOnline') || '已安装' }}</el-tag>
+                    <el-tag v-else-if="row.node_status === 'offline'" type="danger" size="small" effect="light">{{ $t('admin.geoDns.statusOffline') || '已下线' }}</el-tag>
+                    <el-tag v-else type="info" size="small" effect="light">{{ row.node_status }}</el-tag>
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.geoDns.actions')" width="100" fixed="right">
+            <el-table-column :label="$t('admin.geoDns.onlineStatus') || '在线状态'" width="100">
                 <template #default="{ row }">
+                    <el-tag v-if="!row.node_status" type="info" size="small" effect="plain">-</el-tag>
+                    <el-tag v-else-if="row.node_status === 'online'" type="success" size="small" effect="light">{{ $t('admin.geoDns.online') || '在线' }}</el-tag>
+                    <el-tag v-else type="danger" size="small" effect="light">{{ $t('admin.geoDns.offline') || '离线' }}</el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column :label="$t('admin.geoDns.actions')" width="140" fixed="right">
+                <template #default="{ row }">
+                    <el-button size="small" text type="success" :disabled="!row.target_node_id" @click="handleDeploy(row)">
+                        <el-icon><Connection /></el-icon>
+                    </el-button>
                     <el-button size="small" text type="primary" @click="openEditDialog(row)">
                         <el-icon><Edit /></el-icon>
                     </el-button>
@@ -96,15 +108,38 @@
             <el-button type="primary" :loading="saving" @click="handleSave">{{ $t('common.save') }}</el-button>
         </template>
     </el-dialog>
+
+    <el-dialog v-model="showDeployDialog" :title="$t('admin.nodes.deployTitle') || '部署命令'" width="680" :close-on-click-modal="false">
+        <el-card shadow="never" class="token-section">
+            <template #header>
+                <div class="section-header">
+                    <span>{{ $t('admin.nodes.deployTitle') || '部署命令' }} · {{ deployData.node_id }}</span>
+                    <el-button size="small" text type="primary" @click="copyDeployCmd">
+                        <el-icon><CopyDocument /></el-icon>
+                        <span>{{ $t('admin.nodes.copyDeployCmd') || '复制命令' }}</span>
+                    </el-button>
+                </div>
+            </template>
+            <pre class="deploy-code">{{ deployCmdPreview }}</pre>
+        </el-card>
+        <div class="token-footer-tip">
+            <el-icon><InfoFilled /></el-icon>
+            <span>{{ $t('admin.nodes.deployTip') || '在目标节点服务器上执行此命令完成部署' }}</span>
+        </div>
+        <template #footer>
+            <el-button @click="showDeployDialog = false">{{ $t('common.close') || '关闭' }}</el-button>
+        </template>
+    </el-dialog>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Aim, Delete, Edit, Plus, Search } from '@element-plus/icons-vue'
+import { Aim, Connection, CopyDocument, Delete, Edit, InfoFilled, Plus, Search } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
+import { useSystemConfig } from '@/composables/useSystemConfig'
 
 const { t } = useI18n()
 const mappings = ref([])
@@ -113,13 +148,30 @@ const selected = ref([])
 const filterRegion = ref('')
 
 const showDialog = ref(false)
+const showDeployDialog = ref(false)
 const editingId = ref(null)
 const saving = ref(false)
 const formRef = ref(null)
+const deployData = reactive({ node_id: '', api_key: '' })
 const form = reactive({ region: '', node_name: '', public_ipv4: '', node_alias: '', enabled: true })
 const rules = {
     region: [{ required: true, message: t('admin.geoDns.required') || 'Required', trigger: 'blur' }],
     node_name: [{ required: true, message: t('admin.geoDns.required') || 'Required', trigger: 'blur' }],
+}
+const stripPrefix = (s, p) => (s ? s.replace(new RegExp('^' + p), '') : '')
+const { siteUrl, loadSystemConfig } = useSystemConfig()
+const deployCmdPreview = computed(() => {
+    if (!deployData.node_id || !deployData.api_key) return ''
+    const base = siteUrl.value || (window.location.protocol + '//' + window.location.host)
+    return `curl -sSL ${base}/dist/install.sh | sh -s -- --server=${base} --token=${stripPrefix(deployData.api_key, 'ocnd_')} --node-id=${stripPrefix(deployData.node_id, 'nd_')}`
+})
+const copyDeployCmd = async () => {
+    try {
+        await navigator.clipboard.writeText(deployCmdPreview.value)
+        ElMessage.success(t('admin.nodes.deployCopied') || '部署命令已复制')
+    } catch {
+        ElMessage.error(t('admin.nodes.copyFailed') || '复制失败')
+    }
 }
 
 const onSelectionChange = (rows) => { selected.value = rows }
@@ -179,6 +231,22 @@ const handleSave = async () => {
     }
 }
 
+const handleDeploy = async (row) => {
+    const nodeId = row.target_node_id || row.node_id
+    if (!nodeId) {
+        ElMessage.warning(t('admin.geoDns.noNodeLinked') || '该映射未关联节点，无法生成部署命令')
+        return
+    }
+    try {
+        const { data } = await client.post(`/admin/nodes/${nodeId}/tokens`, { expires_in_days: 365 })
+        deployData.node_id = data.data.node_id || ''
+        deployData.api_key = data.data.api_key || ''
+        showDeployDialog.value = true
+    } catch (err) {
+        ElMessage.error(err.response?.data?.message || t('admin.nodes.deployFailed') || '生成部署命令失败')
+    }
+}
+
 const handleDelete = async (id) => {
     try {
         await ElMessageBox.confirm(t('admin.geoDns.confirmDelete'), t('common.confirm'), { type: 'warning' })
@@ -208,6 +276,7 @@ const handleBatchDelete = async () => {
 }
 
 onMounted(() => {
+    loadSystemConfig()
     fetchMappings()
 })
 </script>
@@ -217,4 +286,8 @@ onMounted(() => {
 .empty-icon { font-size: 48px; color: #cbd5e1; margin-bottom: 12px; }
 .empty-title { font-size: 16px; font-weight: 600; color: #475569; margin: 0 0 4px; }
 .empty-desc { font-size: 13px; color: #94a3b8; margin: 0; }
+.token-section { margin-bottom: 12px; }
+.section-header { display: flex; justify-content: space-between; align-items: center; }
+.deploy-code { background: #0f172a; color: #e2e8f0; padding: 12px 16px; border-radius: 6px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-all; margin: 0; }
+.token-footer-tip { display: flex; align-items: center; gap: 6px; color: #64748b; font-size: 12px; margin-top: 8px; }
 </style>

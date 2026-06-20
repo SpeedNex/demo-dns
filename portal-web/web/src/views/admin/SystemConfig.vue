@@ -243,24 +243,37 @@ onMounted(async () => {
 
         if (data.data && Object.keys(data.data).length > 0) {
             // 兼容历史：basic.dns_domain（旧版本字段）迁移到 dns.dns_domain
-            const legacyBasic = data.data.basic && data.data.basic.dns_domain
-                ? { dns_domain: data.data.basic.dns_domain }
-                : {}
-            const mergedBasic = { ...data.data.basic || {} }
-            if (legacyBasic.dns_domain && !data.data.dns) {
-                mergedBasic.dns_domain = undefined
+            // 后端把 basic/dns/redis/clickhouse/payment/mail 存为 JSON 字符串，
+            // 直接 spread 会把字符串当 iterable，得到 {0:'s',1:'i',2:'t',3:'e',...}
+            // 这里统一尝试 JSON.parse
+            const parseMaybe = (v) => {
+                if (v == null) return {}
+                if (typeof v === 'object') return v
+                if (typeof v === 'string') {
+                    const t = v.trim()
+                    if (t.startsWith('{') || t.startsWith('[')) {
+                        try { return JSON.parse(t) } catch { return {} }
+                    }
+                }
+                return {}
             }
-            delete mergedBasic.dns_domain
+            const basic = parseMaybe(data.data.basic)
+            const legacyBasic = basic.dns_domain ? { dns_domain: basic.dns_domain } : {}
+            delete basic.dns_domain
+            const dns = parseMaybe(data.data.dns)
+            const redis = parseMaybe(data.data.redis)
+            const clickhouse = parseMaybe(data.data.clickhouse)
+            const payment = parseMaybe(data.data.payment)
+            const mail = parseMaybe(data.data.mail)
 
             config.value = {
                 ...config.value,
-                ...data.data,
-                basic: { ...config.value.basic, ...mergedBasic },
-                dns: { ...config.value.dns, ...(data.data.dns || {}), ...legacyBasic },
-                redis: { ...config.value.redis, ...(data.data.redis || {}) },
-                clickhouse: { ...config.value.clickhouse, ...(data.data.clickhouse || {}) },
-                payment: { ...config.value.payment, ...(data.data.payment || {}) },
-                mail: { ...config.value.mail, ...(data.data.mail || {}) },
+                basic: { ...config.value.basic, ...basic },
+                dns: { ...config.value.dns, ...dns, ...legacyBasic },
+                redis: { ...config.value.redis, ...redis },
+                clickhouse: { ...config.value.clickhouse, ...clickhouse },
+                payment: { ...config.value.payment, ...payment },
+                mail: { ...config.value.mail, ...mail },
             }
         }
     } catch {}

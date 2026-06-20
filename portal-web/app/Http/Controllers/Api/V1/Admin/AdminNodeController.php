@@ -66,6 +66,8 @@ final class AdminNodeController
             'city' => 'nullable|string|max:80',
             'public_ipv4' => 'nullable|string|max:45',
             'public_ipv6' => 'nullable|string|max:64',
+            'weight' => 'nullable|integer|min:0|max:10000',
+            'capacity_qps' => 'nullable|integer|min:0',
             'supported_protocols' => 'array',
             'supported_protocols.*' => 'string',
         ]);
@@ -99,6 +101,8 @@ final class AdminNodeController
             'city' => 'nullable|string|max:80',
             'public_ipv4' => 'nullable|string|max:45',
             'public_ipv6' => 'nullable|string|max:64',
+            'weight' => 'nullable|integer|min:0|max:10000',
+            'capacity_qps' => 'nullable|integer|min:0',
             'supported_protocols' => 'array',
             'supported_protocols.*' => 'string',
         ]);

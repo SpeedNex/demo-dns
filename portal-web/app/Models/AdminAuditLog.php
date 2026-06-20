@@ -10,6 +10,7 @@ class AdminAuditLog extends Model
 {
     // 表名走 Laravel 默认（snake_case 复数） + config/database.php 的 prefix
     // 不要硬编码表名，否则前缀配置会失效
+    protected $table = 'admin_audit_logs';
 
     public $timestamps = false;
 
