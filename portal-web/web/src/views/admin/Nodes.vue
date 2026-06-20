@@ -192,7 +192,7 @@ const deployCmdPreview = computed(() => {
     const nid = tokenData.node_id
     if (!nid || !tokenData.api_key) return ''
     const base = siteUrl.value || (window.location.protocol + '//' + window.location.host)
-    return `curl -fsSL ${base}/build/install.sh | sh -s -- --server=${base} --token=${stripPrefix(tokenData.api_key, 'ocnd_')} --node-id=${stripPrefix(nid, 'nd_')}`
+    return `curl -fsSL ${base}/build/install.sh | sh -s -- --server=${base} --token=${tokenData.api_key} --node-id=${nid}`
 })
 
 const copyDeployCmd = async () => {
