@@ -46,7 +46,8 @@ export default defineConfig(({ mode }) => {
             __API_BASE__: JSON.stringify(fullApiTarget),
         },
    build: {
-    emptyOutDir: true,
+            base: '/',
+            emptyOutDir: true,
     assetsDir: 'assets',
     sourcemap: mode !== 'production',
     chunkSizeWarningLimit: 1500,

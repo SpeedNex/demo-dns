@@ -1,0 +1,9 @@
+# 打包输出
+dist/
+
+# 环境配置
+.env.development
+.env.production
+
+# 依赖锁文件（可选，建议提交以保证一致性）
+# package-lock.json

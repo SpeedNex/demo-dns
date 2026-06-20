@@ -24,3 +24,4 @@ portal-web/web/node_modules
 /logs/
 *.log
 !/logs/.gitkeep
+portal-web/web/node_modules
