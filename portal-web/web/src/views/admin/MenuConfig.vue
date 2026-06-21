@@ -16,52 +16,57 @@
             <el-table
                 :data="menuTree"
                 row-key="id"
-                border
+                class="menu-table"
                 style="width:100%"
                 default-expand-all
                 :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
             >
-                <el-table-column :label="$t('admin.menuConfig.level') || '级别'" width="100" align="center">
+                <el-table-column :label="$t('admin.menuConfig.name') || '菜单名称'" min-width="240">
                     <template #default="{ row }">
-                        <el-tag v-if="row.isGroup" type="info" size="small">{{ levelText(row) }}</el-tag>
-                        <el-tag v-else-if="!row.parentId" type="primary" size="small">{{ levelText(row) }}</el-tag>
-                        <el-tag v-else-if="getDepth(row.id) === 2" type="success" size="small">{{ levelText(row) }}</el-tag>
-                        <el-tag v-else type="warning" size="small">{{ levelText(row) }}</el-tag>
+                        <div class="menu-name-cell" :class="{ 'is-child': row.parentId }">
+                            <el-icon v-if="row.icon" class="menu-icon">
+                                <component :is="row.icon" />
+                            </el-icon>
+                            <el-icon v-else class="menu-icon menu-icon--placeholder"><Document /></el-icon>
+                            <span class="menu-label">{{ resolveLabel(row) }}</span>
+                            <el-tag
+                                class="level-tag"
+                                :type="!row.parentId ? 'primary' : 'success'"
+                                size="small"
+                                effect="plain"
+                            >
+                                {{ levelText(row) }}
+                            </el-tag>
+                        </div>
                     </template>
                 </el-table-column>
-                <el-table-column :label="$t('admin.menuConfig.name') || '菜单名称'" min-width="220">
+                <el-table-column :label="$t('admin.menuConfig.path') || '路径'" min-width="200">
                     <template #default="{ row }">
-                        <span>{{ resolveLabel(row) }}</span>
+                        <code class="menu-path">{{ row.path }}</code>
                     </template>
                 </el-table-column>
-                <el-table-column :label="$t('admin.menuConfig.path') || '路径'" min-width="180">
+                <el-table-column :label="$t('admin.menuConfig.visible') || '显示'" width="90" align="center">
                     <template #default="{ row }">
-                        <span>{{ row.isGroup ? '--' : row.path }}</span>
+                        <el-switch v-model="row.visible" @change="handleVisibleChange(row)" />
                     </template>
                 </el-table-column>
-                <el-table-column :label="$t('admin.menuConfig.visible') || '显示'" width="100" align="center">
+                <el-table-column :label="$t('admin.menuConfig.sortOrder') || '排序'" width="120" align="center">
                     <template #default="{ row }">
-                        <el-switch v-if="!row.isGroup" v-model="row.visible" @change="handleVisibleChange(row)" />
-                        <span v-else>--</span>
-                    </template>
-                </el-table-column>
-                <el-table-column :label="$t('admin.menuConfig.sortOrder') || '排序'" width="150" align="center">
-                    <template #default="{ row }">
-                        <span v-if="row.isGroup">--</span>
-                        <el-button-group v-else-if="!row.parentId">
+                        <el-button-group v-if="!row.parentId" class="sort-buttons">
                             <el-button :disabled="isFirstMain(row)" size="small" :icon="Top" @click="moveUp(row)" />
                             <el-button :disabled="isLastMain(row)" size="small" :icon="Bottom" @click="moveDown(row)" />
                         </el-button-group>
-                        <el-button-group v-else>
+                        <el-button-group v-else class="sort-buttons">
                             <el-button :disabled="isFirstChild(row)" size="small" :icon="Top" @click="moveSubUp(row)" />
                             <el-button :disabled="isLastChild(row)" size="small" :icon="Bottom" @click="moveSubDown(row)" />
                         </el-button-group>
                     </template>
                 </el-table-column>
-                <el-table-column :label="$t('common.actions') || '操作'" width="120" align="center">
+                <el-table-column :label="$t('common.actions') || '操作'" width="100" align="center">
                     <template #default="{ row }">
-                        <el-button v-if="!row.isGroup" size="small" text type="primary" @click="editMenu(row)">
+                        <el-button size="small" text type="primary" @click="editMenu(row)">
                             <el-icon><Edit /></el-icon>
+                            <span>{{ $t('common.edit') || '编辑' }}</span>
                         </el-button>
                     </template>
                 </el-table-column>
@@ -105,25 +110,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { Top, Bottom, Edit } from '@element-plus/icons-vue'
-import {
-    DataAnalysis, Monitor, Upload, Aim, Collection, Document,
-    Message, User, Connection, Coin, Wallet, Setting, UserFilled,
-    Avatar, Grid, Lock, Tickets, List, Box, View
-} from '@element-plus/icons-vue'
+import { Top, Bottom, Edit, Document } from '@element-plus/icons-vue'
 import client from '@/api/client'
 
 const { t } = useI18n()
-const groupDefinitions = [
-    { id: 'service', labelKey: 'admin.menuConfig.group.service', sort: 1 },
-    { id: 'monitor', labelKey: 'admin.menuConfig.group.monitor', sort: 2 },
-    { id: 'user', labelKey: 'admin.menuConfig.group.user', sort: 3 },
-    { id: 'finance', labelKey: 'admin.menuConfig.group.finance', sort: 4 },
-    { id: 'settings', labelKey: 'admin.menuConfig.group.settings', sort: 5 },
-]
 
 const saving = ref(false)
 const dialogVisible = ref(false)
@@ -152,30 +145,8 @@ const mainMenuItems = ref([])
 const subMenuItems = ref([])
 
 const normalizeMenuConfig = (mainMenu = [], subMenu = []) => {
-    const normalizedMain = []
-    const normalizedSub = []
-
-    for (const item of mainMenu) {
-        if (item.id === 'finance' || item.id === 'basic-config' || item.id === 'publishes') {
-            continue
-        }
-        normalizedMain.push({
-            ...item,
-            parentId: null,
-        })
-    }
-
-    for (const item of subMenu) {
-        if (item.parentId === 'finance') {
-            normalizedMain.push({
-                ...item,
-                parentId: null,
-                icon: item.icon || 'Document',
-            })
-            continue
-        }
-        normalizedSub.push(item)
-    }
+    const normalizedMain = mainMenu.map((item) => ({ ...item, parentId: null }))
+    const normalizedSub = subMenu.map((item) => ({ ...item }))
 
     normalizedMain.sort((a, b) => a.sort - b.sort)
     normalizedMain.forEach((item, index) => {
@@ -189,27 +160,15 @@ const normalizeMenuConfig = (mainMenu = [], subMenu = []) => {
 }
 
 const menuTree = computed(() => {
-    return groupDefinitions.map((group) => {
-        const children = mainMenuItems.value
-            .filter((main) => (main.groupKey || 'service') === group.id)
-            .sort((a, b) => a.sort - b.sort)
-            .map((main) => ({
-                ...main,
-                children: subMenuItems.value
-                    .filter((sub) => sub.parentId === main.id)
-                    .sort((a, b) => a.sort - b.sort),
-            }))
-
-        return {
-            id: `group-${group.id}`,
-            labelKey: group.labelKey,
-            path: '',
-            sort: group.sort,
-            visible: true,
-            isGroup: true,
-            children,
-        }
-    }).filter((group) => group.children.length > 0)
+    return mainMenuItems.value
+        .filter((main) => main.visible)
+        .sort((a, b) => a.sort - b.sort)
+        .map((main) => ({
+            ...main,
+            children: subMenuItems.value
+                .filter((sub) => sub.parentId === main.id && sub.visible)
+                .sort((a, b) => a.sort - b.sort),
+        }))
 })
 
 const mainItems = computed(() => mainMenuItems.value)
@@ -227,26 +186,17 @@ const resolveLabel = (row) => {
     return row.labelKey
 }
 
-// 0=分组, 1=一级, 2=二级, 3=三级
 const getDepth = (id) => {
     const main = mainMenuItems.value.find((m) => m.id === id)
     if (main) return 1
-    const sub = subMenuItems.value.find((s) => s.id === id)
-    if (sub) {
-        const isSubParentMain = mainMenuItems.value.some((m) => m.id === sub.parentId)
-        return isSubParentMain ? 2 : 3
-    }
-    return 0
+    return 2
 }
 
 const levelText = (row) => {
-    if (row?.isGroup) return t('admin.menuConfig.groupLabel') || '分组'
     const depth = getDepth(row?.id)
     return depth === 1
         ? (t('admin.menuConfig.level1') || '一级')
-        : depth === 2
-            ? (t('admin.menuConfig.level2') || '二级')
-            : (t('admin.menuConfig.level3') || '三级')
+        : (t('admin.menuConfig.level2') || '二级')
 }
 
 const isFirstMain = (row) => {
@@ -462,18 +412,91 @@ onMounted(async () => {
     font-size: 14px;
 }
 
-:deep(.el-table) {
+:deep(.menu-table) {
     border-radius: 8px;
+    --el-table-border-color: transparent;
+    --el-table-header-bg-color: #f8fafc;
 }
 
-:deep(.el-table__header-wrapper th) {
-    background-color: #f5f7fa;
-    color: #606266;
+:deep(.menu-table .el-table__header-wrapper th) {
+    background-color: #f8fafc;
+    color: #475569;
     font-weight: 600;
+    font-size: 13px;
+    height: 44px;
+    border-bottom: 1px solid #e2e8f0;
 }
 
-:deep(.el-table__row) {
+:deep(.menu-table .el-table__row) {
     font-size: 14px;
+    transition: background-color 0.15s ease;
+}
+
+:deep(.menu-table .el-table__row:hover) {
+    background-color: #f8fafc;
+}
+
+:deep(.menu-table .el-table__cell) {
+    padding: 10px 0;
+}
+
+/* 菜单名称单元格 */
+.menu-name-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding-left: 8px;
+}
+
+.menu-name-cell.is-child {
+    padding-left: 24px;
+}
+
+.menu-icon {
+    font-size: 16px;
+    color: #64748b;
+    flex-shrink: 0;
+}
+
+.menu-name-cell:not(.is-child) .menu-icon {
+    font-size: 18px;
+    color: #2563eb;
+}
+
+.menu-icon--placeholder {
+    opacity: 0.4;
+}
+
+.menu-label {
+    font-weight: 500;
+    color: #1e293b;
+}
+
+.menu-name-cell.is-child .menu-label {
+    font-weight: 400;
+    color: #475569;
+}
+
+.level-tag {
+    margin-left: 4px;
+    transform: scale(0.9);
+}
+
+/* 路径 */
+.menu-path {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background-color: #f1f5f9;
+    color: #475569;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+/* 排序按钮 */
+.sort-buttons .el-button {
+    padding: 6px 10px;
 }
 
 /* 编辑弹窗菜单名称显示 */

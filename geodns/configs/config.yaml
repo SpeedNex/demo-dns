@@ -8,5 +8,6 @@ server:
 routing:
   global_fallback_region: "global"
 node:
-  token: "ocnd_geodns_local_test"
+  token: "ntk_jzy0c1gplnoljtfjbibjly6oatop8cd1"
   api_endpoint: "http://127.0.0.1:8081"
+  hmac_secret: "hmk_b52xpepihxmrzt3laouuhatvvzrtig4vnjtnt5qn"

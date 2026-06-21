@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
+
+	"ocer-dns/geodns/internal/signing"
 )
 
 type Node struct {
@@ -20,9 +22,14 @@ type Node struct {
 	LastHeartbeatAt    string   `json:"last_heartbeat_at"`
 }
 
+// Client 用于 geodns → portal-web 拉取 health-view 数据。
+// 2026-06-22 NEW P0#3 修复：原来仅设 X-Internal-Token，新版与 node.Client 统一
+// 通过 HMAC 签名（Bearer + X-Hmac-Key + X-Signature + X-Timestamp + X-Nonce），
+// 保持两套客户端认证体系一致。
 type Client struct {
 	BaseURL    string
 	Token      string
+	HMACSecret string // 2026-06-22 NEW P0#3: 可选 HMAC 密钥（默认回退到 Token）
 	HTTPClient *http.Client
 }
 
@@ -37,8 +44,14 @@ func (c Client) Fetch(ctx context.Context) (View, error) {
 		return View{}, err
 	}
 
-	// portal-web 的 /api/v1/internal/* 接口走 shared.token:internal 中间件
-	// 中间件优先认 X-Internal-Token / X-Api-Token；带 token 后才能拉到数据。
+	// 2026-06-22 NEW P0#3: 与 node.Client 对齐，使用统一 HMAC 签名。
+	// 注：portal-web 的 /api/v1/internal/* 接口走 shared.token:internal 中间件，
+	// 中间件优先认 X-Internal-Token / X-Api-Token；HMAC 头可被中间件忽略，
+	// 但对路由是 5-headers 完整请求，符合未来切到 node.hmac 时的兼容预期。
+	signing.AddHMACHeaders(req, c.Token, c.HMACSecret, nil)
+
+	// 保留旧 X-Internal-Token 作为兜底，避免中间件改版后无法回退。
+	// 新版 shared.token:internal 仍认这头。
 	if c.Token != "" {
 		req.Header.Set("X-Internal-Token", c.Token)
 	}

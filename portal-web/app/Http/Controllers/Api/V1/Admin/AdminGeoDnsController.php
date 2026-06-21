@@ -37,6 +37,42 @@ final class AdminGeoDnsController
             return $row;
         })->all();
 
+        // 2026-06-22 NEW P0#1 (联调发现): 已安装的 geodns 节点若未在 geo_dns_mappings
+        // 创建映射（例如通过 geodns-install.sh 直接安装，或 mapping 被误删），
+        // 会导致 /admin/geo-dns 列表看不到这些节点。补上"已存在但无 mapping"的 fallback 行。
+        $mappedNodeIds = GeoDnsMapping::query()
+            ->whereNotNull('target_node_id')
+            ->pluck('target_node_id')
+            ->all();
+        $orphanNodes = \App\Models\Node::query()
+            ->where('node_type', 'geodns')
+            ->whereNotIn('id', $mappedNodeIds)
+            ->orderByDesc('id')
+            ->get();
+        foreach ($orphanNodes as $node) {
+            $mappings[] = [
+                'id' => 'orphan-node-' . $node->id,
+                'domain' => '',
+                'country' => null,
+                'region' => $node->region ?? '',
+                'target_node_id' => $node->id,
+                'node_id' => $node->id,
+                'node_name' => $node->node_name ?? $node->name,
+                'public_ipv4' => $node->public_ipv4,
+                'node_alias' => null,
+                'target_endpoint' => null,
+                'priority' => 0,
+                'weight' => 0,
+                'enabled' => $node->status === 'online',
+                'created_at' => $node->created_at?->toIso8601String(),
+                'updated_at' => $node->updated_at?->toIso8601String(),
+                'node_count' => 1,
+                'node_status' => $node->status,
+                'node_last_heartbeat_at' => $node->last_heartbeat_at?->toIso8601String(),
+                'is_orphan' => true,
+            ];
+        }
+
         return response()->json([
             'data' => $mappings,
             'meta' => [

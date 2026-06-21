@@ -12,13 +12,16 @@ import (
 
 	"ocer-dns/geodns/internal/config"
 	"ocer-dns/geodns/internal/healthview"
+	"ocer-dns/geodns/internal/node"
 	"ocer-dns/geodns/internal/router"
 )
 
 type Server struct {
-	cfg    *config.Config
-	router *router.Router
-	client healthview.Client
+	cfg       *config.Config
+	router    *router.Router
+	client    healthview.Client
+	heartbeat *node.HeartbeatClient
+	startTime time.Time
 
 	mu   sync.RWMutex
 	view healthview.View
@@ -28,14 +31,24 @@ func New(cfg *config.Config) *Server {
 	r := router.New()
 
 	timeout := cfg.RequestTimeout()
+	hbSecret := cfg.NodeHMACSecret()
+	hb := (*node.HeartbeatClient)(nil)
+	if cfg.NodeToken() != "" && hbSecret != "" && cfg.NodeAPIEndpoint() != "" {
+		hb = node.NewHeartbeatClient(cfg.NodeAPIEndpoint(), cfg.NodeToken(), hbSecret, timeout)
+	} else {
+		log.Printf("geodns: heartbeat disabled (token/secret/endpoint not all set)")
+	}
+
 	return &Server{
-		cfg:    cfg,
-		router: r,
-		client: healthview.Client{
+		cfg:       cfg,
+		router:    r,
+		client:    healthview.Client{
 			BaseURL:    cfg.Server.ConsoleHealthURL,
 			Token:      cfg.HealthViewToken(),
 			HTTPClient: &http.Client{Timeout: timeout},
 		},
+		heartbeat: hb,
+		startTime: time.Now(),
 	}
 }
 
@@ -46,6 +59,19 @@ func (s *Server) Run(ctx context.Context) error {
 
 	refreshTicker := time.NewTicker(s.cfg.RefreshDuration())
 	defer refreshTicker.Stop()
+
+	heartbeatTicker := (*time.Ticker)(nil)
+	if s.heartbeat != nil {
+		// 心跳间隔 = 刷新间隔（保持节奏一致，最长 30s）
+		hbInterval := s.cfg.RefreshDuration()
+		if hbInterval > 30*time.Second {
+			hbInterval = 30 * time.Second
+		}
+		heartbeatTicker = time.NewTicker(hbInterval)
+		defer heartbeatTicker.Stop()
+		// 立即发一次
+		s.heartbeat.ReportWithStart(s.startTime, "geodns-local", 0, nil)
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", s.handleHealth)
@@ -87,8 +113,19 @@ func (s *Server) Run(ctx context.Context) error {
 			if err := s.refreshOnce(ctx); err != nil {
 				log.Printf("geodns: health view refresh failed: %v", err)
 			}
+		case <-tickerChan(heartbeatTicker):
+			if s.heartbeat != nil {
+				s.heartbeat.ReportWithStart(s.startTime, "geodns-local", 0, nil)
+			}
 		}
 	}
+}
+
+func tickerChan(t *time.Ticker) <-chan time.Time {
+	if t == nil {
+		return nil
+	}
+	return t.C
 }
 
 func (s *Server) refreshOnce(ctx context.Context) error {

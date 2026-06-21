@@ -18,6 +18,10 @@ class JobExecution extends Model
 
     public const FAILURE_THRESHOLD = 3;
 
+    // 2026-06-22 NEW P0#N1: 迁移用 started_at/finished_at 代替 created_at/updated_at。
+    // 关闭 Eloquent 自动 timestamps，否则 INSERT 会写 created_at/updated_at → 1054 Column not found。
+    public $timestamps = false;
+
     protected $fillable = [
         'job_type',
         'status',

@@ -29,8 +29,9 @@ type RoutingConfig struct {
 }
 
 type NodeConfig struct {
-	Token      string `yaml:"token"`
+	Token       string `yaml:"token"`
 	APIEndpoint string `yaml:"api_endpoint"`
+	HMACSecret  string `yaml:"hmac_secret"`
 }
 
 func (c *Config) RefreshDuration() time.Duration {
@@ -77,6 +78,13 @@ func (c *Config) NodeAPIEndpoint() string {
 		return e
 	}
 	return os.Getenv("GEODNS_API_ENDPOINT")
+}
+
+func (c *Config) NodeHMACSecret() string {
+	if s := c.Node.HMACSecret; s != "" {
+		return s
+	}
+	return os.Getenv("GEODNS_HMAC_SECRET")
 }
 
 func (c *Config) DNSListenAddr() string {

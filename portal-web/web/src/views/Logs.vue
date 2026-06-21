@@ -39,11 +39,11 @@
             </div>
 
             <el-table :data="logs" stripe :empty-text="$t('logs.noLogs')">
-                <el-table-column :label="$t('logs.time')" width="180">
+                <el-table-column :label="$t('logs.time')" width="220">
                     <template #default="{ row }">{{ formatTime(row.timestamp) }}</template>
                 </el-table-column>
                 <el-table-column prop="domain" :label="$t('logs.domain')" min-width="250" />
-                <el-table-column :label="$t('logs.action')" width="100">
+                <el-table-column :label="$t('logs.action')" width="140">
                     <template #default="{ row }">
                         <el-tag :type="row.action === 'blocked' ? 'danger' : 'success'" size="small">
                             {{ row.action === 'blocked' ? $t('logs.blocked') : $t('logs.allowed') }}

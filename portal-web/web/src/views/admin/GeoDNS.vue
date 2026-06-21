@@ -22,7 +22,7 @@
             </el-input>
             <el-button type="primary" size="small" @click="openCreateDialog">
                 <el-icon class="el-icon--left"><Plus /></el-icon>
-                <span>{{ $t('admin.geoDns.addServer') || '添加解析服务器' }}</span>
+                <span>{{ $t('admin.geoDns.addServer') || '添加解析节点' }}</span>
             </el-button>
         </template>
 
@@ -76,16 +76,17 @@
             <el-table-column :label="$t('admin.geoDns.actions')" fixed="right">
                 <template #default="{ row }">
                     <div style="white-space:nowrap;display:flex;gap:4px;align-items:center">
-                    <el-button size="small" text type="primary" @click="openEditDialog(row)">
+                    <el-button v-if="!row.is_orphan" size="small" text type="primary" @click="openEditDialog(row)">
                         <el-icon><Edit /></el-icon>
                     </el-button>
                     <el-button size="small" text type="success" :disabled="!(row.target_node_id || row.node_id)" @click="handleDeploy(row)">
                         <el-icon><Connection /></el-icon>
                         <span>{{ $t('admin.nodes.deploy') || '部署' }}</span>
                     </el-button>
-                    <el-button size="small" text type="danger" @click="handleDelete(row.id)">
+                    <el-button v-if="!row.is_orphan" size="small" text type="danger" @click="handleDelete(row.id)">
                         <el-icon><Delete /></el-icon>
                     </el-button>
+                    <el-tag v-if="row.is_orphan" size="small" type="info" effect="plain" style="white-space:nowrap">{{ $t('admin.geoDns.orphanTag') || '无映射' }}</el-tag>
                 </div>
                 </template>
             </el-table-column>

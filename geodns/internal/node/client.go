@@ -1,22 +1,22 @@
 package node
 
 import (
-"crypto/rand"
-"encoding/hex"
-"encoding/json"
-"fmt"
-"io"
-"log"
-"net/http"
-"strconv"
-"strings"
-"time"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"strings"
+	"time"
+
+	"ocer-dns/geodns/internal/signing"
 )
 
 type Client struct {
-	Token      string
+	Token       string
+	HMACSecret  string // 2026-06-22 NEW P0#3: 可选 HMAC 密钥（默认回退到 Token）
 	APIEndpoint string
-	client     *http.Client
+	client      *http.Client
 }
 
 type ResolverNode struct {
@@ -42,13 +42,16 @@ type ConfigResponse struct {
 
 func NewClient(token, endpoint string) *Client {
 	return &Client{
-		Token:      token,
+		Token:       token,
 		APIEndpoint: strings.TrimSuffix(endpoint, "/"),
 		client: &http.Client{
 			Timeout: 10 * time.Second,
 		},
 	}
 }
+
+// SetHMACSecret 注入 HMAC 密钥。空字符串表示回退到 Token（向后兼容）。
+func (c *Client) SetHMACSecret(secret string) { c.HMACSecret = secret }
 
 func (c *Client) GetConfig() (*GeoDNSConfig, error) {
 	url := c.APIEndpoint + "/node/geodns/config"
@@ -79,15 +82,10 @@ func (c *Client) GetConfig() (*GeoDNSConfig, error) {
 }
 
 func (c *Client) signRequest(req *http.Request) {
-	req.Header.Set("Authorization", "Bearer "+c.Token)
-
-	ts := strconv.FormatInt(time.Now().Unix(), 10)
-	req.Header.Set("X-Timestamp", ts)
-
-	nonce := make([]byte, 16)
-	if _, err := io.ReadFull(rand.Reader, nonce); err == nil {
-		req.Header.Set("X-Nonce", hex.EncodeToString(nonce))
-	}
+	// 2026-06-22 NEW P0#3: 旧版只设了 Bearer + Timestamp + Nonce，未计算 X-Signature，
+	// 会被 portal-web VerifyRequestSignature 中间件以 missing_auth_headers 拒绝。
+	// 改为调用统一 signing 工具，添加完整 5 个头。
+	signing.AddHMACHeaders(req, c.Token, c.HMACSecret, nil)
 }
 
 func (c *Client) RunConfigRefresh(ctx chan<- *GeoDNSConfig, refreshInterval time.Duration) {

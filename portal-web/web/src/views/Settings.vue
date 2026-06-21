@@ -76,12 +76,45 @@
                                 </template>
                             </el-input>
                         </el-form-item>
-                        <el-form-item :label="$t('settings.ipv6Endpoint')">
-                            <el-input :model-value="ipv6Endpoint" readonly>
+                        <el-form-item :label="$t('settings.doqHost')">
+                            <el-input :model-value="doqHost" readonly>
                                 <template #append>
-                                    <el-button @click="copyText(ipv6Endpoint)">{{ $t('common.copy') }}</el-button>
+                                    <el-button @click="copyText(doqHost)">{{ $t('common.copy') }}</el-button>
                                 </template>
                             </el-input>
+                            <div v-if="doqUrl" class="endpoint-tip">{{ doqUrl }}</div>
+                        </el-form-item>
+                        <el-form-item :label="$t('settings.ipv4Endpoints')">
+                            <div v-if="ipv4Endpoints.length" class="endpoint-list">
+                                <el-input
+                                    v-for="(ip, idx) in ipv4Endpoints"
+                                    :key="idx"
+                                    :model-value="ip"
+                                    readonly
+                                    class="endpoint-list__item"
+                                >
+                                    <template #append>
+                                        <el-button @click="copyText(ip)">{{ $t('common.copy') }}</el-button>
+                                    </template>
+                                </el-input>
+                            </div>
+                            <el-empty v-else :description="$t('settings.noIpv4') || '暂无在线 IPv4 节点'" :image-size="60" />
+                        </el-form-item>
+                        <el-form-item :label="$t('settings.ipv6Endpoints')">
+                            <div v-if="ipv6Endpoints.length" class="endpoint-list">
+                                <el-input
+                                    v-for="(ip, idx) in ipv6Endpoints"
+                                    :key="idx"
+                                    :model-value="ip"
+                                    readonly
+                                    class="endpoint-list__item"
+                                >
+                                    <template #append>
+                                        <el-button @click="copyText(ip)">{{ $t('common.copy') }}</el-button>
+                                    </template>
+                                </el-input>
+                            </div>
+                            <el-empty v-else :description="$t('settings.noIpv6') || '暂无 IPv6 地址'" :image-size="60" />
                         </el-form-item>
                     </el-form>
                 </el-card>
@@ -120,7 +153,6 @@ import { Check } from '@element-plus/icons-vue'
 import client from '@/api/client'
 import { useI18n } from 'vue-i18n'
 import Layout from '@/components/Layout.vue'
-import { useCurrentProfile } from '@/composables/useCurrentProfile'
 
 const { locale, t } = useI18n()
 const saving = ref(false)
@@ -140,25 +172,23 @@ const passwordForm = reactive({
     confirm: '',
 })
 
-// V2 产品展示：移除 IPv4 / 127.0.0.1:53 / prf_ 前缀 / dns.ocerdns.local
-// DNS 节点域名由后端 system_config.dns_domain 提供，缺省值 dns.ocerlink.com
-const dnsDomain = ref('dns.ocerlink.com')
-const { currentProfileUid } = useCurrentProfile()
-
-// 6 位 hex profile_uid 拆成 IPv6 风格后缀：bcfe3a → bc:fe3a
-const ipv6Suffix = computed(() => {
-    const pid = currentProfileUid.value || ''
-    if (pid.length < 6) return ''
-    return `${pid.slice(0, 2)}:${pid.slice(2, 6)}`
+// DNS 接入端点由后端 /user/dns-endpoints 根据 profile_uid 和 system_config.dns_domain 生成
+const endpoints = ref({
+    profile_uid: '',
+    doh: '',
+    dot: '',
+    doq: '',
+    doq_url: '',
+    ipv4: [],
+    ipv6: [],
 })
 
-const dohUrl = computed(() => `https://${dnsDomain.value}/${currentProfileUid.value || ''}/dns-query`)
-const dotHost = computed(() => `${currentProfileUid.value || ''}.${dnsDomain.value}`)
-const ipv6Endpoint = computed(() => {
-    const suffix = ipv6Suffix.value
-    if (!suffix) return ''
-    return `你的 IPv6 前缀::${suffix}`
-})
+const dohUrl = computed(() => endpoints.value.doh || '')
+const dotHost = computed(() => endpoints.value.dot || '')
+const doqHost = computed(() => endpoints.value.doq || '')
+const doqUrl = computed(() => endpoints.value.doq_url || '')
+const ipv4Endpoints = computed(() => endpoints.value.ipv4 || [])
+const ipv6Endpoints = computed(() => endpoints.value.ipv6 || [])
 
 const copyText = (text) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -208,11 +238,11 @@ onMounted(async () => {
         const { data } = await client.get('/user/settings')
         if (data.data) Object.assign(form, data.data)
     } catch {}
-    // 从公开接口加载后台基本设置中的 DNS 域名
+    // 加载 DNS 接入端点（DoH / DoT / DoQ / IPv4 / IPv6）
     try {
-        const { data } = await client.get('/dns-config')
-        if (data?.data?.dns_domain) {
-            dnsDomain.value = data.data.dns_domain
+        const { data } = await client.get('/user/dns-endpoints')
+        if (data?.data) {
+            endpoints.value = { ...endpoints.value, ...data.data }
         }
     } catch {}
     // 加载当前方案信息
@@ -244,5 +274,23 @@ onMounted(async () => {
 }
 .settings-card {
     border-radius: var(--radius-lg);
+}
+
+.endpoint-tip {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.endpoint-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.endpoint-list__item {
+    width: 100%;
 }
 </style>

@@ -1,1 +1,34 @@
-{"version":10000,"generated_at":"2026-06-21T02:40:29+00:00","expires_at":"2026-06-21T02:50:29+00:00","profiles":[{"quota":{},"rules":[{"action":"allow","domain":"www.baidu.com","enabled":true,"rule_id":"1","category":null,"list_type":"allowlist","match_type":"exact","normalized_domain":"www.baidu.com"}],"adblock":{"enabled":false},"devices":[{"name":"Localhost","device_id":"dev-localhost-bae","source_ip":"127.0.0.1","device_type":"doh","device_key_hash":null}],"privacy":{"enabled":true,"log_mode":"full","adblock_enabled":false},"team_id":null,"user_id":"1","version":6,"parental":{"adult":true,"enabled":false,"safe_search":false},"security":{"enabled":true,"categories":{"malware":true,"phishing":true}},"profile_id":"bae475","block_response":"nxdomain","default_action":"allow"}],"rulesets":[],"upstreams":[{"address":"1.1.1.1:53","protocol":"udp","timeout":"1500ms"}],"runtime":{"dnssec_validate":false,"ecs_enabled":false,"qname_minimization":false},"signature":null,"checksum":"sha256:30b38765590091bb40579e078662738d9b1c20eb2b12971436d3aa169709e0c1"}
+{
+    "version": 10003,
+    "generated_at": "2026-06-21T08:53:34+00:00",
+    "expires_at": "2026-06-21T09:03:34+00:00",
+    "profiles": [
+        {
+            "rules": [],
+            "profile_id": "p1_e2e_test",
+            "quota": [],
+            "devices": [
+                {
+                    "device_id": "d_e2e_local",
+                    "source_ip": "127.0.0.1",
+                    "name": "e2e-test-client"
+                }
+            ]
+        }
+    ],
+    "rulesets": [],
+    "upstreams": [
+        {
+            "address": "1.1.1.1:53",
+            "protocol": "udp",
+            "timeout": "1500ms"
+        }
+    ],
+    "runtime": {
+        "dnssec_validate": false,
+        "ecs_enabled": false,
+        "qname_minimization": false
+    },
+    "signature": null,
+    "checksum": "sha256:af937de6a2c82de147891dcd705fbac83c2a4c547e03017f5c50ff8f4b58d2c2"
+}

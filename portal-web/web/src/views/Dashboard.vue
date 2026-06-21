@@ -32,6 +32,15 @@
                             <button class="copy-btn" @click="copyText(endpoints.doh)">{{ $t('dashboard.copy') }}</button>
                         </div>
                     </div>
+
+                    <!-- DoT / DoQ -->
+                    <div class="endpoint-block">
+                        <div class="endpoint-label">{{ $t('dashboard.endpointDotDoq') }}</div>
+                        <div class="code-row">
+                            <div class="code">{{ endpoints.dot || '—' }}</div>
+                            <button class="copy-btn" @click="copyText(endpoints.dot)">{{ $t('dashboard.copy') }}</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -232,7 +241,7 @@ import { useCurrentProfile } from '@/composables/useCurrentProfile'
 const { t } = useI18n()
 const { currentProfileId } = useCurrentProfile()
 
-const endpoints = ref({ profile_uid: '', doh: '', dot: '', ipv4: [], ipv6: [] })
+const endpoints = ref({ profile_uid: '', doh: '', dot: '', doq: '', doq_url: '', ipv4: [], ipv6: [] })
 const topVisited = ref([])
 const topBlocked = ref([])
 const recentDevices = ref([])
@@ -273,6 +282,8 @@ const fetchData = async () => {
             profile_uid: ep.profile_uid || '',
             doh: ep.doh || '',
             dot: ep.dot || '',
+            doq: ep.doq || '',
+            doq_url: ep.doq_url || '',
             ipv4: Array.isArray(ep.ipv4) ? ep.ipv4 : [],
             ipv6: Array.isArray(ep.ipv6) ? ep.ipv6 : [],
         }

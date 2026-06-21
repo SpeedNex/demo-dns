@@ -411,10 +411,14 @@ final class UserWorkspaceService
             ->values()
             ->all();
 
+        $host = sprintf('%s.%s', $shortId, $domain);
+
         return [
             'profile_uid' => $shortId,
-            'doh' => sprintf('https://%s/%s/dns-query', $domain, $shortId),
-            'dot' => sprintf('%s.%s', $shortId, $domain),
+            'doh' => sprintf('https://%s/%s', $domain, $shortId),
+            'dot' => $host,
+            'doq' => $host,
+            'doq_url' => sprintf('quic://%s:853', $host),
             'ipv6' => [sprintf('2606:%s:%s::53', substr($shortId, 0, 2), substr($shortId, 2, 4))],
             'ipv4' => $ipv4List,
         ];

@@ -8,7 +8,9 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('task_executions', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            // UI.md P0#1: 真实库使用字符串主键 (PublishService 生成 texec_xxx)，
+            // 与 TaskExecution::$keyType='string' 和 booted() ULID 生成对齐。
+            $table->string('id', 32)->primary();
             $table->unsignedBigInteger('publish_task_id');
             $table->unsignedBigInteger('node_id');
             $table->integer('config_version')->default(0);

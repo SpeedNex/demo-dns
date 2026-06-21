@@ -11,32 +11,56 @@
                         </div>
                     </router-link>
 
-                    <!-- 一级菜单：分组；二级菜单：可展开/折叠 -->
-                    <div v-for="group in navGroups" :key="group.key" class="nav-group">
+                    <!-- 独立一级菜单（不归属任何分组），默认显示在最顶部 -->
+                    <div v-if="topMenuItems.length > 0" class="top-menu-items">
+                        <router-link
+                            v-for="item in topMenuItems"
+                            :key="item.id"
+                            :to="item.path"
+                            class="nav-item"
+                            :class="{ 'is-active': activeRoute === item.path }"
+                        >
+                            <el-icon class="nav-item__icon"><component :is="item.icon" /></el-icon>
+                            <span class="nav-item__label">{{ item.label }}</span>
+                        </router-link>
+                    </div>
+
+                    <!-- 多级菜单树：顶级菜单可展开/折叠，展示子菜单 -->
+                    <div v-for="menu in navTree" :key="menu.id" class="nav-group">
+                        <router-link
+                            v-if="!menu.children.length"
+                            :to="menu.path"
+                            class="nav-group__header nav-group__header--link"
+                            :class="{ 'has-active': activeRoute === menu.path }"
+                        >
+                            <el-icon class="nav-group__icon"><component :is="menu.icon" /></el-icon>
+                            <span class="nav-group__title">{{ menu.label }}</span>
+                        </router-link>
                         <button
+                            v-else
                             type="button"
                             class="nav-group__header"
-                            :class="{ 'is-expanded': isExpanded(group.key), 'has-active': isGroupActive(group) }"
-                            :aria-expanded="isExpanded(group.key) ? 'true' : 'false'"
-                            @click="toggleGroup(group.key)"
+                            :class="{ 'is-expanded': isExpanded(menu.id), 'has-active': isMenuActive(menu) }"
+                            :aria-expanded="isExpanded(menu.id) ? 'true' : 'false'"
+                            @click="toggleMenu(menu.id)"
                         >
-                            <el-icon class="nav-group__icon"><component :is="group.icon" /></el-icon>
-                            <span class="nav-group__title">{{ group.title }}</span>
-                            <el-icon class="nav-group__caret" :class="{ 'is-expanded': isExpanded(group.key) }">
+                            <el-icon class="nav-group__icon"><component :is="menu.icon" /></el-icon>
+                            <span class="nav-group__title">{{ menu.label }}</span>
+                            <el-icon class="nav-group__caret" :class="{ 'is-expanded': isExpanded(menu.id) }">
                                 <ArrowDown />
                             </el-icon>
                         </button>
-                        <div class="nav-group__panel" :class="{ 'is-expanded': isExpanded(group.key) }">
+                        <div v-if="menu.children.length" class="nav-group__panel" :class="{ 'is-expanded': isExpanded(menu.id) }">
                             <div class="nav-group__panel-inner">
                                 <router-link
-                                    v-for="item in group.items"
-                                    :key="item.to"
-                                    :to="item.to"
+                                    v-for="child in menu.children"
+                                    :key="child.id"
+                                    :to="child.path"
                                     class="nav-item"
-                                    :class="{ 'is-active': activeRoute === item.to }"
+                                    :class="{ 'is-active': activeRoute === child.path }"
                                 >
-                                    <el-icon class="nav-item__icon"><component :is="item.icon" /></el-icon>
-                                    <span class="nav-item__label">{{ item.label }}</span>
+                                    <el-icon class="nav-item__icon"><component :is="child.icon" /></el-icon>
+                                    <span class="nav-item__label">{{ child.label }}</span>
                                 </router-link>
                             </div>
                         </div>
@@ -112,27 +136,8 @@ const { locale } = useI18n()
 const menuConfig = ref({ mainMenu: [], subMenu: [] })
 
 function normalizeMenuConfig(config) {
-    const mainMenu = []
-    const subMenu = []
-    const seen = new Set()
-
-    for (const item of (config.mainMenu || [])) {
-        if (item.id === 'finance' || item.id === 'basic-config' || item.id === 'publishes') continue
-        if (seen.has(item.id)) continue
-        seen.add(item.id)
-        mainMenu.push({ ...item, parentId: null })
-    }
-
-    for (const item of (config.subMenu || [])) {
-        if (seen.has(item.id)) continue
-        seen.add(item.id)
-        if (mainMenu.some((m) => m.id === item.parentId)) {
-            subMenu.push(item)
-        } else {
-            // 孤儿子项：按主菜单收纳
-            mainMenu.push({ ...item, parentId: null, icon: item.icon || 'Document' })
-        }
-    }
+    const mainMenu = (config.mainMenu || []).map((item) => ({ ...item, parentId: null }))
+    const subMenu = (config.subMenu || []).map((item) => ({ ...item }))
 
     mainMenu.sort((a, b) => a.sort - b.sort)
     mainMenu.forEach((item, index) => { item.sort = index + 1 })
@@ -239,113 +244,80 @@ const loadExpanded = () => {
     } catch (_) { /* ignore */ }
     return null
 }
-const expandedGroups = ref(loadExpanded() || {
-    service: true,  // 默认展开
-    monitor: false,
-    user: false,
-    finance: false,
-    admin: true,
-    settings: false,
-})
+const expandedMenus = ref(loadExpanded() || {})
 const persistExpanded = () => {
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(expandedGroups.value))
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(expandedMenus.value))
     } catch (_) { /* ignore */ }
 }
-const isExpanded = (key) => expandedGroups.value[key] === true
-const toggleGroup = (key) => {
-    expandedGroups.value[key] = !expandedGroups.value[key]
+const isExpanded = (id) => expandedMenus.value[id] === true
+const toggleMenu = (id) => {
+    expandedMenus.value[id] = !expandedMenus.value[id]
     persistExpanded()
 }
-const isGroupActive = (group) => {
-    return (group.items || []).some((it) => activeRoute.value === it.to)
+const isMenuActive = (menu) => {
+    if (activeRoute.value === menu.path) return true
+    return (menu.children || []).some((child) => activeRoute.value === child.path)
 }
 
-// 根据菜单配置动态生成 navGroups
-const navGroups = computed(() => {
+// 菜单 label 解析：以 nav./admin. 开头的视为 i18n key 走翻译；否则原样显示数据库存的名称
+const resolveMenuLabel = (key) => {
+    if (!key) return ''
+    if (key.startsWith('nav.') || key.startsWith('admin.')) {
+        const translated = i18n.global.t(key)
+        if (translated && translated !== key) return translated
+    }
+    return key
+}
+
+// 独立一级菜单：groupKey 为 null 的菜单项，渲染在分组列表之前
+const topMenuItems = computed(() => {
+    const mainMenu = menuConfig.value.mainMenu || []
+    return mainMenu
+        .filter(m => m.groupKey == null && m.visible)
+        .sort((a, b) => a.sort - b.sort)
+        .map(m => ({
+            id: m.id,
+            path: m.path,
+            label: resolveMenuLabel(m.labelKey),
+            icon: m.icon,
+        }))
+})
+
+// 多级菜单树：仅含父级菜单及其可见子菜单
+const navTree = computed(() => {
     const mainMenu = menuConfig.value.mainMenu || []
     const subMenu = menuConfig.value.subMenu || []
 
-    // 按分组归类菜单（基于 id）
-const serviceIds = ['dashboard', 'nodes', 'geo-dns', 'region-manage', 'rules']
-    const monitorIds = ['alerts', 'query-logs', 'audit-logs']
-    const userIds = ['users', 'devices', 'member-catalogs']
-    const financeIds = ['billing', 'plans', 'balance', 'recharge', 'bill', 'refund-records']
-    const settingsIds = ['system-config']
-    const adminIds = ['admins', 'rbac', 'menu-config']
+    return mainMenu
+        .filter(m => m.groupKey != null && m.visible)
+        .sort((a, b) => a.sort - b.sort)
+        .map(main => {
+            const children = subMenu
+                .filter(s => s.parentId === main.id && s.visible)
+                .sort((a, b) => a.sort - b.sort)
+                .map(child => ({
+                    id: child.id,
+                    path: child.path,
+                    label: resolveMenuLabel(child.labelKey),
+                    icon: child.icon || 'ArrowRight',
+                }))
 
-    return [
-        {
-            key: 'service',
-            title: i18n.global.t('admin.menuGroup.service'),
-            icon: 'Box',
-            items: buildMenuItems(mainMenu, subMenu, serviceIds),
-        },
-        {
-            key: 'monitor',
-            title: i18n.global.t('admin.menuGroup.monitor'),
-            icon: 'View',
-            items: buildMenuItems(mainMenu, subMenu, monitorIds),
-        },
-        {
-            key: 'user',
-            title: i18n.global.t('admin.menuGroup.userMgmt'),
-            icon: 'UserFilled',
-            items: buildMenuItems(mainMenu, subMenu, userIds),
-        },
-        {
-            key: 'finance',
-            title: i18n.global.t('admin.menuGroup.finance'),
-            icon: 'Coin',
-            items: buildMenuItems(mainMenu, subMenu, financeIds),
-        },
-        {
-            key: 'admin',
-            title: i18n.global.t('admin.menuGroup.admin') || '管理员管理',
-            icon: 'Avatar',
-            items: buildMenuItems(mainMenu, subMenu, adminIds),
-        },
-        {
-            key: 'settings',
-            title: i18n.global.t('admin.menuGroup.settings'),
-            icon: 'Setting',
-            items: buildMenuItems(mainMenu, subMenu, settingsIds),
-        },
-    ]
+            return {
+                id: main.id,
+                path: main.path,
+                label: resolveMenuLabel(main.labelKey),
+                icon: main.icon,
+                children,
+            }
+        })
 })
 
-function buildMenuItems(mainMenu, subMenu, groupIds) {
-    const items = []
-    const mainVisible = mainMenu.filter(m => groupIds.includes(m.id) && m.visible)
-    mainVisible.sort((a, b) => a.sort - b.sort)
-
-    for (const main of mainVisible) {
-        // 主菜单项
-        items.push({
-            to: main.path,
-            label: i18n.global.t(main.labelKey) || main.labelKey,
-            icon: main.icon,
-        })
-
-        // 子菜单项
-        const children = subMenu.filter(s => s.parentId === main.id && s.visible)
-        children.sort((a, b) => a.sort - b.sort)
-        for (const child of children) {
-            items.push({
-                to: child.path,
-                label: i18n.global.t(child.labelKey) || child.labelKey,
-                icon: 'ArrowRight',
-            })
-        }
-    }
-    return items
-}
-
-// 路由切换时，自动展开所在组
+// 路由切换时，自动展开当前菜单
 watch(activeRoute, (path) => {
-    const group = navGroups.value.find((g) => g.items.some((it) => it.to === path))
-    if (group && !expandedGroups.value[group.key]) {
-        expandedGroups.value[group.key] = true
+    const menu = navTree.value.find((m) => m.path === path || m.children.some((c) => c.path === path))
+    if (menu && !expandedMenus.value[menu.id]) {
+        expandedMenus.value[menu.id] = true
         persistExpanded()
     }
 }, { immediate: true })
@@ -504,6 +476,14 @@ body {
     margin-top: 12px;
 }
 
+/* === 独立一级菜单 === */
+.top-menu-items {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 10px;
+}
+
 /* === 一/二级折叠菜单 === */
 .nav-group {
     margin-bottom: 6px;
@@ -529,6 +509,10 @@ body {
 .nav-group__header:hover {
     background: rgba(59, 130, 246, 0.18);
     color: #fff;
+}
+
+.nav-group__header.nav-group__header--link {
+    text-decoration: none;
 }
 
 .nav-group__header.has-active {
@@ -573,9 +557,9 @@ body {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding: 4px 0 8px 28px;
+    padding: 4px 0 8px 42px;
     border-left: 1px solid rgba(148, 163, 184, 0.18);
-    margin-left: 18px;
+    margin-left: 28px;
 }
 
 .nav-item {

@@ -45,7 +45,9 @@ class AdminMenuConfigController extends Controller
                 ];
             });
 
-        return response()->json(['data' => $menus]);
+        return response()->json([
+            'data' => $menus,
+        ]);
     }
 
     public function update(Request $request): JsonResponse
