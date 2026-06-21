@@ -67,6 +67,13 @@ func (c *Config) HealthViewToken() string {
 	return os.Getenv("GEODNS_INTERNAL_TOKEN")
 }
 
+func (c *Config) ConsoleHealthURL() string {
+	if u := c.Server.ConsoleHealthURL; u != "" {
+		return u
+	}
+	return os.Getenv("GEODNS_CONSOLE_HEALTH_URL")
+}
+
 func (c *Config) NodeToken() string {
 	if t := c.Node.Token; t != "" {
 		return t

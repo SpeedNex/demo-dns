@@ -304,7 +304,7 @@ func registerNodeToConsole(cfg *config.Config) error {
 	if endpoint == "" {
 		return nil
 	}
-	url := endpoint + "/api/v1/node/nodes/register"
+	url := endpoint + "/api/v1/node/dns-resolver/register"
 
 	payload := map[string]any{
 		"node_id":      cfg.ControlPlane.NodeID,

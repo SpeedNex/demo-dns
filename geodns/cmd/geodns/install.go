@@ -94,11 +94,16 @@ func runInstall(args []string) error {
 // registerNodeToConsole 把本次 install 行为上报给 console，
 // 触发控制台「已注册」状态展示（不阻塞 install，失败仅打印警告）。
 func registerNodeToConsole(cfg *config.Config) error {
-	server := strings.TrimRight(cfg.NodeAPIEndpoint(), "/")
+	// 2026-06-21 fix: NodeAPIEndpoint 形如 ".../api/v1/internal"，直接拼接
+	// 会产生 ".../api/v1/internal/api/v1/node/..." 双重前缀导致 404。
+	// 改从 console_health_url 提取 base url。
+	server := resolveConsoleBaseURL(cfg.ConsoleHealthURL())
 	if server == "" {
 		return nil // 无控制面时跳过
 	}
-	url := server + "/api/v1/node/nodes/register"
+	// 2026-06-21: geodns 专属 register 端点（与 dns-resolver 的 nodes/register 隔离），
+	// 防止不同类型节点共用同一接口造成冲突。
+	url := server + "/api/v1/node/geodns/register"
 
 	payload := map[string]any{
 		"node_id":     cfg.NodeToken(), // 仅作标识
@@ -128,6 +133,20 @@ func registerNodeToConsole(cfg *config.Config) error {
 		return fmt.Errorf("register API returned %d: %s", resp.StatusCode, string(respBody))
 	}
 	return nil
+}
+
+// resolveConsoleBaseURL 从 console_health_url 提取 base url。
+// console_health_url 形如 "https://console.ocerlink.com/api/v1/internal/geodns/health-view"，
+// 需要截断到 "/api/v1" 之前，只保留 scheme + host。
+func resolveConsoleBaseURL(healthURL string) string {
+	healthURL = strings.TrimRight(healthURL, "/")
+	if healthURL == "" {
+		return ""
+	}
+	if idx := strings.Index(healthURL, "/api/v1/"); idx > 0 {
+		return healthURL[:idx]
+	}
+	return healthURL
 }
 
 func validateGeodnsInstallOptions(opts *installOptions) error {

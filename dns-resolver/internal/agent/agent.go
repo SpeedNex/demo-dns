@@ -194,7 +194,7 @@ func (a *Agent) sendHeartbeat() {
 		return
 	}
 
-	resp, err := a.doNodeRequest(http.MethodPost, "/api/v1/node/nodes/heartbeat", bytes.NewReader(body))
+	resp, err := a.doNodeRequest(http.MethodPost, "/api/v1/node/heartbeat", bytes.NewReader(body))
 	if err != nil {
 		log.Printf("Heartbeat failed: %v", err)
 		return
@@ -219,7 +219,7 @@ func (a *Agent) sendHeartbeat() {
 }
 
 func (a *Agent) pullLatestConfig() {
-	path := fmt.Sprintf("/api/v1/node/resolver/config?node_id=%s&current_version=%d",
+	path := fmt.Sprintf("/api/v1/node/dns-resolver/config?node_id=%s&current_version=%d",
 		a.cred.NodeID, a.currentVersion())
 	resp, err := a.doNodeRequest(http.MethodGet, path, nil)
 	if err != nil {
@@ -301,7 +301,7 @@ func (a *Agent) sendConfigAck(version int64, checksum, status, errorCode, errorM
 	}
 
 	body, _ := json.Marshal(payload)
-	resp, err := a.doNodeRequest(http.MethodPost, "/api/v1/node/resolver/config/ack", bytes.NewReader(body))
+	resp, err := a.doNodeRequest(http.MethodPost, "/api/v1/node/dns-resolver/config/ack", bytes.NewReader(body))
 	if err != nil {
 		log.Printf("Config ACK failed: %v", err)
 		return

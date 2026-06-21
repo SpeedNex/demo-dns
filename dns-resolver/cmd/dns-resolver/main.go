@@ -131,7 +131,7 @@ func main() {
 	// Initialize reliable log buffer (receives credentials directly, not from disk)
 	logBuffer := logging.NewBuffer(
 		cfg.Logging.BufferPath,
-		fmt.Sprintf("%s/api/v1/node/query-logs/batch", cfg.ControlPlane.Endpoint),
+		fmt.Sprintf("%s/api/v1/node/dns-resolver/query-logs", cfg.ControlPlane.Endpoint),
 		cfg.Logging.MaxBufferSize,
 		10*time.Second,
 		logging.Credentials{
