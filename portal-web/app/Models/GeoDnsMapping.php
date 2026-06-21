@@ -16,9 +16,9 @@ class GeoDnsMapping extends Model
 
     protected $fillable = [
         'domain',
+        'country',
         'region',
         'target_node_id',
-        'node_id',
         'node_name',
         'public_ipv4',
         'node_alias',
@@ -35,18 +35,42 @@ class GeoDnsMapping extends Model
         ];
     }
 
+    public function fill(array $attributes)
+    {
+        if (array_key_exists('node_id', $attributes) && ! array_key_exists('target_node_id', $attributes)) {
+            $attributes['target_node_id'] = $attributes['node_id'];
+        }
+
+        unset($attributes['node_id']);
+
+        if (empty($attributes['domain'])) {
+            $attributes['domain'] = 'resolver.ocerlink.com';
+        }
+
+        return parent::fill($attributes);
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $mapping): void {
+            if (empty($mapping->domain)) {
+                $mapping->domain = 'resolver.ocerlink.com';
+            }
+        });
+    }
+
     public function node(): BelongsTo
     {
         return $this->belongsTo(Node::class, 'target_node_id');
     }
 
-    public function getNodeIdAttribute(): ?int
+    public function getNodeIdAttribute(): string|int|null
     {
-        return isset($this->attributes['target_node_id']) ? (int) $this->attributes['target_node_id'] : null;
+        return $this->attributes['target_node_id'] ?? null;
     }
 
     public function setNodeIdAttribute(string|int|null $value): void
     {
-        $this->attributes['target_node_id'] = $value !== null ? (int) $value : null;
+        $this->attributes['target_node_id'] = $value;
     }
 }

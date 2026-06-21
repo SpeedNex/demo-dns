@@ -20,14 +20,14 @@ final class AdminRuleController
         $query = RuleSource::query();
 
         if ($request->filled('type')) {
-            $query->where('type', (string) $request->input('type'));
+            $query->where('format', $this->mapTypeToFormat((string) $request->input('type')));
         }
 
         if ($request->filled('enabled')) {
             $query->where('enabled', filter_var($request->input('enabled'), FILTER_VALIDATE_BOOLEAN));
         }
 
-        $sources = $query->orderBy('name')->get()->toArray();
+        $sources = $query->orderBy('name')->get()->map(fn (RuleSource $source): array => $this->presentSource($source))->all();
 
         return response()->json([
             'data' => $sources,
@@ -41,7 +41,7 @@ final class AdminRuleController
 
     public function show(string $id): JsonResponse
     {
-        return response()->json(['data' => RuleSource::query()->findOrFail($id)->toArray()]);
+        return response()->json(['data' => $this->presentSource(RuleSource::query()->findOrFail($id))]);
     }
 
     public function store(Request $request): JsonResponse
@@ -56,14 +56,14 @@ final class AdminRuleController
 
         $source = RuleSource::create([
             'name' => $validated['name'],
-            'type' => $validated['type'],
+            'format' => $this->mapTypeToFormat($validated['type']),
             'url' => $validated['url'],
             'enabled' => $validated['enabled'] ?? true,
         ]);
 
-        AdminAuditLog::record('rule.create', 'rule_source', $source->id, $source->toArray(), $actorId, null, $request->ip(), $request->userAgent());
+        AdminAuditLog::record('rule.create', 'rule_source', $source->id, $this->presentSource($source), $actorId, null, $request->ip(), $request->userAgent());
 
-        return response()->json(['data' => $source->toArray()], 201);
+        return response()->json(['data' => $this->presentSource($source)], 201);
     }
 
     public function update(Request $request, string $id): JsonResponse
@@ -78,11 +78,16 @@ final class AdminRuleController
             'enabled' => 'boolean',
         ]);
 
+        if (isset($validated['type'])) {
+            $validated['format'] = $this->mapTypeToFormat($validated['type']);
+            unset($validated['type']);
+        }
+
         $source->update($validated);
 
-        AdminAuditLog::record('rule.update', 'rule_source', $id, $source->toArray(), $actorId, null, $request->ip(), $request->userAgent());
+        AdminAuditLog::record('rule.update', 'rule_source', $id, $this->presentSource($source->fresh()), $actorId, null, $request->ip(), $request->userAgent());
 
-        return response()->json(['data' => $source->fresh()->toArray()]);
+        return response()->json(['data' => $this->presentSource($source->fresh())]);
     }
 
     public function destroy(Request $request, string $id): JsonResponse
@@ -102,8 +107,8 @@ final class AdminRuleController
         $source = RuleSource::findOrFail($id);
 
         $source->update([
-            'last_sync_status' => 'syncing',
-            'last_synced_at' => now(),
+            'last_sync_status' => 'pending',
+            'last_sync_at' => now(),
             'last_sync_message' => 'Downloading...',
         ]);
 
@@ -133,16 +138,17 @@ final class AdminRuleController
                     continue;
                 }
                 DB::table('rule_items')->updateOrInsert(
-                    ['source_id' => $source->id, 'domain' => $domain],
-                    ['created_at' => $now, 'updated_at' => $now]
+                    ['rule_source_id' => $source->id, 'domain' => $domain],
+                    ['category' => 'default', 'action' => 'block', 'created_at' => $now]
                 );
                 $imported++;
             }
 
             $source->update([
-                'last_sync_status' => 'success',
+                'item_count' => $imported,
+                'last_sync_status' => 'ok',
                 'last_sync_message' => "Imported {$imported} rules",
-                'last_synced_at' => now(),
+                'last_sync_at' => now(),
             ]);
 
             AdminAuditLog::record('rule.sync', 'rule_source', $id, [
@@ -154,7 +160,7 @@ final class AdminRuleController
             $source->update([
                 'last_sync_status' => 'failed',
                 'last_sync_message' => $e->getMessage(),
-                'last_synced_at' => now(),
+                'last_sync_at' => now(),
             ]);
 
             AdminAuditLog::record('rule.sync', 'rule_source', $id, [
@@ -255,5 +261,24 @@ final class AdminRuleController
         AdminAuditLog::record('rule.batch_delete', 'rule_source', null, ['ids' => $validated['ids'], 'count' => $count], $actorId, null, $request->ip(), $request->userAgent());
 
         return response()->json(['data' => ['deleted' => $count]]);
+    }
+
+    private function presentSource(RuleSource $source): array
+    {
+        $row = $source->toArray();
+        $row['type'] = $source->type;
+        $row['rule_count'] = $source->rule_count;
+        $row['last_synced_at'] = $source->last_synced_at?->toIso8601String();
+
+        return $row;
+    }
+
+    private function mapTypeToFormat(string $type): string
+    {
+        return match ($type) {
+            'domain_list' => 'domains',
+            'rpz' => 'json',
+            default => $type,
+        };
     }
 }

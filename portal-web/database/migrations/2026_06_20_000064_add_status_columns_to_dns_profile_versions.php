@@ -12,17 +12,41 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        if (! Schema::hasTable('profile_versions')) {
+            return;
+        }
+
         Schema::table('profile_versions', function (Blueprint $table) {
-            $table->string('status', 20)->nullable()->after('version')->default('published');
-            $table->unsignedInteger('rule_count')->nullable()->after('status')->default(0);
-            $table->string('message', 500)->nullable()->after('rule_count');
+            if (! Schema::hasColumn('profile_versions', 'status')) {
+                $table->string('status', 20)->nullable()->after('version')->default('published');
+            }
+
+            if (! Schema::hasColumn('profile_versions', 'rule_count')) {
+                $table->unsignedInteger('rule_count')->nullable()->after('status')->default(0);
+            }
+
+            if (! Schema::hasColumn('profile_versions', 'message')) {
+                $table->string('message', 500)->nullable()->after('rule_count');
+            }
         });
     }
 
     public function down(): void
     {
+        if (! Schema::hasTable('profile_versions')) {
+            return;
+        }
+
         Schema::table('profile_versions', function (Blueprint $table) {
-            $table->dropColumn(['status', 'rule_count', 'message']);
+            $columns = array_values(array_filter([
+                Schema::hasColumn('profile_versions', 'status') ? 'status' : null,
+                Schema::hasColumn('profile_versions', 'rule_count') ? 'rule_count' : null,
+                Schema::hasColumn('profile_versions', 'message') ? 'message' : null,
+            ]));
+
+            if ($columns !== []) {
+                $table->dropColumn($columns);
+            }
         });
     }
 };

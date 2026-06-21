@@ -34,6 +34,17 @@ class Node extends Model
         'current_config_version' => 'integer',
     ];
 
+    public function fill(array $attributes)
+    {
+        if (($attributes['status'] ?? null) === 'approved') {
+            $attributes['status'] = 'online';
+        }
+
+        unset($attributes['approved_at'], $attributes['version']);
+
+        return parent::fill($attributes);
+    }
+
     public function getRouteKeyName(): string
     {
         return 'node_code';
@@ -47,6 +58,26 @@ class Node extends Model
     public function setNodeNameAttribute(?string $value): void
     {
         $this->attributes['name'] = $value;
+    }
+
+    public function setStatusAttribute(?string $value): void
+    {
+        $this->attributes['status'] = $value === 'approved' ? 'online' : $value;
+    }
+
+    public function setApprovedAtAttribute(mixed $value): void
+    {
+    }
+
+    public function setVersionAttribute(mixed $value): void
+    {
+    }
+
+    public function setIdAttribute(mixed $value): void
+    {
+        if ($value !== null && is_numeric((string) $value)) {
+            $this->attributes['id'] = (int) $value;
+        }
     }
 
     public function tokens(): HasMany

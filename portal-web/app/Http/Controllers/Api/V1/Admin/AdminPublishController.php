@@ -33,17 +33,15 @@ final class AdminPublishController
         foreach ($tasksArray['data'] as $task) {
             switch ($task['status']) {
                 case 'queued':
-                case 'in_progress':
+                case 'running':
                     $pending++;
                     break;
-                case 'completed':
+                case 'succeeded':
+                case 'partial':
                     $completed++;
                     break;
                 case 'failed':
                     $failed++;
-                    break;
-                case 'cancelled':
-                    $cancelled++;
                     break;
             }
         }
@@ -68,17 +66,17 @@ final class AdminPublishController
         $actorId = $request->user()?->admin_id;
         $validated = $request->validate([
             'message' => 'required|string|max:500',
-            'config_version_id' => 'required_without:profile_id|string|nullable',
-            'profile_id' => 'required_without:config_version_id|string|nullable',
+            'config_version_id' => 'required_without:profile_id|nullable',
+            'profile_id' => 'required_without:config_version_id|nullable',
             'target_scope' => 'sometimes|string|in:all_nodes,specific_nodes,all_profiles',
             'target_node_ids' => 'sometimes|array',
-            'target_node_ids.*' => 'string',
+            'target_node_ids.*' => 'required',
         ]);
 
-        $targetScope = $validated['target_scope'] ?? 'all_nodes';
+        $targetScope = $this->mapTargetScope($validated['target_scope'] ?? 'all_nodes');
         $targetFilter = null;
 
-        if ($targetScope === 'specific_nodes' && !empty($validated['target_node_ids'])) {
+        if ($targetScope === 'node' && !empty($validated['target_node_ids'])) {
             $targetFilter = ['node_ids' => $validated['target_node_ids']];
         } else {
             $targetFilter = [];
@@ -93,8 +91,8 @@ final class AdminPublishController
         };
 
         $task = PublishTask::create([
-            'config_version_id' => $validated['config_version_id'] ?? ('pv_' . substr(hash('sha256', $validated['profile_id'] ?? 'default'), 0, 16)),
-            'profile_id' => $validated['profile_id'] ?? 'default',
+            'config_version_id' => $validated['config_version_id'] ?? null,
+            'profile_id' => $validated['profile_id'] ?? null,
             'status' => 'queued',
             'target_scope' => $targetScope,
             'target_filter' => $targetFilter,
@@ -152,12 +150,12 @@ final class AdminPublishController
         $actorId = $request->user()?->admin_id;
         $task = PublishTask::query()->findOrFail($taskId);
 
-        if (in_array($task->status, ['completed', 'cancelled'], true)) {
+        if (in_array($task->status, ['succeeded', 'failed'], true)) {
             return response()->json(['error' => 'Task cannot be cancelled in current state.'], 422);
         }
 
         $task->update([
-            'status' => 'cancelled',
+            'status' => 'failed',
             'completed_at' => now(),
             'latest_error' => 'Cancelled by admin',
         ]);
@@ -178,11 +176,11 @@ final class AdminPublishController
         $actorId = $request->user()?->admin_id;
         $validated = $request->validate([
             'ids' => 'required|array|min:1',
-            'ids.*' => 'string',
+            'ids.*' => 'required',
         ]);
 
         $count = PublishTask::whereIn('id', $validated['ids'])
-            ->whereIn('status', ['failed', 'cancelled'])
+            ->whereIn('status', ['failed'])
             ->update([
                 'status' => 'queued',
                 'latest_error' => null,
@@ -201,13 +199,13 @@ final class AdminPublishController
         $actorId = $request->user()?->admin_id;
         $validated = $request->validate([
             'ids' => 'required|array|min:1',
-            'ids.*' => 'string',
+            'ids.*' => 'required',
         ]);
 
         $count = PublishTask::whereIn('id', $validated['ids'])
-            ->whereIn('status', ['queued', 'in_progress'])
+            ->whereIn('status', ['queued', 'running'])
             ->update([
-                'status' => 'cancelled',
+                'status' => 'failed',
                 'completed_at' => now(),
                 'latest_error' => 'Batch cancelled by admin',
                 'updated_at' => now(),
@@ -226,12 +224,21 @@ final class AdminPublishController
         ]);
 
         $cutoff = now()->subDays($validated['older_than_days'] ?? 30);
-        $count = PublishTask::where('status', 'completed')
+        $count = PublishTask::where('status', 'succeeded')
             ->where('completed_at', '<', $cutoff)
             ->delete();
 
         AdminAuditLog::record('publish.cleanup', 'publish_task', null, ['older_than_days' => $validated['older_than_days'] ?? 30, 'count' => $count], $actorId, null, $request->ip(), $request->userAgent());
 
         return response()->json(['data' => ['deleted' => $count]]);
+    }
+
+    private function mapTargetScope(string $scope): string
+    {
+        return match ($scope) {
+            'specific_nodes' => 'node',
+            'all_profiles' => 'profile',
+            default => $scope,
+        };
     }
 }

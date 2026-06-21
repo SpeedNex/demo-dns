@@ -9,13 +9,16 @@ use App\Models\GeoDnsMapping;
 use App\Models\Node;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 final class AdminGeoDnsController
 {
     public function index(Request $request): JsonResponse
     {
         $query = GeoDnsMapping::query()->with('node');
+
+        if ($request->filled('country')) {
+            $query->where('country', strtoupper((string) $request->input('country')));
+        }
 
         if ($request->filled('region')) {
             $query->where('region', 'like', '%' . $request->input('region') . '%');
@@ -26,11 +29,7 @@ final class AdminGeoDnsController
         }
 
         $mappings = $query->orderByDesc('id')->get()->map(function (GeoDnsMapping $mapping): array {
-            $row = $mapping->toArray();
-            // 优先使用映射表自身的字段，否则回退到关联节点
-            $row['node_name'] = $mapping->node_name ?? $mapping->node?->node_name;
-            $row['node_alias'] = $mapping->node_alias;
-            $row['public_ipv4'] = $mapping->public_ipv4 ?? $mapping->node?->public_ipv4;
+            $row = $this->presentMapping($mapping);
             $row['node_count'] = 1;
             $row['node_status'] = $mapping->node?->status;
             $row['node_last_heartbeat_at'] = $mapping->node?->last_heartbeat_at?->toIso8601String();
@@ -50,8 +49,7 @@ final class AdminGeoDnsController
     public function show(string $id): JsonResponse
     {
         $mapping = GeoDnsMapping::with('node')->findOrFail($id);
-        $row = $mapping->toArray();
-        $row['node_name'] = $mapping->node?->node_name;
+        $row = $this->presentMapping($mapping);
 
         return response()->json(['data' => $row]);
     }
@@ -60,25 +58,37 @@ final class AdminGeoDnsController
     {
         $actorId = $request->user()?->admin_id;
         $validated = $request->validate([
+            'country' => 'nullable|string|size:2',
             'region' => 'required|string|max:80',
-            'node_name' => 'required|string|max:100',
+            'node_id' => 'nullable|exists:nodes,id',
+            'node_name' => 'nullable|string|max:100',
             'public_ipv4' => 'nullable|string|max:45',
             'node_alias' => 'nullable|string|max:100',
+            'target_endpoint' => 'nullable|string|max:255',
+            'priority' => 'integer|min:0|max:1000',
+            'weight' => 'integer|min:0|max:10000',
             'enabled' => 'boolean',
         ]);
 
+        $node = $this->resolveNode($validated['node_id'] ?? null, $validated['node_name'] ?? null);
+
         $mapping = GeoDnsMapping::create([
             'domain' => $request->input('domain', 'resolver.ocerlink.com'),
+            'country' => isset($validated['country']) ? strtoupper($validated['country']) : strtoupper((string) $request->input('country', '*')),
             'region' => $validated['region'],
-            'node_name' => $validated['node_name'],
-            'public_ipv4' => $validated['public_ipv4'] ?? null,
+            'target_node_id' => $node?->id,
+            'node_name' => $validated['node_name'] ?? $node?->node_name ?? $node?->name,
+            'public_ipv4' => $validated['public_ipv4'] ?? $node?->public_ipv4,
             'node_alias' => $validated['node_alias'] ?? null,
+            'target_endpoint' => $validated['target_endpoint'] ?? null,
+            'priority' => $validated['priority'] ?? 0,
+            'weight' => $validated['weight'] ?? 100,
             'enabled' => $validated['enabled'] ?? true,
         ]);
 
-        AdminAuditLog::record('geo_dns.create', 'geo_dns_mapping', $mapping->id, $mapping->toArray(), $actorId, null, $request->ip(), $request->userAgent());
+        AdminAuditLog::record('geo_dns.create', 'geo_dns_mapping', $mapping->id, $this->presentMapping($mapping->fresh('node')), $actorId, null, $request->ip(), $request->userAgent());
 
-        return response()->json(['data' => $mapping->toArray()], 201);
+        return response()->json(['data' => $this->presentMapping($mapping->fresh('node'))], 201);
     }
 
     public function update(Request $request, string $id): JsonResponse
@@ -87,18 +97,37 @@ final class AdminGeoDnsController
         $mapping = GeoDnsMapping::findOrFail($id);
 
         $validated = $request->validate([
+            'country' => 'nullable|string|size:2',
             'region' => 'string|max:80',
-            'node_name' => 'string|max:100',
+            'node_id' => 'nullable|exists:nodes,id',
+            'node_name' => 'nullable|string|max:100',
             'public_ipv4' => 'nullable|string|max:45',
             'node_alias' => 'nullable|string|max:100',
+            'target_endpoint' => 'nullable|string|max:255',
+            'priority' => 'integer|min:0|max:1000',
+            'weight' => 'integer|min:0|max:10000',
             'enabled' => 'boolean',
         ]);
 
-        $mapping->update($validated);
+        $payload = $validated;
 
-        AdminAuditLog::record('geo_dns.update', 'geo_dns_mapping', $id, $mapping->toArray(), $actorId, null, $request->ip(), $request->userAgent());
+        if (array_key_exists('country', $payload) && $payload['country'] !== null) {
+            $payload['country'] = strtoupper($payload['country']);
+        }
 
-        return response()->json(['data' => $mapping->fresh()->toArray()]);
+        if (array_key_exists('node_id', $payload)) {
+            $node = $this->resolveNode($payload['node_id'], $payload['node_name'] ?? null);
+            $payload['target_node_id'] = $node?->id;
+            $payload['node_name'] = $payload['node_name'] ?? $node?->node_name ?? $node?->name;
+            $payload['public_ipv4'] = $payload['public_ipv4'] ?? $node?->public_ipv4;
+            unset($payload['node_id']);
+        }
+
+        $mapping->update($payload);
+
+        AdminAuditLog::record('geo_dns.update', 'geo_dns_mapping', $id, $this->presentMapping($mapping->fresh('node')), $actorId, null, $request->ip(), $request->userAgent());
+
+        return response()->json(['data' => $this->presentMapping($mapping->fresh('node'))]);
     }
 
     public function destroy(Request $request, string $id): JsonResponse
@@ -195,6 +224,8 @@ final class AdminGeoDnsController
             ['domain' => 'resolver.ocerlink.com', 'country' => 'LOCAL', 'region' => 'local'],
             [
                 'target_node_id' => (int) $node->id,
+                'node_name' => $node->node_name ?? $node->name,
+                'public_ipv4' => $node->public_ipv4,
                 'priority' => 5,
                 'weight' => 200,
                 'enabled' => true,
@@ -223,5 +254,31 @@ final class AdminGeoDnsController
         $command->setOutput($output);
 
         return $command;
+    }
+
+    private function resolveNode(string|int|null $nodeId, ?string $nodeName): ?Node
+    {
+        if ($nodeId !== null && $nodeId !== '') {
+            return Node::query()->find($nodeId);
+        }
+
+        if ($nodeName !== null && $nodeName !== '') {
+            return Node::query()
+                ->where('node_name', $nodeName)
+                ->orWhere('name', $nodeName)
+                ->first();
+        }
+
+        return null;
+    }
+
+    private function presentMapping(GeoDnsMapping $mapping): array
+    {
+        $row = $mapping->toArray();
+        $row['node_id'] = $mapping->target_node_id;
+        $row['node_name'] = $mapping->node_name ?? $mapping->node?->node_name ?? $mapping->node?->name;
+        $row['public_ipv4'] = $mapping->public_ipv4 ?? $mapping->node?->public_ipv4;
+
+        return $row;
     }
 }
