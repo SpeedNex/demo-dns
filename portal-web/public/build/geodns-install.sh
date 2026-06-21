@@ -2,7 +2,7 @@
 # =============================================================================
 #  OcerDNS GeoDNS Node One-click Install Script
 #  Usage:
-#    curl -fsSL https://<host>/build/geodns-install.sh | sh -s -- \
+#    curl -fsSL https://<host>/build/geodns-install.sh | bash -s -- \
 #         --server=https://<host> \
 #         --token=xxxxx \
 #         --node-id=xxxxx

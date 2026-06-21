@@ -2,7 +2,7 @@
 # =============================================================================
 #  OcerDNS DNS Resolver Node One-click Install Script
 #  Usage:
-#    curl -fsSL https://<host>/build/dns-resolver-install.sh | sh -s -- \
+#    curl -fsSL https://<host>/build/dns-resolver-install.sh | bash -s -- \
 #         --server=https://<host> \
 #         --token=xxxxx \
 #         --node-id=xxxxx
