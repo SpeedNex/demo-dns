@@ -43,6 +43,7 @@ import AdminBalance from '@/views/admin/Balance.vue'
 import AdminRecharge from '@/views/admin/Recharge.vue'
 import AdminBill from '@/views/admin/Bill.vue'
 import AdminRefundRecords from '@/views/admin/RefundRecords.vue'
+import AdminRegionManage from '@/views/admin/RegionManage.vue'
 import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
 import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
 import AdminAdmins from '@/views/admin/AdminAdmins.vue'
@@ -88,6 +89,7 @@ const routes = [
             { path: 'dashboard', name: 'AdminDashboard', component: AdminDashboard },
             { path: 'nodes', name: 'AdminNodes', component: AdminNodes },
             { path: 'geo-dns', name: 'AdminGeoDNS', component: AdminGeoDNS },
+            { path: 'region-manage', name: 'AdminRegionManage', component: AdminRegionManage },
             { path: 'rules', name: 'AdminRules', component: AdminRules },
             { path: 'query-logs', name: 'AdminQueryLogs', component: AdminQueryLogs },
             { path: 'alerts', name: 'AdminAlerts', component: AdminAlerts },

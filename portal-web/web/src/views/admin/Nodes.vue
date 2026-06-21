@@ -107,11 +107,13 @@
             <el-form-item :label="t('admin.nodes.name')" prop="name">
                 <el-input v-model="form.name" :placeholder="t('admin.nodes.namePlaceholder') || '节点名称'" />
             </el-form-item>
+            <el-form-item :label="t('admin.nodes.region')">
+                <el-select v-model="form.region" filterable clearable :placeholder="t('admin.nodes.regionPlaceholder') || '选择区域'" style="width:100%">
+                    <el-option v-for="r in regions" :key="r.code" :label="`${r.code} - ${r.name}`" :value="r.code" />
+                </el-select>
+            </el-form-item>
             <el-form-item :label="t('admin.nodes.nodeAlias')" prop="node_alias">
                 <el-input v-model="form.node_alias" />
-            </el-form-item>
-            <el-form-item :label="t('admin.nodes.region')">
-                <el-input v-model="form.region" />
             </el-form-item>
             <el-form-item :label="t('admin.nodes.ipv4')">
                 <el-input v-model="form.public_ipv4" />
@@ -182,17 +184,23 @@ const issuingToken = ref(false)
 const editingId = ref(null)
 const formRef = ref(null)
 const tokenData = reactive({ node_id: '', api_key: '', secret: '' })
+const regions = ref([])
+const fetchRegions = async () => {
+    try {
+        const { data } = await client.get('/admin/regions').catch(() => ({ data: { data: [] } }))
+        regions.value = (data.data ?? []).filter(r => r.status === 'active')
+    } catch {}
+}
 const KEY_TTL_MS = 24 * 60 * 60 * 1000
 const nodeTokenCache = new Map()
 const keyExpiresAt = ref(null)
 const keyNodeId = ref(null)
-const stripPrefix = (s, p) => (s ? s.replace(new RegExp('^' + p), '') : '')
 const { siteUrl, loadSystemConfig } = useSystemConfig()
 const deployCmdPreview = computed(() => {
     const nid = tokenData.node_id
     if (!nid || !tokenData.api_key) return ''
     const base = siteUrl.value || (window.location.protocol + '//' + window.location.host)
-    return `curl -fsSL ${base}/build/install.sh | sh -s -- --server=${base} --token=${tokenData.api_key} --node-id=${nid}`
+    return `curl -fsSL ${base}/build/dns-resolver-install.sh | sh -s -- --server=${base} --token=${tokenData.api_key} --node-id=${nid}`
 })
 
 const copyDeployCmd = async () => {
@@ -391,6 +399,7 @@ const handleRegenerate = async () => {
 
 onMounted(() => {
     loadSystemConfig()
+    fetchRegions()
     fetchNodes()
 })
 </script>

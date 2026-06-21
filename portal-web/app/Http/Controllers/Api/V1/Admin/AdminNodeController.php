@@ -54,7 +54,7 @@ final class AdminNodeController
     {
         $actorId = $request->user()?->admin_id;
         $request->merge([
-            'node_code' => $request->input('node_code', 'nd_' . Str::lower(Str::random(10))),
+            'node_code' => $request->input('node_code', Str::lower(Str::random(10))),
             'name' => $request->input('name', $request->input('node_name')),
         ]);
         $validated = $request->validate([

@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\V1\Admin\AdminPublishController;
 use App\Http\Controllers\Api\V1\Admin\AdminQueryLogController;
 use App\Http\Controllers\Api\V1\Admin\AdminRbacController;
 use App\Http\Controllers\Api\V1\Admin\AdminAdminsController;
+use App\Http\Controllers\Api\V1\Admin\AdminRegionController;
 use App\Http\Controllers\Api\V1\Admin\AdminRuleController;
 use App\Http\Controllers\Api\V1\Admin\AdminStatsController;
 use App\Http\Controllers\Api\V1\Admin\AdminSystemConfigController;
@@ -153,6 +154,16 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin.only', 'permission:ad
     // System Config
     Route::get('system-config', [AdminSystemConfigController::class, 'show'])->middleware('permission:admin.system_config.read');
     Route::put('system-config', [AdminSystemConfigController::class, 'update'])->middleware('permission:admin.system_config.write');
+
+    // Region Management
+    Route::middleware('permission:admin.nodes.read')->group(function (): void {
+        Route::get('regions', [AdminRegionController::class, 'index']);
+    });
+    Route::middleware('permission:admin.nodes.write')->group(function (): void {
+        Route::post('regions', [AdminRegionController::class, 'store']);
+        Route::put('regions/{id}', [AdminRegionController::class, 'update']);
+        Route::delete('regions/{id}', [AdminRegionController::class, 'destroy']);
+    });
 
     // Node Management
     Route::middleware('permission:admin.nodes.read')->group(function (): void {

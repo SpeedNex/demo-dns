@@ -120,7 +120,7 @@
                             </template>
                         </el-table-column>
                         <el-table-column :label="$t('common.actions')" width="160" fixed="right">
-                            <template #default="{ row, $index }">
+                            <template #default="{ $index }">
                                 <el-button text type="primary" @click="openEditDialog('device_models', $index)">{{ $t('common.edit') }}</el-button>
                                 <el-button text type="danger" @click="removeRow('device_models', $index)">{{ $t('common.delete') }}</el-button>
                             </template>
@@ -169,7 +169,7 @@
                         <el-table-column :label="$t('admin.memberCatalogs.entries')" prop="entries" width="120" align="right" />
                         <el-table-column :label="$t('admin.memberCatalogs.updatedDays')" prop="days_ago" width="120" align="right" />
                         <el-table-column :label="$t('common.actions')" width="160" fixed="right">
-                            <template #default="{ row, $index }">
+                            <template #default="{ $index }">
                                 <el-button text type="primary" @click="openEditDialog('privacy_blocklists', $index)">{{ $t('common.edit') }}</el-button>
                                 <el-button text type="danger" @click="removeRow('privacy_blocklists', $index)">{{ $t('common.delete') }}</el-button>
                             </template>
@@ -227,7 +227,7 @@
                             </template>
                         </el-table-column>
                         <el-table-column :label="$t('common.actions')" width="160" fixed="right">
-                            <template #default="{ row, $index }">
+                            <template #default="{ $index }">
                                 <el-button text type="primary" @click="openEditDialog('parental_presets', $index)">{{ $t('common.edit') }}</el-button>
                                 <el-button text type="danger" @click="removeRow('parental_presets', $index)">{{ $t('common.delete') }}</el-button>
                             </template>
@@ -270,7 +270,7 @@
                         <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="160" show-overflow-tooltip />
                         <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="320" show-overflow-tooltip />
                         <el-table-column :label="$t('common.actions')" width="160" fixed="right">
-                            <template #default="{ row, $index }">
+                            <template #default="{ $index }">
                                 <el-button text type="primary" @click="openEditDialog('parental_categories', $index)">{{ $t('common.edit') }}</el-button>
                                 <el-button text type="danger" @click="removeRow('parental_categories', $index)">{{ $t('common.delete') }}</el-button>
                             </template>

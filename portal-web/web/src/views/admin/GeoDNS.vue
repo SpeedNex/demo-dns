@@ -75,15 +75,18 @@
             </el-table-column>
             <el-table-column :label="$t('admin.geoDns.actions')" fixed="right">
                 <template #default="{ row }">
-                    <el-button size="small" text type="success" :disabled="!row.target_node_id" @click="handleDeploy(row)">
-                        <el-icon><Connection /></el-icon>
-                    </el-button>
+                    <div style="white-space:nowrap;display:flex;gap:4px;align-items:center">
                     <el-button size="small" text type="primary" @click="openEditDialog(row)">
                         <el-icon><Edit /></el-icon>
+                    </el-button>
+                    <el-button size="small" text type="success" :disabled="!(row.target_node_id || row.node_id)" @click="handleDeploy(row)">
+                        <el-icon><Connection /></el-icon>
+                        <span>{{ $t('admin.nodes.deploy') || '部署' }}</span>
                     </el-button>
                     <el-button size="small" text type="danger" @click="handleDelete(row.id)">
                         <el-icon><Delete /></el-icon>
                     </el-button>
+                </div>
                 </template>
             </el-table-column>
         </el-table>
@@ -91,17 +94,16 @@
 
     <el-dialog v-model="showDialog" :title="editingId ? $t('admin.geoDns.edit') : $t('admin.geoDns.addServer')" width="600">
         <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
-            <el-form-item :label="$t('admin.geoDns.region')" prop="region">
-                <el-input v-model="form.region" maxlength="80" />
-            </el-form-item>
             <el-form-item :label="$t('admin.geoDns.nodeName')" prop="node_name">
-                <el-input v-model="form.node_name" maxlength="100" />
+                <el-input v-model="form.node_name" maxlength="100" :placeholder="$t('admin.geoDns.nodeNamePlaceholder') || '例: kr-test'" />
+            </el-form-item>
+            <el-form-item :label="$t('admin.geoDns.region')" prop="region">
+                <el-select v-model="form.region" filterable clearable :placeholder="$t('admin.geoDns.regionPlaceholder') || '选择区域'" style="width:100%">
+                    <el-option v-for="r in regions" :key="r.code" :label="`${r.code} - ${r.name}`" :value="r.code" />
+                </el-select>
             </el-form-item>
             <el-form-item :label="$t('admin.geoDns.ipAddress')">
-                <el-input v-model="form.public_ipv4" maxlength="45" />
-            </el-form-item>
-            <el-form-item :label="$t('admin.geoDns.alias')">
-                <el-input v-model="form.node_alias" maxlength="100" :placeholder="$t('admin.geoDns.aliasPlaceholder') || '可选，解析服务器的别名'" />
+                <el-input v-model="form.public_ipv4" maxlength="45" :placeholder="$t('admin.geoDns.ipPlaceholder') || '例: 10.20.30.40'" />
             </el-form-item>
             <el-form-item :label="$t('admin.geoDns.enabled')">
                 <el-switch v-model="form.enabled" />
@@ -150,6 +152,13 @@ const mappings = ref([])
 const meta = ref({})
 const selected = ref([])
 const filterRegion = ref('')
+const regions = ref([])
+const fetchRegions = async () => {
+    try {
+        const { data } = await client.get('/admin/regions').catch(() => ({ data: { data: [] } }))
+        regions.value = (data.data ?? []).filter(r => r.status === 'active')
+    } catch {}
+}
 
 const showDialog = ref(false)
 const showDeployDialog = ref(false)
@@ -157,17 +166,16 @@ const editingId = ref(null)
 const saving = ref(false)
 const formRef = ref(null)
 const deployData = reactive({ node_id: '', api_key: '' })
-const form = reactive({ region: '', node_name: '', public_ipv4: '', node_alias: '', enabled: true })
+const form = reactive({ region: '', node_name: '', public_ipv4: '', enabled: true })
 const rules = {
     region: [{ required: true, message: t('admin.geoDns.required') || 'Required', trigger: 'blur' }],
     node_name: [{ required: true, message: t('admin.geoDns.required') || 'Required', trigger: 'blur' }],
 }
-const stripPrefix = (s, p) => (s ? s.replace(new RegExp('^' + p), '') : '')
 const { siteUrl, loadSystemConfig } = useSystemConfig()
 const deployCmdPreview = computed(() => {
     if (!deployData.node_id || !deployData.api_key) return ''
     const base = siteUrl.value || (window.location.protocol + '//' + window.location.host)
-    return `curl -fsSL ${base}/build/install.sh | sh -s -- --server=${base} --token=${deployData.api_key} --node-id=${deployData.node_id}`
+    return `curl -fsSL ${base}/build/geodns-install.sh | sh -s -- --server=${base} --token=${deployData.api_key} --node-id=${deployData.node_id}`
 })
 const copyDeployCmd = async () => {
     try {
@@ -202,7 +210,6 @@ const resetForm = () => {
     form.region = ''
     form.node_name = ''
     form.public_ipv4 = ''
-    form.node_alias = ''
     form.enabled = true
 }
 
@@ -217,7 +224,6 @@ const openEditDialog = (row) => {
     form.region = row.region
     form.node_name = row.node_name || ''
     form.public_ipv4 = row.public_ipv4 || ''
-    form.node_alias = row.node_alias || ''
     form.enabled = row.enabled !== false
     showDialog.value = true
 }
@@ -289,6 +295,7 @@ const handleBatchDelete = async () => {
 
 onMounted(() => {
     loadSystemConfig()
+    fetchRegions()
     fetchMappings()
     // 每 30 秒自动刷新心跳状态
     heartbeatTimer = setInterval(fetchMappings, 30000)

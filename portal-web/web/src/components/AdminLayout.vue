@@ -98,6 +98,7 @@
 import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { ArrowDown, CaretRight, Iphone, User, SwitchButton } from '@element-plus/icons-vue'
 import i18n from '@/locales'
 import enLocale from 'element-plus/dist/locale/en.mjs'
 import zhLocale from 'element-plus/dist/locale/zh-cn.mjs'
@@ -203,6 +204,7 @@ const titleMap = {
     AdminDashboard: 'admin.title',
     AdminNodes: 'nav.nodes',
     AdminGeoDNS: 'nav.geoDns',
+    AdminRegionManage: 'nav.regionManage',
     AdminRules: 'nav.ruleLibrary',
     AdminQueryLogs: 'admin.queryLogs',
     AdminAlerts: 'admin.alerts',
@@ -234,7 +236,7 @@ const loadExpanded = () => {
         if (raw) {
             return JSON.parse(raw)
         }
-    } catch (e) { /* ignore */ }
+    } catch (_) { /* ignore */ }
     return null
 }
 const expandedGroups = ref(loadExpanded() || {
@@ -248,7 +250,7 @@ const expandedGroups = ref(loadExpanded() || {
 const persistExpanded = () => {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(expandedGroups.value))
-    } catch (e) { /* ignore */ }
+    } catch (_) { /* ignore */ }
 }
 const isExpanded = (key) => expandedGroups.value[key] === true
 const toggleGroup = (key) => {
@@ -265,7 +267,7 @@ const navGroups = computed(() => {
     const subMenu = menuConfig.value.subMenu || []
 
     // 按分组归类菜单（基于 id）
-const serviceIds = ['dashboard', 'nodes', 'geo-dns', 'rules']
+const serviceIds = ['dashboard', 'nodes', 'geo-dns', 'region-manage', 'rules']
     const monitorIds = ['alerts', 'query-logs', 'audit-logs']
     const userIds = ['users', 'devices', 'member-catalogs']
     const financeIds = ['billing', 'plans', 'balance', 'recharge', 'bill', 'refund-records']

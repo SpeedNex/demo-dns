@@ -12,7 +12,7 @@ class Node extends Model
     {
         static::creating(function (self $node): void {
             if (blank($node->node_code)) {
-                $node->node_code = 'nd_' . strtolower(\Illuminate\Support\Str::random(10));
+                $node->node_code = strtolower(\Illuminate\Support\Str::random(10));
             }
         });
     }

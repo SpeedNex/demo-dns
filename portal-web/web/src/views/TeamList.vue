@@ -77,6 +77,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
 
+const { t } = useI18n()
 const loading = ref(false)
 const teams = ref([])
 const pendingInvitations = ref([])

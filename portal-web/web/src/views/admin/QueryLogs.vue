@@ -167,7 +167,7 @@
 import { useI18n } from 'vue-i18n'
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Delete, DeleteFilled, Document, Search, RefreshLeft, Download, CopyDocument } from '@element-plus/icons-vue'
+import { Delete, DeleteFilled, Document, Search, RefreshLeft, Download, CopyDocument, User } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
 

@@ -117,7 +117,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Collection, Plus } from '@element-plus/icons-vue'
+import { Collection, Plus, Edit, Refresh, Delete } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
 

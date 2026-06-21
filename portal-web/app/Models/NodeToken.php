@@ -15,7 +15,7 @@ class NodeToken extends Model
     {
         static::creating(function (self $token): void {
             if (blank($token->token_prefix)) {
-                $token->token_prefix = 'ocnd_manual****';
+                $token->token_prefix = substr(Str::random(40), 0, 12) . '****';
             }
             if (blank($token->status)) {
                 $token->status = 'active';
@@ -46,7 +46,7 @@ class NodeToken extends Model
      */
     public static function createForNode(Node $node, ?int $ttlDays = 365, ?int $createdByAdminId = null): array
     {
-        $plain = 'ocnd_' . Str::random(40);
+        $plain = Str::random(40);
         $prefix = substr($plain, 0, 12) . '****';
         $hmacSecret = 'hmk_' . Str::lower(Str::random(32));
 

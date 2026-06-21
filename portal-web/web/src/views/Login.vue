@@ -109,7 +109,7 @@ async function redirectToConsole() {
             await router.push(`/user/${key}`)
             return
         }
-    } catch (e) {
+    } catch (_) {
         if (savedId) {
             await router.push(`/user/${savedId}`)
             return

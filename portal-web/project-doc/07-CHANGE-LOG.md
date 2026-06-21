@@ -14,6 +14,7 @@
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |
 |---|---|---|---|---|
+| 2026-06-21 | code | DNS 节点和 GeoDNS 表单区域字段改为下拉选择，从区域管理 API 获取数据，不允许手动输入；调整表单字段顺序（节点名称第一行，区域第二行）；修复 Region 模型、迁移、控制器验证中表名双重前缀问题（`dns_regions` → `regions`），运行迁移并插入初始区域数据（KR, JP），补充多语言 regionPlaceholder；lint 通过 | web/src/views/admin/Nodes.vue, web/src/views/admin/GeoDNS.vue, app/Models/Region.php, app/Http/Controllers/Api/V1/Admin/AdminRegionController.php, database/migrations/2026_06_20_000066_create_dns_regions_table.php, web/src/locales/{zh-CN,en,ko}.json | ok |
 | 2026-06-21 | code/test/docs | 生产闭环收口：统一修复 GeoDNS/RuleSource/ConfigVersion/PublishTask/Node 等模型与现表结构漂移，补齐旧字段到新字段的兼容映射（`node_id→target_node_id`、`type→format`、`rule_count→item_count`、`profile_id→target_profile_id`、旧节点状态/字段回退）；修复 profile_versions 重复迁移、发布状态枚举、规则同步写库、HMAC 节点鉴权与批量发布验证；完成后端全量测试、API 回归、Go resolver 测试、前端生产构建验收，形成“会员配置 → 发布任务 → 节点鉴权 → GeoDNS/Resolver → 查询日志/计费接口”可回归闭环 | app/Models/{GeoDnsMapping,RuleSource,ConfigVersion,Node}.php, app/Http/Controllers/Api/V1/Admin/{AdminGeoDnsController,AdminRuleController,AdminPublishController}.php, database/migrations/2026_06_20_000064_add_status_columns_to_dns_profile_versions.php, tests/Feature/{AgentHmacSignatureTest,ApiTest,MemberWorkspaceTest,ProfilePublishTest}.php, dns-resolver, web | ok |
 | 2026-06-17 | code | 登录参数 email → name，支持用户名或邮箱登录 | AuthService.php, Login.vue | ok |
 | 2026-06-17 | code | APP_DEBUG=true → false，.env.example 安全加固 | .env.example | ok |

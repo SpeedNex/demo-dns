@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  OcerDNS Resolver One-click Install Script
+#  OcerDNS DNS Resolver Node One-click Install Script
 #  Usage:
-#    curl -fsSL https://<host>/build/install.sh | sh -s -- \
+#    curl -fsSL https://<host>/build/dns-resolver-install.sh | sh -s -- \
 #         --server=https://<host> \
-#         --token=ocnd_xxxxx \
-#         --node-id=nd_xxxxx
+#         --token=xxxxx \
+#         --node-id=xxxxx
 #
 #  Behavior:
 #    1) Detect OS / Architecture
 #    2) Download dns-resolver-linux-<arch> from ${server}/build/
-#    3) Install to /usr/local/bin/geo-dns
-#    4) Run `geo-dns install --server=... --token=... --node-id=...`
+#    3) Install to /usr/local/bin/dns-resolver
+#    4) Run `dns-resolver install --server=... --token=... --node-id=...`
 # =============================================================================
 
 set -euo pipefail
@@ -27,8 +27,8 @@ Usage: $0 --server <url> --token <token> --node-id <id>
 
 Options:
   --server     Console Base URL, e.g. https://console.ocerlink.com
-  --token      Node token issued by console (ocnd_xxx)
-  --node-id    Node code (nd_xxx)
+  --token      Node token issued by console
+  --node-id    Node code
   -h, --help   Show this help
 EOF
 }
@@ -70,7 +70,7 @@ esac
 echo "Detected platform: ${SUFFIX_OS}/${SUFFIX_ARCH}"
 
 # ---------- Download Binary ----------
-BIN_NAME="geo-dns"
+BIN_NAME="dns-resolver"
 INSTALL_DIR="/usr/local/bin"
 INSTALL_PATH="${INSTALL_DIR}/${BIN_NAME}"
 DOWNLOAD_URL="${SERVER%/}/build/dns-resolver-${SUFFIX_OS}-${SUFFIX_ARCH}"

@@ -191,6 +191,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const teamId = route.params.id
@@ -200,15 +201,18 @@ const team = ref(null)
 const members = ref([])
 const invitations = ref([])
 const editForm = ref({ name: '', description: '' })
-const inviteForm = ref({ email: '', role: 'member' })
 const showRoleDialog = ref(false)
 const showTransferDialog = ref(false)
+const roleTarget = ref(null)
+const roleForm = ref({ role: 'member' })
+const roleSaving = ref(false)
+const transferring = ref(false)
+const inviteForm = ref({ email: '', role: 'member' })
 const selectedMember = ref(null)
 const selectedMembers = ref([])
 const selectedInvitations = ref([])
 const updating = ref(false)
 const inviting = ref(false)
-const transferring = ref(false)
 const changeRoleForm = ref({ role: 'member' })
 
 // V2.3: 当前用户主键已改为 uid，从 sessionStorage.user 中解析

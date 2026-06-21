@@ -14,8 +14,9 @@ class AdminMenuRuleSeeder extends Seeder
             ['menu_key' => 'dashboard', 'parent_key' => null, 'title_key' => 'nav.dashboard', 'path' => '/admin/dashboard', 'icon' => 'DataAnalysis', 'sort_order' => 1, 'visible' => true, 'permission_code' => 'admin.dashboard.read', 'group_key' => 'service'],
             ['menu_key' => 'nodes', 'parent_key' => null, 'title_key' => 'nav.nodes', 'path' => '/admin/nodes', 'icon' => 'Monitor', 'sort_order' => 2, 'visible' => true, 'permission_code' => 'admin.nodes.read', 'group_key' => 'service'],
             ['menu_key' => 'geo-dns', 'parent_key' => null, 'title_key' => 'nav.geoDns', 'path' => '/admin/geo-dns', 'icon' => 'Connection', 'sort_order' => 3, 'visible' => true, 'permission_code' => 'admin.geo_dns.read', 'group_key' => 'service'],
-            ['menu_key' => 'rules', 'parent_key' => null, 'title_key' => 'nav.ruleLibrary', 'path' => '/admin/rules', 'icon' => 'Collection', 'sort_order' => 4, 'visible' => true, 'permission_code' => 'admin.rules.read', 'group_key' => 'service'],
-            ['menu_key' => 'publishes', 'parent_key' => null, 'title_key' => 'nav.publishes', 'path' => '/admin/publishes', 'icon' => 'Upload', 'sort_order' => 5, 'visible' => true, 'permission_code' => 'admin.publishes.read', 'group_key' => 'service'],
+            ['menu_key' => 'region-manage', 'parent_key' => null, 'title_key' => 'nav.regionManage', 'path' => '/admin/region-manage', 'icon' => 'Location', 'sort_order' => 4, 'visible' => true, 'permission_code' => 'admin.nodes.read', 'group_key' => 'service'],
+            ['menu_key' => 'rules', 'parent_key' => null, 'title_key' => 'nav.ruleLibrary', 'path' => '/admin/rules', 'icon' => 'Collection', 'sort_order' => 5, 'visible' => true, 'permission_code' => 'admin.rules.read', 'group_key' => 'service'],
+            ['menu_key' => 'publishes', 'parent_key' => null, 'title_key' => 'nav.publishes', 'path' => '/admin/publishes', 'icon' => 'Upload', 'sort_order' => 6, 'visible' => true, 'permission_code' => 'admin.publishes.read', 'group_key' => 'service'],
 
             // 监控分组
             ['menu_key' => 'alerts', 'parent_key' => null, 'title_key' => 'admin.alerts', 'path' => '/admin/alerts', 'icon' => 'Message', 'sort_order' => 6, 'visible' => true, 'permission_code' => 'admin.alerts.read', 'group_key' => 'monitor'],

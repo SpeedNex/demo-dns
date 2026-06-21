@@ -72,6 +72,17 @@ final class AdminGeoDnsController
 
         $node = $this->resolveNode($validated['node_id'] ?? null, $validated['node_name'] ?? null);
 
+        // 如果没有关联节点，自动创建一个
+        if (! $node) {
+            $node = Node::create([
+                'name' => $validated['node_name'] ?? $validated['region'],
+                'region' => $validated['region'],
+                'public_ipv4' => $validated['public_ipv4'] ?? null,
+                'status' => 'pending',
+                'node_type' => 'geodns',
+            ]);
+        }
+
         $mapping = GeoDnsMapping::create([
             'domain' => $request->input('domain', 'resolver.ocerlink.com'),
             'country' => isset($validated['country']) ? strtoupper($validated['country']) : strtoupper((string) $request->input('country', '*')),
@@ -264,8 +275,7 @@ final class AdminGeoDnsController
 
         if ($nodeName !== null && $nodeName !== '') {
             return Node::query()
-                ->where('node_name', $nodeName)
-                ->orWhere('name', $nodeName)
+                ->where('name', $nodeName)
                 ->first();
         }
 

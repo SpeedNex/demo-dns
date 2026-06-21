@@ -99,11 +99,17 @@ if [ "${#BUILT[@]}" -gt 0 ]; then
   ls -la "$OUT"
   echo ""
 
-  # 拷贝 install.sh（如果存在）— 一键安装脚本
-  if [ -f "$ROOT/install.sh" ]; then
-    cp -f "$ROOT/install.sh" "$OUT/install.sh"
-    chmod +x "$OUT/install.sh"
-    echo "✓ install.sh 已就绪"
+  # 拷贝安装脚本（如果存在）— 一键安装脚本
+  if [ -f "$ROOT/dns-resolver-install.sh" ]; then
+    cp -f "$ROOT/dns-resolver-install.sh" "$OUT/dns-resolver-install.sh"
+    chmod +x "$OUT/dns-resolver-install.sh"
+    echo "✓ dns-resolver-install.sh 已就绪"
+  fi
+
+  if [ -f "$ROOT/geodns-install.sh" ]; then
+    cp -f "$ROOT/geodns-install.sh" "$OUT/geodns-install.sh"
+    chmod +x "$OUT/geodns-install.sh"
+    echo "✓ geodns-install.sh 已就绪"
   fi
 
   # 生成 SHA256 校验和（部署到节点时可用 sha256sum -c 校验）
