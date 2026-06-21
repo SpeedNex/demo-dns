@@ -16,7 +16,7 @@
                     <el-table-column prop="name" :label="$t('parental.name')" min-width="200">
                         <template #default="{ row }">
                             <div style="display:flex;align-items:center;gap:8px">
-                                <img :src="row.icon" alt="" style="width:16px;height:16px;border-radius:3px" @error="row.icon = ''" v-if="row.icon" />
+                                <img v-if="row.icon" :src="row.icon" alt="" style="width:16px;height:16px;border-radius:3px" @error="row.icon = ''">
                                 <span>{{ getLocalizedValue(row.name) }}</span>
                                 <el-tag v-if="row.category" size="small" :type="row.category === 'website' ? 'info' : row.category === 'app' ? 'success' : 'warning'" style="margin-left:4px">
                                     {{ $t(`parental.category.${row.category}`) }}
@@ -87,13 +87,13 @@
             <div style="max-height:480px;overflow-y:auto">
                 <div v-for="item in filteredPresets" :key="item.name" class="picker-item" :style="{ borderLeftColor: item.category === 'website' ? '#3b82f6' : item.category === 'app' ? '#10b981' : '#f59e0b' }">
                     <div class="picker-info">
-                        <img v-if="item.icon" :src="item.icon" alt="" style="width:16px;height:16px;border-radius:3px" @error="item.icon = ''" />
+                        <img v-if="item.icon" :src="item.icon" alt="" style="width:16px;height:16px;border-radius:3px" @error="item.icon = ''">
                         <span class="picker-name">{{ getLocalizedValue(item.name) }}</span>
                         <el-tag size="small" :type="item.category === 'website' ? 'info' : item.category === 'app' ? 'success' : 'warning'" style="margin-left:6px">
                             {{ $t(`parental.category.${item.category}`) }}
                         </el-tag>
                     </div>
-                    <el-button v-if="!isBlocked(item)" size="small" type="primary" @click="blockItem(item)" style="font-weight:bold;font-size:12px;text-transform:uppercase;white-space:nowrap">{{ $t('parental.add') }}</el-button>
+                    <el-button v-if="!isBlocked(item)" size="small" type="primary" style="font-weight:bold;font-size:12px;text-transform:uppercase;white-space:nowrap" @click="blockItem(item)">{{ $t('parental.add') }}</el-button>
                     <el-tag v-else type="success" size="small" effect="dark">{{ $t('parental.added') }}</el-tag>
                 </div>
             </div>
@@ -106,7 +106,7 @@
                         <div style="font-weight:500">{{ getCategoryName(cat.key) }}</div>
                         <div style="font-size:0.9em;opacity:0.5;margin-top:2px">{{ getCategoryDesc(cat.key) }}</div>
                     </div>
-                    <el-button v-if="!isCategoryBlocked(cat)" size="small" type="primary" @click="blockCategory(cat)" style="font-weight:bold;font-size:12px;text-transform:uppercase;white-space:nowrap;flex-shrink:0;margin-left:12px">{{ $t('parental.add') }}</el-button>
+                    <el-button v-if="!isCategoryBlocked(cat)" size="small" type="primary" style="font-weight:bold;font-size:12px;text-transform:uppercase;white-space:nowrap;flex-shrink:0;margin-left:12px" @click="blockCategory(cat)">{{ $t('parental.add') }}</el-button>
                     <el-tag v-else type="success" size="small" effect="dark" style="flex-shrink:0;margin-left:12px">{{ $t('parental.added') }}</el-tag>
                 </div>
             </div>

@@ -1,9 +1,9 @@
 <template>
     <div class="auth-shell" :class="variantClass">
         <div class="auth-shell__background">
-            <div class="auth-shell__glow auth-shell__glow--one"></div>
-            <div class="auth-shell__glow auth-shell__glow--two"></div>
-            <div class="auth-shell__grid"></div>
+            <div class="auth-shell__glow auth-shell__glow--one" />
+            <div class="auth-shell__glow auth-shell__glow--two" />
+            <div class="auth-shell__grid" />
         </div>
 
         <div class="auth-shell__frame">

@@ -9,11 +9,11 @@ class QueryLogIngestBatch extends Model
 {
     public $incrementing = true;
     protected $keyType = 'int';
-    public $timestamps = false;
 
     protected $fillable = [
         'batch_id',
         'node_id',
+        'item_count',
         'event_count',
         'status',
         'error_message',
@@ -25,6 +25,7 @@ class QueryLogIngestBatch extends Model
     protected function casts(): array
     {
         return [
+            'item_count' => 'integer',
             'event_count' => 'integer',
             'forwarded_to_clickhouse' => 'boolean',
             'received_at' => 'datetime',

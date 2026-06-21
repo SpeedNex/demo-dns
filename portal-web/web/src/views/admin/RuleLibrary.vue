@@ -33,7 +33,7 @@
             </el-button>
         </template>
 
-        <el-table :data="ruleSources" stripe v-loading="loading" @selection-change="onSelectionChange">
+        <el-table v-loading="loading" :data="ruleSources" stripe @selection-change="onSelectionChange">
             <template #empty>
                 <div class="empty-state">
                     <el-icon class="empty-icon"><Collection /></el-icon>

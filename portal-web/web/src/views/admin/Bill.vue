@@ -54,7 +54,7 @@
             </el-button>
         </template>
 
-        <el-table :data="bills" stripe v-loading="loading" style="width: 100%" min-width="1100">
+        <el-table v-loading="loading" :data="bills" stripe style="width: 100%" min-width="1100">
             <template #empty>
                 <div class="empty-state">
                     <el-icon class="empty-icon"><Tickets /></el-icon>
@@ -86,7 +86,7 @@
     </ListPage>
 
     <el-dialog v-model="showBillDetail" :title="$t('admin.finance.billDetail') || '账单详情'" width="600px">
-        <el-descriptions :column="2" border v-if="selectedBill">
+        <el-descriptions v-if="selectedBill" :column="2" border>
             <el-descriptions-item :label="$t('admin.finance.invoiceNo') || '账单号'">{{ selectedBill.invoice_no }}</el-descriptions-item>
             <el-descriptions-item :label="$t('admin.finance.userId') || '用户ID'">{{ selectedBill.user_id }}</el-descriptions-item>
             <el-descriptions-item :label="$t('admin.finance.subtotal') || '小计'">{{ formatMoney(selectedBill.subtotal_amount_minor, selectedBill.currency) }}</el-descriptions-item>

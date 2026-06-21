@@ -23,10 +23,10 @@
                         />
                         <div class="quota-text">
                             <span>{{ $t('account.quota.used', { used: usageData.queries_used, total: usageData.queries_total }) }}</span>
-                            <span class="quota-unlimited" v-if="usageData.is_unlimited">{{ $t('account.quota.unlimited') }}</span>
+                            <span v-if="usageData.is_unlimited" class="quota-unlimited">{{ $t('account.quota.unlimited') }}</span>
                         </div>
                     </div>
-                    <div class="quota-upgrade" v-if="!usageData.is_unlimited">
+                    <div v-if="!usageData.is_unlimited" class="quota-upgrade">
                         <p>{{ $t('account.quota.upgrade', { price: usageData.upgrade_price }) }}</p>
                         <el-button type="primary" @click="openSubscribeDialog">{{ $t('account.quota.upgradeBtn') }}</el-button>
                     </div>
@@ -81,7 +81,7 @@
                     <h3>{{ $t('account.subscription.title') }}</h3>
                 </div>
                 <div class="card-body">
-                    <div class="subscription-info" v-if="currentSubscription">
+                    <div v-if="currentSubscription" class="subscription-info">
                         <div class="sub-item">
                             <span class="sub-label">{{ $t('account.subscription.plan') }}</span>
                             <span class="sub-value">{{ currentSubscription.plan_name }}</span>
@@ -97,10 +97,10 @@
                             <span class="sub-value">{{ formatDate(currentSubscription.expires_at) }}</span>
                         </div>
                     </div>
-                    <div class="no-subscription" v-else>
+                    <div v-else class="no-subscription">
                         <p>{{ $t('account.subscription.none') }}</p>
                     </div>
-                    <el-button type="primary" @click="openSubscribeDialog" class="subscribe-btn">
+                    <el-button type="primary" class="subscribe-btn" @click="openSubscribeDialog">
                         {{ $t('account.subscription.subscribeBtn') }}
                     </el-button>
                 </div>
@@ -149,7 +149,7 @@
             </el-form>
             <template #footer>
                 <el-button @click="showRechargeDialog = false">{{ $t('common.cancel') }}</el-button>
-                <el-button type="primary" @click="handleRecharge" :loading="recharging">
+                <el-button type="primary" :loading="recharging" @click="handleRecharge">
                     {{ $t('common.confirm') }}
                 </el-button>
             </template>
@@ -264,7 +264,7 @@
             </el-form>
             <template #footer>
                 <el-button @click="showEmailDialog = false">{{ $t('common.cancel') }}</el-button>
-                <el-button type="primary" @click="handleUpdateEmail" :loading="updatingEmail">
+                <el-button type="primary" :loading="updatingEmail" @click="handleUpdateEmail">
                     {{ $t('common.confirm') }}
                 </el-button>
             </template>
@@ -285,7 +285,7 @@
             </el-form>
             <template #footer>
                 <el-button @click="showPasswordDialog = false">{{ $t('common.cancel') }}</el-button>
-                <el-button type="primary" @click="handleUpdatePassword" :loading="updatingPassword">
+                <el-button type="primary" :loading="updatingPassword" @click="handleUpdatePassword">
                     {{ $t('common.confirm') }}
                 </el-button>
             </template>

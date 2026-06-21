@@ -320,7 +320,6 @@ export default {
     safeSearch: {
       title: 'Safe Search',
       desc: 'Filter out search results containing adult content on major search engines, including images and videos.',
-      safeSearch: 'Safe Search',
       safeSearchDesc: 'Filter out search results containing adult content on major search engines, including images and videos. If a search engine does not support this feature, the entire engine will be blocked.',
       forceSafeSearch: 'Force Safe Search',
       forceSafeSearchDesc: 'Force all search engines to use safe search mode, which cannot be turned off by users.',
@@ -556,9 +555,6 @@ export default {
     passwordUpdated: 'Password updated',
     passwordUpdateFailed: 'Failed to update password',
     currentPlan: 'Current Plan',
-  },
-  common: {
-    default: 'Default',
   },
   account: {
     title: 'Account',
@@ -1241,10 +1237,7 @@ export default {
       statusPending: 'Pending',
       statusFailed: 'Failed',
       statusCanceled: 'Canceled',
-      todayQueries: "Today's Queries",
-      totalQueries: 'Total Queries',
       todayBatches: "Today's Batches",
-      totalUsers: 'Total Users',
       totalRevenue: 'Total Revenue',
       pendingInvoices: 'Pending Invoices',
       overdueInvoices: 'Overdue Invoices',
@@ -1345,6 +1338,11 @@ export default {
       actions: 'Actions',
       searchAdmin: 'Search admin',
       addRole: 'Add role',
+      menuRules: 'Menu Rules',
+      menuRulesAll: 'All',
+      menuRulesSave: 'Save Menu Rules',
+      menuRulesEmpty: 'No menus available',
+      menuRulesSaved: 'Menu rules saved',
     },
     menuConfig: {
       title: 'Menu Config',

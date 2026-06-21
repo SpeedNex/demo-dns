@@ -25,13 +25,13 @@ return [
     | CLICKHOUSE_ENABLED is false the client is hard-disabled and the
     | in-process analytics path returns 0 rows (with a log line).
     */
-    'host'        => env('CLICKHOUSE_HOST', ''),
-    'port'        => (int) env('CLICKHOUSE_PORT', 8123),
-    'database'    => env('CLICKHOUSE_DATABASE', 'ocer_dns'),
-    'username'    => env('CLICKHOUSE_USER', 'ocer'),
-    'password'    => env('CLICKHOUSE_PASSWORD', ''),
-    'password_file' => env('CLICKHOUSE_PASSWORD_FILE', ''),
-    'timeout_seconds'        => (float) env('CLICKHOUSE_TIMEOUT', 1.5),
-    'connect_timeout_seconds' => (float) env('CLICKHOUSE_CONNECT_TIMEOUT', 1.0),
-    'enabled'     => (bool) env('CLICKHOUSE_ENABLED', true),
+    'host'        => '127.0.0.1',
+    'port'        => 8123,
+    'database'    => 'ocer_dns',
+    'username'    => 'ocer',
+    'password'    => '',
+    'password_file' => '',
+    'timeout_seconds'        => 1.5,
+    'connect_timeout_seconds' => 1.0,
+    'enabled'     => true,
 ];

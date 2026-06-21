@@ -99,8 +99,8 @@
         </el-card>
 
         <el-dialog
-            :title="$t('privacy.addDevice')"
             v-model="showDeviceModal"
+            :title="$t('privacy.addDevice')"
             :close-on-click-modal="false"
             width="560px"
             class="device-dialog"
@@ -137,8 +137,8 @@
         </el-dialog>
 
         <el-dialog
-            :title="$t('privacy.blocklists.add')"
             v-model="showBlocklistModal"
+            :title="$t('privacy.blocklists.add')"
             :close-on-click-modal="false"
             width="620px"
             class="device-dialog"

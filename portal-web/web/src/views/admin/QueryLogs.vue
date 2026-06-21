@@ -89,7 +89,7 @@
             </el-button>
         </template>
 
-        <el-table :data="logs" stripe v-loading="loading" style="margin-top:0" @selection-change="onSelectionChange">
+        <el-table v-loading="loading" :data="logs" stripe style="margin-top:0" @selection-change="onSelectionChange">
             <el-table-column type="selection" width="40" />
             <template #empty>
                 <div class="empty-state">
@@ -129,7 +129,9 @@
                         :type="isAllowAction(row.action) ? 'success' : 'danger'"
                         effect="light"
                         size="small"
-                    >{{ actionLabel(row.action) }}</el-tag>
+                    >
+{{ actionLabel(row.action) }}
+</el-tag>
                 </template>
             </el-table-column>
             <el-table-column label="类型" width="90">
@@ -151,7 +153,9 @@
                         :type="getLatencyType(row.latency_ms)"
                         effect="light"
                         size="small"
-                    >{{ row.latency_ms }}ms</el-tag>
+                    >
+{{ row.latency_ms }}ms
+</el-tag>
                     <span v-else>-</span>
                 </template>
             </el-table-column>

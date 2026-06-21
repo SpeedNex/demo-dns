@@ -11,7 +11,7 @@
             </el-button>
         </div>
 
-        <el-table :data="teams" v-loading="loading" empty-text="—">
+        <el-table v-loading="loading" :data="teams" empty-text="—">
             <el-table-column prop="name" :label="$t('team.teamName')" min-width="180">
                 <template #default="{ row }">
                     <strong>{{ row.name }}</strong>
@@ -49,7 +49,7 @@
         </el-table>
 
         <!-- Pending Invitations -->
-        <div class="section-gap" v-if="pendingInvitations.length">
+        <div v-if="pendingInvitations.length" class="section-gap">
             <h2 class="section-title">{{ $t('team.pendingInvitations') }}</h2>
             <el-table :data="pendingInvitations" empty-text="—">
                 <el-table-column prop="team_name" :label="$t('team.teamName')" />

@@ -11,7 +11,7 @@
             当前您使用的是 <strong>Free</strong> 套餐，升级后可解锁无限查询、家长监护、查询日志分析等高级功能。
         </el-alert>
 
-        <el-row :gutter="20" v-loading="loading">
+        <el-row v-loading="loading" :gutter="20">
             <el-col v-for="plan in plans" :key="plan.code" :xs="24" :sm="12" :md="8">
                 <el-card class="plan-card" :class="{ featured: plan.is_featured }" shadow="hover">
                     <div class="plan-header">

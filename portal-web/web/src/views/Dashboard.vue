@@ -164,9 +164,9 @@
                 <div class="card-header">
                     <div class="install-head">
                         <div class="chrome-mark" aria-hidden="true">
-                            <span class="dot r"></span>
-                            <span class="dot y"></span>
-                            <span class="dot g"></span>
+                            <span class="dot r" />
+                            <span class="dot y" />
+                            <span class="dot g" />
                         </div>
                         <h2>{{ $t('dashboard.guideTitle') }}</h2>
                     </div>

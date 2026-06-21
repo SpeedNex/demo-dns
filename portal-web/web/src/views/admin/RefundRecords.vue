@@ -53,7 +53,7 @@
             </el-button>
         </template>
 
-        <el-table :data="refunds" stripe v-loading="loading" style="width: 100%">
+        <el-table v-loading="loading" :data="refunds" stripe style="width: 100%">
             <template #empty>
                 <div class="empty-state">
                     <el-icon class="empty-icon"><Wallet /></el-icon>
@@ -88,7 +88,7 @@
     </ListPage>
 
     <el-dialog v-model="showRefundDetail" :title="$t('admin.finance.refundDetail') || '退款详情'" width="550px">
-        <el-descriptions :column="2" border v-if="selectedRefund">
+        <el-descriptions v-if="selectedRefund" :column="2" border>
             <el-descriptions-item :label="$t('admin.finance.refundNo') || '退款号'">{{ selectedRefund.refund_no }}</el-descriptions-item>
             <el-descriptions-item :label="$t('admin.finance.userId') || '用户ID'">{{ selectedRefund.user_id }}</el-descriptions-item>
             <el-descriptions-item :label="$t('admin.finance.paymentId') || '支付ID'">{{ selectedRefund.payment_id }}</el-descriptions-item>

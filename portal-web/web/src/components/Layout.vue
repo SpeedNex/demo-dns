@@ -18,7 +18,7 @@
                 </div>
 
                 <div class="nav-center">
-                    <el-menu-item index="/user" @click="navigateTo('/user')" class="brand-item">
+                    <el-menu-item index="/user" class="brand-item" @click="navigateTo('/user')">
                         <el-icon><Monitor /></el-icon>
                         <span>{{ $t('nav.dashboard') }}</span>
                     </el-menu-item>
@@ -58,7 +58,7 @@
 
                 <div class="nav-right">
                     <!-- Profiles 切换 -->
-                    <el-dropdown @command="handleProfileCommand" trigger="click">
+                    <el-dropdown trigger="click" @command="handleProfileCommand">
                         <span class="toolbar-button profile-selector">
                             <span class="profile-name">{{ currentProfileName }}</span>
                             <el-icon><ArrowDown /></el-icon>
@@ -130,7 +130,7 @@
             </el-form>
             <template #footer>
                 <el-button @click="createProfileVisible = false">{{ $t('common.cancel') }}</el-button>
-                <el-button type="primary" @click="handleCreateProfile" :loading="creatingProfile">
+                <el-button type="primary" :loading="creatingProfile" @click="handleCreateProfile">
                     {{ $t('common.confirm') }}
                 </el-button>
             </template>

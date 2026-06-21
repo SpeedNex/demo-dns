@@ -41,7 +41,7 @@
             </el-tag>
         </div>
 
-        <el-table :data="nodes" stripe v-loading="loading" @selection-change="onSelectionChange" style="margin-top:12px">
+        <el-table v-loading="loading" :data="nodes" stripe style="margin-top:12px" @selection-change="onSelectionChange">
             <template #empty>
                 <div class="empty-state">
                     <el-icon class="empty-icon"><Connection /></el-icon>
@@ -69,7 +69,7 @@
             <el-table-column label="在线状态" min-width="100">
                 <template #default="{ row }">
                     <el-tag v-if="row.status === 'online'" type="success" size="small" effect="dark" style="white-space:nowrap">
-                        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;margin-right:4px"></span>
+                        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;margin-right:4px" />
                         在线
                     </el-tag>
                     <el-tag v-else type="danger" size="small" effect="dark" style="white-space:nowrap">离线</el-tag>

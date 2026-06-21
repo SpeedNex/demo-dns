@@ -28,7 +28,7 @@
                         </div>
                     </div>
                 </div>
-                <el-skeleton :rows="3" animated v-else />
+                <el-skeleton v-else :rows="3" animated />
             </el-card>
 
             <!-- Device List -->

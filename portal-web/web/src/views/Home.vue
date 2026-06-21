@@ -13,7 +13,7 @@
                     <a href="#pricing">{{ $t('nav.pricing') }}</a>
                 </nav>
                 <div class="nav-actions">
-                    <el-dropdown @command="switchLocale" style="margin-right:8px">
+                    <el-dropdown style="margin-right:8px" @command="switchLocale">
                         <span class="lang-btn">
                             {{ currentLocale }}
                             <el-icon><ArrowDown /></el-icon>
@@ -110,7 +110,7 @@
                         <p>{{ $t('home.featuresDesc') }}</p>
                     </div>
                     <div class="features">
-                        <div class="feature" v-for="(f, i) in features" :key="i">
+                        <div v-for="(f, i) in features" :key="i" class="feature">
                             <div class="icon">
                                 <el-icon><component :is="f.icon" /></el-icon>
                             </div>

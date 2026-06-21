@@ -56,7 +56,7 @@
                 <template #default="{ row }">
                     <el-tag v-if="!row.node_status" type="info" size="small" effect="plain" style="white-space:nowrap">-</el-tag>
                     <el-tag v-else-if="row.node_status === 'online'" type="success" size="small" effect="dark" style="white-space:nowrap">
-                        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;margin-right:4px"></span>
+                        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;margin-right:4px" />
                         {{ $t('admin.geoDns.online') || '在线' }}
                     </el-tag>
                     <el-tag v-else type="danger" size="small" effect="dark" style="white-space:nowrap">{{ $t('admin.geoDns.offline') || '离线' }}</el-tag>

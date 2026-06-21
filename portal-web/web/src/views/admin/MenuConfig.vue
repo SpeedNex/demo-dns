@@ -7,7 +7,7 @@
                         <h2>{{ $t('admin.menuConfig.title') || '菜单导航配置' }}</h2>
                         <p class="subtitle">{{ $t('admin.menuConfig.desc') || '配置后台管理菜单的显示和排序' }}</p>
                     </div>
-                    <el-button type="primary" @click="handleSave" :loading="saving">
+                    <el-button type="primary" :loading="saving" @click="handleSave">
                         {{ $t('common.save') || '保存' }}
                     </el-button>
                 </div>
@@ -49,12 +49,12 @@
                     <template #default="{ row }">
                         <span v-if="row.isGroup">--</span>
                         <el-button-group v-else-if="!row.parentId">
-                            <el-button :disabled="isFirstMain(row)" size="small" @click="moveUp(row)" :icon="Top" />
-                            <el-button :disabled="isLastMain(row)" size="small" @click="moveDown(row)" :icon="Bottom" />
+                            <el-button :disabled="isFirstMain(row)" size="small" :icon="Top" @click="moveUp(row)" />
+                            <el-button :disabled="isLastMain(row)" size="small" :icon="Bottom" @click="moveDown(row)" />
                         </el-button-group>
                         <el-button-group v-else>
-                            <el-button :disabled="isFirstChild(row)" size="small" @click="moveSubUp(row)" :icon="Top" />
-                            <el-button :disabled="isLastChild(row)" size="small" @click="moveSubDown(row)" :icon="Bottom" />
+                            <el-button :disabled="isFirstChild(row)" size="small" :icon="Top" @click="moveSubUp(row)" />
+                            <el-button :disabled="isLastChild(row)" size="small" :icon="Bottom" @click="moveSubDown(row)" />
                         </el-button-group>
                     </template>
                 </el-table-column>

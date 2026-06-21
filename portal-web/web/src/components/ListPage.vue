@@ -11,7 +11,7 @@
             <template #header>
                 <div class="card-header">
                     <div class="card-title">
-                        <el-icon class="title-icon" v-if="iconName" :class="iconClass">
+                        <el-icon v-if="iconName" class="title-icon" :class="iconClass">
                             <component :is="iconName" />
                         </el-icon>
                         <span class="title-text">{{ title }} ({{ total }})</span>
@@ -45,10 +45,10 @@
                     :page-sizes="[10, 20, 50, 100]"
                     :total="total"
                     layout="sizes, prev, pager, next"
-                    @size-change="onSizeChange"
-                    @current-change="onCurrentChange"
                     background
                     size="small"
+                    @size-change="onSizeChange"
+                    @current-change="onCurrentChange"
                 />
             </div>
         </el-card>

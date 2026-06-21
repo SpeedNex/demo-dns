@@ -32,7 +32,7 @@ final class ConfigPullController
                     })
                     ->orWhereHas('publishTasks', function ($taskQuery) use ($node): void {
                         $taskQuery
-                            ->whereIn('status', ['queued', 'in_progress', 'completed'])
+                            ->whereIn('status', ['queued', 'running', 'succeeded', 'partial'])
                             ->where(function ($targetQuery) use ($node): void {
                                 $targetQuery
                                     ->where('target_scope', 'all_nodes')

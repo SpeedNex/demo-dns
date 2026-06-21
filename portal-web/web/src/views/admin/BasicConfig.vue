@@ -7,7 +7,7 @@
                         <h2>{{ $t('admin.basicConfig.title') || '基本设置' }}</h2>
                         <p class="subtitle">{{ $t('admin.basicConfig.desc') || '配置网站基本信息' }}</p>
                     </div>
-                    <el-button type="primary" @click="handleSave" :loading="saving">
+                    <el-button type="primary" :loading="saving" @click="handleSave">
                         {{ $t('common.save') || '保存' }}
                     </el-button>
                 </div>

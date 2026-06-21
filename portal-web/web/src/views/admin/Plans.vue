@@ -179,11 +179,11 @@
                             </el-select>
                         </div>
                         <div class="price-col price-col-action">
-                            <el-button text type="danger" :icon="Delete" @click="removePrice(index)" :disabled="form.prices.length <= 1" />
+                            <el-button text type="danger" :icon="Delete" :disabled="form.prices.length <= 1" @click="removePrice(index)" />
                         </div>
                     </div>
                 </div>
-                <el-button type="primary" plain @click="addPrice" :icon="Plus" class="add-price-btn">
+                <el-button type="primary" plain :icon="Plus" class="add-price-btn" @click="addPrice">
                     新增价格
                 </el-button>
             </div>

@@ -40,7 +40,7 @@
             </el-button>
         </template>
 
-        <el-table :data="recharges" stripe v-loading="loading" style="width: 100%">
+        <el-table v-loading="loading" :data="recharges" stripe style="width: 100%">
             <template #empty>
                 <div class="empty-state">
                     <el-icon class="empty-icon"><CreditCard /></el-icon>

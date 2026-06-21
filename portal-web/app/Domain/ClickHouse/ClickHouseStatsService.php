@@ -52,10 +52,10 @@ final class ClickHouseStatsService
                 . ' countIf(action = \'BLOCK\') AS blocked_queries, '
                 . ' countIf(action IN (\'ALLOW\', \'REWRITE\')) AS allowed_queries, '
                 . ' uniqExact(node_id) AS unique_clients, '
-                . ' min(timestamp) AS period_start, '
-                . ' max(timestamp) AS period_end '
+                . ' min(event_time) AS period_start, '
+                . ' max(event_time) AS period_end '
                 . 'FROM dns_logs '
-                . 'WHERE timestamp >= now() - INTERVAL 24 HOUR',
+                . 'WHERE event_time >= now() - INTERVAL 24 HOUR',
             );
         } catch (\Throwable) {
             $rows = [];
@@ -86,7 +86,7 @@ final class ClickHouseStatsService
             $rows = $this->client->jsonSelect(
                 "SELECT domain, count() AS count "
                 . "FROM dns_logs "
-                . "WHERE timestamp >= now() - INTERVAL 24 HOUR AND action = 'BLOCK' "
+                . "WHERE event_time >= now() - INTERVAL 24 HOUR AND action = 'BLOCK' "
                 . "GROUP BY domain ORDER BY count DESC LIMIT {$limit}",
             );
         } catch (\Throwable) {

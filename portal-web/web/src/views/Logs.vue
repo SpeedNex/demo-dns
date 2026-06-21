@@ -54,7 +54,7 @@
                 <el-table-column prop="profile_name" :label="$t('logs.profile')" width="120" />
             </el-table>
 
-            <div class="log-pagination" v-if="total > 0">
+            <div v-if="total > 0" class="log-pagination">
                 <el-pagination
                     v-model:current-page="page"
                     :page-size="20"

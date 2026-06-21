@@ -45,7 +45,7 @@
             </el-button>
         </template>
 
-        <el-table :data="devices" stripe v-loading="loading" @selection-change="selected = $event">
+        <el-table v-loading="loading" :data="devices" stripe @selection-change="selected = $event">
             <template #empty>
                 <div class="empty-state">
                     <el-icon class="empty-icon"><Monitor /></el-icon>

@@ -48,6 +48,7 @@ final class QueryLogController
             $batch = QueryLogIngestBatch::create([
                 'batch_id' => $validated['batch_id'],
                 'node_id' => $node->id,
+                'item_count' => count($validated['items']),
                 'event_count' => count($validated['items']),
                 'status' => 'processing',
                 'received_at' => $now,

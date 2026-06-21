@@ -55,7 +55,7 @@ final class ConfigAcknowledgementService
 
         if ($task !== null) {
             $task->update([
-                'status' => 'completed',
+                'status' => $task->failed_count > 0 ? 'partial' : 'succeeded',
                 'applied_node_count' => $task->applied_count,
                 'failed_node_count' => $task->failed_count,
                 'completed_at' => now(),

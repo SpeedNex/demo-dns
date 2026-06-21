@@ -52,7 +52,7 @@
                 </el-table-column>
             </el-table>
 
-            <div class="pagination-bar" v-if="invoiceMeta?.total > invoicePageSize">
+            <div v-if="invoiceMeta?.total > invoicePageSize" class="pagination-bar">
                 <div class="pagination-total">
                     {{ $t('common.totalPrefix') || '共' }} <strong>{{ invoiceMeta.total ?? 0 }}</strong> {{ $t('common.itemsSuffix') || '条' }}
                 </div>
@@ -61,9 +61,9 @@
                     :page-size="invoicePageSize"
                     :total="invoiceMeta.total ?? 0"
                     layout="sizes, prev, pager, next"
+                    background
                     @size-change="invoicePageSize = $event; invoicePage = 1; fetchInvoices()"
                     @current-change="fetchInvoices"
-                    background
                 />
             </div>
         </el-card>

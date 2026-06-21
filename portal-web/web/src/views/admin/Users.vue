@@ -52,7 +52,7 @@
             </el-button>
         </template>
 
-        <el-table :data="users" stripe v-loading="loading" @selection-change="onSelectionChange">
+        <el-table v-loading="loading" :data="users" stripe @selection-change="onSelectionChange">
             <template #empty>
                 <div class="empty-state">
                     <el-icon class="empty-icon"><User /></el-icon>

@@ -33,7 +33,7 @@
             </el-button>
         </template>
 
-        <el-table :data="balances" stripe v-loading="loading" style="width: 100%">
+        <el-table v-loading="loading" :data="balances" stripe style="width: 100%">
             <template #empty>
                 <div class="empty-state">
                     <el-icon class="empty-icon"><Wallet /></el-icon>
@@ -65,22 +65,22 @@
     </ListPage>
 
     <el-dialog v-model="showBalanceDetail" :title="$t('admin.finance.balanceDetail') || '余额详情'" width="520px">
-        <el-descriptions :column="1" border v-if="selectedBalance">
+        <el-descriptions v-if="selectedBalance" :column="1" border>
             <el-descriptions-item :label="$t('admin.finance.userId') || '用户ID'">{{ selectedBalance.id }}</el-descriptions-item>
             <el-descriptions-item :label="$t('admin.finance.balance') || '余额'">{{ formatBalance(selectedBalance.balance_minor, selectedBalance.currency) }}</el-descriptions-item>
             <el-descriptions-item :label="$t('admin.finance.currency') || '货币'">{{ selectedBalance.currency }}</el-descriptions-item>
-            <el-descriptions-item label="余额更新前" v-if="balanceBefore !== null">{{ formatBalance(balanceBefore, selectedBalance.currency) }}</el-descriptions-item>
-            <el-descriptions-item label="余额更新后" v-if="balanceAfter !== null">{{ formatBalance(balanceAfter, selectedBalance.currency) }}</el-descriptions-item>
+            <el-descriptions-item v-if="balanceBefore !== null" label="余额更新前">{{ formatBalance(balanceBefore, selectedBalance.currency) }}</el-descriptions-item>
+            <el-descriptions-item v-if="balanceAfter !== null" label="余额更新后">{{ formatBalance(balanceAfter, selectedBalance.currency) }}</el-descriptions-item>
             <el-descriptions-item :label="$t('admin.finance.status') || '状态'">
                 <span :class="selectedBalance.status === 'active' ? 'status-text status-text--success' : 'status-text status-text--danger'">
                     {{ selectedBalance.status === 'active' ? ($t('admin.usersPage.enabled') || '启用') : ($t('admin.usersPage.disabled') || '禁用') }}
                 </span>
             </el-descriptions-item>
             <el-descriptions-item :label="$t('admin.finance.createdAt') || '创建时间'">{{ selectedBalance.created_at ? new Date(selectedBalance.created_at).toLocaleString() : '-' }}</el-descriptions-item>
-            <el-descriptions-item label="最后更新" v-if="selectedBalance.balance_updated_at">{{ selectedBalance.balance_updated_at ? new Date(selectedBalance.balance_updated_at).toLocaleString() : '-' }}</el-descriptions-item>
+            <el-descriptions-item v-if="selectedBalance.balance_updated_at" label="最后更新">{{ selectedBalance.balance_updated_at ? new Date(selectedBalance.balance_updated_at).toLocaleString() : '-' }}</el-descriptions-item>
         </el-descriptions>
         <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
-            <el-button size="small" type="success" @click="openQuickCharge" :disabled="!selectedBalance">
+            <el-button size="small" type="success" :disabled="!selectedBalance" @click="openQuickCharge">
                 <el-icon class="el-icon--left"><Coin /></el-icon>
                 {{ $t('admin.usersPage.charge') || '充值' }}
             </el-button>
@@ -100,7 +100,7 @@
             <el-form-item :label="$t('admin.usersPage.chargeDesc')">
                 <el-input v-model="chargeDesc" type="textarea" :rows="2" :placeholder="$t('admin.usersPage.chargeDescPlaceholder')" />
             </el-form-item>
-            <el-form-item label="充值后余额" v-if="selectedBalance">
+            <el-form-item v-if="selectedBalance" label="充值后余额">
                 <span class="balance-value" style="color:#67c23a">
                     {{ formatBalance((selectedBalance.balance_minor || 0) + Math.round(chargeAmount * 100), selectedBalance.currency) }}
                 </span>

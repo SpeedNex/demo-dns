@@ -55,7 +55,7 @@
             </el-button>
         </template>
 
-        <el-table :data="admins" stripe :empty-text="$t('common.noData')" v-loading="loading">
+        <el-table v-loading="loading" :data="admins" stripe :empty-text="$t('common.noData')">
             <el-table-column type="index" :label="$t('common.index')" width="60" />
             <el-table-column prop="username" :label="$t('admin.adminUsers.username') || '用户名'" min-width="140" />
             <el-table-column prop="email" :label="$t('admin.adminUsers.email') || '邮箱'" min-width="200" />
@@ -99,10 +99,10 @@
                         <el-icon><Key /></el-icon>
                         {{ $t('admin.rbac.assignRole') || '分配角色' }}
                     </el-button>
-                    <el-button size="small" text type="success" v-if="row.status !== 'active'" @click="handleStatus(row, 'active')">
+                    <el-button v-if="row.status !== 'active'" size="small" text type="success" @click="handleStatus(row, 'active')">
                         {{ $t('admin.adminUsers.enable') || '启用' }}
                     </el-button>
-                    <el-button size="small" text type="info" v-else @click="handleStatus(row, 'disabled')">
+                    <el-button v-else size="small" text type="info" @click="handleStatus(row, 'disabled')">
                         {{ $t('admin.adminUsers.disable') || '禁用' }}
                     </el-button>
                     <el-button size="small" text type="danger" :disabled="row.is_super_admin" @click="handleDelete(row)">

@@ -6,7 +6,7 @@
             description="Track resolver fleet health, policy release status and 24-hour query activity from one operational dashboard."
         />
         <el-row :gutter="16" style="margin-bottom:24px">
-            <el-col :xs="12" :sm="12" :md="6" v-for="s in stats" :key="s.label">
+            <el-col v-for="s in stats" :key="s.label" :xs="12" :sm="12" :md="6">
                 <el-card shadow="never" class="stat-card" :class="s.color">
                     <div class="stat-value">{{ s.value }}</div>
                     <div class="stat-label">{{ s.label }}</div>
@@ -16,7 +16,7 @@
 
         <!-- UI.md #32: 维度统计（GAFAM / 根域名 / 加密DNS / DNSSEC） -->
         <el-row :gutter="16" style="margin-bottom:24px">
-            <el-col :xs="12" :sm="6" v-for="d in dimensionStats" :key="d.label">
+            <el-col v-for="d in dimensionStats" :key="d.label" :xs="12" :sm="6">
                 <el-card shadow="never" class="stat-card" :class="d.color">
                     <div class="stat-value">{{ d.value }}</div>
                     <div class="stat-label">{{ d.label }}</div>
@@ -25,8 +25,8 @@
         </el-row>
 
         <el-row :gutter="16">
-            <el-col :xs="24" :sm="12" :md="8" v-for="link in quickLinks" :key="link.to">
-                <el-card shadow="never" class="quick-card" @click="$router.push(link.to)" style="cursor:pointer; margin-bottom:16px">
+            <el-col v-for="link in quickLinks" :key="link.to" :xs="24" :sm="12" :md="8">
+                <el-card shadow="never" class="quick-card" style="cursor:pointer; margin-bottom:16px" @click="$router.push(link.to)">
                     <div class="quick-icon">
                         <el-icon :size="28"><component :is="iconMap[link.icon]" /></el-icon>
                     </div>

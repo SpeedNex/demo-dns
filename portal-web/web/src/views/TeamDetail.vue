@@ -33,7 +33,7 @@
                         <el-input v-model="editForm.description" type="textarea" :rows="2" maxlength="500" :disabled="!canManage" />
                     </el-form-item>
                     <el-form-item v-if="canManage">
-                        <el-button type="primary" @click="handleUpdate" :loading="updating">
+                        <el-button type="primary" :loading="updating" @click="handleUpdate">
                             {{ $t('team.save') }}
                         </el-button>
                         <el-button v-if="isOwner" type="danger" plain @click="handleDelete">
@@ -59,7 +59,7 @@
                             </el-tag>
                         </template>
                     </el-table-column>
-                    <el-table-column :label="$t('team.actions')" width="240" v-if="canManage">
+                    <el-table-column v-if="canManage" :label="$t('team.actions')" width="240">
                         <template #default="{ row }">
                             <el-button
                                 v-if="isOwner && row.role !== 'owner'"
@@ -92,7 +92,7 @@
             </el-card>
 
             <!-- Invite Members -->
-            <el-card class="section-gap" v-if="canManage">
+            <el-card v-if="canManage" class="section-gap">
                 <template #header>
                     <span>{{ $t('team.inviteMembers') }}</span>
                 </template>
@@ -107,7 +107,7 @@
                         </el-select>
                     </el-form-item>
                     <el-form-item>
-                        <el-button type="primary" @click="handleInvite" :loading="inviting">
+                        <el-button type="primary" :loading="inviting" @click="handleInvite">
                             {{ $t('team.sendInvite') }}
                         </el-button>
                     </el-form-item>
@@ -115,7 +115,7 @@
             </el-card>
 
             <!-- Invitations List -->
-            <el-card class="section-gap" v-if="canManage && invitations.length">
+            <el-card v-if="canManage && invitations.length" class="section-gap">
                 <template #header>
                     <div class="card-header">
                     <span>{{ $t('team.pendingInvitations') }} ({{ invitations.length }})</span>

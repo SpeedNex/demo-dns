@@ -5,7 +5,7 @@
             <p>{{ $t('team.invitationsSubtitle') }}</p>
         </div>
 
-        <el-table :data="invitations" v-loading="loading" empty-text="—">
+        <el-table v-loading="loading" :data="invitations" empty-text="—">
             <el-table-column prop="team_name" :label="$t('team.teamName')" min-width="200" />
             <el-table-column prop="role" :label="$t('team.invitedAs')" width="120">
                 <template #default="{ row }">

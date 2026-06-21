@@ -2,22 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class TaskExecution extends Model
 {
-    use HasUlids;
+    protected $table = 'task_executions';
 
     public $incrementing = false;
 
     protected $keyType = 'string';
 
-    public $incrementing = true;
-    protected $keyType = 'int';
-
     protected $fillable = [
+        'id',
         'publish_task_id',
         'node_id',
         'config_version',
@@ -39,13 +37,27 @@ class TaskExecution extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $execution): void {
+            if (! is_string($execution->id) || $execution->id === '') {
+                $execution->id = (string) Str::ulid();
+            }
+        });
+    }
+
     public function publishTask(): BelongsTo
     {
-        return $this->belongsTo(PublishTask::class);
+        return $this->belongsTo(PublishTask::class, 'publish_task_id');
+    }
+
+    public function task(): BelongsTo
+    {
+        return $this->publishTask();
     }
 
     public function node(): BelongsTo
     {
-        return $this->belongsTo(Node::class);
+        return $this->belongsTo(Node::class, 'node_id');
     }
 }

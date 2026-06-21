@@ -26,7 +26,7 @@
                             </div>
                         </div>
                     </template>
-                    <el-table :data="roles" stripe :empty-text="$t('common.noData')" v-loading="loadingRoles" highlight-current-row @row-click="selectRole">
+                    <el-table v-loading="loadingRoles" :data="roles" stripe :empty-text="$t('common.noData')" highlight-current-row @row-click="selectRole">
                         <el-table-column prop="code" :label="$t('admin.rbac.roleCode') || '角色代码'" width="120">
                             <template #default="{ row }">
                                 <el-tag size="small" effect="light">{{ row.code }}</el-tag>
@@ -43,7 +43,7 @@
             </el-col>
 
             <el-col :span="16">
-                <el-card shadow="never" class="list-card" v-if="selectedRole">
+                <el-card v-if="selectedRole" shadow="never" class="list-card">
                     <template #header>
                         <div class="card-header">
                             <div class="card-title">
@@ -51,7 +51,7 @@
                                 <span class="title-text">{{ $t('admin.rbac.rolePermissions') || '角色权限' }}: {{ selectedRole.name }}</span>
                             </div>
                             <div class="header-actions">
-                                <el-button size="small" type="success" @click="savePermissions" :loading="savingPerms">
+                                <el-button size="small" type="success" :loading="savingPerms" @click="savePermissions">
                                     <el-icon class="el-icon--left"><Check /></el-icon>
                                     <span>{{ $t('common.save') || '保存' }}</span>
                                 </el-button>
@@ -66,7 +66,7 @@
                                     <span class="permission-section__count">{{ group.items.length }} permissions</span>
                                 </div>
                                 <el-row :gutter="16">
-                                    <el-col :span="12" v-for="perm in group.items" :key="perm.id">
+                                    <el-col v-for="perm in group.items" :key="perm.id" :span="12">
                                         <el-checkbox :value="perm.id" :disabled="selectedRole.is_system">
                                             <div class="perm-item">
                                                 <span class="perm-code">{{ perm.code }}</span>
@@ -112,7 +112,7 @@
                         <p v-if="!menuTree.length" class="empty-hint">{{ $t('admin.rbac.menuRulesEmpty') || '暂无可配置的菜单' }}</p>
                     </div>
                 </el-card>
-                <el-card shadow="never" class="list-card" v-else>
+                <el-card v-else shadow="never" class="list-card">
                     <div class="empty-state">
                         <el-icon class="empty-icon"><Key /></el-icon>
                         <p class="empty-title">{{ $t('admin.rbac.selectRole') || '请选择一个角色查看权限' }}</p>
@@ -136,7 +136,7 @@
         </el-form>
         <template #footer>
             <el-button @click="showRoleDialog = false">{{ $t('common.cancel') }}</el-button>
-            <el-button type="primary" @click="handleSaveRole" :loading="savingRole">{{ $t('common.confirm') }}</el-button>
+            <el-button type="primary" :loading="savingRole" @click="handleSaveRole">{{ $t('common.confirm') }}</el-button>
         </template>
     </el-dialog>
 </template>

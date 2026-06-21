@@ -5,7 +5,7 @@
             <p>{{ $t('team.createSubtitle') }}</p>
         </div>
 
-        <el-form :model="form" :rules="rules" ref="formRef" label-width="120px" class="create-form">
+        <el-form ref="formRef" :model="form" :rules="rules" label-width="120px" class="create-form">
             <el-form-item :label="$t('team.teamName')" prop="name">
                 <el-input v-model="form.name" :placeholder="$t('team.namePlaceholder')" maxlength="100" />
             </el-form-item>
@@ -18,7 +18,7 @@
                 <el-input v-model="form.description" type="textarea" :rows="3" maxlength="500" />
             </el-form-item>
             <el-form-item>
-                <el-button type="primary" @click="handleSubmit" :loading="submitting">
+                <el-button type="primary" :loading="submitting" @click="handleSubmit">
                     {{ $t('team.create') }}
                 </el-button>
                 <el-button @click="$router.push('/user/teams')">

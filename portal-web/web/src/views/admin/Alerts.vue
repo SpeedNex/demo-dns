@@ -36,7 +36,7 @@
         </template>
 
         <el-row :gutter="16" class="stat-row">
-            <el-col :span="6" v-for="s in summaries" :key="s.label">
+            <el-col v-for="s in summaries" :key="s.label" :span="6">
                 <div class="stat-card" :class="`stat-${s.tone}`">
                     <div class="stat-value" :style="{ color: s.color }">{{ s.value }}</div>
                     <div class="stat-label">{{ s.label }}</div>
