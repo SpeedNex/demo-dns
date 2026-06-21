@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 
@@ -104,6 +105,14 @@ func runInstall(args []string) error {
 	fmt.Printf("  node_id   = %s\n", cfg.ControlPlane.NodeID)
 	fmt.Printf("  api_key   = %s\n", maskCredential(cfg.ControlPlane.APIKey))
 	fmt.Printf("  log_buf   = %s\n", cfg.Logging.BufferPath)
+
+	// 2026-06-22: install 完成后调用控制面 register API，告知 console 节点已注册。
+	// register 失败不阻塞 install（配置已写入），仅打印警告。
+	if regErr := registerNodeToConsole(cfg); regErr != nil {
+		fmt.Printf("⚠ console register failed: %v (config was still written, run `resolver` to start)\n", regErr)
+	} else {
+		fmt.Println("✔ console register: success")
+	}
 	fmt.Println("Next: run `resolver` to start the node.")
 	return nil
 }
@@ -284,6 +293,44 @@ func checkPortConflicts(cfg *config.Config) error {
 	}
 	if len(conflicts) > 0 {
 		return fmt.Errorf("one resolver per host, ports already in use: %s", strings.Join(conflicts, "; "))
+	}
+	return nil
+}
+
+// registerNodeToConsole 把本次 install 行为上报给 console，
+// 触发控制台「已注册」状态展示（不阻塞 install，失败仅打印警告）。
+func registerNodeToConsole(cfg *config.Config) error {
+	endpoint := strings.TrimRight(cfg.ControlPlane.Endpoint, "/")
+	if endpoint == "" {
+		return nil
+	}
+	url := endpoint + "/api/v1/node/nodes/register"
+
+	payload := map[string]any{
+		"node_id":      cfg.ControlPlane.NodeID,
+		"installed_at": time.Now().UTC().Format(time.RFC3339),
+	}
+	body, _ := json.Marshal(payload)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, strings.NewReader(string(body)))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if t := strings.TrimSpace(cfg.ControlPlane.APIKey); t != "" {
+		req.Header.Set("Authorization", "Bearer "+t)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("register API returned %d: %s", resp.StatusCode, string(respBody))
 	}
 	return nil
 }

@@ -13,6 +13,11 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 Route::prefix('node')->group(function (): void {
+    // 2026-06-22: 节点安装注册端点（install 后调用），标记节点已注册。
+    // 使用 node.token 中间件：仅校验 Bearer token 鉴权。
+    Route::post('nodes/register', [App\Http\Controllers\Api\V1\Node\NodeRegisterController::class, 'register'])
+        ->middleware(['node.token']);
+
     // Token 验证（无中间件，安装时用 token 换取 api_key + secret）
     Route::post('tokens/verify', [App\Http\Controllers\Api\V1\Node\TokenVerifyController::class, 'verify']);
 

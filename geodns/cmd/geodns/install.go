@@ -2,12 +2,16 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 
@@ -75,7 +79,54 @@ func runInstall(args []string) error {
 	fmt.Printf("  node_id       = %s\n", opts.NodeID)
 	fmt.Printf("  listen_addr   = %s\n", opts.ListenAddr)
 	fmt.Printf("  dns_addr      = %s\n", opts.DNSAddr)
+
+	// 2026-06-22: install 完成后调用控制面 register API，告知 console 节点已注册。
+	// 即使 register 失败也不阻塞 install（配置已写入），但会在 stdout 标注警告。
+	if regErr := registerNodeToConsole(cfg); regErr != nil {
+		fmt.Printf("⚠ console register failed: %v (config was still written, run `geodns` to start)\n", regErr)
+	} else {
+		fmt.Println("✔ console register: success")
+	}
 	fmt.Println("Next: run `geodns` to start the node.")
+	return nil
+}
+
+// registerNodeToConsole 把本次 install 行为上报给 console，
+// 触发控制台「已注册」状态展示（不阻塞 install，失败仅打印警告）。
+func registerNodeToConsole(cfg *config.Config) error {
+	server := strings.TrimRight(cfg.NodeAPIEndpoint(), "/")
+	if server == "" {
+		return nil // 无控制面时跳过
+	}
+	url := server + "/api/v1/node/nodes/register"
+
+	payload := map[string]any{
+		"node_id":     cfg.NodeToken(), // 仅作标识
+		"installed_at": time.Now().UTC().Format(time.RFC3339),
+		"listen_addr":  cfg.Server.ListenAddr,
+	}
+	body, _ := json.Marshal(payload)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, strings.NewReader(string(body)))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if t := cfg.NodeToken(); t != "" {
+		req.Header.Set("Authorization", "Bearer "+t)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("register API returned %d: %s", resp.StatusCode, string(respBody))
+	}
 	return nil
 }
 

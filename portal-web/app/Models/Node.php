@@ -24,12 +24,15 @@ class Node extends Model
         'status', 'desired_config_version', 'current_config_version',
         'last_heartbeat_at', 'last_log_flush_at', 'meta', 'created_by_admin_id',
         'node_name', 'node_alias',
+        // 2026-06-22: install 状态记录
+        'install_status', 'last_installed_at', 'last_listen_addr',
     ];
     protected $casts = [
         'supported_protocols' => 'array',
         'meta' => 'array',
         'last_heartbeat_at' => 'datetime',
         'last_log_flush_at' => 'datetime',
+        'last_installed_at' => 'datetime',
         'desired_config_version' => 'integer',
         'current_config_version' => 'integer',
     ];
