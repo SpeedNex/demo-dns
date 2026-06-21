@@ -46,7 +46,8 @@ func runInstall(args []string) error {
 	fs.StringVar(&opts.ListenAddr, "listen-addr", ":5354", "HTTP listen address")
 	fs.StringVar(&opts.DNSAddr, "dns-addr", ":53", "DNS listen address")
 	fs.StringVar(&opts.HealthToken, "health-token", "", "Internal health-view token (shared with portal-web)")
-	fs.BoolVar(&opts.Force, "force", false, "Overwrite existing config file")
+	// 2026-06-22: --force 已废弃（install 始终覆盖配置），保留以兼容旧脚本，忽略即可。
+	fs.BoolVar(&opts.Force, "force", false, "Deprecated: install now always overwrites")
 
 	if err := fs.Parse(args); err != nil {
 		return err
@@ -132,11 +133,7 @@ func buildGeodnsConfig(opts *installOptions) *config.Config {
 }
 
 func writeGeodnsConfig(path string, cfg *config.Config, force bool) error {
-	if !force {
-		if _, err := os.Stat(path); err == nil {
-			return fmt.Errorf("config already exists at %s; pass --force to overwrite", path)
-		}
-	}
+	_ = force // 2026-06-22: 取消"配置已存在则拒绝"检测，install 始终覆盖。
 
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0o755); err != nil {

@@ -58,7 +58,8 @@ func runInstall(args []string) error {
 	fs.StringVar(&opts.Country, "country", "", "Optional country code, e.g. JP")
 	fs.StringVar(&opts.City, "city", "", "Optional city, e.g. Tokyo")
 	fs.StringVar(&opts.Provider, "provider", "", "Optional provider tag, e.g. AWS")
-	fs.BoolVar(&opts.Force, "force", false, "Overwrite existing config file")
+	// 2026-06-22: --force 已废弃（install 始终覆盖配置），保留以兼容旧脚本，忽略即可。
+	fs.BoolVar(&opts.Force, "force", false, "Deprecated: install now always overwrites")
 
 	if err := fs.Parse(args); err != nil {
 		return err
