@@ -181,7 +181,13 @@ final class AdminGeoDnsController
     {
         $actorId = $request->user()?->admin_id;
         $mapping = GeoDnsMapping::findOrFail($id);
+
+        $targetNodeId = $mapping->target_node_id;
         $mapping->delete();
+
+        if ($targetNodeId) {
+            Node::query()->where('id', $targetNodeId)->delete();
+        }
 
         AdminAuditLog::record('geo_dns.delete', 'geo_dns_mapping', $id, [], $actorId, null, $request->ip(), $request->userAgent());
 
@@ -196,7 +202,16 @@ final class AdminGeoDnsController
             'ids.*' => 'required',
         ]);
 
+        $targetNodeIds = GeoDnsMapping::whereIn('id', $validated['ids'])
+            ->whereNotNull('target_node_id')
+            ->pluck('target_node_id')
+            ->all();
+
         $count = GeoDnsMapping::whereIn('id', $validated['ids'])->delete();
+
+        if (! empty($targetNodeIds)) {
+            Node::query()->whereIn('id', $targetNodeIds)->delete();
+        }
 
         AdminAuditLog::record('geo_dns.batch_delete', 'geo_dns_mapping', null, ['ids' => $validated['ids'], 'count' => $count], $actorId, null, $request->ip(), $request->userAgent());
 
