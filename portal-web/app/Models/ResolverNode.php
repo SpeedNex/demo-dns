@@ -1,38 +1,27 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
- * UI.md #61 — Resolver 节点注册表。
+ * DNS 解析器节点
+ *
+ * 与 Node 共享 dns_nodes 表，通过 node_type='resolver' 过滤。
+ * 2026-06-22: 原 dns_resolver 拆分表已废弃，统一使用 dns_nodes。
  */
-class ResolverNode extends Model
+class ResolverNode extends Node
 {
-    public const STATUS_ONLINE = 'online';
-    public const STATUS_OFFLINE = 'offline';
-    public const STATUS_ERROR = 'error';
-
-    protected $table = 'resolver_nodes_view';
-
-    protected $fillable = [
-        'node_id',
-        'node_name',
-        'region',
-        'policy_version',
-        'last_sync_at',
-        'status',
-        'ip_address',
-        'meta',
-    ];
-
-    protected function casts(): array
+    /**
+     * 默认 scope：只查询 resolver 类型的节点。
+     * 所有 ResolverNode::query() 都自动加 WHERE node_type='resolver'。
+     */
+    protected static function booted(): void
     {
-        return [
-            'meta' => 'array',
-            'last_sync_at' => 'datetime',
-        ];
+        parent::booted();
+
+        static::addGlobalScope('resolver_type', function (Builder $builder): void {
+            $builder->where('node_type', 'resolver');
+        });
     }
 }

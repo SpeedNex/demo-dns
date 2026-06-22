@@ -172,3 +172,15 @@
 
 | 2026-06-22 | code | 新增 migration 2026_06_22_000008：aggregation_offsets 表加 max_timestamp datetime 列，初始化旧记录 max_timestamp=processed_at，清理重复 window_start 记录 | database/migrations/2026_06_22_000008_add_max_timestamp_to_aggregation_offsets.php | ok |
 
+| 2026-06-22 | fix | 修复 ResolverNode 和 GeoDnsNode Model 表名前缀重复问题：DB prefix=dns_ + $table 中多余的 dns_ 前缀导致查询 dns_dns_resolver 报 1146；修正为 $table="resolver" 和 $table="geodns" | app/Models/ResolverNode.php, app/Models/GeoDnsNode.php | ok |
+
+| 2026-06-22 | fix | ResolverNode/GeoDnsNode 表名改为指向 dns_nodes（prefix=dns_ + $table="nodes"），解决开发机未跑 split_nodes migration 导致的 1146 错误；同时回滚之前错误的 `$table="resolver"` 修改 | app/Models/ResolverNode.php, app/Models/GeoDnsNode.php | ok |
+
+| 2026-06-22 | fix | Nodes.vue 修复 onCreate→openCreateDialog、searchKeyword→filterKeyword 未定义变量；GeoDNS.vue 修复 admin.nodes.redeploy→admin.nodes.deploy（缺 i18n key） | web/src/views/admin/Nodes.vue, web/src/views/admin/GeoDNS.vue | ok |
+
+| 2026-06-22 | fix | 保存节点时报 "The name field must be a string"：update 方法中 $request->merge 把 name 设为 null，但验证规则要求 string；改为 nullable|string|max:120 | app/Http/Controllers/Api/V1/Admin/AdminNodeController.php | ok |
+
+| 2026-06-22 | fix | update 节点时 name 为 null 引发 1048 Column name cannot be null：新增 fallback `$validated["name"] ?? $validated["node_alias"] ?? $node->name` | app/Http/Controllers/Api/V1/Admin/AdminNodeController.php | ok |
+
+| 2026-06-22 | code | 废弃 dns_dns_resolver/dns_dns_geodns 拆分表，统一使用 dns_nodes：删除 2 个 migration 文件（split_nodes_tables、resolver_nodes_view）；ResolverNode/GeoDnsNode 改为继承 Node 并加全局 scope 按 node_type 过滤；NodeRegistryService/PolicyPublisher/AdminPolicyController 改为使用 Node Model 的正确字段（node_code/name/current_config_version/last_heartbeat_at/install_status） | database/migrations/(2个文件), app/Models/ResolverNode.php, app/Models/GeoDnsNode.php, app/Domain/Node/NodeRegistryService.php, app/Domain/Policy/PolicyPublisher.php, app/Http/Controllers/Api/V1/Admin/AdminPolicyController.php | ok |
+

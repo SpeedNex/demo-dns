@@ -28,6 +28,12 @@ import (
 // 部署在容器 / systemd 时通常会通过 --config 或 RESOLVER_CONFIG 改写。
 const defaultConfigPath = "configs/server.yaml"
 
+// 版本信息（编译时通过 -ldflags 注入）
+var (
+	version   string
+	buildTime string
+)
+
 // envConfigKey 是允许通过环境变量覆盖配置路径的 key，
 // 命名参考社区惯例（CONSUL_CONFIG_PATH 等），便于与 CI / K8s 集成。
 const envConfigKey = "RESOLVER_CONFIG"

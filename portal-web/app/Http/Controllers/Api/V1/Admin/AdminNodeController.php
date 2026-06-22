@@ -134,7 +134,7 @@ final class AdminNodeController
 
         $validated = $request->validate([
             'node_code' => 'string|max:64|unique:nodes,node_code,' . $nodeId,
-            'name' => 'string|max:120',
+            'name' => 'nullable|string|max:120',
             'node_name' => 'nullable|string|max:120',
             'node_alias' => 'nullable|string|max:100',
             'region' => 'nullable|string|max:40',
@@ -147,6 +147,8 @@ final class AdminNodeController
             'supported_protocols.*' => 'string',
         ]);
 
+
+        $validated['name'] = $validated['name'] ?? $validated['node_alias'] ?? $node->name;
         $node->update($validated);
 
         AdminAuditLog::record('node.update', 'node', $nodeId, $validated, $actorId, null, $request->ip(), $request->userAgent());

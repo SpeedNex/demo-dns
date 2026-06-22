@@ -25,17 +25,16 @@ final class AdminPolicyController
         $latestVersion = (int) (PolicySnapshot::where('status', PolicySnapshot::STATUS_PUBLISHED)->max('version') ?? 0);
         $fleet = app(NodeRegistryService::class)->fleetStats($latestVersion);
         $rows = ResolverNode::query()
-            ->orderBy('node_id')
+            ->orderBy('node_code')
             ->get()
             ->map(fn (ResolverNode $n) => [
-                'node_id' => $n->node_id,
-                'node_name' => $n->node_name,
+                'node_id' => $n->node_code,
+                'node_name' => $n->name,
                 'region' => $n->region,
-                'status' => $n->status,
-                'policy_version' => $n->policy_version,
-                'last_sync_at' => optional($n->last_sync_at)->toIso8601String(),
-                'out_of_sync' => $n->status === ResolverNode::STATUS_ONLINE
-                    && $n->policy_version < $latestVersion,
+                'status' => $n->runtimeStatus(),
+                'policy_version' => $n->current_config_version,
+                'last_sync_at' => optional($n->last_heartbeat_at)->toIso8601String(),
+                'out_of_sync' => $n->install_status === 'installed' && $n->isOnline() && $n->current_config_version < $latestVersion,
             ]);
         return response()->json([
             'data' => $rows,

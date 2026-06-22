@@ -4,47 +4,49 @@ declare(strict_types=1);
 
 namespace App\Domain\Node;
 
-use App\Models\ResolverNode;
+use App\Models\Node;
 use Illuminate\Support\Carbon;
 
 /**
  * UI.md #48 / #61 — Resolver 节点注册/心跳/版本同步。
+ *
+ * 2026-06-22: 统一使用 dns_nodes 表，字段映射到 Node Model。
  */
 final class NodeRegistryService
 {
     public function registerOrUpdate(
-        string $nodeId,
+        string $nodeCode,
         string $nodeName,
         ?string $region = null,
         ?string $ip = null,
-    ): ResolverNode {
-        return ResolverNode::updateOrCreate(
-            ['node_id' => $nodeId],
+    ): Node {
+        return Node::updateOrCreate(
+            ['node_code' => $nodeCode],
             [
-                'node_name' => $nodeName,
+                'node_type' => 'resolver',
+                'name' => $nodeName,
                 'region' => $region,
-                'ip_address' => $ip,
-                'status' => ResolverNode::STATUS_ONLINE,
-                'last_sync_at' => Carbon::now(),
+                'public_ipv4' => $ip,
+                'install_status' => 'installed',
+                'last_heartbeat_at' => Carbon::now(),
             ],
         );
     }
 
-    public function recordHeartbeat(string $nodeId, int $policyVersion): ResolverNode
+    public function recordHeartbeat(string $nodeCode, int $configVersion): Node
     {
-        $node = ResolverNode::where('node_id', $nodeId)->firstOrFail();
+        $node = Node::where('node_code', $nodeCode)->firstOrFail();
         $node->update([
-            'policy_version' => $policyVersion,
-            'last_sync_at' => Carbon::now(),
-            'status' => ResolverNode::STATUS_ONLINE,
+            'current_config_version' => $configVersion,
+            'last_heartbeat_at' => Carbon::now(),
         ]);
         return $node;
     }
 
-    public function markOffline(string $nodeId): ResolverNode
+    public function markOffline(string $nodeCode): Node
     {
-        $node = ResolverNode::where('node_id', $nodeId)->firstOrFail();
-        $node->update(['status' => ResolverNode::STATUS_OFFLINE]);
+        $node = Node::where('node_code', $nodeCode)->firstOrFail();
+        $node->update(['last_heartbeat_at' => null]);
         return $node;
     }
 
@@ -53,12 +55,17 @@ final class NodeRegistryService
      */
     public function fleetStats(int $latestPublishedVersion): array
     {
-        $total = ResolverNode::count();
-        $online = ResolverNode::where('status', ResolverNode::STATUS_ONLINE)->count();
-        $offline = ResolverNode::where('status', ResolverNode::STATUS_OFFLINE)->count();
-        $error = ResolverNode::where('status', ResolverNode::STATUS_ERROR)->count();
-        $out_of_sync = ResolverNode::where('status', ResolverNode::STATUS_ONLINE)
-            ->where('policy_version', '<', $latestPublishedVersion)
+        $total = Node::where('node_type', 'resolver')->count();
+        $online = Node::online()->where('node_type', 'resolver')->count();
+        $offline = Node::where('node_type', 'resolver')->where(function ($q) {
+            $q->whereNull('last_heartbeat_at')
+              ->orWhere('last_heartbeat_at', '<=', now()->subSeconds(180));
+        })->count();
+        $error = 0;
+        $out_of_sync = Node::where('node_type', 'resolver')
+            ->where('install_status', 'installed')
+            ->where('last_heartbeat_at', '>', now()->subSeconds(90))
+            ->where('current_config_version', '<', $latestPublishedVersion)
             ->count();
         return [
             'total' => $total,

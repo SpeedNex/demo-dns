@@ -1,7 +1,7 @@
 <template>
     <ListPage
         :title="$t('admin.geoDns.title')"
-        :desc="'默认监听端口：HTTP 5354'"
+        :desc="'默认监听端口：DNS 53 (UDP/TCP) · DoH 443 · DoT 853 · DoQ 784'"
         i18n-key="admin.geoDns"
         icon-name="Aim"
         :total="meta?.total ?? 0"
@@ -44,7 +44,7 @@
                 </div>
             </template>
             <el-table-column type="selection" width="48" />
-            <el-table-column :label="$t('admin.geoDns.nodeId') || 'GeoDNS节点ID'" :min-width="180">
+            <el-table-column :label="$t('admin.geoDns.nodeId') || '地理调度器节点ID'" :min-width="180">
                 <template #default="{ row }">
                     <div class="name-cell" style="white-space:nowrap">
                         <code class="node-code">{{ row.node_code || (row.target_node_id ? '#' + row.target_node_id : ('#' + row.id)) }}</code>
@@ -96,13 +96,18 @@
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.geoDns.actions')" fixed="right" width="190">
+            <el-table-column :label="$t('admin.geoDns.actions')" fixed="right" width="220">
                 <template #default="{ row }">
                     <div style="white-space:nowrap;display:flex;gap:4px;align-items:center">
                        <el-button size="small" text type="success" :disabled="!(row.target_node_id || row.node_id)" @click="handleDeploy(row)">
                         <span>{{ $t('admin.nodes.deploy') || '一键部署' }}</span>
                     </el-button>
                    
+                        <el-button size="small" text type="info" :disabled="!(row.target_node_id || row.node_id)" @click="handleDeploy(row)">
+                        <el-icon><Refresh /></el-icon>
+                        <span>{{ $t('admin.nodes.deploy') || '重新部署' }}</span>
+                    </el-button>
+                    
                         <el-button size="small" text type="primary" @click="openEditDialog(row)">
                         <el-icon><Edit /></el-icon>
                     </el-button>
@@ -173,7 +178,7 @@
 import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Aim, Connection, CopyDocument, Delete, Edit, InfoFilled, MapLocation, Plus, Search } from '@element-plus/icons-vue'
+import { CopyDocument, Delete, Edit, InfoFilled, Refresh } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
 import { useSystemConfig } from '@/composables/useSystemConfig'

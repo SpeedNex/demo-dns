@@ -22,15 +22,14 @@
             >
                 <span>{{ t('admin.nodes.batchDelete') }} ({{ selected.length }})</span>
             </el-button>
-            <el-button type="primary" size="small" @click="openCreateDialog">
-                <el-icon class="el-icon--left"><Plus /></el-icon>
+            <el-button size="small" type="primary" @click="openCreateDialog">
                 <span>{{ t('admin.nodes.create') }}</span>
             </el-button>
         </template>
 
         <template #filters>
             <el-input
-                v-model="searchKeyword"
+                v-model="filterKeyword"
                 :placeholder="t('admin.nodes.searchPlaceholder') || '搜索节点ID/别名/IP'"
                 class="search-input"
                 clearable
@@ -64,7 +63,6 @@
         <el-table v-loading="loading" :data="nodes" stripe style="margin-top:12px;width:100%" @selection-change="onSelectionChange">
             <template #empty>
                 <div class="empty-state">
-                    <el-icon class="empty-icon"><Connection /></el-icon>
                     <p class="empty-title">{{ t('admin.nodes.noNodes') || '暂无节点' }}</p>
                     <p class="empty-desc">点击右上角「{{ t('admin.nodes.create') }}」添加第一个 DNS 节点。</p>
                 </div>
@@ -73,8 +71,6 @@
             <el-table-column :label="t('admin.nodes.nodeId')" min-width="160">
                 <template #default="{ row }">
                     <div class="name-cell" style="white-space:nowrap">
-                        <!-- 2026-06-22: 单一事实源 — 直接读 row.runtime_status，不再看任何 DB 原始字段 -->
-                        <el-icon :color="row.runtime_status === 'online' ? '#67c23a' : (row.runtime_status === 'degraded' ? '#e6a23c' : (row.runtime_status === 'not_installed' ? '#94a3b8' : '#f56c6c'))" size="14"><Connection /></el-icon>
                         <code class="node-code">{{ row.node_code }}</code>
                     </div>
                 </template>
@@ -119,7 +115,7 @@
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column :label="t('admin.nodes.actions')" min-width="160" fixed="right">
+            <el-table-column :label="t('admin.nodes.actions')" min-width="200" fixed="right">
                 <template #default="{ row }">
                     <div style="white-space:nowrap;display:flex;gap:4px;align-items:center">
                         <el-button size="small" text type="primary" @click="openEditDialog(row)">
@@ -135,6 +131,17 @@
                             @click="openKeyDialog(row)"
                         >
                             <span>{{ t('admin.nodes.deploy') }}</span>
+                        </el-button>
+                        <!-- 重新部署按钮 -->
+                        <el-button
+                            v-if="row.install_status === 'installed'"
+                            size="small"
+                            text
+                            type="info"
+                            @click="openKeyDialog(row)"
+                        >
+                            <el-icon><Refresh /></el-icon>
+                            <span>{{ t('admin.nodes.redeploy') || '重新部署' }}</span>
                         </el-button>
                         <el-button size="small" text type="danger" @click="handleDelete(row.id)">
                             <el-icon><Delete /></el-icon>
@@ -205,7 +212,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { CircleCheck, Connection, CopyDocument, Delete, Edit, InfoFilled, Key, Plus, Search, VideoPause, VideoPlay, WarningFilled } from '@element-plus/icons-vue'
+import { CopyDocument, Delete, Edit, InfoFilled, Refresh } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
 import { useSystemConfig } from '@/composables/useSystemConfig'

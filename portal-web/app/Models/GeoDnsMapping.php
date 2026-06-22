@@ -61,7 +61,7 @@ class GeoDnsMapping extends Model
 
     public function node(): BelongsTo
     {
-        return $this->belongsTo(Node::class, 'target_node_id');
+        return $this->belongsTo(GeoDnsNode::class, 'target_node_id');
     }
 
     public function getNodeIdAttribute(): string|int|null

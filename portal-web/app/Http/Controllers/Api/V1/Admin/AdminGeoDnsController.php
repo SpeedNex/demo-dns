@@ -6,7 +6,8 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Models\AdminAuditLog;
 use App\Models\GeoDnsMapping;
-use App\Models\Node;
+use App\Models\GeoDnsNode;
+use App\Models\ResolverNode;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -29,9 +30,8 @@ final class AdminGeoDnsController
             $query->where('enabled', filter_var($request->input('enabled'), FILTER_VALIDATE_BOOLEAN));
         }
 
-        // 2026-06-22: 统计每个地区的 DNS 节点数（node_type = 'dns-resolver'）
-        $dnsNodeCounts = Node::query()
-            ->where('node_type', 'dns-resolver')
+        // 2026-06-22: 统计每个地区的 DNS 节点数（使用 ResolverNode 表）
+        $dnsNodeCounts = ResolverNode::query()
             ->whereNotNull('region')
             ->groupBy('region')
             ->selectRaw('region, COUNT(*) as count')
@@ -137,14 +137,13 @@ final class AdminGeoDnsController
 
         $node = $this->resolveNode($validated['node_id'] ?? null, $validated['node_name'] ?? null);
 
-        // 如果没有关联节点，自动创建一个
+        // 如果没有关联节点，自动创建一个 GeoDNS 节点
         if (! $node) {
-            $node = Node::create([
-                'name' => $validated['node_name'] ?? $validated['region'],
+            $node = GeoDnsNode::create([
+                'node_alias' => $validated['node_alias'] ?? 'geodns-' . Str::lower(Str::random(6)),
                 'region' => $validated['region'],
                 'public_ipv4' => $validated['public_ipv4'] ?? null,
                 // 2026-06-22: 单一事实源 — status 列已 drop，不再写 status=pending。新建节点默认 install_status=pending。
-                'node_type' => 'geodns',
                 'install_status' => 'pending',
             ]);
         }
@@ -216,7 +215,7 @@ final class AdminGeoDnsController
         $mapping->delete();
 
         if ($targetNodeId) {
-            Node::query()->where('id', $targetNodeId)->delete();
+            GeoDnsNode::query()->where('id', $targetNodeId)->delete();
         }
 
         AdminAuditLog::record('geo_dns.delete', 'geo_dns_mapping', $id, [], $actorId, null, $request->ip(), $request->userAgent());
@@ -240,7 +239,7 @@ final class AdminGeoDnsController
         $count = GeoDnsMapping::whereIn('id', $validated['ids'])->delete();
 
         if (! empty($targetNodeIds)) {
-            Node::query()->whereIn('id', $targetNodeIds)->delete();
+            GeoDnsNode::query()->whereIn('id', $targetNodeIds)->delete();
         }
 
         AdminAuditLog::record('geo_dns.batch_delete', 'geo_dns_mapping', null, ['ids' => $validated['ids'], 'count' => $count], $actorId, null, $request->ip(), $request->userAgent());
@@ -348,15 +347,15 @@ final class AdminGeoDnsController
         return $command;
     }
 
-    private function resolveNode(string|int|null $nodeId, ?string $nodeName): ?Node
+    private function resolveNode(string|int|null $nodeId, ?string $nodeName): ?GeoDnsNode
     {
         if ($nodeId !== null && $nodeId !== '') {
-            return Node::query()->find($nodeId);
+            return GeoDnsNode::query()->find($nodeId);
         }
 
         if ($nodeName !== null && $nodeName !== '') {
-            return Node::query()
-                ->where('name', $nodeName)
+            return GeoDnsNode::query()
+                ->where('node_alias', $nodeName)
                 ->first();
         }
 

@@ -1,139 +1,93 @@
 #!/usr/bin/env bash
-# =============================================================================
-#  build.sh — ocer-dns 一键构建脚本
-#  一条命令同时编译两个 Go 客户端：
-#      1) dns-resolver  (节点端 DNS 解析器 + 安装器)
-#      2) geodns        (GeoDNS 入口服务)
-#  输出目标: Linux amd64 + arm64，静态二进制（CGO_ENABLED=0），
-#  适用于任何 Linux 发行版（glibc / musl 通用）。
-# =============================================================================
+# ============================================================
+# ocer-dns 编译构建脚本
+# 功能：
+#   1. 自动递增版本号（从 VERSION 文件读取）
+#   2. 编译 dns-resolver 和 geodns
+#   3. 显示编译版本和时间
+# ============================================================
 
 set -euo pipefail
 
-# ---------- 路径与基础变量 ----------
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# 输出到 public/build/
-#   - 由 Nginx/Apache 直接作为静态目录分发
-#   - 下载 URL 形如: https://<host>/build/dns-resolver-linux-amd64
-OUT="$ROOT/portal-web/public/build"
-STAMP="$(date +%Y%m%d-%H%M%S)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VERSION_FILE="${SCRIPT_DIR}/VERSION"
 
-# 客户端清单: "源目录:输出名:入口子路径"
-# 源目录: 相对于本脚本根
-# 输出名: 产物基础名（不含后缀）
-# 入口子路径: go build 时用的 ./cmd/...
-SERVICES=(
-  "dns-resolver:dns-resolver:dns-resolver"
-  "geodns:geodns:geodns"
-)
-
-# 目标平台矩阵: 通用 Linux
-TARGETS=(
-  "linux:amd64"
-  "linux:arm64"
-)
-
-# ---------- 工具检查 ----------
-if ! command -v go >/dev/null 2>&1; then
-  echo "✗ Go 未安装或不在 PATH 中" >&2
-  exit 1
-fi
-
-GOVER="$(go version | awk '{print $3}')"
-echo "→ Go: $GOVER"
-echo "→ 输出目录: $OUT"
-mkdir -p "$OUT"
-
-# ---------- 编译循环 ----------
-BUILT=()
-FAILED=0
-
-for target in "${TARGETS[@]}"; do
-  GOOS="${target%:*}"
-  GOARCH="${target##*:}"
-  ARCH_TAG="${GOOS}-${GOARCH}"
-
-  for svc in "${SERVICES[@]}"; do
-    DIR="${svc%%:*}"
-    REST="${svc#*:}"
-    NAME="${REST%%:*}"
-    ENTRY="${REST##*:}"
-
-    SRC="$ROOT/$DIR"
-    OUT_BIN="$OUT/${NAME}-${ARCH_TAG}"
-
-    if [ ! -d "$SRC" ]; then
-      echo "  ✗ 源码目录不存在: $SRC" >&2
-      FAILED=1
-      continue
-    fi
-    if [ ! -f "$SRC/go.mod" ]; then
-      echo "  ✗ 缺少 go.mod: $SRC" >&2
-      FAILED=1
-      continue
-    fi
-
-    echo "→ 编译 $NAME  ($ARCH_TAG)"
-    if ! ( cd "$SRC" && \
-           CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$GOARCH" \
-             go build -trimpath -ldflags="-s -w" \
-               -o "$OUT_BIN" "./cmd/${ENTRY}" ); then
-      echo "  ✗ 编译失败: $NAME ($ARCH_TAG)" >&2
-      FAILED=1
-      continue
-    fi
-
-    if [ -f "$OUT_BIN" ]; then
-      chmod +x "$OUT_BIN"
-      SIZE="$(du -h "$OUT_BIN" | cut -f1)"
-      echo "  ✓ $OUT_BIN  ($SIZE)"
-      BUILT+=("$OUT_BIN")
-    fi
-  done
-done
-
-# ---------- 产物摘要 ----------
-echo ""
-echo "=== 产物清单 ==="
-if [ "${#BUILT[@]}" -gt 0 ]; then
-  ls -la "$OUT"
-  echo ""
-
-  # 拷贝安装脚本（如果存在）— 一键安装脚本
-  if [ -f "$ROOT/dns-resolver-install.sh" ]; then
-    cp -f "$ROOT/dns-resolver-install.sh" "$OUT/dns-resolver-install.sh"
-    chmod +x "$OUT/dns-resolver-install.sh"
-    echo "✓ dns-resolver-install.sh 已就绪"
-  fi
-
-  if [ -f "$ROOT/geodns-install.sh" ]; then
-    cp -f "$ROOT/geodns-install.sh" "$OUT/geodns-install.sh"
-    chmod +x "$OUT/geodns-install.sh"
-    echo "✓ geodns-install.sh 已就绪"
-  fi
-
-  # 生成 SHA256 校验和（部署到节点时可用 sha256sum -c 校验）
-  if command -v shasum >/dev/null 2>&1; then
-    ( cd "$OUT" && shasum -a 256 dns-resolver-* geodns-* > SHA256SUMS 2>/dev/null || true )
-    echo "✓ SHA256SUMS 已生成"
-  elif command -v sha256sum >/dev/null 2>&1; then
-    ( cd "$OUT" && sha256sum dns-resolver-* geodns-* > SHA256SUMS 2>/dev/null || true )
-    echo "✓ SHA256SUMS 已生成"
-  fi
-
-  echo "✓ 成功: ${#BUILT[@]} 个二进制"
-  echo "  下载示例:"
-  echo "    curl -O https://<host>/build/dns-resolver-linux-amd64"
-  echo "    curl -O https://<host>/build/SHA256SUMS"
-  echo "    sha256sum -c SHA256SUMS"
+# 颜色输出
+if [[ -t 1 ]]; then
+    C_RED='\033[0;31m'; C_GREEN='\033[0;32m'; C_YELLOW='\033[0;33m'
+    C_BLUE='\033[0;34m'; C_BOLD='\033[1m'; C_RESET='\033[0m'
 else
-  echo "✗ 没有任何产物"
+    C_RED=''; C_GREEN=''; C_YELLOW=''; C_BLUE=''; C_BOLD=''; C_RESET=''
 fi
 
-# 写入构建指纹
-cat > "$OUT/.build-stamp" <<EOF
-built_at=$STAMP
-go=$GOVER
-EOF
+log_info()  { printf "${C_BLUE}[INFO]${C_RESET}  %s\n" "$*"; }
+log_ok()    { printf "${C_GREEN}[OK]${C_RESET}    %s\n" "$*"; }
+log_title() { printf "\n${C_BOLD}== %s ==${C_RESET}\n" "$*"; }
 
-exit "$FAILED"
+# 读取当前版本号
+read_version() {
+    if [[ -f "${VERSION_FILE}" ]]; then
+        cat "${VERSION_FILE}"
+    else
+        echo "1.0.0"
+    fi
+}
+
+# 递增版本号（补丁版本 +1）
+increment_version() {
+    local version="$1"
+    # 解析版本号：major.minor.patch
+    IFS='.' read -r major minor patch <<< "$version"
+    patch=$((patch + 1))
+    echo "${major}.${minor}.${patch}"
+}
+
+# 写入新版本号
+write_version() {
+    echo "$1" > "${VERSION_FILE}"
+}
+
+# 主构建函数
+main() {
+    log_title "OCER-DNS 构建脚本"
+    
+    # 获取当前版本并递增
+    local current_version=$(read_version)
+    local new_version=$(increment_version "$current_version")
+    local build_time=$(date '+%Y-%m-%d %H:%M:%S')
+    
+    log_info "当前版本: ${current_version}"
+    log_info "新版本号:  ${new_version}"
+    log_info "构建时间:  ${build_time}"
+    
+    # 写入新版本号
+    write_version "${new_version}"
+    log_ok "版本号已更新"
+    
+    # 编译 dns-resolver
+    log_title "编译 dns-resolver"
+    cd "${SCRIPT_DIR}/dns-resolver"
+    go build -ldflags "-X main.version=${new_version} -X main.buildTime=${build_time}" \
+        -o "../bin/dns-resolver" \
+        ./cmd/dns-resolver/
+    log_ok "dns-resolver 编译完成"
+    
+    # 编译 geodns
+    log_title "编译 geodns"
+    cd "${SCRIPT_DIR}/geodns"
+    go build -ldflags "-X main.version=${new_version} -X main.buildTime=${build_time}" \
+        -o "../bin/geodns" \
+        ./cmd/geodns/
+    log_ok "geodns 编译完成"
+    
+    log_title "构建完成"
+    printf "\n${C_BOLD}版本信息${C_RESET}\n"
+    printf "┌─────────────────────────────────────\n"
+    printf "│ 版本号:    %s\n" "${new_version}"
+    printf "│ 构建时间:  %s\n" "${build_time}"
+    printf "│ dns-resolver: bin/dns-resolver\n"
+    printf "│ geodns:      bin/geodns\n"
+    printf "└─────────────────────────────────────\n"
+}
+
+main "$@"

@@ -7,10 +7,11 @@ namespace App\Domain\Policy;
 use App\Models\PolicyPublishLog;
 use App\Models\PolicySnapshot;
 use App\Models\ResolverNode;
-use Illuminate\Support\Facades\DB;
 
 /**
  * UI.md #62 — Policy 发布 → Node → ACK 全链路记录。
+ *
+ * 2026-06-22: ResolverNode 继承 Node 共享 dns_nodes 表，使用 scope online/degraded/offline。
  */
 final class PolicyPublisher
 {
@@ -24,16 +25,15 @@ final class PolicyPublisher
         if ($snap->status !== PolicySnapshot::STATUS_PUBLISHED) {
             // 允许 draft 状态也预创建 log，发布时再统一更新 ack
         }
-        $nodes = ResolverNode::where('status', ResolverNode::STATUS_ONLINE)->get();
+        $nodes = ResolverNode::online()->get();
         $results = [];
         foreach ($nodes as $node) {
             $log = PolicyPublishLog::create([
                 'snapshot_id' => $snap->id,
-                'node_id' => $node->node_id,
+                'node_id' => $node->node_code,
                 'status' => PolicyPublishLog::STATUS_PENDING,
             ]);
-            // 真实场景：HTTP 推送给 node；此处仅记录
-            $results[] = ['node_id' => $node->node_id, 'status' => $log->status, 'log_id' => $log->id];
+            $results[] = ['node_id' => $node->node_code, 'status' => $log->status, 'log_id' => $log->id];
         }
         return $results;
     }
