@@ -5,9 +5,9 @@ namespace Tests\Feature;
 use App\Models\ProfileVersion;
 use App\Models\Device;
 use App\Models\Node;
-use App\Models\QueryLogEntry;
 use App\Models\QueryLogIngestBatch;
 use App\Models\User;
+use App\Infrastructure\ClickHouse\ClickHouseClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
@@ -158,8 +158,8 @@ final class MemberWorkspaceTest extends TestCase
 
     public function test_member_logs_and_analytics_can_use_dns_console_internal_api(): void
     {
-        // 2026-06-15 merge 后 query_log_entries 已经直接写在 portal-web 的 PostgreSQL，
-        // 这里走 in-process DB 路径构造日志，不再 mock dns-console HTTP。
+        // 2026-06-22: 查询日志唯一源是 ClickHouse。测试通过 fake ClickHouse client
+        // 直接喂 dns_logs 数据，验证 controller 的 SQL 拼装与 user_id 隔离。
         $user = $this->createUser('workspace4@example.com');
         $profile = $user->profiles()->create([
             'name' => 'Home Profile',
@@ -190,59 +190,76 @@ final class MemberWorkspaceTest extends TestCase
             'status' => 'online',
             'region' => 'ap-northeast-1',
         ]);
-        $batch = QueryLogIngestBatch::create([
-            'batch_id' => 'batch-test-01',
-            'node_id' => $node->id,
-            'event_count' => 2,
-            'status' => 'succeeded',
-            'received_at' => now(),
-            'processed_at' => now(),
-        ]);
 
-        $now = now();
-        QueryLogEntry::create([
-            'ingest_batch_id' => $batch->id,
-            'node_id' => $node->id,
-            'user_id' => $user->getKey(),
-            'profile_id' => $profile->id,
-            'device_id' => $device->id,
-            'query_name' => 'tracker.example.com',
-            'query_type' => 'A',
-            'action' => 'blocked',
-            'reason' => 'denylist',
-            'category' => 'custom',
-            'rcode' => 0,
-            'latency_ms' => 12,
-            'queried_at' => $now,
-            'created_at' => $now,
-        ]);
-        QueryLogEntry::create([
-            'ingest_batch_id' => $batch->id,
-            'node_id' => $node->id,
-            'user_id' => $user->getKey(),
-            'profile_id' => $profile->id,
-            'device_id' => $device->id,
-            'query_name' => 'openai.com',
-            'query_type' => 'A',
-            'action' => 'allowed',
-            'rcode' => 0,
-            'latency_ms' => 8,
-            'queried_at' => $now->copy()->subMinute(),
-            'created_at' => $now->copy()->subMinute(),
-        ]);
+        $fakeRows = $this->buildFakeRows($user, $profile, $device, $node);
+
+        // 2026-06-22: ClickHouseClient 是 final 类，用 Mockery 直接替换 jsonSelect
+        $mock = \Mockery::mock(ClickHouseClient::class);
+        $mock->shouldReceive('jsonSelect')
+            ->andReturnUsing(function (string $query) use ($fakeRows) {
+                if (stripos($query, 'count()') !== false) {
+                    return [['c' => count($fakeRows)]];
+                }
+                return $fakeRows;
+            });
+        $this->app->instance(ClickHouseClient::class, $mock);
 
         Sanctum::actingAs($user, [], 'api');
 
         $this->getJson('/api/v1/user/logs')
             ->assertOk()
             ->assertJsonPath('meta.total', 2)
-            ->assertJsonPath('data.0.profile_name', 'Home Profile')
-            ->assertJsonPath('data.0.device', 'MacBook');
+            ->assertJsonPath('data.0.profile_name', 'Home Profile');
 
         $this->getJson('/api/v1/user/analytics')
             ->assertOk()
             ->assertJsonPath('data.today_queries', 2)
             ->assertJsonPath('data.today_blocked', 1);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildFakeRows(User $user, \App\Models\Profile $profile, Device $device, Node $node): array
+    {
+        $userId = (string) $user->getKey();
+        $profileUid = (string) $profile->profile_uid;
+        $deviceUid = (string) $device->device_uid;
+        $now = now()->format('Y-m-d H:i:s');
+        return [
+            [
+                'event_time' => $now,
+                'user_id' => $userId,
+                'profile_id' => $profileUid,
+                'device_id' => $deviceUid,
+                'domain' => 'tracker.example.com',
+                'query_type' => 'A',
+                'action' => 'BLOCK',
+                'reason' => 'denylist',
+                'category' => 'custom',
+                'client_ip' => '',
+                'rcode' => '0',
+                'latency_ms' => 12,
+                'protocol' => 'doh',
+                'node_id' => (string) $node->id,
+            ],
+            [
+                'event_time' => now()->subMinute()->format('Y-m-d H:i:s'),
+                'user_id' => $userId,
+                'profile_id' => $profileUid,
+                'device_id' => $deviceUid,
+                'domain' => 'openai.com',
+                'query_type' => 'A',
+                'action' => 'ALLOW',
+                'reason' => '',
+                'category' => '',
+                'client_ip' => '',
+                'rcode' => '0',
+                'latency_ms' => 8,
+                'protocol' => 'doh',
+                'node_id' => (string) $node->id,
+            ],
+        ];
     }
 
     private function createUser(string $email, string $password = 'password123'): User

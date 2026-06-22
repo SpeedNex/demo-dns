@@ -49,7 +49,7 @@ final class OrderService
             return $existing;
         }
         try {
-            return Order::create([
+            $order = Order::create([
                 'user_id' => $userId,
                 'order_no' => $this->generateOrderNo(),
                 'idempotency_key' => $idempotencyKey,
@@ -63,6 +63,11 @@ final class OrderService
                 'currency' => $currency,
                 'meta' => array_merge($meta, ['description' => $description]),
             ]);
+
+            // 同步生成账单（pending 状态）— 用户在账单页支付
+            $this->ensureBillForOrder($order);
+
+            return $order;
         } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
             // 唯一约束兜底：并发双击场景
             $order = Order::where('user_id', $userId)
@@ -155,5 +160,45 @@ final class OrderService
     private function generateOrderNo(): string
     {
         return 'OD' . now()->format('YmdHis') . strtoupper(Str::random(6));
+    }
+
+    /**
+     * 订单创建后同步生成账单（status=pending）。
+     * 幂等：同一 order_id 已有账单时不再创建。
+     */
+    private function ensureBillForOrder(Order $order): void
+    {
+        $existing = DB::table('billings')
+            ->where('user_id', (string) $order->user_id)
+            ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(meta, '$.order_id')) = ?", [(string) $order->id])
+            ->first();
+        if ($existing !== null) {
+            return;
+        }
+
+        $billingNo = 'BIL-' . now()->format('YmdHis') . '-' . str_pad((string) $order->id, 6, '0', STR_PAD_LEFT);
+        $now = now();
+        DB::table('billings')->insert([
+            'billing_no' => $billingNo,
+            'user_id' => (string) $order->user_id,
+            'currency' => $order->currency,
+            'subtotal_minor' => (int) $order->payable_amount_minor,
+            'discount_minor' => 0,
+            'tax_minor' => 0,
+            'total_minor' => (int) $order->payable_amount_minor,
+            'status' => 'pending',
+            'issued_at' => $now,
+            'due_at' => $now->copy()->addDays(7),
+            'meta' => json_encode([
+                'kind' => 'order',
+                'order_id' => (string) $order->id,
+                'order_no' => $order->order_no,
+                'plan_code' => $order->plan_code_snapshot,
+                'billing_cycle' => $order->billing_cycle,
+                'description' => data_get($order->meta ?? [], 'description'),
+            ], JSON_UNESCAPED_UNICODE),
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
     }
 }

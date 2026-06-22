@@ -19,12 +19,15 @@ const locale = supported.includes(savedLocale) ? savedLocale : 'zh-CN'
 const i18n = createI18n({
   legacy: false,
   locale,
-  fallbackLocale: 'en',
+  fallbackLocale: ['en', 'zh-CN', 'ko'],
   messages,
+  // 2026-06-22: 关闭缺失 key 的运行时警告（开发期仍可在 missing 回调中记录）
+  silentTranslationWarn: true,
+  silentFallbackWarn: true,
   missing: (locale, key) => {
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
-      console.error(`[i18n] Missing key "${key}" in "${locale}" locale`)
+      console.warn(`[i18n] Missing key "${key}" in "${locale}" locale`)
     }
   },
 })

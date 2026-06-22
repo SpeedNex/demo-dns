@@ -229,6 +229,8 @@ const titleMap = {
     AdminMenuConfig: 'admin.menuConfig.title',
     AdminAdmins: 'admin.adminUsers.title',
     AdminUserPolicyServices: 'admin.userPolicyServices.title',
+    AdminMemberPolicies: 'admin.memberPolicies.title',
+    AdminBlacklistWhitelist: 'admin.blacklistWhitelist.title',
 }
 
 const pageTitle = computed(() => (titleMap[route.name] || 'admin.title'))

@@ -167,9 +167,8 @@
     "boundIpTitle": "绑定 IP",
     "boundIpTag": "Bound IPs",
     "endpointId": "ID",
-    "endpointDot": "DNS-over-TLS/QUIC",
-    "endpointDoh": "DNS-over-HTTPS",
     "endpointDot": "DNS-over-TLS",
+    "endpointDoh": "DNS-over-HTTPS",
     "endpointDoq": "DNS-over-QUIC",
     "endpointDotDoq": "DNS-over-TLS / QUIC",
     "endpointIpv6": "IPv6",
@@ -530,7 +529,8 @@
     "version": "版本",
     "createdAt": "创建时间",
     "updatedAt": "更新时间",
-    "rulesTitle": "域名规则"
+    "rulesTitle": "域名规则",
+    "batchDelete": "批量删除"
   },
   "settings": {
     "title": "系统设置",
@@ -770,7 +770,9 @@
     "deleteDevice": "删除设备",
     "confirmDelete": "确认",
     "deviceRemoval": "设备移除需要从 Profile 设置页面解绑。",
-    "copy": "复制"
+    "copy": "复制",
+    "edit": "编辑",
+    "enabled": "已启用"
   },
   "apiKeys": {
     "title": "API Key 管理",
@@ -799,7 +801,8 @@
     "copied": "已复制",
     "copyFailed": "复制失败",
     "apiKeyRevoked": "API 密钥已撤销",
-    "failedToCreate": "创建 API 密钥失败"
+    "failedToCreate": "创建 API 密钥失败",
+    "edit": "编辑"
   },
   "admin": {
     "title": "控制台",
@@ -1086,7 +1089,8 @@
       "acknowledgedSuccess": "已确认",
       "acknowledgeFailed": "确认失败",
       "batchDeleteSuccess": "批量删除成功",
-      "deleteFailed": "删除失败"
+      "deleteFailed": "删除失败",
+      "edit": "编辑"
     },
     "publishes": {
       "title": "发布任务",
@@ -1578,6 +1582,34 @@
       "saveSuccess": "配置已保存",
       "saveFailed": "保存失败",
       "deleteBlockedHasChildren": "该导航下存在子级，请先删除子级导航"
+    },
+    "memberPolicies": {
+      "title": "会员策略",
+      "desc": "查看所有会员的策略设置快照（安全 / 隐私 / 家长监护）",
+      "uid": "会员UID",
+      "email": "邮箱",
+      "profileCount": "Profile 数",
+      "security": "安全",
+      "privacy": "隐私",
+      "parental": "家长监护",
+      "updatedAt": "更新时间",
+      "noData": "暂无会员策略",
+      "searchPlaceholder": "搜索 UID / 邮箱"
+    },
+    "blacklistWhitelist": {
+      "title": "黑白名单",
+      "desc": "查看所有会员 Profile 的黑名单 / 白名单规则汇总",
+      "type": "类型",
+      "domain": "域名",
+      "matchType": "匹配方式",
+      "owner": "所属会员",
+      "enabled": "启用",
+      "createdAt": "创建时间",
+      "all": "全部",
+      "deny": "黑名单",
+      "allow": "白名单",
+      "noData": "暂无黑白名单规则",
+      "searchPlaceholder": "搜索域名 / 会员"
     }
   },
   "team": {
@@ -1694,6 +1726,8 @@
     "actions": "操作",
     "noData": "暂无数据",
     "saveSuccess": "保存成功",
-    "batchDeleteConfirm": "确定删除选中的 {count} 条？"
+    "batchDeleteConfirm": "确定删除选中的 {count} 条？",
+    "loading": "加载中...",
+    "index": "序号"
   }
 }

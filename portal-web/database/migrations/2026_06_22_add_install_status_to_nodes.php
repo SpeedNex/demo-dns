@@ -18,10 +18,12 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // 注意：不得使用 after('status')，因为紧邻的 drop_status_from_nodes 会先执行
+        // 字段位置由 MySQL 自然追加即可，不影响业务逻辑
         Schema::table('nodes', function (Blueprint $table): void {
-            $table->string('install_status', 20)->default('pending')->after('status');
-            $table->timestamp('last_installed_at')->nullable()->after('install_status');
-            $table->string('last_listen_addr', 80)->nullable()->after('last_installed_at');
+            $table->string('install_status', 20)->default('pending');
+            $table->timestamp('last_installed_at')->nullable();
+            $table->string('last_listen_addr', 80)->nullable();
         });
     }
 

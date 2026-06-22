@@ -44,27 +44,13 @@
                 </div>
             </div>
 
-            <!-- Right: Bound IP (IPv4 / IPv6) -->
+            <!-- Right: Bound IP (IPv4 only, IPv6 hidden per 2026-06-22 request) -->
             <div class="card">
                 <div class="card-header">
                     <h2>{{ $t('dashboard.boundIpTitle') || '绑定 IP' }}</h2>
                     <span class="badge-endpoint">{{ $t('dashboard.boundIpTag') || 'Bound IPs' }}</span>
                 </div>
                 <div class="card-body">
-                    <!-- IPv6 -->
-                    <div class="endpoint-block">
-                        <div class="endpoint-label">{{ $t('dashboard.endpointIpv6') }}</div>
-                        <div v-if="endpoints.ipv6 && endpoints.ipv6.length">
-                            <div v-for="(ip, idx) in endpoints.ipv6" :key="'v6-' + idx" class="code-row" :class="{ 'mt-6': idx > 0 }">
-                                <div class="code">{{ ip }}</div>
-                                <button class="copy-btn" @click="copyText(ip)">{{ $t('dashboard.copy') }}</button>
-                            </div>
-                        </div>
-                        <div v-else class="code-row">
-                            <div class="code">—</div>
-                        </div>
-                    </div>
-
                     <!-- IPv4 (Bound IP) -->
                     <div class="endpoint-block">
                         <div class="endpoint-label">

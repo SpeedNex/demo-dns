@@ -18,6 +18,7 @@ class QueryLogIngestBatch extends Model
         'status',
         'error_message',
         'forwarded_to_clickhouse',
+        'raw_payload',
         'received_at',
         'processed_at',
     ];
@@ -28,6 +29,7 @@ class QueryLogIngestBatch extends Model
             'item_count' => 'integer',
             'event_count' => 'integer',
             'forwarded_to_clickhouse' => 'boolean',
+            'raw_payload' => 'array',
             'received_at' => 'datetime',
             'processed_at' => 'datetime',
         ];

@@ -12,28 +12,34 @@
             <div class="section">
                 <div class="section-title">{{ $t('privacy.blocklists.title') }}</div>
                 <div class="section-desc">{{ $t('privacy.blocklists.desc') }}</div>
-                <div v-if="activeBlocklists.length === 0" class="empty-tip">
-                    {{ $t('privacy.blocklists.empty') }}
+                <!-- 2026-06-22: 未拉取完成前显示骨架占位，避免「2 项 → 0 项」闪烁 -->
+                <div v-if="!blocklistLoaded" class="empty-tip">
+                    {{ $t('common.loading') || '加载中...' }}
                 </div>
-                <div
-                    v-for="list in activeBlocklists"
-                    :key="list.key"
-                    class="setting-row"
-                >
-                    <div class="setting-info">
-                        <span class="setting-label">{{ displayText(list.name) }}</span>
-                        <span class="setting-desc">{{ displayText(list.desc) }}</span>
-                        <span class="setting-meta">{{ list.entries.toLocaleString() }} {{ $t('privacy.blocklists.entries', { count: 1 }) }} • {{ $t('privacy.blocklists.updated', { days: list.daysAgo }) }}</span>
+                <template v-else>
+                    <div v-if="activeBlocklists.length === 0" class="empty-tip">
+                        {{ $t('privacy.blocklists.empty') }}
                     </div>
-                    <el-button link @click="removeBlocklist(list.key)">
-                        <el-icon><Delete /></el-icon>
+                    <div
+                        v-for="list in activeBlocklists"
+                        :key="list.key"
+                        class="setting-row"
+                    >
+                        <div class="setting-info">
+                            <span class="setting-label">{{ displayText(list.name) }}</span>
+                            <span class="setting-desc">{{ displayText(list.desc) }}</span>
+                            <span class="setting-meta">{{ list.entries.toLocaleString() }} {{ $t('privacy.blocklists.entries', { count: 1 }) }} • {{ $t('privacy.blocklists.updated', { days: list.daysAgo }) }}</span>
+                        </div>
+                        <el-button link @click="removeBlocklist(list.key)">
+                            <el-icon><Delete /></el-icon>
+                        </el-button>
+                    </div>
+                    <el-divider />
+                    <el-button type="primary" size="small" plain @click="showBlocklistModal = true">
+                        <el-icon><Plus /></el-icon>
+                        {{ $t('privacy.blocklists.add') }}
                     </el-button>
-                </div>
-                <el-divider />
-                <el-button type="primary" size="small" plain @click="showBlocklistModal = true">
-                    <el-icon><Plus /></el-icon>
-                    {{ $t('privacy.blocklists.add') }}
-                </el-button>
+                </template>
             </div>
 
             <!-- 深度跟踪保护 -->
@@ -209,13 +215,13 @@ const form = reactive({
     allow_marketing_links: false,
     block_disguised_trackers: true,
     log_mode: 'full',
-    blocklists: {
-        ads_tracking: true,
-        deep_tracking: false,
-        third_party_tracking: true,
-    },
+    // 2026-06-22: 不在此处硬编码默认拦截列表，避免首次渲染 2 项 → 拉取后空 的闪烁
+    blocklists: {},
     deep_tracking_devices: [],
 })
+
+// 2026-06-22: 拦截列表是否已从后端拉取（用于防止「显示 2 项 → 变空白」闪烁）
+const blocklistLoaded = ref(false)
 
 const availableBlocklists = ref([
     { key: 'ads_tracking', name: 'Ads & Tracking', desc: 'Ad and tracker protection', entries: 86222 },
@@ -325,6 +331,8 @@ const removeDevice = async (deviceId) => {
 }
 
 const fetchData = async () => {
+    // 2026-06-22: 切换 profile 时重置 loaded 状态，避免切换瞬间显示上一个 profile 的数据
+    blocklistLoaded.value = false
     try {
         const catalogResponse = await client.get('/user/catalogs')
         const catalogs = catalogResponse.data?.data || {}
@@ -355,7 +363,11 @@ const fetchData = async () => {
             }
         }
         Object.assign(form, incoming, { blocklists: incomingBlocklists })
-    } catch {}
+    } catch {
+    } finally {
+        // 2026-06-22: 不论成功失败都标记已加载，避免永久显示"加载中"
+        blocklistLoaded.value = true
+    }
 }
 
 onMounted(fetchData)

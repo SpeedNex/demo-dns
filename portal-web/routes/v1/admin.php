@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\V1\Admin\AdminDeviceController;
 use App\Http\Controllers\Api\V1\Admin\AdminFinanceController;
 use App\Http\Controllers\Api\V1\Admin\AdminGeoDnsController;
 use App\Http\Controllers\Api\V1\Admin\AdminMemberCatalogController;
+use App\Http\Controllers\Api\V1\Admin\AdminMemberPolicyController;
+use App\Http\Controllers\Api\V1\Admin\AdminBlacklistWhitelistController;
 use App\Http\Controllers\Api\V1\Admin\AdminNodeController;
 use App\Http\Controllers\Api\V1\Admin\AdminPlanController;
 use App\Http\Controllers\Api\V1\Admin\AdminPolicyController;
@@ -227,6 +229,12 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin.only', 'permission:ad
     Route::middleware('permission:admin.policy.write')->group(function (): void {
         Route::post('policy/users/{userId}/snapshot', [AdminPolicyController::class, 'snapshotUser']);
         Route::post('policy/snapshots/{id}/publish', [AdminPolicyController::class, 'publishSnapshot']);
+    });
+
+    // 会员策略 + 黑白名单 — UI.md 后台导航
+    Route::middleware('permission:admin.users.read')->group(function (): void {
+        Route::get('member-policies', [AdminMemberPolicyController::class, 'index']);
+        Route::get('blacklist-whitelist', [AdminBlacklistWhitelistController::class, 'index']);
     });
 
     // Menu Config — 菜单导航配置

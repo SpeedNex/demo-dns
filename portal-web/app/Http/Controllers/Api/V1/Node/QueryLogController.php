@@ -9,7 +9,6 @@ use App\Infrastructure\ClickHouse\ClickHouseClient;
 use App\Models\Device;
 use App\Models\Node;
 use App\Models\Profile;
-use App\Models\QueryLogEntry;
 use App\Models\QueryLogIngestBatch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -53,6 +52,8 @@ final class QueryLogController
                 'item_count' => count($validated['items']),
                 'event_count' => count($validated['items']),
                 'status' => 'processing',
+                // 2026-06-22: 原始 items 落 MySQL，CH 失败时给 retry-failed-batches 直接喂数据
+                'raw_payload' => $validated['items'],
                 'received_at' => $now,
             ]);
 
@@ -61,7 +62,6 @@ final class QueryLogController
                 ->get(['id', 'profile_uid', 'user_id'])
                 ->keyBy('profile_uid');
 
-            $entries = [];
             $dnsLogs = [];
             $usageEvents = [];
 
@@ -139,24 +139,6 @@ final class QueryLogController
                     $deviceUid = $device->device_uid;
                 }
 
-                $entries[] = [
-                    'ingest_batch_id' => $batch->id,
-                    'node_id' => $node->id,
-                    'user_id' => $userPk,
-                    'profile_id' => $profilePk,
-                    'device_id' => $devicePk,
-                    'query_name' => $queryName,
-                    'query_type' => strtoupper((string) ($item['query_type'] ?? 'A')),
-                    'action' => strtolower((string) $item['action']),
-                    'reason' => $item['reason'] ?? null,
-                    'category' => $item['category'] ?? null,
-                    'client_ip' => $clientIp !== '' ? $clientIp : null,
-                    'rcode' => (int) ($item['rcode'] ?? 0),
-                    'latency_ms' => (int) ($item['latency_ms'] ?? 0),
-                    'queried_at' => $queriedAt,
-                    'created_at' => $now,
-                ];
-
                 $dnsLogs[] = [
                     'event_time' => $queriedAt->format('Y-m-d H:i:s'),
                     'timestamp' => $queriedAt->format('Y-m-d H:i:s'),
@@ -188,7 +170,9 @@ final class QueryLogController
                 }
             }
 
-            QueryLogEntry::insert($entries);
+            // 2026-06-22: 用户查询日志只存 ClickHouse（dns_logs / usage_events），
+            // 不再写入 MySQL dns_query_log_entries，MySQL 仅保留 batch 审计与重试元数据。
+            // 重试数据从 dns_query_log_ingest_batches.raw_payload 取。
 
             try {
                 $clickhouse->insertJsonEachRow('dns_logs', $dnsLogs);

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Infrastructure\ClickHouse\ClickHouseClient;
-use App\Models\QueryLogEntry;
 use App\Models\QueryLogIngestBatch;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -67,17 +66,14 @@ final class ClickHouseRetryFailedBatchesCommand extends Command
         foreach ($batches as $batch) {
             $retryCount = $this->extractRetryCount($batch->error_message);
 
-            $entries = QueryLogEntry::query()
-                ->where('ingest_batch_id', $batch->id)
-                ->orderBy('id')
-                ->limit($rowLimit)
-                ->get();
-
-            if ($entries->isEmpty()) {
-                // entries 已被裁剪 / 清理 → 不再重试
+            // 2026-06-22: dns_query_log_entries 不再写入。CH 重试数据源改为
+            // dns_query_log_ingest_batches.raw_payload（上报时存的原始 items JSON）。
+            $rawItems = $batch->raw_payload;
+            if (! is_array($rawItems) || $rawItems === []) {
+                // 历史批次（迁移前）没有 raw_payload → 无法重试
                 $batch->update([
                     'status' => 'failed',
-                    'error_message' => 'no entries left to retry (original: ' . substr((string) $batch->error_message, 0, 200) . ')',
+                    'error_message' => 'no raw_payload to retry (original: ' . substr((string) $batch->error_message, 0, 200) . ')',
                     'forwarded_to_clickhouse' => false,
                     'updated_at' => now(),
                 ]);
@@ -85,28 +81,45 @@ final class ClickHouseRetryFailedBatchesCommand extends Command
                 continue;
             }
 
+            $items = array_slice($rawItems, 0, $rowLimit);
+
             $dnsLogs = [];
-            foreach ($entries as $e) {
-                $ts = $e->queried_at ?: $e->created_at ?: now();
+            foreach ($items as $it) {
+                $queriedAt = isset($it['queried_at'])
+                    ? now()->setTimestamp((int) $it['queried_at'])->format('Y-m-d H:i:s')
+                    : (isset($it['ts']) ? (string) $it['ts'] : now()->format('Y-m-d H:i:s'));
+                $queryName = strtolower((string) ($it['query_name'] ?? $it['domain'] ?? ''));
+                $domain = strtolower((string) ($it['domain'] ?? $it['query_name'] ?? ''));
                 $dnsLogs[] = [
-                    'event_time' => $ts->format('Y-m-d H:i:s'),
-                    'timestamp' => $ts->format('Y-m-d H:i:s'),
-                    'node_id' => (string) $e->node_id,
-                    'user_id' => $e->user_id !== null ? (string) $e->user_id : '',
-                    'profile_id' => $e->profile_id !== null ? (string) $e->profile_id : '',
-                    'device_id' => $e->device_id !== null ? (string) $e->device_id : '',
-                    'query_name' => (string) $e->query_name,
-                    'domain' => (string) $e->query_name,
-                    'query_type' => strtoupper((string) $e->query_type),
-                    'action' => strtoupper((string) $e->action),
-                    'reason' => (string) ($e->reason ?? ''),
-                    'category' => (string) ($e->category ?? ''),
-                    'client_ip' => (string) ($e->client_ip ?? ''),
-                    'rcode' => (int) $e->rcode,
-                    'latency_ms' => (int) $e->latency_ms,
-                    // 2026-06-22: 旧 entries 没存 protocol，retry 时置空字符串（CH 列已 ALTER）
-                    'protocol' => '',
+                    'event_time' => $queriedAt,
+                    'timestamp' => $queriedAt,
+                    'node_id' => (string) ($batch->node_id ?? ''),
+                    'user_id' => (string) ($it['user_id'] ?? ''),
+                    'profile_id' => (string) ($it['profile_id'] ?? ''),
+                    'device_id' => (string) ($it['device_id'] ?? ''),
+                    'query_name' => $queryName,
+                    'domain' => $domain,
+                    'query_type' => strtoupper((string) ($it['query_type'] ?? 'A')),
+                    'action' => strtoupper((string) ($it['action'] ?? 'ALLOW')),
+                    'reason' => (string) ($it['reason'] ?? ''),
+                    'category' => (string) ($it['category'] ?? ''),
+                    'client_ip' => (string) ($it['client_ip'] ?? ''),
+                    'rcode' => (int) ($it['rcode'] ?? 0),
+                    'latency_ms' => (int) ($it['latency_ms'] ?? 0),
+                    // raw_payload 通常含 protocol；缺失时置空
+                    'protocol' => strtolower((string) ($it['protocol'] ?? '')),
                 ];
+            }
+
+            if ($dnsLogs === []) {
+                $batch->update([
+                    'status' => 'failed',
+                    'error_message' => 'raw_payload has no convertible items (original: ' . substr((string) $batch->error_message, 0, 200) . ')',
+                    'forwarded_to_clickhouse' => false,
+                    'updated_at' => now(),
+                ]);
+                $gaveUp++;
+                continue;
             }
 
             try {

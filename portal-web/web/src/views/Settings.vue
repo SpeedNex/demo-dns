@@ -100,7 +100,8 @@
                             </div>
                             <el-empty v-else :description="$t('settings.noIpv4') || '暂无在线 IPv4 节点'" :image-size="60" />
                         </el-form-item>
-                        <el-form-item :label="$t('settings.ipv6Endpoints')">
+                        <!-- IPv6 endpoints 暂时隐藏（2026-06-22 用户要求） -->
+                        <el-form-item v-if="false" :label="$t('settings.ipv6Endpoints')">
                             <div v-if="ipv6Endpoints.length" class="endpoint-list">
                                 <el-input
                                     v-for="(ip, idx) in ipv6Endpoints"

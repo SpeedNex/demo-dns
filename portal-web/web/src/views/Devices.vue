@@ -20,7 +20,8 @@
                             <el-button size="small" @click="copyText(endpoints.doh)">{{ $t('devices.copy') }}</el-button>
                         </div>
                     </div>
-                    <div class="endpoint-item">
+                    <!-- IPv6 暂时隐藏（2026-06-22 用户要求） -->
+                    <div v-if="false" class="endpoint-item">
                         <label>IPv6</label>
                         <div class="code-row">
                             <code class="code">{{ Array.isArray(endpoints.ipv6) ? endpoints.ipv6.join(', ') : (endpoints.ipv6 || '-') }}</code>

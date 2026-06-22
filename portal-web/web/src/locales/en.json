@@ -33,7 +33,10 @@
     "pricing": "Pricing",
     "backHome": "← Back to Home",
     "footerTranslate": "Help us translate or improve OcerDNS in your language. <a href=\"https://help.ocerdns.io/t/q6hmv0s/translations\">Learn more</a>",
-    "footerTranslateLink": "Learn more"
+    "footerTranslateLink": "Learn more",
+    "dnsService": "DNS Service",
+    "monitoring": "Monitoring",
+    "identity": "Identity"
   },
   "home": {
     "title": "OcerDNS",
@@ -164,9 +167,8 @@
     "boundIpTitle": "Bound IPs",
     "boundIpTag": "Resolved Addresses",
     "endpointId": "ID",
-    "endpointDot": "DNS-over-TLS/QUIC",
-    "endpointDoh": "DNS-over-HTTPS",
     "endpointDot": "DNS-over-TLS",
+    "endpointDoh": "DNS-over-HTTPS",
     "endpointDoq": "DNS-over-QUIC",
     "endpointDotDoq": "DNS-over-TLS / QUIC",
     "endpointIpv6": "IPv6",
@@ -230,7 +232,8 @@
     "blockTld": "Block Specific TLDs",
     "blockTldDesc": "Block entire top-level domains that are commonly associated with malicious activity.",
     "childAbuse": "Block Child Abuse Content",
-    "childAbuseDesc": "Block websites containing child sexual abuse material."
+    "childAbuseDesc": "Block websites containing child sexual abuse material.",
+    "beta": "Beta"
   },
   "privacy": {
     "title": "Block Lists",
@@ -262,7 +265,9 @@
       "added": "added",
       "alreadyAdded": "already added",
       "removed": "Removed",
-      "deviceRemoved": "Device removed"
+      "deviceRemoved": "Device removed",
+      "noDevices": "No devices",
+      "empty": "No blocklists"
     },
     "addDevice": "Add Device",
     "special": {
@@ -717,7 +722,36 @@
     "upgradeSuccessful": "Upgrade successful!",
     "upgradeFailed": "Upgrade failed",
     "overQuota": "You have exceeded your Free quota. Upgrade to Pro for unlimited queries.",
-    "quotaNormal": "You're within your Free quota."
+    "quotaNormal": "You're within your Free quota.",
+    "plans": {
+      "free": "Free",
+      "freeDesc": "Basic protection for personal users",
+      "freeQuota": "300k queries / month",
+      "pro": "Pro",
+      "proDesc": "For power users who need advanced security",
+      "proQuota": "Unlimited queries",
+      "business": "Business",
+      "businessDesc": "For teams and businesses",
+      "businessQuota": "50 blocks / employee / month",
+      "enterprise": "Enterprise",
+      "enterpriseDesc": "Custom contract"
+    },
+    "perMonth": "/ month",
+    "perEmployeeMonth": "/ employee / month",
+    "queries": "queries",
+    "basicSecurity": "Basic security",
+    "basicPrivacy": "Basic privacy",
+    "upTo2Profiles": "Up to 2 profiles",
+    "current": "Current",
+    "advancedSecurity": "Advanced security",
+    "advancedPrivacy": "Advanced privacy",
+    "parentalControl": "Parental control",
+    "unlimitedProfiles": "Unlimited profiles",
+    "queryLogs": "Query logs",
+    "everythingInPro": "Everything in Pro",
+    "teamManagement": "Team management",
+    "employeeBlocks": "50 blocks / employee / month",
+    "prioritySupport": "Priority support"
   },
   "devices": {
     "title": "Devices",
@@ -823,7 +857,33 @@
       "ruleLibrary": "Rule Library",
       "ruleLibraryDesc": "Manage rule sources",
       "systemConfig": "System Config",
-      "systemConfigDesc": "DNS and system parameters"
+      "systemConfigDesc": "DNS and system parameters",
+      "queryLogsPage": {
+        "title": "Query Logs",
+        "desc": "All user query logs",
+        "searchDomain": "Search domain...",
+        "action": "Action",
+        "all": "All",
+        "allowed": "Allowed",
+        "blocked": "Blocked",
+        "startTime": "Start Time",
+        "endTime": "End Time",
+        "profile": "Profile",
+        "user": "User",
+        "username": "Username",
+        "emptyDesc": "Query logs will be displayed here.",
+        "domain": "Domain",
+        "answer": "Answer",
+        "clientIp": "Client IP",
+        "time": "Time",
+        "latency": "Latency",
+        "clearAll": "Clear All",
+        "cleared": "Cleared",
+        "clearAllConfirm": "Clear all query logs?",
+        "batchDeleteConfirm": "Delete {count} selected item(s)?",
+        "batchDeleted": "{count} item(s) deleted",
+        "batchDeleteFailed": "Batch delete failed"
+      }
     },
     "loginTitle": "OcerDNS",
     "login": "Admin Login",
@@ -892,7 +952,31 @@
       "createSuccess": "Create successful",
       "confirmDelete": "Delete this user?",
       "confirmDeleteTitle": "Confirm Delete",
-      "deleteSuccess": "Delete successful"
+      "deleteSuccess": "Delete successful",
+      "all": "All",
+      "create": "Create User",
+      "namePlaceholder": "Enter username",
+      "emailPlaceholder": "Enter email",
+      "password": "Password",
+      "passwordPlaceholder": "Enter password",
+      "passwordLeaveBlank": "Leave blank to keep unchanged",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Confirm password",
+      "member": "Member",
+      "admin": "Admin",
+      "charge": "Charge",
+      "chargeAmount": "Charge Amount",
+      "chargeDesc": "Charge amount description",
+      "chargeDescPlaceholder": "Enter charge description",
+      "chargeSuccess": "Charge succeeded",
+      "chargeFailed": "Charge failed",
+      "balance": "Balance",
+      "nameRequired": "Name is required",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Invalid email format",
+      "passwordRequired": "Password is required",
+      "passwordMinLength": "Password must be at least 8 characters",
+      "confirmPasswordRequired": "Password confirmation is required"
     },
     "devicesPage": {
       "title": "Device Management",
@@ -934,7 +1018,9 @@
       "acknowledgeFailed": "Failed to acknowledge",
       "total": "Total",
       "batchDeleteSuccess": "Batch delete successful",
-      "deleteFailed": "Delete failed"
+      "deleteFailed": "Delete failed",
+      "all": "All",
+      "emptyDesc": "System alerts will be displayed here."
     },
     "nodes": {
       "title": "DNS Nodes",
@@ -1185,7 +1271,29 @@
       "stripeSecretKey": "Secret Key",
       "stripeWebhookSecret": "Webhook Secret",
       "stripeWebhookUrl": "Webhook URL",
-      "defaultCurrency": "Default Currency"
+      "defaultCurrency": "Default Currency",
+      "redis": "Redis",
+      "clickhouse": "ClickHouse",
+      "payment": "Payment",
+      "mailServer": "Mail Server",
+      "host": "Host",
+      "port": "Port",
+      "password": "Password",
+      "database": "Database",
+      "username": "Username",
+      "maxExecTime": "Max Execution Time",
+      "paymentProvider": "Payment Provider",
+      "merchantId": "Merchant ID",
+      "merchantKey": "Merchant Key",
+      "webhookSecret": "Webhook Secret",
+      "callbackUrl": "Callback URL",
+      "mailDriver": "Mail Driver",
+      "smtpHost": "SMTP Host",
+      "smtpPort": "SMTP Port",
+      "smtpUsername": "SMTP Username",
+      "smtpPassword": "SMTP Password",
+      "fromAddress": "From Address",
+      "fromName": "From Name"
     },
     "basicConfig": {
       "title": "Basic Settings",
@@ -1473,7 +1581,35 @@
       },
       "saveSuccess": "Configuration saved",
       "saveFailed": "Save failed",
-      "deleteBlockedHasChildren": "This menu has sub-items. Please delete them first."
+      "deleteBlockedHasChildren": "This menu has sub-items, please remove them first"
+    },
+    "memberPolicies": {
+      "title": "Member Policies",
+      "desc": "View policy settings snapshot for all members (Security / Privacy / Parental)",
+      "uid": "Member UID",
+      "email": "Email",
+      "profileCount": "Profiles",
+      "security": "Security",
+      "privacy": "Privacy",
+      "parental": "Parental",
+      "updatedAt": "Updated",
+      "noData": "No member policies",
+      "searchPlaceholder": "Search UID / email"
+    },
+    "blacklistWhitelist": {
+      "title": "Blacklist / Whitelist",
+      "desc": "Aggregated blacklist / whitelist rules across all member profiles",
+      "type": "Type",
+      "domain": "Domain",
+      "matchType": "Match",
+      "owner": "Owner",
+      "enabled": "Enabled",
+      "createdAt": "Created",
+      "all": "All",
+      "deny": "Deny",
+      "allow": "Allow",
+      "noData": "No blacklist / whitelist rules",
+      "searchPlaceholder": "Search domain / member"
     }
   },
   "team": {
@@ -1591,6 +1727,7 @@
     "reset": "Reset",
     "noData": "No Data",
     "saveSuccess": "Saved successfully",
-    "batchDeleteConfirm": "Delete {count} selected?"
+    "batchDeleteConfirm": "Delete {count} selected?",
+    "loading": "Loading..."
   }
 }

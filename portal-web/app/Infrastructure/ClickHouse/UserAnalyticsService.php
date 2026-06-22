@@ -393,6 +393,82 @@ final class UserAnalyticsService
     }
 
     /**
+     * 最近 7 天每日查询量。返回固定 7 长度数组（按 UTC 倒序，date 字段为 YYYY-MM-DD）。
+     *
+     * @return array{data: array<int, array{date: string, count: int, blocked: int}>, meta: array{total: int, max: int, range: string}}
+     */
+    public function dailyTrend7d(string $userId, ?string $profileId = null): array
+    {
+        $empty = $this->emptyTrend7d();
+        if (! $this->client->ping()) {
+            return $empty;
+        }
+
+        $where = $this->buildWhere($userId, $profileId, interval: 'INTERVAL 7 DAY');
+        $params = $this->paramsFor($userId, $profileId);
+
+        try {
+            $rows = $this->client->jsonSelect(
+                'SELECT toDate(event_time) AS d, count() AS c, countIf(action = \'BLOCK\') AS b '.
+                'FROM dns_logs WHERE '.$where.' '.
+                'GROUP BY d ORDER BY d ASC',
+                $params
+            );
+        } catch (\RuntimeException) {
+            return $empty;
+        }
+
+        $byDate = [];
+        foreach ($rows as $r) {
+            $key = (string) ($r['d'] ?? '');
+            if ($key === '') {
+                continue;
+            }
+            $byDate[$key] = [
+                'date'    => $key,
+                'count'   => (int) ($r['c'] ?? 0),
+                'blocked' => (int) ($r['b'] ?? 0),
+            ];
+        }
+
+        $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        $series = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $d = $now->modify("-{$i} day")->format('Y-m-d');
+            $series[] = $byDate[$d] ?? ['date' => $d, 'count' => 0, 'blocked' => 0];
+        }
+
+        $total = array_sum(array_column($series, 'count'));
+        $max = max(1, max(array_column($series, 'count')));
+
+        return [
+            'data' => $series,
+            'meta' => [
+                'total' => $total,
+                'max'   => $max,
+                'range' => '7d',
+            ],
+        ];
+    }
+
+    /**
+     * @return array{data: array<int, array{date: string, count: int, blocked: int}>, meta: array{total: int, max: int, range: string}}
+     */
+    private function emptyTrend7d(): array
+    {
+        $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        $series = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $d = $now->modify("-{$i} day")->format('Y-m-d');
+            $series[] = ['date' => $d, 'count' => 0, 'blocked' => 0];
+        }
+        return [
+            'data' => $series,
+            'meta' => ['total' => 0, 'max' => 1, 'range' => '7d'],
+        ];
+    }
+
+    /**
      * Build a WHERE clause for user (always) and profile (optional) scoping.
      */
     private function buildWhere(string $userId, ?string $profileId, string $interval): string

@@ -48,6 +48,8 @@ import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
 import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
 import AdminAdmins from '@/views/admin/AdminAdmins.vue'
 import AdminUserPolicyServices from '@/views/admin/UserPolicyServices.vue'
+import AdminMemberPolicies from '@/views/admin/MemberPolicies.vue'
+import AdminBlacklistWhitelist from '@/views/admin/BlacklistWhitelist.vue'
 
 const routes = [
     // Public routes
@@ -111,6 +113,8 @@ const routes = [
             { path: 'menu-config', name: 'AdminMenuConfig', component: AdminMenuConfig },
             { path: 'admins', name: 'AdminAdmins', component: AdminAdmins },
             { path: 'user-policy-services', name: 'AdminUserPolicyServices', component: AdminUserPolicyServices },
+            { path: 'member-policies', name: 'AdminMemberPolicies', component: AdminMemberPolicies },
+            { path: 'blacklist-whitelist', name: 'AdminBlacklistWhitelist', component: AdminBlacklistWhitelist },
         ],
     },
 
