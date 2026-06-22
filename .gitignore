@@ -32,3 +32,4 @@ portal-web/public/dist
 # 临时测试脚本与 env 备份
 /portal-web/_test_admin_token.php
 /portal-web/.env.bak.*
+portal-web/public/dist
