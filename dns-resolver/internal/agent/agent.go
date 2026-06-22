@@ -568,7 +568,9 @@ func (a *Agent) profilesPath() string {
 }
 
 func (a *Agent) doNodeRequest(method, path string, body io.Reader) (*http.Response, error) {
-	req, err := http.NewRequest(method, a.controlPlaneURL(path), body)
+	fullURL := a.controlPlaneURL(path)
+	log.Printf("DEBUG doNodeRequest: method=%s url=%s", method, fullURL)
+	req, err := http.NewRequest(method, fullURL, body)
 	if err != nil {
 		return nil, err
 	}

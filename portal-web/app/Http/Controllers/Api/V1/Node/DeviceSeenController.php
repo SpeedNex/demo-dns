@@ -47,7 +47,7 @@ final class DeviceSeenController
             [
                 'user_id' => $profile->user_id,
                 'device_uid' => 'dev_' . substr($fingerprint, 0, 16),
-                'name' => $validated['device_name'] ?? ('Node ' . $node->id),
+                'name' => $validated['device_name'] ?? ('Node ' . $node->node_id),
                 'source' => 'auto',
                 'protocol' => $validated['protocol'],
                 'user_agent' => $userAgent !== '' ? $userAgent : null,

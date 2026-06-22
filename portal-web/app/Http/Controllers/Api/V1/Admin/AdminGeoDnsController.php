@@ -64,19 +64,19 @@ final class AdminGeoDnsController
             ->all();
         $orphanNodes = \App\Models\Node::query()
             ->where('node_type', 'geodns')
-            ->whereNotIn('id', $mappedNodeIds)
+            ->whereNotIn('node_id', $mappedNodeIds)
             ->orderByDesc('id')
             ->get();
         foreach ($orphanNodes as $node) {
             $mappings[] = [
-                'id' => 'orphan-node-' . $node->id,
+                'id' => 'orphan-node-' . $node->node_id,
                 'domain' => '',
                 'country' => null,
                 'region' => $node->region ?? '',
-                'target_node_id' => $node->id,
-                'node_id' => $node->id,
+                'target_node_id' => $node->node_id,
+                'node_id' => $node->node_id,
                 'node_code' => $node->node_code,
-                'node_name' => $node->node_name ?? $node->name,
+                'node_name' => $node->node_name,
                 'node_alias' => $node->node_alias ?? null,
                 'public_ipv4' => $node->public_ipv4,
                 'target_endpoint' => null,
@@ -120,7 +120,7 @@ final class AdminGeoDnsController
         $validated = $request->validate([
             'country' => 'nullable|string|size:2',
             'region' => 'required|string|max:80',
-            'node_id' => 'nullable|exists:nodes,id',
+            'node_id' => 'nullable|exists:nodes,node_id',
             'node_name' => 'nullable|string|max:100',
             'public_ipv4' => 'nullable|string|max:45',
             'node_alias' => 'nullable|string|max:100',
@@ -143,6 +143,7 @@ final class AdminGeoDnsController
                 'node_alias' => $validated['node_alias'] ?? 'geodns-' . Str::lower(Str::random(6)),
                 'region' => $validated['region'],
                 'public_ipv4' => $validated['public_ipv4'] ?? null,
+                'node_type' => 'geodns',
                 // 2026-06-22: 单一事实源 — status 列已 drop，不再写 status=pending。新建节点默认 install_status=pending。
                 'install_status' => 'pending',
             ]);
@@ -152,8 +153,8 @@ final class AdminGeoDnsController
             'domain' => $request->input('domain', 'resolver.ocerlink.com'),
             'country' => isset($validated['country']) ? strtoupper($validated['country']) : strtoupper((string) $request->input('country', '*')),
             'region' => $validated['region'],
-            'target_node_id' => $node?->id,
-            'node_name' => $validated['node_name'] ?? $node?->node_name ?? $node?->name,
+            'target_node_id' => $node?->node_id,
+            'node_name' => $validated['node_name'] ?? $node?->node_name,
             'public_ipv4' => $validated['public_ipv4'] ?? $node?->public_ipv4,
             'node_alias' => $validated['node_alias'] ?? null,
             'target_endpoint' => $validated['target_endpoint'] ?? null,
@@ -175,7 +176,7 @@ final class AdminGeoDnsController
         $validated = $request->validate([
             'country' => 'nullable|string|size:2',
             'region' => 'string|max:80',
-            'node_id' => 'nullable|exists:nodes,id',
+            'node_id' => 'nullable|exists:nodes,node_id',
             'node_name' => 'nullable|string|max:100',
             'public_ipv4' => 'nullable|string|max:45',
             'node_alias' => 'nullable|string|max:100',
@@ -193,8 +194,8 @@ final class AdminGeoDnsController
 
         if (array_key_exists('node_id', $payload)) {
             $node = $this->resolveNode($payload['node_id'], $payload['node_name'] ?? null);
-            $payload['target_node_id'] = $node?->id;
-            $payload['node_name'] = $payload['node_name'] ?? $node?->node_name ?? $node?->name;
+            $payload['target_node_id'] = $node?->node_id;
+            $payload['node_name'] = $payload['node_name'] ?? $node?->node_name;
             $payload['public_ipv4'] = $payload['public_ipv4'] ?? $node?->public_ipv4;
             unset($payload['node_id']);
         }
@@ -215,7 +216,7 @@ final class AdminGeoDnsController
         $mapping->delete();
 
         if ($targetNodeId) {
-            GeoDnsNode::query()->where('id', $targetNodeId)->delete();
+            GeoDnsNode::query()->where('node_id', $targetNodeId)->delete();
         }
 
         AdminAuditLog::record('geo_dns.delete', 'geo_dns_mapping', $id, [], $actorId, null, $request->ip(), $request->userAgent());
@@ -239,7 +240,7 @@ final class AdminGeoDnsController
         $count = GeoDnsMapping::whereIn('id', $validated['ids'])->delete();
 
         if (! empty($targetNodeIds)) {
-            GeoDnsNode::query()->whereIn('id', $targetNodeIds)->delete();
+            GeoDnsNode::query()->whereIn('node_id', $targetNodeIds)->delete();
         }
 
         AdminAuditLog::record('geo_dns.batch_delete', 'geo_dns_mapping', null, ['ids' => $validated['ids'], 'count' => $count], $actorId, null, $request->ip(), $request->userAgent());
@@ -259,7 +260,7 @@ final class AdminGeoDnsController
         $seeder->setCommand($this->commandForSeeder());
         $seeder->run();
 
-        $createdNodes = \App\Models\Node::query()->whereIn('node_code', ['nd_local_mac', 'nd_cn_shanghai', 'nd_us_silicon', 'nd_eu_frankfurt'])->get(['id', 'node_code', 'name']);
+        $createdNodes = \App\Models\Node::query()->whereIn('node_code', ['nd_local_mac', 'nd_cn_shanghai', 'nd_us_silicon', 'nd_eu_frankfurt'])->get(['node_id', 'node_code']);
         $createdMappings = GeoDnsMapping::query()->where('domain', 'resolver.ocerlink.com')->get(['id', 'country', 'region', 'target_node_id']);
 
         AdminAuditLog::record('geo_dns.seed_demo', 'geo_dns_mapping', null, [
@@ -290,8 +291,7 @@ final class AdminGeoDnsController
         $node = \App\Models\Node::query()->firstOrCreate(
             ['node_code' => 'nd_local_mac'],
             [
-                'name' => 'Local Mac',
-                'node_name' => 'Local Mac',
+                'node_alias' => 'Local Mac',
                 'region' => 'local',
                 'country' => 'CN',
                 'city' => 'Shanghai',
@@ -314,8 +314,8 @@ final class AdminGeoDnsController
         $mapping = GeoDnsMapping::query()->updateOrCreate(
             ['domain' => 'resolver.ocerlink.com', 'country' => 'LOCAL', 'region' => 'local'],
             [
-                'target_node_id' => (int) $node->id,
-                'node_name' => $node->node_name ?? $node->name,
+                'target_node_id' => (int) $node->node_id,
+                'node_name' => $node->node_name,
                 'public_ipv4' => $node->public_ipv4,
                 'priority' => 5,
                 'weight' => 200,
@@ -323,7 +323,7 @@ final class AdminGeoDnsController
             ],
         );
 
-        AdminAuditLog::record('geo_dns.bind_local_node', 'node', (string) $node->id, [
+        AdminAuditLog::record('geo_dns.bind_local_node', 'node', (string) $node->node_id, [
             'node_code' => $node->node_code,
             'mapping_id' => $mapping->id,
         ], $actorId, null, $request->ip(), $request->userAgent());
@@ -366,7 +366,7 @@ final class AdminGeoDnsController
     {
         $row = $mapping->toArray();
         $row['node_id'] = $mapping->target_node_id;
-        $row['node_name'] = $mapping->node_name ?? $mapping->node?->node_name ?? $mapping->node?->name;
+        $row['node_name'] = $mapping->node_name ?? $mapping->node?->node_name;
         $row['node_code'] = $mapping->node?->node_code;
         $row['public_ipv4'] = $mapping->public_ipv4 ?? $mapping->node?->public_ipv4;
 

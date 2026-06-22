@@ -51,7 +51,7 @@ class NodeToken extends Model
         $hmacSecret = 'hmk_' . Str::lower(Str::random(32));
 
         $token = self::create([
-            'node_id' => $node->id,
+            'node_id' => $node->node_id,
             'token_prefix' => $prefix,
             'token_hash' => hash('sha256', $plain),
             'hmac_key_hash' => hash('sha256', $hmacSecret),

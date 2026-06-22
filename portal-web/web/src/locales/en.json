@@ -982,9 +982,12 @@
     "devicesPage": {
       "title": "Device Management",
       "desc": "Manage connected devices",
+      "deviceId": "Device ID",
       "name": "Device Name",
       "user": "User",
       "type": "Type",
+      "os": "OS",
+      "protocol": "Protocol",
       "status": "Status",
       "sourceIp": "Source IP",
       "lastSeen": "Last Seen",

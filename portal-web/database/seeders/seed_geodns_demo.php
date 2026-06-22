@@ -50,7 +50,7 @@ foreach ($nodeDefs as $n) {
             'meta' => ['test_data' => true],
         ]
     );
-    echo "[+] {$node->node_code} → ID={$node->id} ({$node->name})" . PHP_EOL;
+    echo "[+] {$node->node_code} → ID={$node->node_id} ({$node->node_alias})" . PHP_EOL;
 }
 
 // 3. 创建 geo_dns_mappings 路由规则
@@ -81,7 +81,7 @@ foreach ($mappings as $m) {
             'enabled' => true,
         ]
     );
-    echo "[M] {$row->domain} | " . ($row->country ?? '*') . " | {$row->region} → node_id=" . ($row->target_node_id ?? '-') . " ({$node?->name})" . PHP_EOL;
+    echo "[M] {$row->domain} | " . ($row->country ?? '*') . " | {$row->region} → node_id=" . ($row->target_node_id ?? '-') . " ({$node?->node_alias})" . PHP_EOL;
 }
 
 echo "---" . PHP_EOL;

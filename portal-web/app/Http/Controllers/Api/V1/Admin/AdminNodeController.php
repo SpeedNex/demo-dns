@@ -119,7 +119,7 @@ final class AdminNodeController
             'created_by_admin_id' => $actorId,
         ]));
 
-        AdminAuditLog::record('node.create', 'node', (string) $node->id, $node->toArray(), $actorId !== null ? (string) $actorId : null, null, $request->ip(), $request->userAgent());
+        AdminAuditLog::record('node.create', 'node', (string) $node->node_id, $node->toArray(), $actorId !== null ? (string) $actorId : null, null, $request->ip(), $request->userAgent());
 
         return response()->json(['data' => $node->toArray()], 201);
     }
@@ -128,13 +128,9 @@ final class AdminNodeController
     {
         $actorId = $request->user()?->admin_id;
         $node = Node::query()->findOrFail($nodeId);
-        $request->merge([
-            'name' => $request->input('name', $request->input('node_name')),
-        ]);
 
         $validated = $request->validate([
             'node_code' => 'string|max:64|unique:nodes,node_code,' . $nodeId,
-            'name' => 'nullable|string|max:120',
             'node_name' => 'nullable|string|max:120',
             'node_alias' => 'nullable|string|max:100',
             'region' => 'nullable|string|max:40',
@@ -147,8 +143,6 @@ final class AdminNodeController
             'supported_protocols.*' => 'string',
         ]);
 
-
-        $validated['name'] = $validated['name'] ?? $validated['node_alias'] ?? $node->name;
         $node->update($validated);
 
         AdminAuditLog::record('node.update', 'node', $nodeId, $validated, $actorId, null, $request->ip(), $request->userAgent());
@@ -205,11 +199,11 @@ final class AdminNodeController
                 ->update(['scopes' => json_encode($validated['scopes'])]);
         }
 
-        AdminAuditLog::record('node.token_issue', 'node_token', (string) $node->id, ['node_id' => $nodeId], $actorId !== null ? (string) $actorId : null, null, $request->ip(), $request->userAgent());
+        AdminAuditLog::record('node.token_issue', 'node_token', (string) $node->node_id, ['node_id' => $nodeId], $actorId !== null ? (string) $actorId : null, null, $request->ip(), $request->userAgent());
 
         return response()->json([
             'data' => [
-                'id' => (string) $node->id,
+                'id' => (string) $node->node_id,
                 'token_prefix' => $result['prefix'],
                 'api_key' => $result['token'],
                 'hmac_secret' => $result['hmac_secret'] ?? '',

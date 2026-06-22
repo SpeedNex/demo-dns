@@ -22,6 +22,8 @@ class Device extends Model
         'sni',
         'ip_hash',
         'source_ip',
+        'device_type',
+        'device_os',
         'country',
         'first_seen_at',
         'last_seen_at',

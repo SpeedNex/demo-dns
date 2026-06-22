@@ -11,7 +11,7 @@ final class AdminDeviceController
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Device::query()->with('user:id,username,email');
+        $query = Device::query()->with('user:uid,username,email');
 
         if ($deviceName = $request->input('device_name')) {
             $query->where('name', 'like', "%{$deviceName}%");
@@ -23,8 +23,11 @@ final class AdminDeviceController
         $items = array_map(function ($d) {
             return [
                 'id' => $d['id'],
+                'device_uid' => $d['device_uid'],
                 'device_name' => $d['name'],
-                'device_type' => $d['protocol'],
+                'device_type' => $d['device_type'],
+                'device_os' => $d['device_os'],
+                'protocol' => $d['protocol'],
                 'source_ip' => $d['ip_hash'] ? 'hashed' : null,
                 'is_online' => $d['last_seen_at'] !== null && Carbon::parse($d['last_seen_at'])->gt(now()->subMinutes(5)),
                 'last_seen_at' => $d['last_seen_at'],
@@ -53,8 +56,11 @@ final class AdminDeviceController
         return response()->json([
             'data' => [
                 'id' => $device['id'],
+                'device_uid' => $device['device_uid'],
                 'device_name' => $device['name'],
-                'device_type' => $device['protocol'],
+                'device_type' => $device['device_type'],
+                'device_os' => $device['device_os'],
+                'protocol' => $device['protocol'],
                 'source_ip' => $device['ip_hash'] ? 'hashed' : null,
                 'is_online' => $device['last_seen_at'] !== null && $device['last_seen_at']->gt(now()->subMinutes(5)),
                 'last_seen_at' => $device['last_seen_at'],

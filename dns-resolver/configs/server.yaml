@@ -7,14 +7,12 @@ node:
     provider: local
     public_ipv4: 127.0.0.1
 listen:
-    doh: 443
-    udp: 53
-    tcp: 53
-    dot: 853
-    doq: 784
+    doh: 8443
+    udp: 5354
+    tcp: 5354
 control_plane:
     endpoint: http://localhost:8081
-    api_key: ocnd_ywOOlWPNeSeSzWNWZRSzART2ODy19hqMPo8lcNLX
+    api_key: ak_bDtNnuMzTOEqdZclRpC41VYyDedseQ0X6lInFFLH
     secret: hmk_ja0ixnpmnjzqura5cf7zmwfkgptipwmn
     node_id: 16
     heartbeat_interval: 30

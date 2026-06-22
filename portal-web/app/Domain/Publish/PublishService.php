@@ -51,7 +51,7 @@ final class PublishService
 
         // 2026-06-22: 单一事实源 — 用 Node::online() scope 取真正在岗的节点（last_heartbeat_at 距 now 不超过阈值）。
         // 之前的 $activeStatuses = ['pending','online','degraded','maintenance'] 是基于已 drop 的 status 列。
-        $targetNodes = Node::online()->get(['id']);
+        $targetNodes = Node::online()->get(['node_id']);
 
         $publishTask = PublishTask::create([
             'config_version_id' => $configVersion->id,
@@ -72,7 +72,7 @@ final class PublishService
             $rows = $targetNodes->map(fn (Node $node): array => [
                 'id' => 'texec_' . bin2hex(random_bytes(8)),
                 'publish_task_id' => $publishTask->id,
-                'node_id' => $node->id,
+                'node_id' => $node->node_id,
                 'config_version' => $globalVersion,
                 'status' => 'pending',
                 'created_at' => $now,

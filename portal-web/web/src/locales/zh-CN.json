@@ -932,9 +932,12 @@
     "devicesPage": {
       "title": "设备管理",
       "desc": "管理接入设备",
+      "deviceId": "设备ID",
       "name": "设备名称",
       "user": "用户",
       "type": "类型",
+      "os": "操作系统",
+      "protocol": "协议",
       "status": "状态",
       "sourceIp": "来源 IP",
       "lastSeen": "最后在线",

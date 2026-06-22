@@ -54,6 +54,7 @@
                 </div>
             </template>
             <el-table-column type="selection" width="40" />
+            <el-table-column prop="device_uid" :label="$t('admin.devicesPage.deviceId') || '设备ID'" width="180" />
             <el-table-column prop="device_name" :label="$t('admin.devicesPage.name') || '设备名称'" min-width="180">
                 <template #default="{ row }">
                     <div class="name-cell">
@@ -63,7 +64,14 @@
                 </template>
             </el-table-column>
             <el-table-column prop="user_email" :label="$t('admin.devicesPage.user') || '用户'" min-width="200" />
-            <el-table-column prop="device_type" :label="$t('admin.devicesPage.type') || '类型'" width="120" />
+            <el-table-column prop="device_type" :label="$t('admin.devicesPage.type') || '类型'" width="100">
+                <template #default="{ row }">
+                    <el-tag v-if="row.device_type" size="small" effect="plain">{{ row.device_type }}</el-tag>
+                    <span v-else>-</span>
+                </template>
+            </el-table-column>
+            <el-table-column prop="device_os" :label="$t('admin.devicesPage.os') || '操作系统'" width="120" />
+            <el-table-column prop="protocol" :label="$t('admin.devicesPage.protocol') || '协议'" width="90" />
             <el-table-column :label="$t('admin.devicesPage.status') || '状态'" width="100">
                 <template #default="{ row }">
                     <el-tag :type="row.is_online ? 'success' : 'info'" size="small" effect="light">{{ row.is_online ? ($t('admin.devicesPage.online') || '在线') : ($t('admin.devicesPage.offline') || '离线') }}</el-tag>

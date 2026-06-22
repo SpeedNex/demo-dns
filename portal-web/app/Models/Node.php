@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Node extends Model
 {
+    protected $primaryKey = 'node_id';
+
     protected static function booted(): void
     {
         static::creating(function (self $node): void {
@@ -20,7 +22,7 @@ class Node extends Model
 
     protected $table = 'nodes';
     protected $fillable = [
-        'node_code', 'node_type', 'name', 'domain', 'region', 'city', 'weight', 'capacity_qps',
+        'node_code', 'node_type', 'domain', 'region', 'city', 'weight', 'capacity_qps',
         'public_ipv4', 'public_ipv6', 'supported_protocols',
         'desired_config_version', 'current_config_version',
         'last_heartbeat_at', 'last_log_flush_at', 'meta', 'created_by_admin_id',
@@ -47,19 +49,12 @@ class Node extends Model
 
     public function getNodeNameAttribute(): ?string
     {
-        return $this->attributes['name'] ?? null;
+        return $this->attributes['node_alias'] ?? null;
     }
 
     public function setNodeNameAttribute(?string $value): void
     {
-        $this->attributes['name'] = $value;
-    }
-
-    public function setIdAttribute(mixed $value): void
-    {
-        if ($value !== null && is_numeric((string) $value)) {
-            $this->attributes['id'] = (int) $value;
-        }
+        $this->attributes['node_alias'] = $value;
     }
 
     public function tokens(): HasMany

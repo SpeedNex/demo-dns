@@ -29,7 +29,7 @@ final class AdminPolicyController
             ->get()
             ->map(fn (ResolverNode $n) => [
                 'node_id' => $n->node_code,
-                'node_name' => $n->name,
+                'node_name' => $n->node_alias,
                 'region' => $n->region,
                 'status' => $n->runtimeStatus(),
                 'policy_version' => $n->current_config_version,

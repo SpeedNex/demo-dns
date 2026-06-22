@@ -46,9 +46,7 @@
             <el-table-column type="selection" width="48" />
             <el-table-column :label="$t('admin.geoDns.nodeId') || '地理调度器节点ID'" :min-width="180">
                 <template #default="{ row }">
-                    <div class="name-cell" style="white-space:nowrap">
-                        <code class="node-code">{{ row.node_code || (row.target_node_id ? '#' + row.target_node_id : ('#' + row.id)) }}</code>
-                    </div>
+                    <code class="node-code">{{ row.node_code || '—' }}</code>
                 </template>
             </el-table-column>
             <el-table-column :label="$t('admin.geoDns.nodeAlias') || '节点别名'" :min-width="160" show-overflow-tooltip>
@@ -124,9 +122,6 @@
 
     <el-dialog v-model="showDialog" :title="editingId ? $t('admin.geoDns.edit') : $t('admin.geoDns.addServer')" width="600">
         <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
-            <el-form-item v-if="editingId" :label="$t('admin.geoDns.nodeId') || '节点ID'">
-                <code class="node-code">{{ form.node_code || (editingId ? ('#' + editingId) : '') }}</code>
-            </el-form-item>
             <el-form-item :label="$t('admin.geoDns.region')" prop="region">
                 <el-select v-model="form.region" filterable clearable :placeholder="$t('admin.geoDns.regionPlaceholder') || '选择区域'" style="width:100%">
                     <el-option v-for="r in regions" :key="r.code" :label="`${r.code} - ${r.name}`" :value="r.code" />
@@ -134,9 +129,6 @@
             </el-form-item>
             <el-form-item :label="$t('admin.geoDns.nodeAlias') || '节点别名'">
                 <el-input v-model="form.node_alias" :placeholder="$t('admin.geoDns.nodeAliasPlaceholder') || '可选，留空将自动生成 geodns-xxxxxx'" />
-            </el-form-item>
-            <el-form-item :label="$t('admin.geoDns.nodeName')" prop="node_name">
-                <el-input v-model="form.node_name" maxlength="100" :placeholder="$t('admin.geoDns.nodeNamePlaceholder') || '例: kr-test'" />
             </el-form-item>
             <el-form-item :label="$t('admin.geoDns.ipAddress')">
                 <el-input v-model="form.public_ipv4" maxlength="45" :placeholder="$t('admin.geoDns.ipPlaceholder') || '例: 10.20.30.40'" />
@@ -202,10 +194,9 @@ const editingId = ref(null)
 const saving = ref(false)
 const formRef = ref(null)
 const deployData = reactive({ node_id: '', api_key: '' })
-const form = reactive({ region: '', node_name: '', node_alias: '', node_code: '', public_ipv4: '', enabled: true })
+const form = reactive({ region: '', node_alias: '', public_ipv4: '', enabled: true })
 const rules = {
     region: [{ required: true, message: t('admin.geoDns.required') || 'Required', trigger: 'change' }],
-    node_name: [{ required: false, message: t('admin.geoDns.required') || 'Required', trigger: 'blur' }],
 }
 const { siteUrl, loadSystemConfig } = useSystemConfig()
 const deployCmdPreview = computed(() => {
@@ -244,9 +235,7 @@ const fetchMappings = async () => {
 
 const resetForm = () => {
     form.region = ''
-    form.node_name = ''
     form.node_alias = ''
-    form.node_code = ''
     form.public_ipv4 = ''
     form.enabled = true
 }
@@ -260,9 +249,7 @@ const openCreateDialog = () => {
 const openEditDialog = (row) => {
     editingId.value = row.id
     form.region = row.region
-    form.node_name = row.node_name || ''
     form.node_alias = row.node_alias || ''
-    form.node_code = row.node_code || ''
     form.public_ipv4 = row.public_ipv4 || ''
     form.enabled = row.enabled !== false
     showDialog.value = true

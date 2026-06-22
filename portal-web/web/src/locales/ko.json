@@ -984,9 +984,12 @@
     "devicesPage": {
       "title": "기기 관리",
       "desc": "연결된 기기 관리",
+      "deviceId": "기기 ID",
       "name": "기기 이름",
       "user": "사용자",
       "type": "유형",
+      "os": "운영체제",
+      "protocol": "프로토콜",
       "status": "상태",
       "sourceIp": "소스 IP",
       "lastSeen": "마지막으로 본 시간",

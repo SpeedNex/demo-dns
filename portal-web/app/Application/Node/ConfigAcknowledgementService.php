@@ -23,7 +23,7 @@ final class ConfigAcknowledgementService
     public function acknowledge(Node $node, array $payload): array
     {
         $ack = $this->configAckService->acknowledge([
-            'node_id' => $node->id,
+            'node_id' => $node->node_id,
             'config_version' => $payload['config_version'],
             'status' => $payload['status'],
         ]);
@@ -32,7 +32,7 @@ final class ConfigAcknowledgementService
             'current_config_version' => $payload['config_version'],
         ]);
 
-        $execution = TaskExecution::where('node_id', $node->id)
+        $execution = TaskExecution::where('node_id', $node->node_id)
             ->where('config_version', $payload['config_version'])
             ->latest('updated_at')
             ->first();
