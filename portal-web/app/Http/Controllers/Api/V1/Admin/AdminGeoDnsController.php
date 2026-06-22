@@ -29,17 +29,28 @@ final class AdminGeoDnsController
             $query->where('enabled', filter_var($request->input('enabled'), FILTER_VALIDATE_BOOLEAN));
         }
 
+        // 2026-06-22: 统计每个地区的 DNS 节点数（node_type = 'dns-resolver'）
+        $dnsNodeCounts = Node::query()
+            ->where('node_type', 'dns-resolver')
+            ->whereNotNull('region')
+            ->groupBy('region')
+            ->selectRaw('region, COUNT(*) as count')
+            ->pluck('count', 'region')
+            ->all();
+
         // 2026-06-22: 单一事实源 — "是否在线/降级/离线"全部从 $mapping->runtimeStatus() 取（已 drop 的 nodes.status 不再读）。
-        $mappings = $query->orderByDesc('id')->get()->map(function (GeoDnsMapping $mapping): array {
+        $mappings = $query->orderByDesc('id')->get()->map(function (GeoDnsMapping $mapping) use ($dnsNodeCounts): array {
             $row = $this->presentMapping($mapping);
             $row['node_count'] = 1;
             $row['node_status'] = $mapping->node?->runtimeStatus();
             $row['node_last_heartbeat_at'] = $mapping->node?->last_heartbeat_at?->toIso8601String();
             $row['node_last_seen_ago'] = $mapping->node?->lastSeenAgo();
-            $row['install_status'] = $mapping->target_node_id ? 'installed' : 'not_installed';
+            $row['install_status'] = $mapping->target_node_id ? ($mapping->node?->install_status ?? 'installed') : 'not_installed';
             $row['node_heartbeat_stale'] = ! ($mapping->node?->isOnline() ?? false);
             // 4 档: not_installed / online / degraded / offline
             $row['status'] = $mapping->runtimeStatus();
+            // DNS 节点数：按地区统计
+            $row['dns_node_count'] = $dnsNodeCounts[$mapping->region] ?? 0;
 
             return $row;
         })->all();

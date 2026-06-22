@@ -1155,6 +1155,7 @@
       "alias": "별칭",
       "aliasPlaceholder": "선택 사항, 해석 서버의 별칭",
       "nodeCount": "노드 수",
+      "dnsNodeCount": "DNS 노드 수",
       "status": "상태",
       "actions": "작업",
       "addServer": "해석 노드 추가",

@@ -93,7 +93,7 @@
                     <!-- install_status 是 DB 原值：pending / installed / failed -->
                     <el-tag v-if="row.install_status === 'installed'" type="success" size="small" effect="light" style="white-space:nowrap">已安装</el-tag>
                     <el-tag v-else-if="row.install_status === 'failed'" type="danger" size="small" effect="light" style="white-space:nowrap">安装失败</el-tag>
-                    <el-tag v-else type="info" size="small" effect="plain" style="white-space:nowrap">未安装</el-tag>
+                    <el-tag v-else type="info" size="small" effect="plain" style="white-space:nowrap">待安装</el-tag>
                 </template>
             </el-table-column>
             <el-table-column label="在线状态" min-width="100">
@@ -104,7 +104,7 @@
                         在线
                     </el-tag>
                     <el-tag v-else-if="row.runtime_status === 'degraded'" type="warning" size="small" effect="dark" style="white-space:nowrap">降级</el-tag>
-                    <el-tag v-else-if="row.runtime_status === 'not_installed'" type="info" size="small" effect="plain" style="white-space:nowrap">--</el-tag>
+                    <el-tag v-else-if="row.runtime_status === 'not_installed'" type="info" size="small" effect="plain" style="white-space:nowrap;border:none">--</el-tag>
                     <el-tag v-else type="danger" size="small" effect="dark" style="white-space:nowrap">离线</el-tag>
                 </template>
             </el-table-column>

@@ -1153,6 +1153,7 @@
       "alias": "别名",
       "aliasPlaceholder": "可选，解析服务器的别名",
       "nodeCount": "节点数",
+      "dnsNodeCount": "DNS节点数",
       "status": "状态",
       "actions": "操作",
       "addServer": "添加解析节点",

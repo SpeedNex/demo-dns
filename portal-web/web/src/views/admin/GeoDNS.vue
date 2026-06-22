@@ -77,10 +77,14 @@
                 </template>
             </el-table-column>
             <el-table-column prop="region" :label="$t('admin.geoDns.region')" :min-width="100" />
+            <el-table-column :label="$t('admin.geoDns.dnsNodeCount') || 'DNS节点数'" :min-width="100">
+                <template #default="{ row }">
+                    <span>{{ row.dns_node_count ?? 0 }}</span>
+                </template>
+            </el-table-column>
             <el-table-column prop="public_ipv4" :label="$t('admin.geoDns.ipAddress')" :min-width="130">
                 <template #default="{ row }">
                     <span v-if="row.public_ipv4">{{ row.public_ipv4 }}</span>
-                    <span v-else-if="row.node_alias" class="text-gray-400">{{ row.node_alias }}</span>
                     <span v-else class="text-gray-400">-</span>
                 </template>
             </el-table-column>

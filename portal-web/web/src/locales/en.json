@@ -1154,6 +1154,7 @@
       "alias": "Alias",
       "aliasPlaceholder": "Optional, alias for this resolver",
       "nodeCount": "Node Count",
+      "dnsNodeCount": "DNS Node Count",
       "status": "Status",
       "actions": "Actions",
       "addServer": "Add Node",
