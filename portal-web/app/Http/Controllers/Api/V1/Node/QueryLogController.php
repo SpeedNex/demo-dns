@@ -63,6 +63,12 @@ final class QueryLogController
             $queryName = strtolower((string) ($item['query_name'] ?? $item['domain'] ?? ''));
             $domain = strtolower((string) ($item['domain'] ?? $item['query_name'] ?? ''));
             $clientIp = trim((string) ($item['client_ip'] ?? ''));
+            // P1: 防御性剥离端口号（127.0.0.1:55309 → 127.0.0.1），
+            // 防止 resolver 上报时意外包含端口导致设备识别失真
+            if ($clientIp !== '' && substr_count($clientIp, ':') === 1) {
+                $parts = explode(':', $clientIp);
+                $clientIp = $parts[0];
+            }
             $devicePk = null;
             $deviceUid = trim((string) ($item['device_id'] ?? ''));
 

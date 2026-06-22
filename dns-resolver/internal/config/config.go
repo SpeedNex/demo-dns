@@ -46,6 +46,9 @@ type ListenConfig struct {
 	DoQ int `yaml:"doq"`
 	TCP int `yaml:"tcp"`
 	UDP int `yaml:"udp"`
+	// TLS 证书配置 — DoT / DoQ 必需；为空时自动生成自签名证书（开发用）
+	TLSCertFile string `yaml:"tls_cert_file"`
+	TLSKeyFile  string `yaml:"tls_key_file"`
 }
 
 type ControlPlaneConfig struct {

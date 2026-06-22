@@ -6,7 +6,7 @@ module ocer-dns/dns-resolver
 // 折中方案：把 Go 指令定在 1.24（与当前 runner / CI 镜像一致），同时
 // 把上述 x/* 间接依赖降到 0.30 之前（最后一个允许 go 1.22 的版本系列）。
 // 这样在 1.22 / 1.23 / 1.24 任一版本上都能编译，避免 toolchain 下载。
-go 1.24.1
+go 1.25.0
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.46.0
@@ -26,14 +26,16 @@ require (
 	github.com/klauspost/compress v1.18.5 // indirect
 	github.com/paulmach/orb v0.12.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.25 // indirect
+	github.com/quic-go/quic-go v0.60.0 // indirect
 	github.com/segmentio/asm v1.2.1 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	go.opentelemetry.io/otel v1.41.0 // indirect
 	go.opentelemetry.io/otel/trace v1.41.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/mod v0.31.0 // indirect
-	golang.org/x/net v0.50.0 // indirect
-	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
-	golang.org/x/tools v0.40.0 // indirect
+	golang.org/x/crypto v0.51.0 // indirect
+	golang.org/x/mod v0.35.0 // indirect
+	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/tools v0.44.0 // indirect
 )

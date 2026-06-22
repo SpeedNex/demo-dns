@@ -18,6 +18,7 @@ import (
 	"ocer-dns/dns-resolver/internal/dnscache"
 	"ocer-dns/dns-resolver/internal/dnsserver"
 	"ocer-dns/dns-resolver/internal/doh"
+	"ocer-dns/dns-resolver/internal/doq"
 	"ocer-dns/dns-resolver/internal/logging"
 	"ocer-dns/dns-resolver/internal/matching"
 	"ocer-dns/dns-resolver/internal/metrics"
@@ -248,6 +249,22 @@ func main() {
 			log.Fatalf("DNS server error: %v", err)
 		}
 	}()
+
+	// Start DoQ (DNS over QUIC) server if port configured
+	var doqServer *doq.Server
+	if cfg.Listen.DoQ > 0 {
+		tlsCfg, err := dnsserver.LoadTLSConfig(cfg.Listen.TLSCertFile, cfg.Listen.TLSKeyFile)
+		if err != nil {
+			log.Printf("doq: failed to load TLS config: %v (DoQ not started)", err)
+		} else {
+			doqServer = doq.New(cfg, logBuffer, metricsCollector, queryCache)
+			go func() {
+				if err := doqServer.Run(ctx, tlsCfg); err != nil {
+					log.Fatalf("DoQ server error: %v", err)
+				}
+			}()
+		}
+	}
 
 	// Wait for shutdown signal
 	quit := make(chan os.Signal, 1)

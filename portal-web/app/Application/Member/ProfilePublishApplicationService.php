@@ -10,6 +10,7 @@ use App\Domain\Publish\PublishService;
 use App\Models\Profile;
 use App\Models\ProfileVersion;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 final class ProfilePublishApplicationService
 {
@@ -58,7 +59,7 @@ final class ProfilePublishApplicationService
 
         $profilePublishService = new ProfilePublishService($this->configBuilder, $this->publishService);
 
-        return DB::transaction(function () use ($profile, $profilePublishService, $featureSettings, $rules, $devices): array {
+        return DB::transaction(function () use ($profile, $profilePublishService, $featureSettings, $rules, $devices, $userId): array {
             $publishResult = $profilePublishService->publish(
                 array_merge($profile->toArray(), [
                     'devices' => $devices,
@@ -68,7 +69,7 @@ final class ProfilePublishApplicationService
                 ]),
                 $rules,
                 $featureSettings,
-                [],
+                $this->loadQuotaData((int) $userId),
             );
 
             $newVersion = (int) ($profile->version ?? 1) + 1;
@@ -92,5 +93,32 @@ final class ProfilePublishApplicationService
 
             return $publishResult;
         });
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function loadQuotaData(int $userId): array
+    {
+        $quota = [];
+
+        try {
+            $subscription = DB::table('subscriptions')
+                ->where('user_id', $userId)
+                ->where('status', 'active')
+                ->orderByDesc('id')
+                ->first(['quota_status', 'plan_id']);
+
+            if ($subscription !== null && ($subscription->quota_status ?? 'normal') !== 'normal') {
+                $quota['quota_status'] = $subscription->quota_status;
+            }
+        } catch (\Throwable $e) {
+            Log::warning('loadQuotaData failed, using default quota', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return $quota;
     }
 }

@@ -34,3 +34,10 @@ Schedule::command('billing:generate')
     ->onOneServer()
     ->withoutOverlapping()
     ->runInBackground();
+
+// P0: 计费配额闭环 — Free 套餐超额检测（5 分钟一窗）
+Schedule::command('quota:check')
+    ->everyFiveMinutes()
+    ->onOneServer()
+    ->withoutOverlapping()
+    ->runInBackground();

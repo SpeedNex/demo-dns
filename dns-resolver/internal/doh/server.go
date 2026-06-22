@@ -91,6 +91,7 @@ type activeConfig struct {
 	Profiles []struct {
 		ProfileID     string         `json:"profile_id"`
 		BlockResponse string         `json:"block_response"`
+		Quota         map[string]any `json:"quota"`
 		Parental      map[string]any `json:"parental"`
 		Devices       []struct {
 			DeviceID string `json:"device_id"`
@@ -285,6 +286,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 	var queryType string
 	var decision *matching.Decision
 	firstSeen := true
+	clientAddr := remoteIPFromAddr(r.RemoteAddr).String()
 
 	if len(msg.Question) > 0 {
 		domain = msg.Question[0].Name
@@ -304,6 +306,9 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 			firstSeen = seen
 		}
 
+		// P1: 去端口化客户端 IP，防止将 127.0.0.1:55309 记录为设备标识
+		clientAddr = remoteIPFromAddr(r.RemoteAddr).String()
+
 		resolvedProfileUID, blockMode, runtimeDeviceID, safeSearchEnabled, ok := s.resolveRuntimeProfile(r.RemoteAddr, profileUID)
 		if !ok {
 			http.Error(w, "profile not found", http.StatusForbidden)
@@ -311,6 +316,13 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 			return
 		}
 		profileUID = resolvedProfileUID
+
+		// P0: 检查配额状态 — quota_status=exceeded 时拒绝解析
+		if s.isQuotaExceeded(profileUID) {
+			http.Error(w, "quota exceeded", http.StatusForbidden)
+			s.metrics.IncErrors()
+			return
+		}
 
 		// Extract device info from headers
 		deviceUID, deviceType := resolver.ExtractDeviceFromHeaders(map[string]string{
@@ -369,7 +381,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 					Action:         "BLOCK",
 					Reason:         decision.Reason,
 					Category:       decision.Category,
-					ClientIP:       r.RemoteAddr,
+					ClientIP:       clientAddr,
 					QueryType:      queryType,
 					ResponseCode:   reply.Rcode,
 					ResponseTimeMs: elapsed,
@@ -418,7 +430,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 					Action:         "REWRITE",
 					Reason:         decision.Reason,
 					Category:       decision.Category,
-					ClientIP:       r.RemoteAddr,
+					ClientIP:       clientAddr,
 					QueryType:      queryType,
 					ResponseCode:   reply.Rcode,
 					ResponseTimeMs: elapsed,
@@ -462,7 +474,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 			Domain:         domain,
 			Action:         "ALLOW",
 			Reason:         "default",
-			ClientIP:       r.RemoteAddr,
+			ClientIP:       clientAddr,
 			QueryType:      queryType,
 			ResponseCode:   reply.Rcode,
 			ResponseTimeMs: elapsed,
@@ -470,6 +482,23 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 			Protocol:       "doh",
 		})
 	}
+}
+
+func (s *Server) isQuotaExceeded(profileID string) bool {
+	cfg, err := s.loadActiveConfig()
+	if err != nil {
+		return false
+	}
+	for _, p := range cfg.Profiles {
+		if p.ProfileID == profileID {
+			if p.Quota == nil {
+				return false
+			}
+			status, _ := p.Quota["quota_status"].(string)
+			return status == "exceeded"
+		}
+	}
+	return false
 }
 
 func firstNonEmpty(values ...string) string {

@@ -8,8 +8,13 @@ node:
     public_ipv4: 127.0.0.1
 listen:
     doh: 8443
-    udp: 5354
-    tcp: 5354
+    dot: 853
+    doq: 853
+    udp: 53
+    tcp: 53
+    # TLS 证书路径；留空时自动生成自签名证书（仅开发测试用）
+    # tls_cert_file: /etc/ocer-dns/certs/server.crt
+    # tls_key_file: /etc/ocer-dns/certs/server.key
 control_plane:
     endpoint: http://localhost:8081
     api_key: ak_bDtNnuMzTOEqdZclRpC41VYyDedseQ0X6lInFFLH

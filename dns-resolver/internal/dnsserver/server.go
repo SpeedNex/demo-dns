@@ -35,6 +35,7 @@ type Server struct {
 	client          *dns.Client
 	udpServer       *dns.Server
 	tcpServer       *dns.Server
+	dotServer       *dns.Server
 	dedupTTL        time.Duration
 }
 
@@ -42,6 +43,7 @@ type activeConfig struct {
 	Profiles []struct {
 		ProfileID     string         `json:"profile_id"`
 		BlockResponse string         `json:"block_response"`
+		Quota         map[string]any `json:"quota"`
 		Parental      map[string]any `json:"parental"`
 		Devices       []struct {
 			DeviceID string `json:"device_id"`
@@ -75,7 +77,7 @@ func New(
 	handler.udpServer = &dns.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.Listen.UDP),
 		Net:     "udp",
-		Handler: dns.HandlerFunc(handler.handleQuery),
+		Handler: dns.HandlerFunc(func(w dns.ResponseWriter, req *dns.Msg) { handler.handleQuery(w, req, "udp") }),
 	}
 
 	tcpPort := cfg.Listen.TCP
@@ -85,14 +87,29 @@ func New(
 	handler.tcpServer = &dns.Server{
 		Addr:    fmt.Sprintf(":%d", tcpPort),
 		Net:     "tcp",
-		Handler: dns.HandlerFunc(handler.handleQuery),
+		Handler: dns.HandlerFunc(func(w dns.ResponseWriter, req *dns.Msg) { handler.handleQuery(w, req, "tcp") }),
+	}
+
+	// 初始化 DoT (DNS over TLS) 服务器
+	if cfg.Listen.DoT > 0 {
+		tlsCfg, err := LoadTLSConfig(cfg.Listen.TLSCertFile, cfg.Listen.TLSKeyFile)
+		if err != nil {
+			log.Printf("dot: failed to load TLS config: %v (DoT not started)", err)
+		} else {
+			handler.dotServer = &dns.Server{
+				Addr:      fmt.Sprintf(":%d", cfg.Listen.DoT),
+				Net:       "tcp-tls",
+				TLSConfig: tlsCfg,
+				Handler:   dns.HandlerFunc(func(w dns.ResponseWriter, req *dns.Msg) { handler.handleQuery(w, req, "dot") }),
+			}
+		}
 	}
 
 	return handler
 }
 
 func (s *Server) Run(ctx context.Context) error {
-	errCh := make(chan error, 2)
+	errCh := make(chan error, 3)
 
 	go func() {
 		log.Printf("Starting UDP DNS server on %s", s.udpServer.Addr)
@@ -108,26 +125,35 @@ func (s *Server) Run(ctx context.Context) error {
 		}
 	}()
 
+	if s.dotServer != nil {
+		go func() {
+			log.Printf("Starting DoT (DNS over TLS) server on :%d", s.cfg.Listen.DoT)
+			if err := s.dotServer.ListenAndServe(); err != nil {
+				errCh <- err
+			}
+		}()
+	}
+
 	select {
 	case <-ctx.Done():
 		_ = s.udpServer.Shutdown()
 		_ = s.tcpServer.Shutdown()
+		if s.dotServer != nil {
+			_ = s.dotServer.Shutdown()
+		}
 		return nil
 	case err := <-errCh:
 		_ = s.udpServer.Shutdown()
 		_ = s.tcpServer.Shutdown()
+		if s.dotServer != nil {
+			_ = s.dotServer.Shutdown()
+		}
 		return err
 	}
 }
 
-func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg) {
+func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg, proto string) {
 	s.metrics.IncQueries()
-
-	// 2026-06-22: 按 w.LocalAddr() 网络类型推断上报协议，udp/tcp
-	proto := "udp"
-	if _, ok := w.LocalAddr().(*net.TCPAddr); ok {
-		proto = "tcp"
-	}
 
 	reply := new(dns.Msg)
 	reply.SetReply(req)
@@ -170,7 +196,18 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 		_ = w.WriteMsg(reply)
 		s.metrics.IncErrors()
 		if firstSeen {
-			s.appendLog("", "", domain, "BLOCK", "ip_not_bound", "", w.RemoteAddr().String(), queryType, proto, reply.Rcode, startedAt)
+			s.appendLog("", "", domain, "BLOCK", "ip_not_bound", "", clientIP, queryType, proto, reply.Rcode, startedAt)
+		}
+		return
+	}
+
+	// P0: 检查配额状态 — quota_status=exceeded 时拒绝解析
+	if s.isQuotaExceeded(profileID) {
+		reply.Rcode = dns.RcodeRefused
+		_ = w.WriteMsg(reply)
+		s.metrics.IncErrors()
+		if firstSeen {
+			s.appendLog(profileID, deviceID, domain, "BLOCK", "quota_exceeded", "", clientIP, queryType, proto, reply.Rcode, startedAt)
 		}
 		return
 	}
@@ -189,7 +226,7 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 		s.applyBlockResponse(reply, question, blockResponse)
 		_ = w.WriteMsg(reply)
 		if firstSeen {
-			s.appendLog(profileID, deviceID, domain, "BLOCK", decision.Reason, decision.Category, w.RemoteAddr().String(), queryType, proto, reply.Rcode, startedAt)
+			s.appendLog(profileID, deviceID, domain, "BLOCK", decision.Reason, decision.Category, clientIP, queryType, proto, reply.Rcode, startedAt)
 		}
 		return
 	}
@@ -209,7 +246,7 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 		s.metrics.IncAllowed()
 		_ = w.WriteMsg(reply)
 		if firstSeen {
-			s.appendLog(profileID, deviceID, domain, "REWRITE", decision.Reason, decision.Category, w.RemoteAddr().String(), queryType, proto, reply.Rcode, startedAt)
+			s.appendLog(profileID, deviceID, domain, "REWRITE", decision.Reason, decision.Category, clientIP, queryType, proto, reply.Rcode, startedAt)
 		}
 		return
 	}
@@ -221,7 +258,7 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 		s.metrics.IncAllowed()
 		_ = w.WriteMsg(cached)
 		if firstSeen {
-			s.appendLog(profileID, deviceID, domain, "ALLOW", "cache_hit", "", w.RemoteAddr().String(), queryType, proto, cached.Rcode, startedAt)
+			s.appendLog(profileID, deviceID, domain, "ALLOW", "cache_hit", "", clientIP, queryType, proto, cached.Rcode, startedAt)
 		}
 		return
 	}
@@ -236,7 +273,7 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 		_ = w.WriteMsg(reply)
 		s.metrics.IncErrors()
 		if firstSeen {
-			s.appendLog(profileID, deviceID, domain, "ERROR", "upstream_timeout", "", w.RemoteAddr().String(), queryType, proto, reply.Rcode, startedAt)
+			s.appendLog(profileID, deviceID, domain, "ERROR", "upstream_timeout", "", clientIP, queryType, proto, reply.Rcode, startedAt)
 		}
 		return
 	}
@@ -247,8 +284,25 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 	s.metrics.IncAllowed()
 	_ = w.WriteMsg(upstreamReply)
 	if firstSeen {
-		s.appendLog(profileID, deviceID, domain, "ALLOW", "default", "", w.RemoteAddr().String(), queryType, proto, upstreamReply.Rcode, startedAt)
+		s.appendLog(profileID, deviceID, domain, "ALLOW", "default", "", clientIP, queryType, proto, upstreamReply.Rcode, startedAt)
 	}
+}
+
+func (s *Server) isQuotaExceeded(profileID string) bool {
+	cfg, err := s.loadActiveConfig()
+	if err != nil {
+		return false
+	}
+	for _, p := range cfg.Profiles {
+		if p.ProfileID == profileID {
+			if p.Quota == nil {
+				return false
+			}
+			status, _ := p.Quota["quota_status"].(string)
+			return status == "exceeded"
+		}
+	}
+	return false
 }
 
 func (s *Server) resolveRuntimeProfile(addr net.Addr) (profileID string, blockResponse string, deviceID string, safeSearch bool, ok bool) {
