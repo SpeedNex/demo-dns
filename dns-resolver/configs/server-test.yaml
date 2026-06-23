@@ -1,0 +1,36 @@
+node:
+    node_uid: vydisdlb7k
+    name: resolver-local-16
+    version: 1.0.0
+    region: local-test
+    country: CN
+    provider: local
+    public_ipv4: 127.0.0.1
+listen:
+    doh: 8443
+    dot: 18853
+    doq: 18853
+    udp: 15353
+    tcp: 15353
+control_plane:
+    endpoint: http://localhost:8081
+    api_key: ak_bDtNnuMzTOEqdZclRpC41VYyDedseQ0X6lInFFLH
+    secret: hmk_ja0ixnpmnjzqura5cf7zmwfkgptipwmn
+    node_id: 16
+    heartbeat_interval: 30
+    config_poll_interval: 5
+    profiles_path: ./configs
+upstream:
+    - 1.1.1.1
+    - 8.8.8.8
+logging:
+    level: debug
+    buffer_path: /tmp/ocer-dns-log-buffer
+nats:
+    enabled: false
+redis:
+    enabled: false
+geodns:
+    enabled: true
+    endpoint: http://127.0.0.1:15354
+    request_timeout_seconds: 3

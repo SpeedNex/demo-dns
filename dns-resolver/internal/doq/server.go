@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -110,19 +111,29 @@ func (s *Server) Stop() error {
 	return nil
 }
 
+func profileUIDFromSNI(serverName string) string {
+	parts := strings.SplitN(serverName, ".", 2)
+	if len(parts) < 2 {
+		return ""
+	}
+	return strings.ToLower(parts[0])
+}
+
 func (s *Server) handleConnection(ctx context.Context, conn *quic.Conn) {
 	remoteAddr := conn.RemoteAddr().String()
+	// 从 QUIC TLS 连接状态中提取 SNI → profileUID
+	profileUID := profileUIDFromSNI(conn.ConnectionState().TLS.ServerName)
 	defer conn.CloseWithError(0, "bye")
 	for {
 		stream, err := conn.AcceptStream(ctx)
 		if err != nil {
 			return
 		}
-		go s.handleStream(stream, remoteAddr)
+		go s.handleStream(stream, remoteAddr, profileUID)
 	}
 }
 
-func (s *Server) handleStream(stream *quic.Stream, remoteAddr string) {
+func (s *Server) handleStream(stream *quic.Stream, remoteAddr string, profileUID string) {
 	defer stream.Close()
 
 	// Read 2-byte length prefix
@@ -145,8 +156,8 @@ func (s *Server) handleStream(stream *quic.Stream, remoteAddr string) {
 		return
 	}
 
-	// ① Profile 匹配（按客户端 IP）
-	profileID, blockResponse, deviceID, safeSearchEnabled, ok := s.resolveRuntimeProfile(remoteAddr)
+	// ① Profile 匹配 — 优先通过 TLS SNI(profileUID) 识别，回退到源 IP
+	profileID, blockResponse, deviceID, safeSearchEnabled, ok := s.resolveRuntimeProfile(remoteAddr, profileUID)
 	if !ok {
 		reply := new(dns.Msg)
 		reply.SetReply(req)
@@ -202,10 +213,21 @@ func (s *Server) isQuotaExceeded(profileID string) bool {
 	return false
 }
 
-func (s *Server) resolveRuntimeProfile(remoteAddr string) (profileID string, blockResponse string, deviceID string, safeSearch bool, ok bool) {
+func (s *Server) resolveRuntimeProfile(remoteAddr string, profileUID string) (profileID string, blockResponse string, deviceID string, safeSearch bool, ok bool) {
 	cfg, err := s.loadActiveConfig()
 	if err != nil || len(cfg.Profiles) == 0 {
 		return "", "nxdomain", "", false, false
+	}
+
+	// 如果通过 TLS SNI 直接拿到了 profileUID，优先使用
+	if profileUID != "" {
+		for _, p := range cfg.Profiles {
+			if p.ProfileID == profileUID {
+				safeSearch = boolFromMap(p.Parental, "safe_search") || boolFromMap(p.Parental, "force_safe_search")
+				return profileUID, firstNonEmpty(p.BlockResponse, "nxdomain"), "", safeSearch, true
+			}
+		}
+		// SNI 指定的 Profile UID 在配置中不存在时，回退到源 IP
 	}
 
 	sourceMap := make(map[string]string)

@@ -1148,6 +1148,8 @@
       "desc": "区域流量调度配置",
       "nodeMapping": "节点映射",
       "schedulerId": "调度器ID",
+      "schedulerAlias": "调度器别名",
+      "schedulerAliasPlaceholder": "可选，留空将自动生成 {region}-Scheduler",
       "id": "ID",
       "nodeId": "节点ID",
       "nodeName": "节点名称",
@@ -1733,6 +1735,6 @@
     "saveSuccess": "保存成功",
     "batchDeleteConfirm": "确定删除选中的 {count} 条？",
     "loading": "加载中...",
-    "index": "序号"
+    "index": "ID"
   }
 }

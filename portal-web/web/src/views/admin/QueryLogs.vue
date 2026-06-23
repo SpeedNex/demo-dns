@@ -26,8 +26,8 @@
             </el-input>
             <el-input
                 v-model="filter.username"
-                :placeholder="$t('admin.queryLogsPage.username') || '用户名'"
-                style="width:160px"
+                :placeholder="$t('admin.queryLogsPage.username') || 'Username'"
+                style="width:140px"
                 size="small"
                 clearable
                 @clear="fetchLogs"
@@ -37,8 +37,8 @@
             </el-input>
             <el-select
                 v-model="filter.action"
-                :placeholder="$t('admin.queryLogsPage.action') || 'Query Type'"
-                style="width:140px"
+                :placeholder="$t('admin.queryLogsPage.action') || 'Action'"
+                style="width:130px"
                 size="small"
                 clearable
                 @change="fetchLogs"
@@ -59,8 +59,8 @@
             />
             <el-select
                 v-model="filter.profile_id"
-                :placeholder="$t('admin.queryLogsPage.profile') || '策略'"
-                style="width:180px"
+                :placeholder="$t('admin.queryLogsPage.profile') || 'Profile'"
+                style="width:160px"
                 size="small"
                 clearable
                 @change="fetchLogs"
@@ -81,43 +81,20 @@
             </el-button>
             <el-button size="small" type="danger" :disabled="selected.length === 0" @click="handleBatchDelete">
                 <el-icon class="el-icon--left"><Delete /></el-icon>
-                <span>{{ $t('common.batchDelete') || '批量删除' }} ({{ selected.length }})</span>
+                <span>{{ $t('common.batchDelete') || 'Batch Delete' }} ({{ selected.length }})</span>
             </el-button>
             <el-button size="small" type="danger" plain @click="handleClearAll">
                 <el-icon class="el-icon--left"><DeleteFilled /></el-icon>
-                <span>{{ $t('admin.queryLogsPage.clearAll') || '一键清空' }}</span>
+                <span>{{ $t('admin.queryLogsPage.clearAll') || 'Clear All' }}</span>
             </el-button>
         </template>
 
         <el-table v-loading="loading" :data="logs" stripe style="margin-top:0" @selection-change="onSelectionChange">
             <el-table-column type="selection" width="40" />
-            <el-table-column :label="$t('admin.queryLogsPage.time') || 'Time'" width="190" fixed>
+            <el-table-column :label="$t('admin.queryLogsPage.time')" width="190" fixed>
                 <template #default="{ row }">{{ row.queried_at ? new Date(row.queried_at).toLocaleString() : '-' }}</template>
             </el-table-column>
-            <template #empty>
-                <div class="empty-state">
-                    <el-icon class="empty-icon"><Document /></el-icon>
-                    <p class="empty-title">{{ $t('dashboard.noData') || 'No Data' }}</p>
-                    <p class="empty-desc">{{ $t('admin.queryLogsPage.emptyDesc') || 'Query logs will appear here.' }}</p>
-                </div>
-            </template>
-            <el-table-column :label="$t('admin.queryLogsPage.user') || '用户'" width="170" show-overflow-tooltip>
-                <template #default="{ row }">
-                    <div class="user-cell">
-                        <span class="user-name">{{ row.user_name || row.user_email || (row.user_id ? `#${row.user_id}` : '-') }}</span>
-                        <span v-if="row.user_id" class="user-id">uid: {{ row.user_id }}</span>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column :label="$t('admin.queryLogsPage.profile') || '策略'" width="180" show-overflow-tooltip>
-                <template #default="{ row }">
-                    <div class="profile-cell">
-                        <span class="profile-name">{{ row.profile_name || '-' }}</span>
-                        <span v-if="row.profile_uid" class="profile-uid">{{ row.profile_uid }}</span>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column label="域名" min-width="240" show-overflow-tooltip>
+            <el-table-column label="域名" min-width="220" show-overflow-tooltip>
                 <template #default="{ row }">
                     <div class="domain-cell">
                         <span class="domain-name">{{ row.query_name || '-' }}</span>
@@ -125,7 +102,24 @@
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.queryLogsPage.action') || '动作'" width="92">
+            <template #empty>
+                <div class="empty-state">
+                    <el-icon class="empty-icon"><Document /></el-icon>
+                    <p class="empty-title">{{ $t('dashboard.noData') }}</p>
+                    <p class="empty-desc">{{ $t('admin.queryLogsPage.emptyDesc') }}</p>
+                </div>
+            </template>
+            <el-table-column :label="$t('admin.queryLogsPage.user')" width="140" show-overflow-tooltip>
+                <template #default="{ row }">
+                    <span class="user-name">{{ row.user_name || row.user_email || (row.user_id ? `#${row.user_id}` : '-') }}</span>
+                </template>
+            </el-table-column>
+            <el-table-column :label="$t('admin.queryLogsPage.profile')" width="160" show-overflow-tooltip>
+                <template #default="{ row }">
+                    <span class="profile-name">{{ row.profile_name || '-' }}</span>
+                </template>
+            </el-table-column>
+            <el-table-column :label="$t('admin.queryLogsPage.action')" width="85">
                 <template #default="{ row }">
                     <el-tag
                         v-if="row.action"
@@ -137,16 +131,25 @@
 </el-tag>
                 </template>
             </el-table-column>
-            <el-table-column label="类型" width="110">
+            <el-table-column label="类型" width="70">
                 <template #default="{ row }">
-                    <el-tag v-if="row.query_type" type="primary" effect="light" size="small">{{ row.query_type }}</el-tag>
-                    <span v-else style="color:#94a3b8">A</span>
+                    <el-tag v-if="row.query_type" type="info" effect="light" size="small">{{ row.query_type }}</el-tag>
+                    <span v-else style="color:#94a3b8">-</span>
                 </template>
             </el-table-column>
-            <el-table-column label="客户端" width="170" show-overflow-tooltip>
+            <el-table-column label="协议" width="70">
+                <template #default="{ row }">
+                    <el-tag v-if="row.protocol" type="warning" effect="light" size="small">{{ row.protocol?.toUpperCase() }}</el-tag>
+                    <span v-else style="color:#94a3b8">-</span>
+                </template>
+            </el-table-column>
+            <el-table-column label="节点" width="90" show-overflow-tooltip>
+                <template #default="{ row }">{{ row.node_id || '-' }}</template>
+            </el-table-column>
+            <el-table-column label="客户端" width="140" show-overflow-tooltip>
                 <template #default="{ row }">{{ row.client_ip || '-' }}</template>
             </el-table-column>
-            <el-table-column :label="$t('admin.queryLogsPage.latency') || 'Latency (ms)'" width="120">
+            <el-table-column :label="$t('admin.queryLogsPage.latency')" width="100">
                 <template #default="{ row }">
                     <el-tag
                         v-if="row.latency_ms != null"
@@ -276,6 +279,7 @@ const fetchLogs = async () => {
         if (filter.domain) params.domain = filter.domain
         if (filter.action) params.action = filter.action
         if (filter.profile_id) params.profile_id = filter.profile_id
+        if (filter.username) params.username = filter.username
         if (filter.dateRange && filter.dateRange.length === 2) {
             params.start_time = filter.dateRange[0].toISOString()
             params.end_time = filter.dateRange[1].toISOString()
@@ -295,6 +299,7 @@ const handleReset = () => {
     filter.domain = ''
     filter.action = ''
     filter.profile_id = ''
+    filter.username = ''
     filter.dateRange = null
     page.value = 1
     fetchLogs()
@@ -307,6 +312,7 @@ const handleExport = async () => {
         if (filter.domain) params.domain = filter.domain
         if (filter.action) params.action = filter.action
         if (filter.profile_id) params.profile_id = filter.profile_id
+        if (filter.username) params.username = filter.username
         if (filter.dateRange && filter.dateRange.length === 2) {
             params.start_time = filter.dateRange[0].toISOString()
             params.end_time = filter.dateRange[1].toISOString()
@@ -409,16 +415,4 @@ onMounted(() => {
 .empty-icon { font-size: 48px; color: #cbd5e1; margin-bottom: 12px; }
 .empty-title { font-size: 16px; font-weight: 600; color: #475569; margin: 0 0 4px; }
 .empty-desc { font-size: 13px; color: #94a3b8; margin: 0; }
-</style>
-
-<style scoped>
-.empty-state { padding: 40px 0; text-align: center; color: #64748b; }
-.empty-icon { font-size: 48px; color: #cbd5e1; margin-bottom: 12px; }
-.empty-title { font-size: 16px; font-weight: 600; color: #475569; margin: 0 0 4px; }
-.empty-desc { font-size: 13px; color: #94a3b8; margin: 0; }
-
-.domain-cell { display: flex; align-items: center; gap: 6px; }
-.domain-name { color: #0f172a; font-weight: 500; }
-.copy-icon { font-size: 13px; color: #94a3b8; cursor: pointer; transition: color 0.2s; }
-.copy-icon:hover { color: #2563eb; }
 </style>

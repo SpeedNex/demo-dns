@@ -204,6 +204,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin.only', 'permission:ad
     });
     Route::middleware('permission:admin.geo_dns.write')->group(function (): void {
         Route::post('geo-dns', [AdminGeoDnsController::class, 'store']);
+        Route::post('geo-dns/{id}/token', [AdminGeoDnsController::class, 'issueToken']);
         Route::put('geo-dns/{id}', [AdminGeoDnsController::class, 'update']);
         Route::delete('geo-dns/{id}', [AdminGeoDnsController::class, 'destroy']);
         Route::post('geo-dns/batch-destroy', [AdminGeoDnsController::class, 'batchDestroy']);

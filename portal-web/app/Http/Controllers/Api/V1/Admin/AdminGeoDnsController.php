@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Models\AdminAuditLog;
 use App\Models\DnsGeodns;
 use App\Models\Node;
+use App\Models\NodeToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -111,7 +112,7 @@ final class AdminGeoDnsController
         $nodeAlias = $validated['node_alias'] ?? (strtoupper(str_replace('geodns-', '', $region)) . '-Scheduler');
 
         $node = DnsGeodns::create([
-            'node_code' => 'nd_' . Str::lower(Str::random(10)),
+            'node_code' => Str::lower(Str::random(10)),
             'node_alias' => $nodeAlias,
             'region' => $region,
             'country' => isset($validated['country']) ? strtoupper($validated['country']) : null,
@@ -227,7 +228,7 @@ final class AdminGeoDnsController
             $node = DnsGeodns::updateOrCreate(
                 ['node_alias' => $demo['alias']],
                 [
-                    'node_code' => 'nd_' . Str::lower(Str::random(8)),
+                    'node_code' => Str::lower(Str::random(10)),
                     'region' => $demo['region'],
                     'country' => $demo['country'],
                     'city' => $demo['city'],
@@ -251,6 +252,50 @@ final class AdminGeoDnsController
                 'nodes' => array_map(fn (DnsGeodns $n) => ['id' => $n->id, 'node_code' => $n->node_code, 'region' => $n->region], $created),
             ],
         ]);
+    }
+
+    public function issueToken(Request $request, string $id): JsonResponse
+    {
+        $actorId = $request->user()?->admin_id;
+        $geodns = DnsGeodns::query()->findOrFail($id);
+
+        $validated = $request->validate([
+            'expires_in_days' => 'integer|min:1|max:3650',
+        ]);
+
+        // 生成部署令牌，关联到 geodns 专用 Node（不存在则创建）
+        $node = Node::query()->firstOrCreate(
+            ['node_code' => $geodns->node_code],
+            [
+                'node_alias' => $geodns->node_alias ?? $geodns->node_code,
+                'region' => $geodns->region,
+                'install_status' => 'pending',
+                'current_config_version' => 0,
+                'desired_config_version' => 1,
+            ],
+        );
+
+        $result = NodeToken::createForNode(
+            $node,
+            isset($validated['expires_in_days']) ? (int) $validated['expires_in_days'] : 365,
+            $actorId
+        );
+
+        AdminAuditLog::record('geo_dns.token_issue', 'node_token', (string) $node->id, [
+            'geo_dns_id' => $geodns->id,
+            'node_code' => $geodns->node_code,
+        ], $actorId !== null ? (string) $actorId : null, null, $request->ip(), $request->userAgent());
+
+        return response()->json([
+            'data' => [
+                'api_key' => $result['token'],
+                'hmac_secret' => $result['hmac_secret'] ?? '',
+                'node_id' => $node->node_code,
+                'expires_at' => optional($result['expires_at'])?->toIso8601String(),
+            ],
+        ], 201)
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, private')
+            ->header('Pragma', 'no-cache');
     }
 
     /**

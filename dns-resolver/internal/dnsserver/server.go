@@ -2,12 +2,14 @@ package dnsserver
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"ocer-dns/dns-resolver/internal/config"
 	"ocer-dns/dns-resolver/internal/metrics"
@@ -24,6 +26,7 @@ type Server struct {
 	udpServer *dns.Server
 	tcpServer *dns.Server
 	dotServer *dns.Server
+	sniMap    sync.Map // key: remoteAddr -> sni (用于 DoT 按 SNI 识别 Profile)
 }
 
 type activeConfig struct {
@@ -66,12 +69,19 @@ func New(
 		Handler: dns.HandlerFunc(func(w dns.ResponseWriter, req *dns.Msg) { s.handleQuery(w, req, "tcp") }),
 	}
 
-	// 初始化 DoT (DNS over TLS) 服务器
+	// 初始化 DoT (DNS over TLS) 服务器 — 通过 GetConfigForClient 提取 SNI
 	if cfg.Listen.DoT > 0 {
-		tlsCfg, err := LoadTLSConfig(cfg.Listen.TLSCertFile, cfg.Listen.TLSKeyFile)
+		baseTLS, err := LoadTLSConfig(cfg.Listen.TLSCertFile, cfg.Listen.TLSKeyFile)
 		if err != nil {
 			log.Printf("dot: failed to load TLS config: %v (DoT not started)", err)
 		} else {
+			tlsCfg := baseTLS.Clone()
+			tlsCfg.GetConfigForClient = func(info *tls.ClientHelloInfo) (*tls.Config, error) {
+				if info.Conn != nil {
+					s.sniMap.Store(info.Conn.RemoteAddr().String(), info.ServerName)
+				}
+				return baseTLS, nil
+			}
 			s.dotServer = &dns.Server{
 				Addr:      fmt.Sprintf(":%d", cfg.Listen.DoT),
 				Net:       "tcp-tls",
@@ -129,8 +139,16 @@ func (s *Server) Run(ctx context.Context) error {
 }
 
 func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg, proto string) {
-	// ① Profile 匹配（按客户端 IP）
-	profileID, blockResponse, deviceID, safeSearchEnabled, ok := s.resolveRuntimeProfile(w.RemoteAddr())
+	// ① Profile 匹配
+	//    DoT: 优先通过 TLS SNI 识别; 若 SNI 无匹配则回退到源 IP
+	//    UDP/TCP: 沿用源 IP 匹配
+	profileUID := ""
+	if proto == "dot" {
+		if sni, ok := s.sniMap.Load(w.RemoteAddr().String()); ok {
+			profileUID = resolver.ExtractProfileFromSNI(sni.(string))
+		}
+	}
+	profileID, blockResponse, deviceID, safeSearchEnabled, ok := s.resolveRuntimeProfile(w.RemoteAddr(), profileUID)
 	if !ok {
 		reply := new(dns.Msg)
 		reply.SetReply(req)
@@ -174,10 +192,21 @@ func (s *Server) isQuotaExceeded(profileID string) bool {
 	return false
 }
 
-func (s *Server) resolveRuntimeProfile(addr net.Addr) (profileID string, blockResponse string, deviceID string, safeSearch bool, ok bool) {
+func (s *Server) resolveRuntimeProfile(addr net.Addr, profileUID string) (profileID string, blockResponse string, deviceID string, safeSearch bool, ok bool) {
 	cfg, err := s.loadActiveConfig()
 	if err != nil || len(cfg.Profiles) == 0 {
 		return "", "nxdomain", "", false, false
+	}
+
+	// 如果通过 SNI 直接拿到了 profileUID，优先使用
+	if profileUID != "" {
+		for _, p := range cfg.Profiles {
+			if p.ProfileID == profileUID {
+				safeSearch = boolFromMap(p.Parental, "safe_search") || boolFromMap(p.Parental, "force_safe_search")
+				return profileUID, firstNonEmpty(p.BlockResponse, "nxdomain"), "", safeSearch, true
+			}
+		}
+		// SNI 指定的 Profile UID 在配置中不存在时，回退到源 IP
 	}
 
 	sourceMap := make(map[string]string)

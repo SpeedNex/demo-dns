@@ -31,7 +31,7 @@ final class NodeTokenService
 
         NodeToken::updateOrCreate(
             [
-                'node_id' => $node->node_id,
+                'node_id' => $node->id,
                 'name' => $name,
             ],
             [

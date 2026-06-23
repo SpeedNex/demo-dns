@@ -119,7 +119,7 @@ final class AdminNodeController
             'created_by_admin_id' => $actorId,
         ]));
 
-        AdminAuditLog::record('node.create', 'node', (string) $node->node_id, $node->toArray(), $actorId !== null ? (string) $actorId : null, null, $request->ip(), $request->userAgent());
+        AdminAuditLog::record('node.create', 'node', (string) $node->id, $node->toArray(), $actorId !== null ? (string) $actorId : null, null, $request->ip(), $request->userAgent());
 
         return response()->json(['data' => $node->toArray()], 201);
     }

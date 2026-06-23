@@ -40,7 +40,7 @@ final class NodeHealthViewService
     private function mapNode(\App\Models\Node $node): ?array
     {
         return [
-            'node_id' => (string) ($node->node_id ?? ''),
+            'node_id' => (string) ($node->id ?? ''),
             'region' => $node->region,
             'country' => $node->country ?? null,
             'city' => $node->city ?? null,

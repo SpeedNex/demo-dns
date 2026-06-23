@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/pem"
 	"log"
 	"math/big"
 	"net"
@@ -65,7 +66,7 @@ func generateSelfSignedCert() (*tls.Certificate, error) {
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
 		IPAddresses:           []net.IP{net.ParseIP("127.0.0.1"), net.IPv6loopback},
-		DNSNames:              []string{"localhost", "ocer-dns-resolver"},
+		DNSNames:              []string{"localhost", "ocer-dns-resolver", "dns.test.com", "*.dns.test.com"},
 	}
 
 	certDER, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, &key.PublicKey, key)
@@ -73,18 +74,24 @@ func generateSelfSignedCert() (*tls.Certificate, error) {
 		return nil, err
 	}
 
-	// 将临时证书写入文件，方便调试
+	// 将临时证书写入文件，方便调试（同时写 DER 和 PEM 两种格式）
 	certPath := "/tmp/ocer-dns-dev.crt"
-	keyPath := "/tmp/ocer-dns-dev.key"
 	_ = os.WriteFile(certPath, certDER, 0644)
+
+	pemPath := "/tmp/ocer-dns-dev.pem"
+	pemBlock := &pem.Block{Type: "CERTIFICATE", Bytes: certDER}
+	_ = os.WriteFile(pemPath, pem.EncodeToMemory(pemBlock), 0644)
 
 	keyBytes, err := x509.MarshalECPrivateKey(key)
 	if err != nil {
 		return nil, err
 	}
-	_ = os.WriteFile(keyPath, keyBytes, 0600)
+	_ = os.WriteFile("/tmp/ocer-dns-dev.key", keyBytes, 0600)
 
-	log.Printf("tls: self-signed cert written to %s / %s (dev-only, do not use in production)", certPath, keyPath)
+	log.Printf("tls: self-signed cert written to %s / %s (dev-only, do not use in production)", pemPath, certPath)
+
+	// 将证书写入 PEM 格式，方便 kdig +tls-ca 使用
+	_ = os.WriteFile("/tmp/ocer-dns-ca.pem", pem.EncodeToMemory(pemBlock), 0644)
 
 	cert := tls.Certificate{
 		Certificate: [][]byte{certDER},

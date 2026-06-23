@@ -60,7 +60,7 @@
             </el-tag>
         </div>
 
-        <el-table v-loading="loading" :data="nodes" stripe style="margin-top:12px;width:100%" @selection-change="onSelectionChange">
+        <el-table v-loading="loading" :data="nodes" stripe style="margin-top:12px;width:100%" :header-cell-style="{'white-space':'nowrap'}" @selection-change="onSelectionChange">
             <template #empty>
                 <div class="empty-state">
                     <p class="empty-title">{{ t('admin.nodes.noNodes') || '暂无节点' }}</p>
@@ -68,6 +68,7 @@
                 </div>
             </template>
             <el-table-column type="selection" width="48" />
+            <el-table-column type="index" width="50" :label="t('common.index')" />
             <el-table-column :label="t('admin.nodes.nodeId')" min-width="160">
                 <template #default="{ row }">
                     <div class="name-cell" style="white-space:nowrap">
@@ -441,8 +442,9 @@ const issueKeyFor = async (nodePkId) => {
             expiresAt,
         })
         showTokenResultDialog.value = true
-    } catch {
-        ElMessage.error(t('admin.nodes.tokenFailed'))
+    } catch (err) {
+        const msg = err.response?.data?.message || err.response?.data?.error?.message || t('admin.nodes.tokenFailed')
+        ElMessage.error(msg)
     } finally {
         issuingToken.value = false
     }

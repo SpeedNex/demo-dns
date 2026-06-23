@@ -35,7 +35,7 @@
             </el-button>
         </template>
 
-        <el-table :data="mappings" stripe @selection-change="onSelectionChange">
+        <el-table :data="mappings" stripe :header-cell-style="{'white-space':'nowrap'}" @selection-change="onSelectionChange">
             <template #empty>
                 <div class="empty-state">
                     <el-icon class="empty-icon"><Aim /></el-icon>
@@ -44,6 +44,7 @@
                 </div>
             </template>
             <el-table-column type="selection" width="48" />
+            <el-table-column type="index" width="50" :label="$t('common.index')" />
             <el-table-column :label="$t('admin.geoDns.schedulerId') || '调度器ID'" :min-width="180">
                 <template #default="{ row }">
                     <code class="node-code">{{ row.node_code || '—' }}</code>
@@ -94,12 +95,31 @@
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.geoDns.actions')" fixed="right" width="220">
+            <el-table-column :label="$t('admin.geoDns.actions')" fixed="right" width="280">
                 <template #default="{ row }">
                     <div style="white-space:nowrap;display:flex;gap:4px;align-items:center">
                         <el-button size="small" text type="primary" @click="openEditDialog(row)">
                             <el-icon><Edit /></el-icon>
                             <span>{{ $t('common.edit') || '编辑' }}</span>
+                        </el-button>
+                        <el-button
+                            v-if="row.install_status !== 'installed'"
+                            size="small"
+                            text
+                            type="success"
+                            @click="handleDeploy(row)"
+                        >
+                            <span>{{ $t('admin.nodes.deploy') }}</span>
+                        </el-button>
+                        <el-button
+                            v-if="row.install_status === 'installed'"
+                            size="small"
+                            text
+                            type="info"
+                            @click="handleDeploy(row)"
+                        >
+                            <el-icon><Refresh /></el-icon>
+                            <span>{{ $t('admin.nodes.redeploy') || '重新部署' }}</span>
                         </el-button>
                         <el-button size="small" text type="danger" @click="handleDelete(row.id)">
                             <el-icon><Delete /></el-icon>
@@ -268,14 +288,14 @@ const handleSave = async () => {
 }
 
 const handleDeploy = async (row) => {
-    const nodeId = row.target_node_id || row.node_id
-    if (!nodeId) {
-        ElMessage.warning(t('admin.geoDns.noNodeLinked') || '该映射未关联节点，无法生成部署命令')
+    const geoDnsId = row.id
+    if (!geoDnsId) {
+        ElMessage.warning('调度器ID不可用')
         return
     }
     try {
-        const { data } = await client.post(`/admin/nodes/${nodeId}/tokens`, { expires_in_days: 365 })
-        deployData.node_id = data.data.node_id || ''
+        const { data } = await client.post(`/admin/geo-dns/${geoDnsId}/token`, { expires_in_days: 365 })
+        deployData.node_id = row.node_code || row.id
         deployData.api_key = data.data.api_key || ''
         showDeployDialog.value = true
     } catch (err) {
