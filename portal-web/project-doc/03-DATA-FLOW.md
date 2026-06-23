@@ -53,7 +53,7 @@
 
 ```yaml
 listen:
-    doh: 443      # 生产环境使用 443，由 nginx TLS 终止
+    doh: 8443     # 内部 DoH 端口，Caddy 443 → dns-resolver 8443
     dot: 853
     doq: 853
     udp: 53

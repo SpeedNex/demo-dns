@@ -161,7 +161,7 @@ func Default() *Config {
 		Listen: ListenConfig{
 			UDP: 53,
 			TCP: 53,
-			DoH: 443,
+			DoH: 8443, // Caddy 443 → dns-resolver 8443（DoH 内部端口）
 			DoT: 853,
 			DoQ: 853,
 		},
