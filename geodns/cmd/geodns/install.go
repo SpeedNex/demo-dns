@@ -141,9 +141,13 @@ func runInstall(args []string) error {
 	//   1) 告知 console 节点已注册
 	//   2) **同时获取并缓存 api_key**（仅此一次返回明文）
 	// register 失败不阻塞 install（配置已写入），仅打印警告。
+	// 2026-06-23: register 失败时删除旧的 api_key 文件，确保 loadBearer() fallback 到 config.yaml 的 token。
 	if regErr := registerNodeToConsole(cfg, opts.APIKeyPath, opts.Verbose); regErr != nil {
 		log.Printf("console register FAILED: %v", regErr)
 		fmt.Printf("⚠ console register failed: %v (config was still written, run `geodns` to start)\n", regErr)
+		if err := os.Remove(opts.APIKeyPath); err == nil {
+			log.Printf("removed stale api_key file: %s", opts.APIKeyPath)
+		}
 	} else {
 		log.Printf("console register: success")
 		fmt.Println("✔ console register: success")
