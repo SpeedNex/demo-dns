@@ -100,10 +100,11 @@ final class AdminNodeController
             $validated['node_code'] = Str::lower(Str::random(10));
         }
 
-        // 2026-06-22: 节点别名为非必填，留空时按 "node-{6位code}" 自动生成
+        // 2026-06-23: 节点别名为非必填，留空时按 "node-{region}-{index}" 自动生成
         $aliasInput = trim((string) ($validated['node_alias'] ?? ''));
         if ($aliasInput === '') {
-            $validated['node_alias'] = 'node-' . Str::lower(Str::random(6));
+            $regionCode = strtolower($validated['region'] ?? 'unknown');
+            $validated['node_alias'] = Node::generateAlias($regionCode);
         } else {
             $validated['node_alias'] = $aliasInput;
         }

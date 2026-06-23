@@ -154,4 +154,22 @@ class Node extends Model
                     ->orWhere('last_heartbeat_at', '<=', now()->subSeconds($threshold * 2));
             });
     }
+
+    /**
+     * 生成 Resolver 节点别名，格式：node-{region_code}-{index}
+     * regionCode 传入时应为小写地区码，如 "kr", "cn"
+     */
+    public static function generateAlias(string $regionCode): string
+    {
+        $prefix = 'node-' . strtolower($regionCode) . '-';
+        $maxIndex = self::query()
+            ->where('region', $regionCode)
+            ->whereNotNull('node_alias')
+            ->get()
+            ->map(fn ($n) => (int) preg_replace('/^' . preg_quote($prefix, '/') . '(\d+)$/', '$1', $n->node_alias ?? ''))
+            ->filter(fn ($i) => $i > 0)
+            ->max() ?? 0;
+
+        return $prefix . ($maxIndex + 1);
+    }
 }

@@ -34,4 +34,24 @@ class DnsGeodns extends Model
         'desired_config_version' => 'integer',
         'current_config_version' => 'integer',
     ];
+
+    /**
+     * 生成 GeoDNS 别名，格式：geo-{region_code}-{index}
+     * regionCode 传入时应为小写地区码，如 "kr", "cn"
+     */
+    public static function generateAlias(string $regionCode): string
+    {
+        $prefix = 'geo-' . strtolower($regionCode) . '-';
+        // region 字段存储格式为 "geodns-kr"，需匹配
+        $regionPattern = 'geodns-' . $regionCode;
+        $maxIndex = self::query()
+            ->where('region', 'like', $regionPattern . '%')
+            ->whereNotNull('node_alias')
+            ->get()
+            ->map(fn ($n) => (int) preg_replace('/^' . preg_quote($prefix, '/') . '(\d+)$/', '$1', $n->node_alias ?? ''))
+            ->filter(fn ($i) => $i > 0)
+            ->max() ?? 0;
+
+        return $prefix . ($maxIndex + 1);
+    }
 }

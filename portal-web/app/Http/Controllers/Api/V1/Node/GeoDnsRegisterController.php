@@ -37,10 +37,13 @@ final class GeoDnsRegisterController
         }
 
         // 查找或创建 geodns 节点记录
+        // region 来自 resolver token 对应的节点（如 "kr", "geodns-kr"）
+        $regionCode = strtolower(str_replace('geodns-', '', $resolvedNode->region ?? 'unknown'));
         $node = DnsGeodns::updateOrCreate(
             ['node_code' => $resolvedNode->node_code],
             [
-                'node_alias' => 'geodns-' . Str::lower(Str::random(6)),
+                'node_alias' => DnsGeodns::generateAlias($regionCode),
+                'region' => $resolvedNode->region,
                 'install_status' => 'installed',
                 'last_installed_at' => $validated['installed_at'] ?? now(),
                 'last_listen_addr' => $validated['listen_addr'] ?? null,

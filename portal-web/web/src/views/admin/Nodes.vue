@@ -467,26 +467,30 @@ onMounted(() => {
 .status-summary { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .status-cell { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
 .status-toggle { line-height: 1; }
-.empty-state { padding: 40px 0; text-align: center; color: #64748b; }
+.empty-state { padding: 40px 0; text-align: center; }
 .empty-icon { font-size: 48px; color: #cbd5e1; margin-bottom: 12px; }
-.empty-title { font-size: 16px; font-weight: 600; color: #475569; margin: 0 0 4px; }
-.empty-desc { font-size: 13px; color: #94a3b8; margin: 0; }
+.empty-title { font-size: 16px; font-weight: 600; color: var(--color-text-secondary); margin: 0 0 4px; }
+.empty-desc { font-size: 13px; color: var(--color-text-muted); margin: 0; }
 .name-cell { display: flex; align-items: center; gap: 8px; }
 .node-code {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 13px;
-    color: #1e293b;
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
+    color: var(--color-text);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
     border-radius: 4px;
     padding: 2px 8px;
 }
 
-/* Heartbeat freshness (2026-06-22 单一事实源) */
-.hb-stale { color: #f56c6c; font-weight: 500; }
+/* Action bar */
+.action-bar { white-space: nowrap; display: flex; gap: 4px; align-items: center; }
+
+/* Heartbeat column */
+.hb-col { display: flex; flex-direction: column; line-height: 1.3; }
+.hb-stale { color: var(--color-danger); font-weight: 500; }
 .hb-warn  { color: #e6a23c; font-weight: 500; }
-.hb-none  { color: #94a3b8; }
-.hb-exact { color: #94a3b8; font-size: 12px; }
+.hb-none  { color: var(--color-text-muted); }
+.hb-exact { color: var(--color-text-muted); font-size: 12px; }
 
 /* Token 结果弹窗 */
 .token-result-dialog :deep(.el-dialog__body) {

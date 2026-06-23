@@ -108,8 +108,9 @@ final class AdminGeoDnsController
             $region = 'geodns-' . $region;
         }
 
-        // 别名留空时自动按 {Region}-Scheduler-{序号} 生成
-        $nodeAlias = $validated['node_alias'] ?? (strtoupper(str_replace('geodns-', '', $region)) . '-Scheduler');
+        // 别名留空时自动按 geo-{region_code}-{index} 生成
+        $regionCode = strtolower(str_replace('geodns-', '', $region));
+        $nodeAlias = $validated['node_alias'] ?: DnsGeodns::generateAlias($regionCode);
 
         $node = DnsGeodns::create([
             'node_code' => Str::lower(Str::random(10)),

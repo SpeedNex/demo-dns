@@ -38,16 +38,14 @@ final class OrderController
     /** POST /api/v1/user/orders — 创建订单（套餐购买）*/
     public function create(Request $request): JsonResponse
     {
-        // billing_cycle 优先从顶层取，兜底从 meta.billing_cycle 取（前端会放在 meta 里）
+        // 安全约束：仅允许前端传 plan_code + billing_cycle；金额/币种由后端从 plan_prices 查表得到
         $validated = $request->validate([
             'plan_code' => 'required|string|max:30',
             'description' => 'nullable|string|max:255',
-            'billing_cycle' => 'nullable|string|in:monthly,yearly',
+            'billing_cycle' => 'required|string|in:monthly,yearly',
             'idempotency_key' => 'nullable|string|max:80',
             'meta' => 'sometimes|array',
         ]);
-
-        $billingCycle = $validated['billing_cycle'] ?? ($validated['meta']['billing_cycle'] ?? null);
 
         $userId = (string) $request->user()->uid;
         $idempotencyKey = (string) $request->header('Idempotency-Key', '') !== ''
@@ -55,6 +53,7 @@ final class OrderController
             : (string) ($validated['idempotency_key'] ?? '');
 
         $plan = \App\Models\Plan::where('code', $validated['plan_code'])->first();
+        $billingCycle = $validated['billing_cycle'];
         $price = $plan
             ?->prices()
             ->where('billing_cycle', $billingCycle)
@@ -115,12 +114,12 @@ final class OrderController
             return response()->json(['message' => 'Order is not payable.'], 422);
         }
         $tx = $this->payments->createCheckout($order);
-        $rawPayload = $tx->raw_payload ?? [];
+        $meta = $tx->meta ?? [];
         return response()->json([
             'data' => [
                 'order_id' => (string) $order->id,
                 'payment_transaction_id' => (string) $tx->id,
-                'redirect_url' => $rawPayload['redirect_url'] ?? null,
+                'redirect_url' => $meta['redirect_url'] ?? null,
                 'provider_session_id' => (string) $tx->provider_session_id,
             ],
         ], 201);
