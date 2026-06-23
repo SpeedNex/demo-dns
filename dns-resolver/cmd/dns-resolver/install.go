@@ -522,8 +522,6 @@ func tryResolverStartViaSystemd(opts *installOptions) error {
 	if unitPath == "" {
 		unitPath = "/etc/systemd/system/dns-resolver.service"
 	}
-	configDir := filepath.Dir(opts.ConfigPath)
-
 	// 2026-06-22: 将配置路径转为绝对路径，避免 systemd 工作目录为 / 时找不到配置文件
 	absConfig := opts.ConfigPath
 	if !filepath.IsAbs(absConfig) {
@@ -531,6 +529,8 @@ func tryResolverStartViaSystemd(opts *installOptions) error {
 			absConfig = filepath.Join(wd, absConfig)
 		}
 	}
+	// 2026-06-23: configDir 也从绝对路径派生，避免 systemd WorkingDirectory 要求绝对路径
+	configDir := filepath.Dir(absConfig)
 
 	rendered := strings.NewReplacer(
 		"{{.NodeID}}", opts.NodeID,
@@ -576,8 +576,17 @@ func startResolverViaNohup(opts *installOptions) error {
 		return fmt.Errorf("locate self binary: %w", err)
 	}
 
-	pidFile := filepath.Join(filepath.Dir(opts.ConfigPath), "dns-resolver.pid")
-	logFile := filepath.Join(filepath.Dir(opts.ConfigPath), "dns-resolver.log")
+	// 2026-06-23: 始终使用绝对路径，避免 nohup 进程 CWD 漂移导致找不到配置
+	absConfig := opts.ConfigPath
+	if !filepath.IsAbs(absConfig) {
+		if wd, err := os.Getwd(); err == nil {
+			absConfig = filepath.Join(wd, absConfig)
+		}
+	}
+	configDir := filepath.Dir(absConfig)
+
+	pidFile := filepath.Join(configDir, "dns-resolver.pid")
+	logFile := filepath.Join(configDir, "dns-resolver.log")
 
 	// 避免重复启动:已有 PID 文件且进程活着就直接复用
 	if pid, perr := readResolverPIDFile(pidFile); perr == nil && processResolverAlive(pid) {
@@ -585,7 +594,7 @@ func startResolverViaNohup(opts *installOptions) error {
 		return nil
 	}
 
-	cmd := exec.Command(binary, "--config="+opts.ConfigPath)
+	cmd := exec.Command(binary, "--config="+absConfig)
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 	out, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o640)
 	if err != nil {
