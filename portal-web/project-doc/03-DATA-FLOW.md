@@ -13,6 +13,29 @@
 | **geodns** | Go | 入口调度：健康视图同步、就近路由 | 53(权威)/15354(API) |
 | **clickhouse** | ClickHouse | 日志分析：查询日志存储与统计 | 8123/9000 |
 
+### ⚠️ 强约束：GeoDNS = 调度解析器，不是节点
+
+> **GeoDNS 是调度解析器（Scheduler / Resolver），不是 Node（节点）。**
+> 该约束必须在所有数据库设计、代码实现和文档中严格遵守。
+
+| 维度 | Resolver 节点 | GeoDNS 调度解析器 |
+|------|--------------|-------------------|
+| 数据库表 | `dns_resolver_nodes` | `dns_geodns` |
+| 模型 | `App\Models\Node` | `App\Models\DnsGeodns` |
+| 控制器前缀 | `Node/NodeRegisterController` | `Node/GeoDnsRegisterController` |
+| 数据流向 | 接收用户 DNS 查询，执行规则匹配 | 接收用户 DNS 查询，就近路由到 Resolver |
+| 注册流程 | bearer token 鉴权 → 更新安装状态 → 签发 api_key | bearer token 鉴权 → 更新安装状态 → 签发 api_key |
+| 心跳 | 每 30s 上报，portal-web 健康检测 | 每 30s 上报，portal-web 健康视图聚合 |
+| 关联方式 | 无 | 通过 `region` 字段精确匹配 `dns_resolver_nodes.region` |
+| 表前缀 | `dns_resolver_nodes.*` | `dns_geodns.*` |
+
+**代码实现约束：**
+1. GeoDNS 必须引用 `DnsGeodns` 模型，`$table = 'geodns'`（实际表名 `dns_geodns`）
+2. Resolver 节点必须引用 `Node` 模型，`$table = 'resolver_nodes'`（实际表名 `dns_resolver_nodes`）
+3. 两个模型不得混用，不得通过 `node_id` 关联
+4. 关联查询必须使用 `region` 精确匹配，禁止 `like` 模糊匹配
+5. 新增 API 时必须明确区分操作对象是 Resolver 还是 GeoDNS
+
 ---
 
 ## 2. Resolver 端口定义

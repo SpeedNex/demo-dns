@@ -32,9 +32,9 @@ final class AuthenticateNodeApiKey
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (! Schema::hasColumn('nodes', 'api_key')) {
+        if (! Schema::hasColumn('resolver_nodes', 'api_key')) {
             return new JsonResponse([
-                'error' => ['code' => 'NOT_MIGRATED', 'message' => 'nodes.api_key column not migrated yet'],
+                'error' => ['code' => 'NOT_MIGRATED', 'message' => 'resolver_nodes.api_key column not migrated yet'],
             ], 503);
         }
 

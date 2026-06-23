@@ -12,9 +12,9 @@ use App\Models\TeamMember;
 use App\Models\TeamInvitation;
 use App\Models\ProfileRule;
 use App\Models\ApiKey;
+use App\Models\DnsGeodns;
 use App\Models\Node;
 use App\Models\RuleSource;
-use App\Models\GeoDnsMapping;
 use App\Models\PublishTask;
 use App\Models\SystemConfig;
 use App\Models\Device;
@@ -1199,93 +1199,75 @@ class ApiTest extends TestCase
 
     public function test_301_admin_geo_dns_create()
     {
-        $node = Node::create([
-            'id' => 'nd_geo_' . time(),
-            'node_name' => 'Geo Node',
-            'region' => 'us-east',
-            'public_ipv4' => '1.2.3.4',
-            'status' => 'online',
-        ]);
         $this->callAdminApi('POST', '/api/v1/admin/geo-dns', [
             'country' => 'US',
             'region' => 'us-east',
-            'node_id' => $node->id,
+            'node_alias' => 'US East Geo',
+            'public_ipv4' => '1.2.3.4',
         ], 201);
     }
 
     public function test_302_admin_geo_dns_detail()
     {
-        $node = Node::create([
-            'id' => 'nd_geo2_' . time(),
-            'node_name' => 'Geo Node 2',
-            'region' => 'us-east',
+        $node = DnsGeodns::create([
+            'node_code' => 'nd_geo2_' . time(),
+            'node_alias' => 'Geo Node 2',
+            'region' => 'geodns-us-east',
             'public_ipv4' => '1.2.3.4',
-            'status' => 'online',
+            'install_status' => 'installed',
+            'current_config_version' => 1,
         ]);
-        $geo = GeoDnsMapping::create([
-            'country' => 'CA',
-            'region' => 'ca-east',
-            'node_id' => $node->id,
-            'enabled' => true,
-        ]);
-        $this->callAdminApi('GET', "/api/v1/admin/geo-dns/{$geo->id}", [], 200);
+        $this->callAdminApi('GET', "/api/v1/admin/geo-dns/{$node->id}", [], 200);
     }
 
     public function test_303_admin_geo_dns_update()
     {
-        $node = Node::create([
-            'id' => 'nd_geo3_' . time(),
-            'node_name' => 'Geo Node 3',
-            'region' => 'us-east',
+        $node = DnsGeodns::create([
+            'node_code' => 'nd_geo3_' . time(),
+            'node_alias' => 'Geo Node 3',
+            'region' => 'geodns-us-east',
             'public_ipv4' => '1.2.3.4',
-            'status' => 'online',
+            'install_status' => 'installed',
+            'current_config_version' => 1,
         ]);
-        $geo = GeoDnsMapping::create([
-            'country' => 'MX',
-            'region' => 'mx-east',
-            'node_id' => $node->id,
-            'enabled' => true,
-        ]);
-        $this->callAdminApi('PUT', "/api/v1/admin/geo-dns/{$geo->id}", [
-            'priority' => 50,
+        $this->callAdminApi('PUT', "/api/v1/admin/geo-dns/{$node->id}", [
+            'node_alias' => 'Updated Geo',
         ], 200);
     }
 
     public function test_304_admin_geo_dns_delete()
     {
-        $node = Node::create([
-            'id' => 'nd_geo4_' . time(),
-            'node_name' => 'Geo Node 4',
-            'region' => 'us-east',
+        $node = DnsGeodns::create([
+            'node_code' => 'nd_geo4_' . time(),
+            'node_alias' => 'Geo Node 4',
+            'region' => 'geodns-us-east',
             'public_ipv4' => '1.2.3.4',
-            'status' => 'online',
+            'install_status' => 'installed',
+            'current_config_version' => 1,
         ]);
-        $geo = GeoDnsMapping::create([
-            'country' => 'JP',
-            'region' => 'jp-east',
-            'node_id' => $node->id,
-            'enabled' => true,
-        ]);
-        $this->callAdminApi('DELETE', "/api/v1/admin/geo-dns/{$geo->id}", [], 200);
+        $this->callAdminApi('DELETE', "/api/v1/admin/geo-dns/{$node->id}", [], 200);
     }
 
     public function test_305_admin_geo_dns_batch_destroy()
     {
-        $node = Node::create([
-            'id' => 'nd_geo5_' . time(),
-            'node_name' => 'Geo Node 5',
-            'region' => 'us-east',
+        $node1 = DnsGeodns::create([
+            'node_code' => 'nd_geo5_' . time(),
+            'node_alias' => 'Geo Node 5',
+            'region' => 'geodns-us-east',
             'public_ipv4' => '1.2.3.4',
-            'status' => 'online',
+            'install_status' => 'installed',
+            'current_config_version' => 1,
         ]);
-        $geo = GeoDnsMapping::create([
-            'country' => 'DE',
-            'region' => 'de-east',
-            'node_id' => $node->id,
-            'enabled' => true,
+        $node2 = DnsGeodns::create([
+            'node_code' => 'nd_geo6_' . time(),
+            'node_alias' => 'Geo Node 6',
+            'region' => 'geodns-us-west',
+            'public_ipv4' => '5.6.7.8',
+            'install_status' => 'installed',
+            'current_config_version' => 1,
         ]);
         $this->callAdminApi('POST', '/api/v1/admin/geo-dns/batch-destroy', [
-            'ids' => [$geo->id],
+            'ids' => [$node1->id, $node2->id],
         ], 200);
     }
 

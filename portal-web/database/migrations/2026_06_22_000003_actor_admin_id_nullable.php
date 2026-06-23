@@ -22,9 +22,12 @@ return new class extends Migration {
         }
 
         // 1) 解除 FK（避免修改可空性时 MySQL 8 触发 3780 错误）
-        Schema::table('admin_audit_logs', function (Blueprint $table) {
-            $table->dropForeign('fk_audit_actor');
-        });
+        // SQLite 不支持 dropForeign，仅在 MySQL 执行
+        if (DB::connection()->getDriverName() === 'mysql') {
+            Schema::table('admin_audit_logs', function (Blueprint $table) {
+                $table->dropForeign('fk_audit_actor');
+            });
+        }
 
         // 2) 改列为 nullable
         Schema::table('admin_audit_logs', function (Blueprint $table) {
@@ -32,11 +35,13 @@ return new class extends Migration {
         });
 
         // 3) 重建 FK（这次允许 NULL 端点）
-        Schema::table('admin_audit_logs', function (Blueprint $table) {
-            $table->foreign('actor_admin_id', 'fk_audit_actor')
-                ->references('admin_id')->on('admins')
-                ->restrictOnDelete()->cascadeOnUpdate();
-        });
+        if (DB::connection()->getDriverName() === 'mysql') {
+            Schema::table('admin_audit_logs', function (Blueprint $table) {
+                $table->foreign('actor_admin_id', 'fk_audit_actor')
+                    ->references('admin_id')->on('admins')
+                    ->restrictOnDelete()->cascadeOnUpdate();
+            });
+        }
     }
 
     public function down(): void
@@ -45,16 +50,20 @@ return new class extends Migration {
             return;
         }
 
-        Schema::table('admin_audit_logs', function (Blueprint $table) {
-            $table->dropForeign('fk_audit_actor');
-        });
+        if (DB::connection()->getDriverName() === 'mysql') {
+            Schema::table('admin_audit_logs', function (Blueprint $table) {
+                $table->dropForeign('fk_audit_actor');
+            });
+        }
         Schema::table('admin_audit_logs', function (Blueprint $table) {
             $table->unsignedBigInteger('actor_admin_id')->nullable(false)->change();
         });
-        Schema::table('admin_audit_logs', function (Blueprint $table) {
-            $table->foreign('actor_admin_id', 'fk_audit_actor')
-                ->references('admin_id')->on('admins')
-                ->restrictOnDelete()->cascadeOnUpdate();
-        });
+        if (DB::connection()->getDriverName() === 'mysql') {
+            Schema::table('admin_audit_logs', function (Blueprint $table) {
+                $table->foreign('actor_admin_id', 'fk_audit_actor')
+                    ->references('admin_id')->on('admins')
+                    ->restrictOnDelete()->cascadeOnUpdate();
+            });
+        }
     }
 };

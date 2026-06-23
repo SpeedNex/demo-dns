@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Domain\Billing\PlanCatalogService;
+use App\Models\Node;
 use App\Models\Plan;
 use App\Models\PolicySnapshot;
-use App\Models\ResolverNode;
 use App\Models\User;
 use App\Domain\Node\NodeRegistryService;
 use App\Domain\Policy\PolicyPublisher;
@@ -17,6 +17,8 @@ use Illuminate\Http\Request;
 
 /**
  * UI.md #61 / #62 / #63 — 策略闭环 admin 接口。
+ *
+ * 2026-06-23: 使用 Node 模型，通过 region 字段区分 resolver 节点。
  */
 final class AdminPolicyController
 {
@@ -24,10 +26,11 @@ final class AdminPolicyController
     {
         $latestVersion = (int) (PolicySnapshot::where('status', PolicySnapshot::STATUS_PUBLISHED)->max('version') ?? 0);
         $fleet = app(NodeRegistryService::class)->fleetStats($latestVersion);
-        $rows = ResolverNode::query()
+        $rows = Node::query()
+            ->where('region', 'like', 'resolver-%')
             ->orderBy('node_code')
             ->get()
-            ->map(fn (ResolverNode $n) => [
+            ->map(fn (Node $n) => [
                 'node_id' => $n->node_code,
                 'node_name' => $n->node_alias,
                 'region' => $n->region,

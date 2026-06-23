@@ -5,18 +5,25 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Models\AdminAuditLog;
-use App\Models\GeoDnsMapping;
-use App\Models\GeoDnsNode;
-use App\Models\ResolverNode;
+use App\Models\DnsGeodns;
+use App\Models\Node;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
+/**
+ * GeoDNS 调度解析器管理（2026-06-23 重构）
+ *
+ * 【强约束】GeoDNS 是调度解析器（Scheduler / Resolver），不是节点。
+ * GeoDNS 存放在独立的 dns_geodns 表中。
+ * Resolver 节点存放在 dns_resolver_nodes 表中。
+ * 关联通过 region 地区精确匹配。
+ */
 final class AdminGeoDnsController
 {
     public function index(Request $request): JsonResponse
     {
-        $query = GeoDnsMapping::query()->with('node');
+        $query = DnsGeodns::query();
 
         if ($request->filled('country')) {
             $query->where('country', strtoupper((string) $request->input('country')));
@@ -26,92 +33,59 @@ final class AdminGeoDnsController
             $query->where('region', 'like', '%' . $request->input('region') . '%');
         }
 
-        if ($request->filled('enabled')) {
-            $query->where('enabled', filter_var($request->input('enabled'), FILTER_VALIDATE_BOOLEAN));
-        }
+        $nodes = $query->orderBy('region', 'desc')->get()->map(function (DnsGeodns $node): array {
+            return [
+                'id' => $node->id,
+                'node_code' => $node->node_code,
+                'node_alias' => $node->node_alias,
+                'region' => $node->region,
+                'country' => $node->country,
+                'city' => $node->city,
+                'domain' => $node->domain,
+                'public_ipv4' => $node->public_ipv4,
+                'public_ipv6' => $node->public_ipv6,
+                'weight' => $node->weight,
+                'status' => $node->install_status === 'installed' ? 'online' : 'offline',
+                'node_count' => 1,
+                'node_status' => $node->install_status === 'installed' ? 'online' : 'offline',
+                'node_last_heartbeat_at' => $node->last_heartbeat_at?->toIso8601String(),
+                'node_last_seen_ago' => $node->last_heartbeat_at?->diffForHumans(now(), ['short' => true]),
+                'install_status' => $node->install_status,
+                'node_heartbeat_stale' => ! ($node->install_status === 'installed' && $node->last_heartbeat_at?->gt(now()->subSeconds(90))),
+                'created_at' => $node->created_at?->toIso8601String(),
+                'updated_at' => $node->updated_at?->toIso8601String(),
+                'is_orphan' => false,
+            ];
+        })->all();
 
-        // 2026-06-22: 统计每个地区的 DNS 节点数（使用 ResolverNode 表）
-        $dnsNodeCounts = ResolverNode::query()
+        // 统计 resolver 节点数按地区分组
+        $resolverCounts = Node::query()
+            ->where('region', 'like', 'resolver-%')
             ->whereNotNull('region')
             ->groupBy('region')
             ->selectRaw('region, COUNT(*) as count')
             ->pluck('count', 'region')
             ->all();
 
-        // 2026-06-22: 单一事实源 — "是否在线/降级/离线"全部从 $mapping->runtimeStatus() 取（已 drop 的 nodes.status 不再读）。
-        $mappings = $query->orderBy('server_id', 'desc')->get()->map(function (GeoDnsMapping $mapping) use ($dnsNodeCounts): array {
-            $row = $this->presentMapping($mapping);
-            $row['node_count'] = 1;
-            $row['node_status'] = $mapping->node?->runtimeStatus();
-            $row['node_last_heartbeat_at'] = $mapping->node?->last_heartbeat_at?->toIso8601String();
-            $row['node_last_seen_ago'] = $mapping->node?->lastSeenAgo();
-            $row['install_status'] = $mapping->target_node_id ? ($mapping->node?->install_status ?? 'installed') : 'not_installed';
-            $row['node_heartbeat_stale'] = ! ($mapping->node?->isOnline() ?? false);
-            // 4 档: not_installed / online / degraded / offline
-            $row['status'] = $mapping->runtimeStatus();
-            // DNS 节点数：按地区统计
-            $row['dns_node_count'] = $dnsNodeCounts[$mapping->region] ?? 0;
-
-            return $row;
-        })->all();
-
-        // 2026-06-22 P0#1: 已安装的 geodns 节点若未在 geo_dns_mappings
-        // 创建映射（例如通过 geodns-install.sh 直接安装，或 mapping 被误删），
-        // 会导致 /admin/geo-dns 列表看不到这些节点。补上"已存在但无 mapping"的 fallback 行。
-        $mappedNodeIds = GeoDnsMapping::query()
-            ->whereNotNull('target_node_id')
-            ->pluck('target_node_id')
-            ->all();
-        $orphanNodes = \App\Models\Node::query()
-            ->where('node_type', 'geodns')
-            ->whereNotIn('node_id', $mappedNodeIds)
-            ->orderByDesc('node_id')
-            ->get();
-        foreach ($orphanNodes as $node) {
-            $mappings[] = [
-                'id' => 'orphan-node-' . $node->node_id,
-                'domain' => '',
-                'country' => null,
-                'region' => $node->region ?? '',
-                'target_node_id' => $node->node_id,
-                'node_id' => $node->node_id,
-                'node_code' => $node->node_code,
-                'node_name' => $node->node_name,
-                'node_alias' => $node->node_alias ?? null,
-                'public_ipv4' => $node->public_ipv4,
-                'target_endpoint' => null,
-                'priority' => 0,
-                'weight' => 0,
-                // 2026-06-22: orphan 节点 is_orphan=true (装了没建 mapping)，按节点自身 runtimeStatus() 走。
-                'enabled' => $node->isOnline(),
-                'created_at' => $node->created_at?->toIso8601String(),
-                'updated_at' => $node->updated_at?->toIso8601String(),
-                'node_count' => 1,
-                'node_status' => $node->runtimeStatus(),
-                'node_last_heartbeat_at' => $node->last_heartbeat_at?->toIso8601String(),
-                'node_last_seen_ago' => $node->lastSeenAgo(),
-                'node_heartbeat_stale' => ! $node->isOnline(),
-                'install_status' => 'installed',
-                'status' => $node->runtimeStatus(),
-                'is_orphan' => true,
-            ];
+        // 添加 resolver 统计
+        foreach ($nodes as &$row) {
+            $row['dns_node_count'] = $resolverCounts[$row['region']] ?? 0;
         }
 
         return response()->json([
-            'data' => $mappings,
+            'data' => $nodes,
             'meta' => [
-                'total' => count($mappings),
-                'enabled' => count(array_filter($mappings, fn (array $m): bool => (bool) $m['enabled'])),
+                'total' => count($nodes),
+                'enabled' => count(array_filter($nodes, fn (array $m): bool => $m['status'] === 'online')),
             ],
         ]);
     }
 
     public function show(string $id): JsonResponse
     {
-        $mapping = GeoDnsMapping::with('node')->findOrFail($id);
-        $row = $this->presentMapping($mapping);
+        $node = DnsGeodns::query()->findOrFail($id);
 
-        return response()->json(['data' => $row]);
+        return response()->json(['data' => $this->presentNode($node)]);
     }
 
     public function store(Request $request): JsonResponse
@@ -120,106 +94,100 @@ final class AdminGeoDnsController
         $validated = $request->validate([
             'country' => 'nullable|string|size:2',
             'region' => 'required|string|max:80',
-            'node_id' => 'nullable|exists:nodes,node_id',
-            'node_name' => 'nullable|string|max:100',
-            'public_ipv4' => 'nullable|string|max:45',
             'node_alias' => 'nullable|string|max:100',
-            'target_endpoint' => 'nullable|string|max:255',
-            'priority' => 'integer|min:0|max:1000',
+            'domain' => 'nullable|string|max:255',
+            'public_ipv4' => 'nullable|string|max:45',
+            'public_ipv6' => 'nullable|string|max:64',
             'weight' => 'integer|min:0|max:10000',
             'enabled' => 'boolean',
         ]);
 
-        // 2026-06-22: 别名留空时自动按 geodns-{6位随机} 生成
-        if (blank($validated['node_alias'] ?? null)) {
-            $validated['node_alias'] = 'geodns-' . Str::lower(Str::random(6));
+        // 确保 region 以 'geodns-' 开头
+        $region = $validated['region'];
+        if (! str_starts_with($region, 'geodns-')) {
+            $region = 'geodns-' . $region;
         }
 
-        $node = $this->resolveNode($validated['node_id'] ?? null, $validated['node_name'] ?? null);
+        // 别名留空时自动按 geodns-{6位随机} 生成
+        $nodeAlias = $validated['node_alias'] ?? ('geodns-' . Str::lower(Str::random(6)));
 
-        // 如果没有关联节点，自动创建一个 GeoDNS 节点
-        if (! $node) {
-            $node = GeoDnsNode::create([
-                'node_alias' => $validated['node_alias'] ?? 'geodns-' . Str::lower(Str::random(6)),
-                'region' => $validated['region'],
-                'public_ipv4' => $validated['public_ipv4'] ?? null,
-                'node_type' => 'geodns',
-                // 2026-06-22: 单一事实源 — status 列已 drop，不再写 status=pending。新建节点默认 install_status=pending。
-                'install_status' => 'pending',
-            ]);
-        }
-
-        $mapping = GeoDnsMapping::create([
-            'domain' => $request->input('domain', 'resolver.ocerlink.com'),
-            'country' => isset($validated['country']) ? strtoupper($validated['country']) : strtoupper((string) $request->input('country', '*')),
-            'region' => $validated['region'],
-            'target_node_id' => $node?->node_id,
-            'node_name' => $validated['node_name'] ?? $node?->node_name,
-            'public_ipv4' => $validated['public_ipv4'] ?? $node?->public_ipv4,
-            'node_alias' => $validated['node_alias'] ?? null,
-            'target_endpoint' => $validated['target_endpoint'] ?? null,
-            'priority' => $validated['priority'] ?? 0,
+        $node = DnsGeodns::create([
+            'node_code' => 'nd_' . Str::lower(Str::random(10)),
+            'node_alias' => $nodeAlias,
+            'region' => $region,
+            'country' => isset($validated['country']) ? strtoupper($validated['country']) : null,
+            'domain' => $validated['domain'] ?? null,
+            'public_ipv4' => $validated['public_ipv4'] ?? null,
+            'public_ipv6' => $validated['public_ipv6'] ?? null,
             'weight' => $validated['weight'] ?? 100,
-            'enabled' => $validated['enabled'] ?? true,
+            'install_status' => 'pending',
+            'desired_config_version' => 1,
+            'current_config_version' => 0,
         ]);
 
-        AdminAuditLog::record('geo_dns.create', 'geo_dns_mapping', $mapping->server_id, $this->presentMapping($mapping->fresh('node')), $actorId, null, $request->ip(), $request->userAgent());
+        AdminAuditLog::record('geo_dns.create', 'node', (string) $node->id, $this->presentNode($node), $actorId, null, $request->ip(), $request->userAgent());
 
-        return response()->json(['data' => $this->presentMapping($mapping->fresh('node'))], 201);
+        return response()->json(['data' => $this->presentNode($node)], 201);
     }
 
     public function update(Request $request, string $id): JsonResponse
     {
         $actorId = $request->user()?->admin_id;
-        $mapping = GeoDnsMapping::findOrFail($id);
+        $node = DnsGeodns::query()->findOrFail($id);
 
         $validated = $request->validate([
             'country' => 'nullable|string|size:2',
-            'region' => 'string|max:80',
-            'node_id' => 'nullable|exists:nodes,node_id',
-            'node_name' => 'nullable|string|max:100',
-            'public_ipv4' => 'nullable|string|max:45',
+            'region' => 'nullable|string|max:80',
             'node_alias' => 'nullable|string|max:100',
-            'target_endpoint' => 'nullable|string|max:255',
-            'priority' => 'integer|min:0|max:1000',
-            'weight' => 'integer|min:0|max:10000',
+            'domain' => 'nullable|string|max:255',
+            'public_ipv4' => 'nullable|string|max:45',
+            'public_ipv6' => 'nullable|string|max:64',
+            'weight' => 'nullable|integer|min:0|max:10000',
             'enabled' => 'boolean',
         ]);
 
-        $payload = $validated;
-
-        if (array_key_exists('country', $payload) && $payload['country'] !== null) {
-            $payload['country'] = strtoupper($payload['country']);
+        $payload = [];
+        if (isset($validated['region'])) {
+            $region = $validated['region'];
+            if (! str_starts_with($region, 'geodns-')) {
+                $region = 'geodns-' . $region;
+            }
+            $payload['region'] = $region;
+        }
+        if (array_key_exists('country', $validated)) {
+            $payload['country'] = $validated['country'] !== null ? strtoupper($validated['country']) : null;
+        }
+        if (array_key_exists('node_alias', $validated)) {
+            $payload['node_alias'] = $validated['node_alias'];
+        }
+        if (array_key_exists('domain', $validated)) {
+            $payload['domain'] = $validated['domain'];
+        }
+        if (array_key_exists('public_ipv4', $validated)) {
+            $payload['public_ipv4'] = $validated['public_ipv4'];
+        }
+        if (array_key_exists('public_ipv6', $validated)) {
+            $payload['public_ipv6'] = $validated['public_ipv6'];
+        }
+        if (array_key_exists('weight', $validated)) {
+            $payload['weight'] = $validated['weight'];
         }
 
-        if (array_key_exists('node_id', $payload)) {
-            $node = $this->resolveNode($payload['node_id'], $payload['node_name'] ?? null);
-            $payload['target_node_id'] = $node?->node_id;
-            $payload['node_name'] = $payload['node_name'] ?? $node?->node_name;
-            $payload['public_ipv4'] = $payload['public_ipv4'] ?? $node?->public_ipv4;
-            unset($payload['node_id']);
-        }
+        $node->update($payload);
 
-        $mapping->update($payload);
+        AdminAuditLog::record('geo_dns.update', 'node', (string) $node->id, $this->presentNode($node->fresh()), $actorId, null, $request->ip(), $request->userAgent());
 
-        AdminAuditLog::record('geo_dns.update', 'geo_dns_mapping', $id, $this->presentMapping($mapping->fresh('node')), $actorId, null, $request->ip(), $request->userAgent());
-
-        return response()->json(['data' => $this->presentMapping($mapping->fresh('node'))]);
+        return response()->json(['data' => $this->presentNode($node->fresh())]);
     }
 
     public function destroy(Request $request, string $id): JsonResponse
     {
         $actorId = $request->user()?->admin_id;
-        $mapping = GeoDnsMapping::findOrFail($id);
+        $node = DnsGeodns::query()->findOrFail($id);
 
-        $targetNodeId = $mapping->target_node_id;
-        $mapping->delete();
+        $node->delete();
 
-        if ($targetNodeId) {
-            GeoDnsNode::query()->where('node_id', $targetNodeId)->delete();
-        }
-
-        AdminAuditLog::record('geo_dns.delete', 'geo_dns_mapping', $id, [], $actorId, null, $request->ip(), $request->userAgent());
+        AdminAuditLog::record('geo_dns.delete', 'node', $id, [], $actorId, null, $request->ip(), $request->userAgent());
 
         return response()->json(['data' => ['id' => $id, 'deleted' => true]]);
     }
@@ -232,53 +200,62 @@ final class AdminGeoDnsController
             'ids.*' => 'required',
         ]);
 
-        $targetNodeIds = GeoDnsMapping::whereIn('server_id', $validated['ids'])
-            ->whereNotNull('target_node_id')
-            ->pluck('target_node_id')
-            ->all();
+        $count = DnsGeodns::query()
+            ->whereIn('id', $validated['ids'])
+            ->delete();
 
-        $count = GeoDnsMapping::whereIn('server_id', $validated['ids'])->delete();
-
-        if (! empty($targetNodeIds)) {
-            GeoDnsNode::query()->whereIn('node_id', $targetNodeIds)->delete();
-        }
-
-        AdminAuditLog::record('geo_dns.batch_delete', 'geo_dns_mapping', null, ['ids' => $validated['ids'], 'count' => $count], $actorId, null, $request->ip(), $request->userAgent());
+        AdminAuditLog::record('geo_dns.batch_delete', 'node', null, ['ids' => $validated['ids'], 'count' => $count], $actorId, null, $request->ip(), $request->userAgent());
 
         return response()->json(['data' => ['deleted' => $count]]);
     }
 
     /**
-     * 一键插入 GeoDNS 演示数据：4 个节点（local + CN/US/EU）+ 6 条国家映射。
-     * 已存在的 node_code / (domain, country, region) 组合会被跳过，不重复插入。
+     * 一键插入 GeoDNS 演示数据：4 个调度解析器。
      */
     public function seedDemo(Request $request): JsonResponse
     {
         $actorId = $request->user()?->admin_id;
-        $seeder = app(\Database\Seeders\GeoDnsDemoSeeder::class);
-        $seeder->setContainer(app());
-        $seeder->setCommand($this->commandForSeeder());
-        $seeder->run();
 
-        $createdNodes = \App\Models\Node::query()->whereIn('node_code', ['nd_local_mac', 'nd_cn_shanghai', 'nd_us_silicon', 'nd_eu_frankfurt'])->get(['node_id', 'node_code']);
-        $createdMappings = GeoDnsMapping::query()->where('domain', 'resolver.ocerlink.com')->get(['server_id', 'country', 'region', 'target_node_id']);
+        $demoNodes = [
+            ['region' => 'geodns-local', 'country' => 'CN', 'city' => 'Shanghai', 'alias' => 'Local Mac'],
+            ['region' => 'geodns-cn', 'country' => 'CN', 'city' => 'Shanghai', 'alias' => 'CN Shanghai'],
+            ['region' => 'geodns-us', 'country' => 'US', 'city' => 'Silicon Valley', 'alias' => 'US Silicon'],
+            ['region' => 'geodns-eu', 'country' => 'DE', 'city' => 'Frankfurt', 'alias' => 'EU Frankfurt'],
+        ];
 
-        AdminAuditLog::record('geo_dns.seed_demo', 'geo_dns_mapping', null, [
-            'nodes' => $createdNodes->pluck('node_code')->all(),
-            'mappings' => $createdMappings->count(),
+        $created = [];
+        foreach ($demoNodes as $demo) {
+            $node = DnsGeodns::updateOrCreate(
+                ['node_alias' => $demo['alias']],
+                [
+                    'node_code' => 'nd_' . Str::lower(Str::random(8)),
+                    'region' => $demo['region'],
+                    'country' => $demo['country'],
+                    'city' => $demo['city'],
+                    'domain' => 'resolver.ocerlink.com',
+                    'public_ipv4' => '127.0.0.1',
+                    'install_status' => 'installed',
+                    'desired_config_version' => 1,
+                    'current_config_version' => 1,
+                    'last_heartbeat_at' => now(),
+                ],
+            );
+            $created[] = $node;
+        }
+
+        AdminAuditLog::record('geo_dns.seed_demo', 'node', null, [
+            'nodes' => count($created),
         ], $actorId, null, $request->ip(), $request->userAgent());
 
         return response()->json([
             'data' => [
-                'nodes' => $createdNodes->toArray(),
-                'mappings' => $createdMappings->toArray(),
+                'nodes' => array_map(fn (DnsGeodns $n) => ['id' => $n->id, 'node_code' => $n->node_code, 'region' => $n->region], $created),
             ],
         ]);
     }
 
     /**
-     * 创建或获取「本地」节点（用于本地调试 / GeoDNS 路由）。
-     * 返回固定 node_code = nd_local_mac，便于在 GeoDNS 映射里引用。
+     * 创建或获取「本地」调度解析器（用于本地调试 / GeoDNS 路由）。
      */
     public function bindLocalNode(Request $request): JsonResponse
     {
@@ -288,88 +265,60 @@ final class AdminGeoDnsController
             'public_ipv6' => 'nullable|string|max:64',
         ]);
 
-        $node = \App\Models\Node::query()->firstOrCreate(
+        $node = DnsGeodns::updateOrCreate(
             ['node_code' => 'nd_local_mac'],
             [
                 'node_alias' => 'Local Mac',
-                'region' => 'local',
+                'region' => 'geodns-local',
                 'country' => 'CN',
                 'city' => 'Shanghai',
+                'domain' => 'resolver.ocerlink.com',
                 'public_ipv4' => $validated['public_ipv4'] ?? '127.0.0.1',
                 'public_ipv6' => $validated['public_ipv6'] ?? null,
-                // 2026-06-22: 单一事实源 — status 列已 drop，不再写 status=online。runtimeStatus() 看 last_heartbeat_at。
                 'supported_protocols' => ['doh', 'dot', 'udp'],
-                'current_config_version' => 0,
+                'install_status' => 'installed',
+                'current_config_version' => 1,
                 'desired_config_version' => 1,
+                'last_heartbeat_at' => now(),
             ],
         );
 
-        // 同步 IPv4/IPv6（如果传了）
+        // 同步 IPv4/IPv6
         $updates = [];
         if (! empty($validated['public_ipv4'])) $updates['public_ipv4'] = $validated['public_ipv4'];
         if (! empty($validated['public_ipv6'])) $updates['public_ipv6'] = $validated['public_ipv6'];
         if ($updates) $node->update($updates);
 
-        // 自动创建一条 LOCAL → local node 的映射
-        $mapping = GeoDnsMapping::query()->updateOrCreate(
-            ['domain' => 'resolver.ocerlink.com', 'country' => 'LOCAL', 'region' => 'local'],
-            [
-                'target_node_id' => (int) $node->node_id,
-                'node_name' => $node->node_name,
-                'public_ipv4' => $node->public_ipv4,
-                'priority' => 5,
-                'weight' => 200,
-                'enabled' => true,
-            ],
-        );
-
-        AdminAuditLog::record('geo_dns.bind_local_node', 'node', (string) $node->node_id, [
+        AdminAuditLog::record('geo_dns.bind_local_node', 'node', (string) $node->id, [
             'node_code' => $node->node_code,
-            'mapping_id' => $mapping->server_id,
+            'region' => $node->region,
         ], $actorId, null, $request->ip(), $request->userAgent());
 
-        $row = $node->fresh()->toArray();
-        $row['mapping_id'] = $mapping->server_id;
-
-        return response()->json(['data' => $row]);
+        return response()->json(['data' => $this->presentNode($node->fresh())]);
     }
 
-    private function commandForSeeder(): \Illuminate\Console\Command
+    private function presentNode(DnsGeodns $node): array
     {
-        // 给 seeder 一个无操作的 command 桩，避免它内部用 $this->command 输出报错
-        $command = new \Illuminate\Console\Command('seed');
-        $output = new \Illuminate\Console\OutputStyle(
-            new \Symfony\Component\Console\Input\StringInput(''),
-            new \Symfony\Component\Console\Output\NullOutput(),
-        );
-        $command->setOutput($output);
-
-        return $command;
-    }
-
-    private function resolveNode(string|int|null $nodeId, ?string $nodeName): ?GeoDnsNode
-    {
-        if ($nodeId !== null && $nodeId !== '') {
-            return GeoDnsNode::query()->find($nodeId);
-        }
-
-        if ($nodeName !== null && $nodeName !== '') {
-            return GeoDnsNode::query()
-                ->where('node_alias', $nodeName)
-                ->first();
-        }
-
-        return null;
-    }
-
-    private function presentMapping(GeoDnsMapping $mapping): array
-    {
-        $row = $mapping->toArray();
-        $row['node_id'] = $mapping->target_node_id;
-        $row['node_name'] = $mapping->node_name ?? $mapping->node?->node_name;
-        $row['node_code'] = $mapping->node?->node_code;
-        $row['public_ipv4'] = $mapping->public_ipv4 ?? $mapping->node?->public_ipv4;
-
-        return $row;
+        return [
+            'id' => $node->id,
+            'node_code' => $node->node_code,
+            'node_alias' => $node->node_alias,
+            'region' => $node->region,
+            'country' => $node->country,
+            'city' => $node->city,
+            'domain' => $node->domain,
+            'public_ipv4' => $node->public_ipv4,
+            'public_ipv6' => $node->public_ipv6,
+            'weight' => $node->weight,
+            'status' => $node->install_status === 'installed' ? 'online' : 'offline',
+            'install_status' => $node->install_status,
+            'node_count' => 1,
+            'node_status' => $node->install_status === 'installed' ? 'online' : 'offline',
+            'node_last_heartbeat_at' => $node->last_heartbeat_at?->toIso8601String(),
+            'node_last_seen_ago' => $node->last_heartbeat_at?->diffForHumans(now(), ['short' => true]),
+            'node_heartbeat_stale' => ! ($node->install_status === 'installed' && $node->last_heartbeat_at?->gt(now()->subSeconds(90))),
+            'created_at' => $node->created_at?->toIso8601String(),
+            'updated_at' => $node->updated_at?->toIso8601String(),
+        ];
     }
 }

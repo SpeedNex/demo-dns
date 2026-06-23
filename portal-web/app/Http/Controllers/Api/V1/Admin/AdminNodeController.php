@@ -199,15 +199,15 @@ final class AdminNodeController
                 ->update(['scopes' => json_encode($validated['scopes'])]);
         }
 
-        AdminAuditLog::record('node.token_issue', 'node_token', (string) $node->node_id, ['node_id' => $nodeId], $actorId !== null ? (string) $actorId : null, null, $request->ip(), $request->userAgent());
+        AdminAuditLog::record('node.token_issue', 'node_token', (string) $node->id, ['node_id' => $nodeId], $actorId !== null ? (string) $actorId : null, null, $request->ip(), $request->userAgent());
 
         return response()->json([
             'data' => [
-                'id' => (string) $node->node_id,
+                'id' => (string) $node->id,
                 'token_prefix' => $result['prefix'],
                 'api_key' => $result['token'],
                 'hmac_secret' => $result['hmac_secret'] ?? '',
-                'node_id' => $node->node_code,
+                'node_code' => $node->node_code,
                 'expires_at' => optional($result['expires_at'])?->toIso8601String(),
             ],
         ], 201)

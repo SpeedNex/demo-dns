@@ -9,8 +9,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Node extends Model
 {
-    protected $primaryKey = 'node_id';
-
     protected static function booted(): void
     {
         static::creating(function (self $node): void {
@@ -20,9 +18,9 @@ class Node extends Model
         });
     }
 
-    protected $table = 'nodes';
+    protected $table = 'resolver_nodes';
     protected $fillable = [
-        'node_code', 'node_type', 'domain', 'region', 'city', 'weight', 'capacity_qps',
+        'node_code', 'domain', 'region', 'city', 'weight', 'capacity_qps',
         'public_ipv4', 'public_ipv6', 'supported_protocols',
         'desired_config_version', 'current_config_version',
         'last_heartbeat_at', 'last_log_flush_at', 'meta', 'created_by_admin_id',
@@ -41,11 +39,6 @@ class Node extends Model
         'desired_config_version' => 'integer',
         'current_config_version' => 'integer',
     ];
-
-    public function getRouteKeyName(): string
-    {
-        return 'node_code';
-    }
 
     public function getNodeNameAttribute(): ?string
     {
@@ -78,20 +71,16 @@ class Node extends Model
     // 旧设计：nodes.status 列由 HeartbeatController 写 online，由 cron 写 offline，
     //         任何读它的脚本都有 race / 漂移风险。
     // 新设计：status 列已 drop，所有"在线/离线/降级"都从这里实时计算：
-    //   - getHeartbeatStaleSeconds()  阈值（按 node_type 分）
+    //   - getHeartbeatStaleSeconds()  阈值（统一 90 秒）
     //   - isOnline() / isDegraded()   布尔谓词（用于 Query Builder、告警）
     //   - runtimeStatus()             4 档字符串（用于 JSON 响应、UI）
     // 任何时候任何人读，结论都一致；无需 cron、无需 MarkOfflineCommand。
     // =========================================================================
 
-    /** 心跳超时阈值（秒），按 node_type 分，geodns 心跳快（10s）→ 阈值小，resolver 30s → 阈值大。 */
+    /** 心跳超时阈值（秒），统一使用 90 秒。 */
     public function getHeartbeatStaleSeconds(): int
     {
-        return match ($this->node_type) {
-            'geodns'   => (int) env('NODE_HEARTBEAT_STALE_SECONDS_GEODNS', 30),
-            'resolver' => (int) env('NODE_HEARTBEAT_STALE_SECONDS', 90),
-            default    => (int) env('NODE_HEARTBEAT_STALE_SECONDS', 90),
-        };
+        return (int) env('NODE_HEARTBEAT_STALE_SECONDS', 90);
     }
 
     /** 心跳新鲜 = 真正在岗。 */

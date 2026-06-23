@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class NodeToken extends Model
 {
-    protected $table = 'node_tokens';
+    protected $table = 'resolver_node_tokens';
     protected $hidden = ['token_hash', 'hmac_key_hash', 'hmac_secret_encrypted'];
 
     protected static function booted(): void

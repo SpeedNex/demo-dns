@@ -11,15 +11,14 @@ use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * 节点 API 请求/错误日志中间件（2026-06-22 新增）
+ * 节点 API 请求/错误日志中间件（2026-06-23 改造）
  *
  * 记录所有 /api/v1/node/* 和 /api/v1/internal/* 请求：
  *   - method / path / status / latency_ms
- *   - token 前缀（脱敏） / node_id（解析自 token）
+ *   - token 前缀（脱敏） / node_code / region
  *   - 异常时记录 error 堆栈
  *
  * 输出到独立 channel `node_api`（daily 滚动，storage/logs/node-api-{date}.log）
- * tail -f storage/logs/node-api-$(date +%Y-%m-%d).log 即可实时观察所有节点调用。
  */
 final class ApiRequestLog
 {
@@ -41,7 +40,7 @@ final class ApiRequestLog
                 'method' => $request->method(),
                 'path' => $request->path(),
                 'token_prefix' => $this->tokenPrefix($request),
-                'node_id' => $this->nodeId($request),
+                'node_code' => $this->nodeCode($request),
                 'status' => 500,
                 'latency_ms' => $latencyMs,
                 'exception' => get_class($e),
@@ -59,8 +58,8 @@ final class ApiRequestLog
             'method' => $request->method(),
             'path' => $request->path(),
             'token_prefix' => $this->tokenPrefix($request),
-            'node_id' => $this->nodeId($request),
-            'node_type' => $this->nodeType($request),
+            'node_code' => $this->nodeCode($request),
+            'region' => $this->nodeRegion($request),
             'status' => $status,
             'latency_ms' => $latencyMs,
             'remote_addr' => $request->ip(),
@@ -94,7 +93,7 @@ final class ApiRequestLog
         return substr($bearer, 0, 8) . '***';
     }
 
-    private function nodeId(Request $request): ?string
+    private function nodeCode(Request $request): ?string
     {
         $node = $request->attributes->get('node');
         if ($node instanceof Node) {
@@ -103,11 +102,11 @@ final class ApiRequestLog
         return null;
     }
 
-    private function nodeType(Request $request): ?string
+    private function nodeRegion(Request $request): ?string
     {
         $node = $request->attributes->get('node');
         if ($node instanceof Node) {
-            return $node->node_type;
+            return $node->region;
         }
         return null;
     }

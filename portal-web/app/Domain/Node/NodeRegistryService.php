@@ -10,7 +10,8 @@ use Illuminate\Support\Carbon;
 /**
  * UI.md #48 / #61 — Resolver 节点注册/心跳/版本同步。
  *
- * 2026-06-22: 统一使用 dns_nodes 表，字段映射到 Node Model。
+ * 2026-06-23: 删除 node_type 字段，节点类型由 region 字段区分。
+ * resolver 节点 region 以 'resolver-' 开头。
  */
 final class NodeRegistryService
 {
@@ -23,9 +24,8 @@ final class NodeRegistryService
         return Node::updateOrCreate(
             ['node_code' => $nodeCode],
             [
-                'node_type' => 'resolver',
                 'name' => $nodeName,
-                'region' => $region,
+                'region' => $region ?? 'resolver-default',
                 'public_ipv4' => $ip,
                 'install_status' => 'installed',
                 'last_heartbeat_at' => Carbon::now(),
@@ -55,14 +55,15 @@ final class NodeRegistryService
      */
     public function fleetStats(int $latestPublishedVersion): array
     {
-        $total = Node::where('node_type', 'resolver')->count();
-        $online = Node::online()->where('node_type', 'resolver')->count();
-        $offline = Node::where('node_type', 'resolver')->where(function ($q) {
+        $total = Node::query()->where('region', 'like', 'resolver-%')->count();
+        $online = Node::online()->where('region', 'like', 'resolver-%')->count();
+        $offline = Node::query()->where('region', 'like', 'resolver-%')->where(function ($q) {
             $q->whereNull('last_heartbeat_at')
               ->orWhere('last_heartbeat_at', '<=', now()->subSeconds(180));
         })->count();
         $error = 0;
-        $out_of_sync = Node::where('node_type', 'resolver')
+        $out_of_sync = Node::query()
+            ->where('region', 'like', 'resolver-%')
             ->where('install_status', 'installed')
             ->where('last_heartbeat_at', '>', now()->subSeconds(90))
             ->where('current_config_version', '<', $latestPublishedVersion)

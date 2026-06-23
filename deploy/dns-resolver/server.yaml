@@ -1,0 +1,37 @@
+# Docker Configuration for DNS Resolver
+node:
+    node_uid: vydisdlb7k
+    name: resolver-docker
+    version: 1.0.0
+    region: docker-test
+    country: CN
+    provider: docker
+    public_ipv4: 127.0.0.1
+listen:
+    doh: 8443
+    dot: 853
+    doq: 853
+    udp: 53
+    tcp: 53
+control_plane:
+    endpoint: http://portal-web:8081
+    api_key: ak_bDtNnuMzTOEqdZclRpC41VYyDedseQ0X6lInFFLH
+    secret: hmk_ja0ixnpmnjzqura5cf7zmwfkgptipwmn
+    node_id: 1
+    heartbeat_interval: 30
+    config_poll_interval: 5
+    profiles_path: ./configs
+upstream:
+    - 1.1.1.1
+    - 8.8.8.8
+logging:
+    level: debug
+    buffer_path: /var/lib/ocer-dns/log-buffer
+nats:
+    enabled: false
+redis:
+    enabled: false
+geodns:
+    enabled: true
+    endpoint: http://geodns:15354
+    request_timeout_seconds: 3

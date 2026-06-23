@@ -1,0 +1,15 @@
+# Docker Configuration for GeoDNS
+server:
+    listen_addr: :15354
+    listen_dns_addr: :10053
+    console_health_url: http://portal-web:8081/api/v1/internal/geodns/health-view
+    console_health_token: bootstrap_shared_token_12345
+    refresh_interval: 15s
+    request_timeout_seconds: 5
+routing:
+    global_fallback_region: global
+node:
+    token: bootstrap_shared_token_12345
+    node_id: geodns-docker
+    api_endpoint: http://portal-web:8081
+    api_key_path: /app/configs/api_key

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class NodeHeartbeat extends Model
 {
-    
+    protected $table = 'resolver_node_heartbeats';
 
     protected $fillable = [
         'node_id',
