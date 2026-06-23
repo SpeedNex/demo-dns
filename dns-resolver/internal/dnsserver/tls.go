@@ -12,32 +12,64 @@ import (
 	"math/big"
 	"net"
 	"os"
+	"sync/atomic"
 	"time"
 )
 
-// LoadTLSConfig 加载或生成 TLS 证书。
-// 如果 certFile/keyFile 非空则从文件加载；否则生成自签名证书（开发用）。
+// LoadTLSConfig 加载 TLS 配置。
+// 如果 certFile/keyFile 非空，使用 GetCertificate 回调动态加载（支持热更新，无需重启）；
+// 内部维护原子缓存：
+//   - 首次启动无证书时 → 自签名兜底（通常 install 尚未完成）
+//   - 一旦成功加载过正式证书 → 后续加载失败使用缓存证书，不回退自签名
+// 如果 certFile/keyFile 为空，直接生成自签名证书（开发测试用）。
 func LoadTLSConfig(certFile, keyFile string) (*tls.Config, error) {
-	var cert tls.Certificate
-
 	if certFile != "" && keyFile != "" {
-		var err error
-		cert, err = tls.LoadX509KeyPair(certFile, keyFile)
-		if err != nil {
-			return nil, err
+		log.Printf("tls: will load certificate from %s (hot-reload via GetCertificate)", certFile)
+
+		var (
+			cachedCert  atomic.Value // stores *tls.Certificate
+			hasRealCert atomic.Bool
+		)
+
+		// 首次尝试加载，预先填充缓存（可能失败，不影响后续握手）
+		if initialCert, err := tls.LoadX509KeyPair(certFile, keyFile); err == nil {
+			cachedCert.Store(&initialCert)
+			hasRealCert.Store(true)
+			log.Printf("tls: preloaded certificate from %s", certFile)
 		}
-		log.Printf("tls: loaded certificate from %s", certFile)
-	} else {
-		log.Printf("tls: no certificate configured, generating self-signed (dev-only)")
-		c, err := generateSelfSignedCert()
-		if err != nil {
-			return nil, err
-		}
-		cert = *c
+
+		return &tls.Config{
+			GetCertificate: func(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
+				cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+				if err != nil {
+					// 有缓存 → 用最后一次成功的证书，不中断服务
+					if cached := cachedCert.Load(); cached != nil {
+						log.Printf("tls: reload failed (%v) — using cached cert", err)
+						return cached.(*tls.Certificate), nil
+					}
+					// 从未成功加载过 → 自签名兜底（仅首次启动）
+					log.Printf("tls: no cached cert available, falling back to self-signed: %v", err)
+					return generateSelfSignedCert()
+				}
+				// 成功加载 → 更新缓存
+				cachedCert.Store(&cert)
+				if !hasRealCert.Load() {
+					hasRealCert.Store(true)
+					log.Printf("tls: first successful load of %s", certFile)
+				}
+				return &cert, nil
+			},
+			MinVersion: tls.VersionTLS12,
+		}, nil
 	}
 
+	log.Printf("tls: no certificate configured, generating self-signed (dev-only)")
+	c, err := generateSelfSignedCert()
+	if err != nil {
+		return nil, err
+	}
 	return &tls.Config{
-		Certificates: []tls.Certificate{cert},
+		Certificates: []tls.Certificate{*c},
 		MinVersion:   tls.VersionTLS12,
 	}, nil
 }
