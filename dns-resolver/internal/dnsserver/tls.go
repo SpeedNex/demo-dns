@@ -96,22 +96,22 @@ func LoadTLSConfig(certFile, keyFile, dnsDomain string) (*tls.Config, error) {
 				}
 
 				// 发现阶段：搜索 Caddy 证书存储
-				certFile, keyFile, err := findCaddyCert(dnsDomain)
-				if err == nil {
-					if cert, loadErr := tls.LoadX509KeyPair(certFile, keyFile); loadErr == nil {
-						cachedCert.Store(&cert)
-						knownPaths.Store(&certPaths{certFile, keyFile})
-						return &cert, nil
-					}
+			certFile, keyFile, err := findCaddyCert(dnsDomain)
+			if err == nil {
+				if cert, loadErr := tls.LoadX509KeyPair(certFile, keyFile); loadErr == nil {
+					cachedCert.Store(&cert)
+					knownPaths.Store(&certPaths{certFile, keyFile})
+					return &cert, nil
 				}
+			}
 
-				// 完全失败 → 缓存回退或自签名
-				if cached := cachedCert.Load(); cached != nil {
-					return cached.(*tls.Certificate), nil
-				}
-				log.Printf("tls: no cert found for %s, using self-signed (Caddy may not have obtained it yet)", dnsDomain)
-				return generateSelfSignedCert()
-			},
+			// 未发现证书 → 用自签名兜底（Caddy 尚未就绪）
+			if cached := cachedCert.Load(); cached != nil {
+				return cached.(*tls.Certificate), nil
+			}
+			log.Printf("tls: no caddy cert found for %s, using self-signed", dnsDomain)
+			return generateSelfSignedCert()
+		},
 			MinVersion: tls.VersionTLS12,
 		}, nil
 	}
