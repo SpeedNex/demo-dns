@@ -61,7 +61,7 @@ func runInstall(args []string) error {
 	fs.StringVar(&opts.NodeID, "node-id", "", "Node ID assigned by console, e.g. hk-01")
 	fs.StringVar(&opts.Token, "token", "", "Node token issued by console (ak_xxx); exchanged for api_key via verify API")
 	fs.StringVar(&opts.APIKey, "api-key", "", "Node API key issued by console (ak_xxx); used when --token is not provided")
-	fs.StringVar(&opts.ConfigPath, "config", "configs/server.yaml", "Output resolver config.yaml path")
+	fs.StringVar(&opts.ConfigPath, "config", "/usr/local/etc/dns-resolver/server.yaml", "Output resolver config.yaml path")
 	fs.StringVar(&opts.Name, "name", "", "Optional human-friendly node name override")
 	fs.StringVar(&opts.Region, "region", "", "Optional region code, e.g. ap-northeast-1")
 	fs.StringVar(&opts.Country, "country", "", "Optional country code, e.g. JP")

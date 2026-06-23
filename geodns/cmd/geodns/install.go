@@ -35,7 +35,7 @@ type installOptions struct {
 	Force       bool
 	Verbose     bool
 	// 2026-06-22: --install-dir 参数，用于决定 configs/api_key 落到哪里。
-	// 默认基于 GEODNS_HOME > /usr/local/etc/geodns > ~/.geodns。
+	// 默认基于 GEODNS_HOME > /usr/local/etc/geodns。
 	InstallDir string
 	// 2026-06-22: 安装完成后是否自动启动节点。
 	// 优先级: --start=true > --no-start > --start=false
@@ -291,8 +291,7 @@ func resolveConsoleBaseURL(healthURL string) string {
 //
 //  1. --install-dir 显式传
 //  2. $GEODNS_HOME 环境变量
-//  3. /usr/local/etc/geodns （install.sh 标准安装位置）
-//  4. ~/.geodns （fallback 绝对路径）
+//  3. /usr/local/etc/geodns （默认安装位置）
 //
 // 2026-06-22: 不再用 CWD 相对路径，避免 CWD 漂移导致文件落错位置。
 func resolveInstallDir(explicit string) string {
@@ -302,13 +301,7 @@ func resolveInstallDir(explicit string) string {
 	if env := os.Getenv("GEODNS_HOME"); env != "" {
 		return absPath(env)
 	}
-	if _, err := os.Stat("/usr/local/etc/geodns"); err == nil {
-		return "/usr/local/etc/geodns"
-	}
-	if home, err := os.UserHomeDir(); err == nil {
-		return filepath.Join(home, ".geodns")
-	}
-	return "/tmp/geodns"
+	return "/usr/local/etc/geodns"
 }
 
 func absPath(p string) string {

@@ -27,7 +27,7 @@ import (
 
 // defaultConfigPath 是 resolver 启动时寻找 server.yaml 的兜底路径。
 // 部署在容器 / systemd 时通常会通过 --config 或 RESOLVER_CONFIG 改写。
-const defaultConfigPath = "configs/server.yaml"
+const defaultConfigPath = "/usr/local/etc/dns-resolver/server.yaml"
 
 // 版本信息（编译时通过 -ldflags 注入）
 var (
