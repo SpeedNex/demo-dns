@@ -87,6 +87,7 @@ final class AdminNodeController
             'node_alias' => 'nullable|string|max:100',
             'region' => 'required|string|max:40',
             'city' => 'nullable|string|max:80',
+            'domain' => 'nullable|string|max:255',
             'public_ipv4' => 'nullable|string|max:45',
             'public_ipv6' => 'nullable|string|max:64',
             'weight' => 'nullable|integer|min:0|max:10000',
@@ -136,6 +137,7 @@ final class AdminNodeController
             'node_alias' => 'nullable|string|max:100',
             'region' => 'nullable|string|max:40',
             'city' => 'nullable|string|max:80',
+            'domain' => 'nullable|string|max:255',
             'public_ipv4' => 'nullable|string|max:45',
             'public_ipv6' => 'nullable|string|max:64',
             'weight' => 'nullable|integer|min:0|max:10000',
@@ -209,6 +211,7 @@ final class AdminNodeController
                 'api_key' => $result['token'],
                 'hmac_secret' => $result['hmac_secret'] ?? '',
                 'node_code' => $node->node_code,
+                'dns_domain' => $node->domain ?? '',
                 'expires_at' => optional($result['expires_at'])?->toIso8601String(),
             ],
         ], 201)

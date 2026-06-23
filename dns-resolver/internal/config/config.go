@@ -56,6 +56,10 @@ type ControlPlaneConfig struct {
 	// 2026-06-15: dns-console-web 合并入 portal-web，所有 admin / agent 接口
 	// 都在同一 host 上提供，因此 resolver 只需要一个 base URL。
 	Endpoint string `yaml:"endpoint"`
+	// DNSDomain 是该节点对外服务的 DoH 域名（如 dns.ocerlinkdata.com）。
+	// 由 portal-web register 接口返回，install 阶段写入配置；
+	// Caddy 自动 TLS 使用此域名申请 Let's Encrypt 证书。
+	DNSDomain string `yaml:"dns_domain"`
 	// APIKey 是 portal-web 后台预创建节点时签发的凭据，
 	// 由 `resolver install --console=... --node-id=... --api-key=...` 写入
 	// 节点启动后直接使用此凭据鉴权，不再走任何自助注册/兜底流程

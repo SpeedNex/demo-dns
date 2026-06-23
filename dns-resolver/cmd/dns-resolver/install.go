@@ -127,10 +127,27 @@ func runInstall(args []string) error {
 
 	// 2026-06-22: install 完成后调用控制面 register API，告知 console 节点已注册。
 	// register 失败不阻塞 install（配置已写入），仅打印警告。
-	if regErr := registerNodeToConsole(cfg); regErr != nil {
+	// register 成功时可能返回 dns_domain，用于自动配置 Caddy 证书。
+	dnsDomain, regErr := registerNodeToConsole(cfg)
+	if regErr != nil {
 		fmt.Printf("⚠ console register failed: %v (config was still written, run `resolver` to start)\n", regErr)
+	} else if dnsDomain != "" {
+		fmt.Printf("✔ console register: success (dns_domain=%s)\n", dnsDomain)
+
+		// 更新配置中的 dns_domain
+		cfg.ControlPlane.DNSDomain = dnsDomain
+		if err := writeConfigAtomic(opts.ConfigPath, cfg); err != nil {
+			fmt.Printf("⚠ update config with dns_domain failed: %v\n", err)
+		}
+
+		// 自动安装并配置 Caddy（自动 HTTPS 反向代理到 :8443）
+		if setupErr := setupCaddy(dnsDomain); setupErr != nil {
+			fmt.Printf("⚠ caddy auto-setup: %v (DoH will not be available on port 443 until manually configured)\n", setupErr)
+		} else {
+			fmt.Println("✔ caddy: auto-configured with Let's Encrypt TLS")
+		}
 	} else {
-		fmt.Println("✔ console register: success")
+		fmt.Println("✔ console register: success (no dns_domain, skip Caddy auto-setup)")
 	}
 
 	// 2026-06-22 NEW: --start 开启时自动拉起节点。
@@ -337,10 +354,11 @@ func checkPortConflicts(cfg *config.Config) error {
 // 触发控制台「已注册」状态展示（不阻塞 install，失败仅打印警告）。
 // 2026-06-21: register 接口会**同时返回明文 api_key**，本函数负责把 api_key
 // 缓存到独立文件 configs/api_key（权限 0600），节点启动时优先从这里读取鉴权。
-func registerNodeToConsole(cfg *config.Config) error {
+// 2026-06-23: 返回值扩充为 (dnsDomain, error)，dns_domain 用于 Caddy 自动 TLS 配置。
+func registerNodeToConsole(cfg *config.Config) (dnsDomain string, err error) {
 	endpoint := strings.TrimRight(cfg.ControlPlane.Endpoint, "/")
 	if endpoint == "" {
-		return nil
+		return "", nil
 	}
 	url := endpoint + "/api/v1/node/dns-resolver/register"
 
@@ -354,7 +372,7 @@ func registerNodeToConsole(cfg *config.Config) error {
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, strings.NewReader(string(body)))
 	if err != nil {
-		return err
+		return "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	if t := strings.TrimSpace(cfg.ControlPlane.APIKey); t != "" {
@@ -363,30 +381,32 @@ func registerNodeToConsole(cfg *config.Config) error {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 300 {
 		respBody, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("register API returned %d: %s", resp.StatusCode, string(respBody))
+		return "", fmt.Errorf("register API returned %d: %s", resp.StatusCode, string(respBody))
 	}
 
 	// 2026-06-21: 解析 register 返回的 api_key 并缓存。
 	// 老版本服务端（迁移未完成）不会返回 api_key 字段，此时跳过缓存。
+	// 2026-06-23: 同时读取 dns_domain，用于 Caddy 自动 TLS 配置。
 	var result struct {
 		Data struct {
 			APIKey     string `json:"api_key"`
 			APIKeyPath string `json:"api_key_path"`
+			DNSDomain  string `json:"dns_domain"`
 		} `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		// 解析失败不算致命错误（可能是老服务端），仅警告
 		fmt.Printf("⚠ could not parse register response for api_key: %v\n", err)
-		return nil
+		return "", nil
 	}
 	if result.Data.APIKey == "" {
 		// 老服务端未签发 api_key，跳过缓存（节点继续用 token 鉴权）
-		return nil
+		return result.Data.DNSDomain, nil
 	}
 
 	// 2026-06-22: 始终用 cfg.ControlPlane.APIKeyPath (绝对路径) 写 api_key，
@@ -401,12 +421,91 @@ func registerNodeToConsole(cfg *config.Config) error {
 		}
 	}
 	if err := os.MkdirAll(filepath.Dir(apiKeyPath), 0o755); err != nil {
-		return fmt.Errorf("create api_key dir: %w", err)
+		return result.Data.DNSDomain, fmt.Errorf("create api_key dir: %w", err)
 	}
 	if err := os.WriteFile(apiKeyPath, []byte(result.Data.APIKey), 0o600); err != nil {
-		return fmt.Errorf("write api_key to %s: %w", apiKeyPath, err)
+		return result.Data.DNSDomain, fmt.Errorf("write api_key to %s: %w", apiKeyPath, err)
 	}
 	fmt.Printf("✔ api_key cached to %s\n", apiKeyPath)
+	return result.Data.DNSDomain, nil
+}
+
+// =============================================================================
+//  2026-06-23 NEW: Caddy 自动配置（DoH HTTPS + 自动 Let's Encrypt 证书）
+// =============================================================================
+
+// setupCaddy 安装并配置 Caddy，将 DoH 路径转发到 dns-resolver :8443。
+// - 如果 Caddy 未安装，通过 apt 自动安装
+// - 写入 Caddyfile，配置自动 TLS + 反向代理
+// - 通过 systemd 启动 Caddy
+func setupCaddy(domain string) error {
+	if domain == "" {
+		return nil
+	}
+
+	// 1. 检查/安装 Caddy
+	if _, lookErr := exec.LookPath("caddy"); lookErr != nil {
+		fmt.Println("  caddy not found, installing via apt...")
+		installCmd := exec.Command("apt-get", "install", "-y", "caddy")
+		if out, err := installCmd.CombinedOutput(); err != nil {
+			return fmt.Errorf("apt install caddy failed: %w (%s)", err, strings.TrimSpace(string(out)))
+		}
+	}
+
+	// 2. 打印版本
+	if verOut, verErr := exec.Command("caddy", "version").Output(); verErr == nil {
+		fmt.Printf("  caddy: %s", strings.TrimSpace(string(verOut)))
+	}
+
+	// 3. 写入 Caddyfile
+	// 使用标准 /etc/caddy/Caddyfile 路径（apt install caddy 自动创建该目录）
+	caddyfile := fmt.Sprintf(`# Auto-generated by dns-resolver install — %s
+# Do NOT edit this file manually unless you know what you're doing.
+# resolver will overwrite it on re-install.
+
+%s {
+    # DoH paths — profile UID /dns-query /health
+    @doh {
+        path_regexp doh ^/[0-9a-f]{6}(/dns-query)?$
+        path /dns-query /health
+    }
+    handle @doh {
+        reverse_proxy localhost:8443
+    }
+    # Other paths — safe default
+    handle {
+        respond "OcerDNS Resolver — %s" 200
+    }
+}
+`, time.Now().UTC().Format(time.RFC3339), domain, domain)
+
+	if err := os.MkdirAll("/etc/caddy", 0o755); err != nil {
+		return fmt.Errorf("create /etc/caddy: %w", err)
+	}
+	if err := os.WriteFile("/etc/caddy/Caddyfile", []byte(caddyfile), 0o644); err != nil {
+		return fmt.Errorf("write /etc/caddy/Caddyfile: %w", err)
+	}
+	fmt.Println("  ✔ Caddyfile written to /etc/caddy/Caddyfile")
+
+	// 4. 通过 systemd 启动 Caddy
+	if _, sysErr := exec.LookPath("systemctl"); sysErr == nil {
+		// daemon-reload + enable --now
+		for _, args := range [][]string{
+			{"daemon-reload"},
+			{"enable", "--now", "caddy"},
+		} {
+			cmd := exec.Command("systemctl", args...)
+			if out, err := cmd.CombinedOutput(); err != nil {
+				return fmt.Errorf("systemctl %s: %w (%s)", strings.Join(args, " "), err, strings.TrimSpace(string(out)))
+			}
+		}
+		fmt.Printf("  ✔ caddy started (https://%s → localhost:8443)\n", domain)
+	} else {
+		// 无 systemd — 仅写入配置，提示用户手动启动
+		fmt.Printf("  ⚠ systemd not found; start caddy manually:\n")
+		fmt.Printf("    caddy run --config /etc/caddy/Caddyfile\n")
+	}
+
 	return nil
 }
 

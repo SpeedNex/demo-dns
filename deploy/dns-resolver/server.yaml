@@ -33,5 +33,5 @@ redis:
     enabled: false
 geodns:
     enabled: true
-    endpoint: http://geodns:15354
+    endpoint: http://geodns:5354
     request_timeout_seconds: 3

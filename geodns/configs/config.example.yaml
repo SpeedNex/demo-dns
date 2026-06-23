@@ -1,5 +1,5 @@
 server:
-  listen_addr: ":15354"
+  listen_addr: ":5354"
   # 2026-06-15: portal-web hosts the health-view endpoint now.
   console_health_url: "http://127.0.0.1:8081/api/v1/internal/geodns/health-view"
   # 必须与 portal-web 中 INTERNAL_SHARED_TOKEN 保持一致；portal 中间件

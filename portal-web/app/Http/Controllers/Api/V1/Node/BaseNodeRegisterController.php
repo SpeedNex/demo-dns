@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Node;
 
 use App\Models\Node;
+use App\Support\SystemConfigValue;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -76,9 +77,15 @@ abstract class BaseNodeRegisterController
 
         $node->update($updateData);
 
+        $dnsDomain = SystemConfigValue::field('dns', 'dns_domain');
+        if (empty($dnsDomain)) {
+            $dnsDomain = $node->domain ?? '';
+        }
+
         $response = [
             'data' => [
                 'node_id' => $node->node_code,
+                'dns_domain' => $dnsDomain,
                 'region' => $node->region,
                 'install_status' => $node->install_status,
                 'last_installed_at' => $node->last_installed_at?->toIso8601String(),

@@ -10,7 +10,7 @@
 |------|--------|------|------|
 | **portal-web** | Laravel | 控制面：节点管理、配置发布、日志存储、计费 | 8081 |
 | **dns-resolver** | Go | 数据面：DNS 解析、规则匹配、日志采集 | 53/443/853 |
-| **geodns** | Go | 入口调度：健康视图同步、就近路由 | 53(权威)/15354(API) |
+| **geodns** | Go | 入口调度：健康视图同步、就近路由 | 53(权威)/5354(API) |
 | **clickhouse** | ClickHouse | 日志分析：查询日志存储与统计 | 8123/9000 |
 
 ### ⚠️ 强约束：GeoDNS = 调度解析器，不是节点
@@ -617,6 +617,6 @@ dns_query_logs 表
 
 | 日期 | 描述 |
 |------|------|
-| 2026-06-23 | 修正 GeoDNS 端口定义，区分 Authoritative DNS (53) 和 Internal API (15354) |
+| 2026-06-23 | 修正 GeoDNS 端口定义，区分 Authoritative DNS (53) 和 Internal API (5354) |
 | 2026-06-23 | 修正 DoH 流程说明，明确不经过 GeoDNS |
 | 2026-06-23 | 修正 GeoDNS HealthView 拉取方式，定时同步而非每次查询拉取 |
