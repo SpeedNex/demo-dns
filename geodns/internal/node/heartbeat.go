@@ -12,29 +12,33 @@ import (
 	"time"
 )
 
-// HeartbeatClient 上报节点心跳到 portal-web /api/v1/node/heartbeat
+// HeartbeatClient 上报节点心跳到 portal-web /api/v1/node/{heartbeat_path}
+// 2026-06-23 新增：HeartbeatPath 字段，默认 /geodns/heartbeat，允许不同服务自定义路径。
 // 2026-06-22 改造：统一为纯 Token 鉴权，删除 HMAC 签名。
 // 2026-06-21 改造：
 //   - URL 从 /api/v1/node/nodes/heartbeat 改为 /api/v1/node/heartbeat
 //   - 优先用 api_key 文件鉴权，fallback 到 Bearer token
 type HeartbeatClient struct {
-	APIEndpoint string
-	Bearer      string
-	APIKeyPath  string // 2026-06-21: register 时签发的 api_key 缓存文件路径
-	HTTPClient  *http.Client
+	APIEndpoint   string
+	Bearer        string
+	APIKeyPath    string // 2026-06-21: register 时签发的 api_key 缓存文件路径
+	HeartbeatPath string // 2026-06-23: 路径后缀，如 "geodns/heartbeat"
+	HTTPClient    *http.Client
 }
 
-func NewHeartbeatClient(apiEndpoint, bearer string, timeout time.Duration) *HeartbeatClient {
+// NewHeartbeatClient 创建心跳客户端，hbPath 如 "geodns/heartbeat"。
+func NewHeartbeatClient(apiEndpoint, bearer, hbPath string, timeout time.Duration) *HeartbeatClient {
 	return &HeartbeatClient{
-		APIEndpoint: strings.TrimSuffix(apiEndpoint, "/"),
-		Bearer:      bearer,
-		HTTPClient:  &http.Client{Timeout: timeout},
+		APIEndpoint:   strings.TrimSuffix(apiEndpoint, "/"),
+		Bearer:        bearer,
+		HeartbeatPath: strings.Trim(hbPath, "/"),
+		HTTPClient:    &http.Client{Timeout: timeout},
 	}
 }
 
 // NewHeartbeatClientWithAPIKeyPath 2026-06-21: 创建带 api_key 路径的 client
-func NewHeartbeatClientWithAPIKeyPath(apiEndpoint, bearer, apiKeyPath string, timeout time.Duration) *HeartbeatClient {
-	c := NewHeartbeatClient(apiEndpoint, bearer, timeout)
+func NewHeartbeatClientWithAPIKeyPath(apiEndpoint, bearer, apiKeyPath, hbPath string, timeout time.Duration) *HeartbeatClient {
+	c := NewHeartbeatClient(apiEndpoint, bearer, hbPath, timeout)
 	c.APIKeyPath = apiKeyPath
 	return c
 }
@@ -68,8 +72,12 @@ func (c *HeartbeatClient) Report(payload HeartbeatPayload) error {
 		return fmt.Errorf("marshal heartbeat: %w", err)
 	}
 
-	// 2026-06-21: 路径从 /api/v1/node/nodes/heartbeat 改为 /api/v1/node/heartbeat
-	url := c.APIEndpoint + "/api/v1/node/heartbeat"
+	// 2026-06-23: 路径改为 /api/v1/node/{heartbeat_path}，默认 "geodns/heartbeat"
+	path := c.HeartbeatPath
+	if path == "" {
+		path = "geodns/heartbeat"
+	}
+	url := c.APIEndpoint + "/api/v1/node/" + path
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
 		return err

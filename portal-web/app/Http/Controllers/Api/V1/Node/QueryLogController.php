@@ -134,9 +134,10 @@ final class QueryLogController
             }
 
             $dnsLogs[] = [
+                'event_id' => \Illuminate\Support\Str::uuid()->toString(),
                 'event_time' => $queriedAt->format('Y-m-d H:i:s'),
                 'timestamp' => $queriedAt->format('Y-m-d H:i:s'),
-                'node_id' => (string) $node->node_id,
+                'node_id' => (string) $node->id,
                 'user_id' => $userPk !== null ? (string) $userPk : '',
                 'profile_id' => $profileUid ?? '',
                 'device_id' => $deviceUid,

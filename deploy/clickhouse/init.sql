@@ -5,6 +5,7 @@ CREATE DATABASE IF NOT EXISTS ocer_dns;
 
 -- DNS Query Logs Table (main query logging)
 CREATE TABLE IF NOT EXISTS ocer_dns.dns_logs (
+    event_id String,
     timestamp DateTime64(3),
     profile_id String,
     node_id String,

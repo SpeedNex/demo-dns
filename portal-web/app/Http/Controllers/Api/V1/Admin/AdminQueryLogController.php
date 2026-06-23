@@ -66,7 +66,7 @@ final class AdminQueryLogController
         $whereSql = $where === [] ? '' : 'WHERE ' . implode(' AND ', $where);
 
         if (! empty($validated['export'])) {
-            $sql = "SELECT event_time, user_id, profile_id, device_id, domain, query_type, action, reason, client_ip, rcode, latency_ms, protocol, node_id FROM dns_logs {$whereSql} ORDER BY event_time DESC LIMIT 10000";
+            $sql = "SELECT event_id, event_time, user_id, profile_id, device_id, domain, query_type, action, reason, client_ip, rcode, latency_ms, protocol, node_id FROM dns_logs {$whereSql} ORDER BY event_time DESC LIMIT 10000";
             $rows = $this->clickhouse->jsonSelect($sql);
             $rows = $this->enrich($rows);
 
@@ -80,7 +80,7 @@ final class AdminQueryLogController
         $countSql = "SELECT count() AS c FROM dns_logs {$whereSql}";
         $total = (int) ($this->clickhouse->jsonSelect($countSql)[0]['c'] ?? 0);
 
-        $sql = "SELECT event_time, user_id, profile_id, device_id, domain, query_type, action, reason, client_ip, rcode, latency_ms, protocol, node_id FROM dns_logs {$whereSql} ORDER BY event_time DESC LIMIT {$perPage} OFFSET {$offset}";
+        $sql = "SELECT event_id, event_time, user_id, profile_id, device_id, domain, query_type, action, reason, client_ip, rcode, latency_ms, protocol, node_id FROM dns_logs {$whereSql} ORDER BY event_time DESC LIMIT {$perPage} OFFSET {$offset}";
         $rows = $this->enrich($this->clickhouse->jsonSelect($sql));
 
         return response()->json([
@@ -146,16 +146,45 @@ final class AdminQueryLogController
 
     public function batchDestroy(Request $request): JsonResponse
     {
-        // 2026-06-22: 查询日志唯一源是 ClickHouse，MySQL 不再保留明细 → 不再提供删除
-        return response()->json(['data' => ['deleted' => 0, 'note' => 'logs are stored in ClickHouse, use TTL or external tooling']]);
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'string',
+        ]);
+
+        // 过滤空 event_id（旧数据没有 event_id）
+        $ids = array_values(array_filter($validated['ids'], fn ($v) => $v !== '' && $v !== null));
+        if ($ids === []) {
+            return response()->json(['message' => 'No valid event IDs provided.'], 400);
+        }
+
+        $actorId = $request->user()?->admin_id;
+        $list = implode("','", array_map(fn ($v) => $this->q($v), $ids));
+        $sql = "ALTER TABLE dns_logs DELETE WHERE event_id IN ('{$list}')";
+
+        try {
+            $this->clickhouse->send($sql);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'ClickHouse delete failed: ' . $e->getMessage()], 500);
+        }
+
+        AdminAuditLog::record('query_logs.batch_delete', 'query_log_entry', null, ['count' => count($ids)], $actorId, null, $request->ip(), $request->userAgent());
+
+        return response()->json(['data' => ['deleted' => count($ids)]]);
     }
 
     public function clearAll(Request $request): JsonResponse
     {
         $actorId = $request->user()?->admin_id;
-        AdminAuditLog::record('query_logs.clear_all', 'query_log_entry', null, ['note' => 'clickhouse-only, use external tooling'], $actorId, null, $request->ip(), $request->userAgent());
 
-        return response()->json(['data' => ['deleted' => 0, 'note' => 'logs are stored in ClickHouse, use TTL or external tooling']]);
+        try {
+            $this->clickhouse->send('TRUNCATE TABLE IF EXISTS dns_logs');
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'ClickHouse truncate failed: ' . $e->getMessage()], 500);
+        }
+
+        AdminAuditLog::record('query_logs.clear_all', 'query_log_entry', null, ['note' => 'truncated'], $actorId, null, $request->ip(), $request->userAgent());
+
+        return response()->json(['data' => ['deleted' => true]]);
     }
 
     /**

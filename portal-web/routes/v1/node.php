@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\Node\ConfigAckController;
 use App\Http\Controllers\Api\V1\Node\ConfigPullController;
 use App\Http\Controllers\Api\V1\Node\DeviceSeenController;
 use App\Http\Controllers\Api\V1\Node\GeoDNSConfigController;
+use App\Http\Controllers\Api\V1\Node\GeoDnsHeartbeatController;
 use App\Http\Controllers\Api\V1\Node\GeoDnsRegisterController;
 use App\Http\Controllers\Api\V1\Node\HeartbeatController;
 use App\Http\Controllers\Api\V1\Node\NodeRegisterController;
@@ -46,6 +47,7 @@ Route::prefix('node')->middleware(['api.log'])->group(function (): void {
 
     Route::prefix('geodns')->group(function (): void {
         Route::post('register', [GeoDnsRegisterController::class, 'register'])->middleware(['node.token']);
+        Route::post('heartbeat', [GeoDnsHeartbeatController::class, 'store'])->middleware(['node.token']);
     });
 
     // === 业务接口（用 api_key 鉴权） ===

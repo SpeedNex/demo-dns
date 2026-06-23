@@ -60,7 +60,6 @@ final class AdminGeoDnsController
 
         // 统计 resolver 节点数按地区分组
         $resolverCounts = Node::query()
-            ->where('region', 'like', 'resolver-%')
             ->whereNotNull('region')
             ->groupBy('region')
             ->selectRaw('region, COUNT(*) as count')
@@ -108,8 +107,8 @@ final class AdminGeoDnsController
             $region = 'geodns-' . $region;
         }
 
-        // 别名留空时自动按 geodns-{6位随机} 生成
-        $nodeAlias = $validated['node_alias'] ?? ('geodns-' . Str::lower(Str::random(6)));
+        // 别名留空时自动按 {Region}-Scheduler-{序号} 生成
+        $nodeAlias = $validated['node_alias'] ?? (strtoupper(str_replace('geodns-', '', $region)) . '-Scheduler');
 
         $node = DnsGeodns::create([
             'node_code' => 'nd_' . Str::lower(Str::random(10)),
@@ -268,7 +267,7 @@ final class AdminGeoDnsController
         $node = DnsGeodns::updateOrCreate(
             ['node_code' => 'nd_local_mac'],
             [
-                'node_alias' => 'Local Mac',
+                'node_alias' => 'Local-Scheduler',
                 'region' => 'geodns-local',
                 'country' => 'CN',
                 'city' => 'Shanghai',

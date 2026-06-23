@@ -1,7 +1,11 @@
 server:
   listen_addr: ":15354"
-  console_health_url: "http://127.0.0.1:8000/api/v1/internal/geodns/health-view"
-  console_health_token: "internal-local-token"
+  console_health_url: "http://127.0.0.1:8081/api/v1/internal/geodns/health-view"
+  console_health_token: "ntk_Go3p3qRvtBkeqsaCkz78m8HxthxilxMceRQwDqBg"
   refresh_interval: "15s"
 routing:
   global_fallback_region: "global"
+node:
+  token: "ntk_Go3p3qRvtBkeqsaCkz78m8HxthxilxMceRQwDqBg"
+  node_id: "nd_local_mac"
+  api_endpoint: "http://127.0.0.1:8081"

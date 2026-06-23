@@ -28,7 +28,7 @@ final class ConfigPullController
             ->where(function ($query) use ($node): void {
                 $query
                     ->whereHas('publishTasks.executions', function ($executionQuery) use ($node): void {
-                        $executionQuery->where('node_id', $node->node_id);
+                        $executionQuery->where('node_id', $node->id);
                     })
                     ->orWhereHas('publishTasks', function ($taskQuery) use ($node): void {
                         $taskQuery
@@ -39,7 +39,7 @@ final class ConfigPullController
                                     ->orWhere(function ($specificNodeQuery) use ($node): void {
                                         $specificNodeQuery
                                             ->where('target_scope', 'specific_nodes')
-                                            ->whereJsonContains('target_filter->node_ids', $node->node_id);
+                                            ->whereJsonContains('target_filter->node_ids', $node->id);
                                     });
                             });
                     });
@@ -97,7 +97,7 @@ final class ConfigPullController
             TaskExecution::updateOrCreate(
                 [
                     'publish_task_id' => $publishTask->id,
-                    'node_id' => $node->node_id,
+                    'node_id' => $node->id,
                 ],
                 [
                     'config_version' => $configVersion->version,

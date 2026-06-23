@@ -29,11 +29,11 @@ final class HeartbeatController
         ]);
         $heartbeat['status'] = $heartbeat['status'] ?? HeartbeatService::STATUS_ONLINE;
         $heartbeat['current_config_version'] = (int) ($heartbeat['current_config_version'] ?? $node->current_config_version);
-        $heartbeat['node_id'] = $node->node_id;
+        $heartbeat['node_id'] = $node->id;
 
         // 历史心跳表保留 status（自报），便于审计 / 趋势分析。
         NodeHeartbeat::create([
-            'node_id' => $node->node_id,
+            'node_id' => $node->id,
             'status' => $heartbeat['status'],
             'uptime_seconds' => (int) ($heartbeat['uptime_seconds'] ?? 0),
             'version' => $heartbeat['version'] ?? null,
@@ -71,9 +71,9 @@ final class HeartbeatController
                 'level' => $reportedStatus === 'offline' ? 'error' : 'warning',
                 'source' => 'node',
                 'subject_type' => 'node',
-                'subject_id' => $node->node_id,
+                'subject_id' => $node->id,
                 'title' => '节点上报异常',
-                'message' => "节点 {$node->node_alias} (id={$node->node_id}) 上报 status={$reportedStatus}",
+                'message' => "节点 {$node->node_alias} (id={$node->id}) 上报 status={$reportedStatus}",
                 'status' => 'open',
             ]);
         }
@@ -93,9 +93,9 @@ final class HeartbeatController
                 'level' => 'warning',
                 'source' => 'node',
                 'subject_type' => 'node',
-                'subject_id' => $node->node_id,
+                'subject_id' => $node->id,
                 'title' => '节点心跳超时',
-                'message' => "节点 {$node->node_alias} (id={$node->node_id}) 距离上次心跳已超 5 分钟",
+                'message' => "节点 {$node->node_alias} (id={$node->id}) 距离上次心跳已超 5 分钟",
                 'status' => 'open',
             ]);
         }

@@ -400,7 +400,7 @@ final class UserWorkspaceService
             ->where('last_heartbeat_at', '>', now()->subSeconds($threshold))
             ->whereNotNull('public_ipv4')
             ->where('public_ipv4', '!=', '')
-            ->orderBy('node_id')
+            ->orderBy('id')
             ->limit(4)
             ->pluck('public_ipv4')
             ->map(fn ($ip) => trim($ip))

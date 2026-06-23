@@ -91,6 +91,9 @@
 
         <el-table v-loading="loading" :data="logs" stripe style="margin-top:0" @selection-change="onSelectionChange">
             <el-table-column type="selection" width="40" />
+            <el-table-column :label="$t('admin.queryLogsPage.time') || 'Time'" width="190" fixed>
+                <template #default="{ row }">{{ row.queried_at ? new Date(row.queried_at).toLocaleString() : '-' }}</template>
+            </el-table-column>
             <template #empty>
                 <div class="empty-state">
                     <el-icon class="empty-icon"><Document /></el-icon>
@@ -134,7 +137,7 @@
 </el-tag>
                 </template>
             </el-table-column>
-            <el-table-column label="类型" width="90">
+            <el-table-column label="类型" width="110">
                 <template #default="{ row }">
                     <el-tag v-if="row.query_type" type="primary" effect="light" size="small">{{ row.query_type }}</el-tag>
                     <span v-else style="color:#94a3b8">A</span>
@@ -142,9 +145,6 @@
             </el-table-column>
             <el-table-column label="客户端" width="170" show-overflow-tooltip>
                 <template #default="{ row }">{{ row.client_ip || '-' }}</template>
-            </el-table-column>
-            <el-table-column :label="$t('admin.queryLogsPage.time') || 'Time'" width="190">
-                <template #default="{ row }">{{ row.queried_at ? new Date(row.queried_at).toLocaleString() : '-' }}</template>
             </el-table-column>
             <el-table-column :label="$t('admin.queryLogsPage.latency') || 'Latency (ms)'" width="120">
                 <template #default="{ row }">
@@ -189,19 +189,31 @@ const onSelectionChange = (rows) => {
 
 const handleBatchDelete = async () => {
     if (selected.value.length === 0) return
+
+    // 过滤掉 event_id 为空的记录（旧数据没有 event_id）
+    const validIds = selected.value
+        .map((r) => r.event_id)
+        .filter((id) => id && id !== '')
+
+    if (validIds.length === 0) {
+        ElMessage.warning('选中的日志均为旧数据，无法逐条删除（仅支持一键清空）')
+        return
+    }
+
     try {
         await ElMessageBox.confirm(
-            t('admin.queryLogsPage.batchDeleteConfirm', { count: selected.value.length }) || `确定删除选中的 ${selected.value.length} 条日志？`,
+            t('admin.queryLogsPage.batchDeleteConfirm', { count: validIds.length }) || `确定删除选中的 ${validIds.length} 条日志？`,
             t('common.confirm'),
             { type: 'warning' },
         )
-        const ids = selected.value.map((r) => r.id)
-        await client.post('/admin/query-logs/batch-destroy', { ids })
+        await client.post('/admin/query-logs/batch-destroy', { ids: validIds })
         ElMessage.success(t('admin.queryLogsPage.batchDeleted') || '删除成功')
         selected.value = []
         await fetchLogs()
     } catch (e) {
-        if (e !== 'cancel') {
+        if (e !== 'cancel' && e?.response?.data?.message) {
+            ElMessage.error(e.response.data.message)
+        } else if (e !== 'cancel') {
             ElMessage.error(t('admin.queryLogsPage.batchDeleteFailed') || '删除失败')
         }
     }
@@ -218,7 +230,9 @@ const handleClearAll = async () => {
         ElMessage.success(t('admin.queryLogsPage.cleared') || '日志已清空')
         await fetchLogs()
     } catch (e) {
-        if (e !== 'cancel') {
+        if (e !== 'cancel' && e?.response?.data?.message) {
+            ElMessage.error(e.response.data.message)
+        } else if (e !== 'cancel') {
             ElMessage.error(t('common.deleteFailed') || '操作失败')
         }
     }

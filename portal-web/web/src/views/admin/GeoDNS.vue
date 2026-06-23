@@ -44,12 +44,12 @@
                 </div>
             </template>
             <el-table-column type="selection" width="48" />
-            <el-table-column :label="$t('admin.geoDns.nodeId') || '地理调度器节点ID'" :min-width="180">
+            <el-table-column :label="$t('admin.geoDns.schedulerId') || '调度器ID'" :min-width="180">
                 <template #default="{ row }">
                     <code class="node-code">{{ row.node_code || '—' }}</code>
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.geoDns.nodeAlias') || '节点别名'" :min-width="160" show-overflow-tooltip>
+            <el-table-column :label="$t('admin.geoDns.schedulerAlias') || '调度器别名'" :min-width="160" show-overflow-tooltip>
                 <template #default="{ row }">
                     <span>{{ row.node_alias || '—' }}</span>
                 </template>
@@ -97,24 +97,15 @@
             <el-table-column :label="$t('admin.geoDns.actions')" fixed="right" width="220">
                 <template #default="{ row }">
                     <div style="white-space:nowrap;display:flex;gap:4px;align-items:center">
-                       <el-button size="small" text type="success" :disabled="!(row.target_node_id || row.node_id)" @click="handleDeploy(row)">
-                        <span>{{ $t('admin.nodes.deploy') || '一键部署' }}</span>
-                    </el-button>
-                   
-                        <el-button size="small" text type="info" :disabled="!(row.target_node_id || row.node_id)" @click="handleDeploy(row)">
-                        <el-icon><Refresh /></el-icon>
-                        <span>{{ $t('admin.nodes.deploy') || '重新部署' }}</span>
-                    </el-button>
-                    
                         <el-button size="small" text type="primary" @click="openEditDialog(row)">
-                        <el-icon><Edit /></el-icon>
-                    </el-button>
-                
-                    <el-button size="small" text type="danger" @click="handleDelete(row.id)">
-                        <el-icon><Delete /></el-icon>
-                    </el-button>
-                    <el-tag v-if="row.is_orphan" size="small" type="info" effect="plain" style="white-space:nowrap">{{ $t('admin.geoDns.orphanTag') || '无映射' }}</el-tag>
-                </div>
+                            <el-icon><Edit /></el-icon>
+                            <span>{{ $t('common.edit') || '编辑' }}</span>
+                        </el-button>
+                        <el-button size="small" text type="danger" @click="handleDelete(row.id)">
+                            <el-icon><Delete /></el-icon>
+                        </el-button>
+                        <el-tag v-if="row.is_orphan" size="small" type="info" effect="plain" style="white-space:nowrap">{{ $t('admin.geoDns.orphanTag') || '无映射' }}</el-tag>
+                    </div>
                 </template>
             </el-table-column>
         </el-table>
@@ -127,8 +118,8 @@
                     <el-option v-for="r in regions" :key="r.code" :label="`${r.code} - ${r.name}`" :value="r.code" />
                 </el-select>
             </el-form-item>
-            <el-form-item :label="$t('admin.geoDns.nodeAlias') || '节点别名'">
-                <el-input v-model="form.node_alias" :placeholder="$t('admin.geoDns.nodeAliasPlaceholder') || '可选，留空将自动生成 geodns-xxxxxx'" />
+            <el-form-item :label="$t('admin.geoDns.schedulerAlias') || '调度器别名'">
+                <el-input v-model="form.node_alias" :placeholder="$t('admin.geoDns.schedulerAliasPlaceholder') || '可选，留空将自动生成 KR-Scheduler'" />
             </el-form-item>
             <el-form-item :label="$t('admin.geoDns.ipAddress')">
                 <el-input v-model="form.public_ipv4" maxlength="45" :placeholder="$t('admin.geoDns.ipPlaceholder') || '例: 10.20.30.40'" />

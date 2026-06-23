@@ -45,6 +45,7 @@ func New(cfg *config.Config) *Server {
 			cfg.NodeAPIEndpoint(),
 			cfg.NodeToken(),
 			apiKeyPath,
+			"geodns/heartbeat",
 			timeout,
 		)
 		log.Printf("geodns: heartbeat enabled (endpoint=%s, api_key=%s, node_id=%s)",
