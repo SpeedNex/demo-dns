@@ -9,8 +9,11 @@ use App\Infrastructure\ClickHouse\ClickHouseClient;
 use App\Models\Device;
 use App\Models\Node;
 use App\Models\Profile;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 /**
  * 2026-06-22: 查询日志只写 ClickHouse，不再经过 MySQL 中间表。
@@ -25,6 +28,7 @@ final class QueryLogController
 
         /** @var Node $node */
         $node = $request->attributes->get('node');
+
         $validated = $request->validate([
             'batch_id' => 'required|string|max:100',
             'items' => 'required|array|min:1|max:1000',
@@ -50,123 +54,96 @@ final class QueryLogController
         $usageEvents = [];
 
         $profiles = Profile::query()
-            ->whereIn('profile_uid', collect($validated['items'])->pluck('profile_id')->filter()->unique()->values())
+            ->whereIn(
+                'profile_uid',
+                collect($validated['items'])
+                    ->pluck('profile_id')
+                    ->filter()
+                    ->unique()
+                    ->values()
+            )
             ->get(['id', 'profile_uid', 'user_id'])
             ->keyBy('profile_uid');
 
         foreach ($validated['items'] as $item) {
             $profileUid = $item['profile_id'] ?? null;
             $profile = $profileUid !== null ? $profiles->get($profileUid) : null;
+
             $profilePk = $profile?->id;
             $userPk = $profile?->user_id;
-            $queriedAt = isset($item['queried_at']) ? now()->setTimestamp((int) $item['queried_at']) : $now;
+
+            $queriedAt = isset($item['queried_at'])
+                ? now()->setTimestamp((int) $item['queried_at'])
+                : $now;
+
             $queryName = strtolower((string) ($item['query_name'] ?? $item['domain'] ?? ''));
             $domain = strtolower((string) ($item['domain'] ?? $item['query_name'] ?? ''));
+
             $clientIp = trim((string) ($item['client_ip'] ?? ''));
-            // P1: 防御性剥离端口号（127.0.0.1:55309 → 127.0.0.1），
-            // 防止 resolver 上报时意外包含端口导致设备识别失真
+
+            // 防御性剥离 IPv4 端口号，例如 127.0.0.1:55309 -> 127.0.0.1。
+            // 注意：IPv6 会包含多个冒号，所以这里仅处理冒号数量等于 1 的情况。
             if ($clientIp !== '' && substr_count($clientIp, ':') === 1) {
                 $parts = explode(':', $clientIp);
                 $clientIp = $parts[0];
             }
+
+            $protocol = strtolower(trim((string) ($item['protocol'] ?? 'doh')));
+            if ($protocol === '') {
+                $protocol = 'doh';
+            }
+
             $devicePk = null;
             $deviceUid = trim((string) ($item['device_id'] ?? ''));
 
-            // Fallback: profile not found via profile_uid → try resolving via device_id.
+            // Fallback: profile not found via profile_uid -> try resolving via device_id.
+            // 这里只解析 profile/user，不在这里累加 query_count，避免后续主流程再次累加导致重复计数。
             if ($profilePk === null && $deviceUid !== '') {
                 $dev = Device::query()
                     ->where('device_uid', $deviceUid)
                     ->whereNotNull('profile_id')
                     ->orderByDesc('last_seen_at')
-                    ->first(['profile_id', 'user_id']);
+                    ->first(['id', 'profile_id', 'user_id']);
+
                 if ($dev) {
                     $profilePk = $dev->profile_id;
                     $userPk = $dev->user_id;
-                    $dev->forceFill([
-                        'last_seen_at' => $queriedAt,
-                        'last_query_at' => $queriedAt,
-                        'updated_at' => $now,
-                    ])->save();
-                    $dev->increment('query_count');
                     $devicePk = $dev->id;
                 }
             }
 
             if ($userPk !== null && $profilePk !== null) {
-                // 2026-06-24: 优先按 (profile_id, fingerprint) 查找,
-                // 避免 device_uid 为空时 INSERT 重复记录导致 uniq_devices_profile_fingerprint 冲突。
-                // fingerprint 已经包含 profile_id + protocol + clientIp + deviceUid,
-                // 足以唯一标识一台设备。
                 $fingerprint = hash('sha256', implode('|', [
                     (string) $profilePk,
-                    'doh',
+                    $protocol,
                     $clientIp,
                     $deviceUid,
                 ]));
-                $device = Device::query()
-                    ->where('profile_id', $profilePk)
-                    ->where('fingerprint', $fingerprint)
-                    ->first();
 
-                if (! $device) {
-                    // 2026-06-24: 先按 fingerprint 查不到，再按 device_uid 查
-                    // (同客户端可能因间隙性 fingerprint 变化导致首次 lookup miss)
-                    if ($deviceUid !== '') {
-                        $device = Device::query()
-                            ->where('profile_id', $profilePk)
-                            ->where('device_uid', $deviceUid)
-                            ->first();
-                    }
+                $device = $this->resolveDevice(
+                    userPk: (int) $userPk,
+                    profilePk: (int) $profilePk,
+                    deviceUid: $deviceUid,
+                    fingerprint: $fingerprint,
+                    clientIp: $clientIp,
+                    protocol: $protocol,
+                    queriedAt: $queriedAt,
+                    now: $now
+                );
 
-                    if (! $device) {
-                        $device = Device::query()->create([
-                            'user_id' => $userPk,
-                            'profile_id' => $profilePk,
-                            'device_uid' => $deviceUid !== '' ? $deviceUid : 'dev_' . substr(hash('sha256', $clientIp), 0, 16),
-                            'fingerprint' => $fingerprint,
-                            'name' => $deviceUid !== '' ? $deviceUid : ('Device ' . ($clientIp !== '' ? $clientIp : substr(hash('sha256', $clientIp), 0, 6))),
-                            'source' => 'auto',
-                            'protocol' => 'doh',
-                            'ip_hash' => $clientIp !== '' ? hash('sha256', $clientIp) : null,
-                            'first_seen_at' => $queriedAt,
-                            'last_seen_at' => $queriedAt,
-                            'last_query_at' => $queriedAt,
-                            'query_count' => 1,
-                            'status' => 'active',
-                            'created_at' => $now,
-                            'updated_at' => $now,
-                        ]);
-                    } else {
-                        // 通过 device_uid 找到已有设备，更新 fingerprint
-                        $device->forceFill([
-                            'fingerprint' => $fingerprint,
-                            'last_seen_at' => $queriedAt,
-                            'last_query_at' => $queriedAt,
-                            'updated_at' => $now,
-                        ])->save();
-                        $device->increment('query_count');
-                    }
-                } else {
-                    $device->forceFill([
-                        'last_seen_at' => $queriedAt,
-                        'last_query_at' => $queriedAt,
-                        'updated_at' => $now,
-                    ])->save();
-                    $device->increment('query_count');
-                }
                 $devicePk = $device->id;
                 $deviceUid = $device->device_uid;
             }
 
             $dnsLogs[] = [
-                'event_id' => \Illuminate\Support\Str::uuid()->toString(),
+                'event_id' => Str::uuid()->toString(),
                 'event_time' => $queriedAt->format('Y-m-d H:i:s'),
                 'timestamp' => $queriedAt->format('Y-m-d H:i:s'),
                 'node_id' => (string) $node->id,
                 'user_id' => $userPk !== null ? (string) $userPk : '',
                 'profile_id' => $profileUid ?? '',
                 'device_id' => $deviceUid,
-                'domain' => $domain,
+                'domain' => $domain !== '' ? $domain : $queryName,
                 'query_type' => strtoupper((string) ($item['query_type'] ?? 'A')),
                 'action' => strtoupper((string) $item['action']),
                 'reason' => (string) ($item['reason'] ?? ''),
@@ -174,7 +151,7 @@ final class QueryLogController
                 'client_ip' => $clientIp,
                 'rcode' => (int) ($item['rcode'] ?? 0),
                 'latency_ms' => (int) ($item['latency_ms'] ?? 0),
-                'protocol' => strtolower((string) ($item['protocol'] ?? '')),
+                'protocol' => $protocol,
             ];
 
             if ($userPk !== null && $profilePk !== null) {
@@ -191,8 +168,13 @@ final class QueryLogController
         // 直接写入 ClickHouse，不再经过 MySQL batch/error 表。
         // dns-resolver 的本地 buffer 会在写入失败时自动重试。
         try {
-            $clickhouse->insertJsonEachRow('dns_logs', $dnsLogs);
-            $clickhouse->insertJsonEachRow('usage_events', $usageEvents);
+            if ($dnsLogs !== []) {
+                $clickhouse->insertJsonEachRow('dns_logs', $dnsLogs);
+            }
+
+            if ($usageEvents !== []) {
+                $clickhouse->insertJsonEachRow('usage_events', $usageEvents);
+            }
         } catch (\Throwable $e) {
             return response()->json([
                 'data' => $result,
@@ -203,5 +185,140 @@ final class QueryLogController
         return response()->json([
             'data' => $result,
         ]);
+    }
+
+    private function resolveDevice(
+        int $userPk,
+        int $profilePk,
+        string $deviceUid,
+        string $fingerprint,
+        string $clientIp,
+        string $protocol,
+        Carbon $queriedAt,
+        Carbon $now
+    ): Device {
+        $resolvedDeviceUid = $deviceUid !== ''
+            ? $deviceUid
+            : 'dev_' . substr(hash('sha256', $clientIp), 0, 16);
+
+        $device = $this->findDevice($resolvedDeviceUid, $profilePk, $fingerprint);
+
+        if (! $device) {
+            try {
+                $device = Device::query()->create([
+                    'user_id' => $userPk,
+                    'profile_id' => $profilePk,
+                    'device_uid' => $resolvedDeviceUid,
+                    'fingerprint' => $fingerprint,
+                    'name' => $deviceUid !== ''
+                        ? $deviceUid
+                        : ('Device ' . ($clientIp !== '' ? $clientIp : 'Unknown')),
+                    'source' => 'auto',
+                    'protocol' => $protocol,
+                    'ip_hash' => $clientIp !== ''
+                        ? hash('sha256', $clientIp)
+                        : null,
+                    'first_seen_at' => $queriedAt,
+                    'last_seen_at' => $queriedAt,
+                    'last_query_at' => $queriedAt,
+                    'query_count' => 1,
+                    'status' => 'active',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+
+                return $device;
+            } catch (QueryException $e) {
+                if (! $this->isDuplicateKeyException($e)) {
+                    throw $e;
+                }
+
+                $device = $this->findDevice($resolvedDeviceUid, $profilePk, $fingerprint);
+
+                if (! $device) {
+                    throw $e;
+                }
+            }
+        }
+
+        $this->touchDevice(
+            device: $device,
+            userPk: $userPk,
+            profilePk: $profilePk,
+            fingerprint: $fingerprint,
+            clientIp: $clientIp,
+            protocol: $protocol,
+            queriedAt: $queriedAt,
+            now: $now
+        );
+
+        return $device;
+    }
+
+    private function findDevice(
+        string $resolvedDeviceUid,
+        int $profilePk,
+        string $fingerprint
+    ): ?Device {
+        $device = Device::query()
+            ->where('device_uid', $resolvedDeviceUid)
+            ->first();
+
+        if ($device) {
+            return $device;
+        }
+
+        return Device::query()
+            ->where('profile_id', $profilePk)
+            ->where('fingerprint', $fingerprint)
+            ->first();
+    }
+
+    private function touchDevice(
+        Device $device,
+        int $userPk,
+        int $profilePk,
+        string $fingerprint,
+        string $clientIp,
+        string $protocol,
+        Carbon $queriedAt,
+        Carbon $now
+    ): void {
+        try {
+            $device->forceFill([
+                'user_id' => $userPk,
+                'profile_id' => $profilePk,
+                'fingerprint' => $fingerprint,
+                'protocol' => $protocol,
+                'ip_hash' => $clientIp !== ''
+                    ? hash('sha256', $clientIp)
+                    : null,
+                'last_seen_at' => $queriedAt,
+                'last_query_at' => $queriedAt,
+                'updated_at' => $now,
+            ])->save();
+        } catch (QueryException $e) {
+            if (! $this->isDuplicateKeyException($e)) {
+                throw $e;
+            }
+
+            // 如果更新 fingerprint 时撞上 uniq_devices_profile_fingerprint，
+            // 说明另一条设备记录已经拥有该 fingerprint。
+            // 这里不再强行覆盖，避免继续抛 1062。
+            $device->forceFill([
+                'last_seen_at' => $queriedAt,
+                'last_query_at' => $queriedAt,
+                'updated_at' => $now,
+            ])->save();
+        }
+
+        Device::query()
+            ->whereKey($device->id)
+            ->increment('query_count');
+    }
+
+    private function isDuplicateKeyException(QueryException $e): bool
+    {
+        return (int) ($e->errorInfo[1] ?? 0) === 1062;
     }
 }
