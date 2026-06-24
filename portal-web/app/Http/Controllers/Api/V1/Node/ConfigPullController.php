@@ -1,155 +1,138 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\V1\Node;
 
-use App\Domain\ConfigVersion\ConfigBuildService;
-use App\Domain\ConfigVersion\ChecksumService;
 use App\Models\ConfigVersion;
-use App\Models\Node;
+use App\Models\Plan;
 use App\Models\Profile;
-use App\Models\ProfileVersion;
-use App\Models\PublishTask;
-use App\Models\TaskExecution;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Resolver 配置拉取控制器。
+ *
+ * 架构：Global Config + Lazy Profile
+ *   - GET /config           → 公共运行参数（upstreams / plans / rulesets）
+ *   - GET /profiles/{id}    → 单个 Profile 配置（按需拉取）
+ *   - POST /profiles/check  → 批量版本检查
+ */
 final class ConfigPullController
 {
-    public function show(Request $request): JsonResponse|Response
+    /**
+     * 拉取 Global Config：Resolver 公共运行配置，不含任何用户 Profile 数据。
+     *
+     * GET /api/v1/node/dns-resolver/config
+     */
+    public function show(): JsonResponse
     {
-        /** @var Node $node */
-        $node = $request->attributes->get('node');
-        $service = new ConfigBuildService(new ChecksumService());
-        $currentVersion = (int) $request->integer('current_version', $node->current_config_version);
-
-        // Resolve the config version targeted for this node via publish tasks,
-        // rather than picking the globally latest version. This ensures
-        // multi-tenant isolation and supports gradual rollout.
-        $configVersion = ConfigVersion::query()
-            ->where(function ($query) use ($node): void {
-                $query
-                    ->whereHas('publishTasks.executions', function ($executionQuery) use ($node): void {
-                        $executionQuery->where('node_id', $node->id);
-                    })
-                    ->orWhereHas('publishTasks', function ($taskQuery) use ($node): void {
-                        $taskQuery
-                            ->whereIn('status', ['queued', 'running', 'succeeded', 'partial'])
-                            ->where(function ($targetQuery) use ($node): void {
-                                $targetQuery
-                                    ->where('target_scope', 'all_nodes')
-                                    ->orWhere(function ($specificNodeQuery) use ($node): void {
-                                        $specificNodeQuery
-                                            ->where('target_scope', 'specific_nodes')
-                                            ->whereJsonContains('target_filter->node_ids', $node->id);
-                                    });
-                            });
-                    });
-            })
-            ->orderByDesc('version')
-            ->first();
-
-        // Fallback to latest version if no targeted task found.
-        if ($configVersion === null) {
-            $configVersion = ConfigVersion::query()->orderByDesc('version')->first();
-        }
-
-        if ($configVersion === null) {
-            return response()->noContent();
-        }
-
-        if ($configVersion->version <= $currentVersion) {
-            return response()->noContent();
-        }
-
-        // Read raw config_json bypassing Eloquent's `array` cast so the
-        // nested `quota: {}` object is preserved as stdClass instead of
-        // collapsing to []. The resolver expects quota as map[string]any.
-        $rawConfigJson = $configVersion->getRawOriginal('config_json');
-        $singleConfig = is_string($rawConfigJson)
-            ? json_decode($rawConfigJson, true)
-            : (array) $rawConfigJson;
-        if (is_array($singleConfig) && array_key_exists('quota', $singleConfig)) {
-            $singleConfig['quota'] = (object) $singleConfig['quota'];
-        } else {
-            $singleConfig['quota'] = (object) [];
-        }
-        // Backfill rule_id to string for legacy bundles (resolver expects string type).
-        if (is_array($singleConfig) && isset($singleConfig['rules']) && is_array($singleConfig['rules'])) {
-            foreach ($singleConfig['rules'] as $i => $r) {
-                if (is_array($r) && array_key_exists('rule_id', $r)) {
-                    $singleConfig['rules'][$i]['rule_id'] = (string) $r['rule_id'];
-                }
-            }
-        }
-
-        // 聚合所有活跃 Profile 的最新配置，确保 resolver 收到完整的多租户配置
-        $allProfiles = [];
-        $latestVersions = ProfileVersion::whereIn('profile_id', Profile::where('status', 'active')->pluck('id'))
-            ->where('status', 'published')
-            ->orderByDesc('version')
-            ->get()
-            ->groupBy('profile_id');
-
-        foreach ($latestVersions as $profileId => $versions) {
-            $pvConfig = $versions->first()->config_json;
-            if (is_array($pvConfig)) {
-                // 规范化 quota 对象
-                if (array_key_exists('quota', $pvConfig)) {
-                    $pvConfig['quota'] = (object) $pvConfig['quota'];
-                } else {
-                    $pvConfig['quota'] = (object) [];
-                }
-                $allProfiles[] = $pvConfig;
-            }
-        }
-
-        // 如果已发布的配置不在 latestVersions 中，也追加进去
-        $singleProfileId = $singleConfig['profile_id'] ?? null;
-        $alreadyIncluded = false;
-        foreach ($allProfiles as $p) {
-            if (($p['profile_id'] ?? null) === $singleProfileId) {
-                $alreadyIncluded = true;
-                break;
-            }
-        }
-        if (!$alreadyIncluded) {
-            $allProfiles[] = $singleConfig;
-        }
-
-        $profileVersion = (int) ($singleConfig['version'] ?? $configVersion->version);
-        $bundle = $service->buildBundle(
-            [
-                'profile_version' => $profileVersion,
-                'config_json' => $singleConfig,
-                'all_profiles' => $allProfiles,
+        $plans = Plan::where('status', 'active')->get()->mapWithKeys(fn ($plan) => [
+            $plan->code => [
+                'monthly_query_limit' => (int) $plan->monthly_query_limit,
+                'profiles_limit'      => (int) $plan->profiles_limit,
+                'devices_limit'       => (int) $plan->devices_limit,
+                'log_retention_days'  => (int) $plan->log_retention_days,
             ],
-            [$this->defaultUpstream()],
-        );
+        ]);
 
-        $publishTask = PublishTask::where('config_version_id', $configVersion->id)
-            ->latest('queued_at')
-            ->first();
+        return response()->json(['data' => [
+            'version'   => (int) (ConfigVersion::max('version') ?? 0),
+            'upstreams' => [$this->defaultUpstream()],
+            'plans'     => $plans,
+            'rulesets'  => [],
+            'limits'    => [
+                'max_qps'        => (int) config('dns.max_qps', 1000),
+                'rate_limit_rps' => (int) config('dns.rate_limit_rps', 100),
+            ],
+        ]]);
+    }
 
-        if ($publishTask !== null) {
-            TaskExecution::updateOrCreate(
-                [
-                    'publish_task_id' => $publishTask->id,
-                    'node_id' => $node->id,
-                ],
-                [
-                    'config_version' => $configVersion->version,
-                    'status' => 'pulled',
-                    'checksum' => $bundle['checksum'],
-                    'pulled_at' => now(),
-                    'last_seen_at' => now(),
-                ],
-            );
+    /**
+     * 拉取单个 Profile 的完整配置（resolver 按需调用）。
+     *
+     * GET /api/v1/node/dns-resolver/profiles/{profileId}
+     */
+    public function showProfile(string $profileId): JsonResponse
+    {
+        // 1. 通过 6 位 hex 查找 Profile
+        $profile = Profile::where('profile_id', $profileId)->first();
+        if (! $profile) {
+            return response()->json(['error' => 'Profile not found'], 404);
         }
 
-        return response()->json([
-            'data' => $bundle,
-        ]);
+        // 2. 取该 Profile 的最新 ConfigVersion
+        $configVersion = ConfigVersion::where('target_profile_id', $profile->id)
+            ->orderByDesc('version')
+            ->first();
+
+        if (! $configVersion) {
+            return response()->json(['error' => 'No published config for this profile'], 404);
+        }
+
+        // 3. 解析 config_json
+        $raw = $configVersion->getRawOriginal('config_json');
+        $config = is_string($raw) ? json_decode($raw, true) : (array) $raw;
+
+        if (! is_array($config)) {
+            return response()->json(['error' => 'Invalid config format'], 500);
+        }
+
+        // 4. 确保 quota 对象格式正确
+        if (array_key_exists('quota', $config)) {
+            $config['quota'] = (object) $config['quota'];
+        } else {
+            $config['quota'] = (object) [];
+        }
+
+        // 5. rule_id 转为字符串（resolver 期望 string 类型）
+        if (isset($config['rules']) && is_array($config['rules'])) {
+            foreach ($config['rules'] as $i => $r) {
+                if (is_array($r) && array_key_exists('rule_id', $r)) {
+                    $config['rules'][$i]['rule_id'] = (string) $r['rule_id'];
+                }
+            }
+        }
+
+        return response()->json(['data' => $config]);
+    }
+
+    /**
+     * 批量检查 Profile 版本：resolver 上报本地缓存的版本号，
+     * Portal 返回有更新的 Profile 列表。
+     *
+     * POST /api/v1/node/dns-resolver/profiles/check
+     *
+     * @bodyParam profiles object { profile_id: local_version, ... }
+     */
+    public function checkProfiles(Request $request): JsonResponse
+    {
+        $clientVersions = $request->input('profiles', []);
+        if (! is_array($clientVersions) || $clientVersions === []) {
+            return response()->json(['data' => ['updated' => []]]);
+        }
+
+        $updated = [];
+
+        // 批量查找所有请求的 Profile
+        $profileIds = array_keys($clientVersions);
+        $profiles = Profile::whereIn('profile_id', $profileIds)
+            ->get(['id', 'profile_id'])
+            ->keyBy('profile_id');
+
+        foreach ($clientVersions as $profileId => $localVersion) {
+            $profile = $profiles->get($profileId);
+            if (! $profile) {
+                continue;
+            }
+            $latestVersion = ConfigVersion::where('target_profile_id', $profile->id)
+                ->max('version');
+            if ($latestVersion !== null && (int) $latestVersion > (int) $localVersion) {
+                $updated[$profileId] = (int) $latestVersion;
+            }
+        }
+
+        return response()->json(['data' => ['updated' => $updated]]);
     }
 
     /**
@@ -158,9 +141,9 @@ final class ConfigPullController
     private function defaultUpstream(): array
     {
         return [
-            'address' => config('dns.default_upstream', '1.1.1.1:53'),
+            'address'  => config('dns.default_upstream', '1.1.1.1:53'),
             'protocol' => 'udp',
-            'timeout' => '1500ms',
+            'timeout'  => '1500ms',
         ];
     }
 }

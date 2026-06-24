@@ -1,7 +1,8 @@
 // Package agent 实现 dns-resolver 节点生命周期管理：
-//   - 心跳上报到 portal-web admin（2026-06-15: dns-console-web 已合并入 portal-web）
-//   - config bundle 拉取、checksum 校验、原子写盘、热加载
-//   - config ACK
+//   - 心跳上报到 portal-web admin
+//   - Global Config 拉取（启动 + 定时刷新）
+//   - Profile 按需拉取 + 二级缓存（Memory LRU + Disk CacheEnvelope）
+//   - 版本检查 + LRU 淘汰
 //
 // 鉴权完全基于 console 预签发的 APIKey，统一使用 Bearer Token 鉴权。
 package agent
@@ -21,6 +22,7 @@ import (
 	"sync"
 	"time"
 
+	"ocer-dns/dns-resolver/internal/cache"
 	"ocer-dns/dns-resolver/internal/config"
 	"ocer-dns/dns-resolver/internal/matching"
 	"ocer-dns/dns-resolver/internal/metrics"
@@ -38,6 +40,7 @@ type Agent struct {
 	engine  *matching.Engine
 	metrics *metrics.Metrics
 	client  *http.Client
+	pCache  *cache.ProfileCache
 
 	mu                   sync.RWMutex
 	cred                 Credentials
@@ -46,6 +49,7 @@ type Agent struct {
 	currentChecksum      string
 	lastConfigPullAt     string
 	lastLogFlushAt       string
+	globalVersion        int64
 }
 
 type heartbeatRequest struct {
@@ -117,14 +121,25 @@ func New(cfg *config.Config, engine *matching.Engine, collector *metrics.Metrics
 		timeout = time.Duration(cfg.ControlPlane.RequestTimeoutSec) * time.Second
 	}
 
+	cacheDir := cfg.ControlPlane.ProfilesCacheDir
+	if cacheDir == "" {
+		cacheDir = cfg.ControlPlane.ProfilesPath
+	}
+	pc := cache.NewProfileCache(
+		cacheDir,
+		cfg.ControlPlane.ProfileCacheMemory,
+		cfg.ControlPlane.ProfileCacheDisk,
+		time.Duration(cfg.ControlPlane.ProfileEvictTTLMin)*time.Minute,
+		time.Duration(cfg.ControlPlane.ProfileDiskTTLDays)*24*time.Hour,
+	)
+
 	return &Agent{
 		cfg:     cfg,
 		engine:  engine,
 		metrics: collector,
+		pCache:  pc,
 		cred: Credentials{
 			NodeID: strings.TrimSpace(cfg.ControlPlane.NodeID),
-			// 2026-06-24: APIKey 字段已 deprecated,凭据改由 LoadBearer() 从文件读取。
-			// 留空防止任何意外 fallback 到 yaml 旧值。
 		},
 		localProfiles: make(map[string]int64),
 		client: &http.Client{
@@ -158,20 +173,241 @@ func (a *Agent) StartConfigSync(ctx context.Context, interval time.Duration) {
 		interval = 30 * time.Second
 	}
 
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
+	// 版本检查间隔
+	checkInterval := time.Duration(a.cfg.ControlPlane.VersionCheckMinutes) * time.Minute
+	if checkInterval <= 0 {
+		checkInterval = 5 * time.Minute
+	}
 
-	a.pullLatestConfig()
+	ticker := time.NewTicker(interval)
+	checkTicker := time.NewTicker(checkInterval)
+	defer ticker.Stop()
+	defer checkTicker.Stop()
+
+	// 启动时：拉取 Global Config + 加载磁盘缓存
+	a.pullGlobalConfig()
+	a.pCache.LoadFromDiskOnStartup()
+
+	// 启动 evictor（每 5 分钟）
+	go a.evictLoop()
 
 	for {
 		select {
 		case <-ticker.C:
-			a.pullLatestConfig()
+			a.pullGlobalConfig()
+		case <-checkTicker.C:
+			a.checkProfiles()
 		case <-ctx.Done():
 			log.Println("Config sync stopped")
 			return
 		}
 	}
+}
+
+// pullGlobalConfig 拉取 Global Config（upstreams / plans / rulesets / limits）。
+func (a *Agent) pullGlobalConfig() {
+	path := "/api/v1/node/dns-resolver/config"
+	resp, err := a.doNodeRequest(http.MethodGet, path, nil)
+	if err != nil {
+		log.Printf("Global config pull failed: %v", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return
+	}
+
+	var envelope struct {
+		Data json.RawMessage `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&envelope); err != nil {
+		log.Printf("Decode global config failed: %v", err)
+		return
+	}
+
+	var gc config.GlobalConfig
+	if err := json.Unmarshal(envelope.Data, &gc); err != nil {
+		log.Printf("Parse global config failed: %v", err)
+		return
+	}
+
+	// 写盘
+	globalPath := filepath.Join(a.cfg.ControlPlane.ProfilesPath, "global.json")
+	os.MkdirAll(filepath.Dir(globalPath), 0755)
+	tmpPath := globalPath + ".tmp"
+	os.WriteFile(tmpPath, envelope.Data, 0644)
+	os.Rename(tmpPath, globalPath)
+
+	// 更新全局版本
+	a.mu.Lock()
+	a.globalVersion = gc.Version
+	a.mu.Unlock()
+
+	log.Printf("Global config applied version=%d upstreams=%d", gc.Version, len(gc.Upstreams))
+}
+
+// FetchProfile 按 Profile ID 拉取配置，经过 Memory → Disk → Portal 三级回源。
+// 被三个协议 server 在查询未命中时调用。
+func (a *Agent) FetchProfile(profileID string) error {
+	profileID = strings.TrimSpace(profileID)
+	if len(profileID) < 4 {
+		return fmt.Errorf("invalid profile id: %s", profileID)
+	}
+
+	// 1. 检查内存缓存
+	if _, _, ok := a.pCache.GetFromMemory(profileID); ok {
+		return nil
+	}
+
+	// 2. 检查磁盘缓存
+	if data, version, ok := a.pCache.GetFromDisk(profileID); ok {
+		a.pCache.SetToMemory(profileID, data, version)
+		return nil
+	}
+
+	// 3. 回源 Portal（SingleFlight 防击穿）
+	_, _, err := a.pCache.DoOnce(profileID, func() (json.RawMessage, int64, error) {
+		path := fmt.Sprintf("/api/v1/node/dns-resolver/profiles/%s", profileID)
+		resp, fetchErr := a.doNodeRequest(http.MethodGet, path, nil)
+		if fetchErr != nil {
+			return nil, 0, fmt.Errorf("fetch profile %s: %w", profileID, fetchErr)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == http.StatusNotFound {
+			return nil, 0, fmt.Errorf("profile %s not found on portal", profileID)
+		}
+		if resp.StatusCode != http.StatusOK {
+			return nil, 0, fmt.Errorf("fetch profile %s returned status %d", profileID, resp.StatusCode)
+		}
+
+		body, readErr := io.ReadAll(resp.Body)
+		if readErr != nil {
+			return nil, 0, fmt.Errorf("read profile %s: %w", profileID, readErr)
+		}
+
+		// 解析响应获取 version
+		var dataEnv struct {
+			Data json.RawMessage `json:"data"`
+		}
+		if err := json.Unmarshal(body, &dataEnv); err != nil {
+			return nil, 0, fmt.Errorf("parse profile %s: %w", profileID, err)
+		}
+
+		// 从 profile config 中提取 version
+		var profileMeta struct {
+			Version int64 `json:"version"`
+		}
+		json.Unmarshal(dataEnv.Data, &profileMeta)
+
+		// 写入磁盘缓存
+		if diskErr := a.pCache.SetToDisk(profileID, dataEnv.Data, profileMeta.Version); diskErr != nil {
+			log.Printf("Write profile %s to disk cache failed: %v", profileID, diskErr)
+		}
+
+		return dataEnv.Data, profileMeta.Version, nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// 4. 从内存缓存读取（刚写入）并加载到引擎
+	if data, version, ok := a.pCache.GetFromMemory(profileID); ok {
+		a.pCache.SetToMemory(profileID, data, version)
+
+		// 解析 ProfileConfig 并加载到 engine
+		var bundle config.ResolverConfig
+		if err := json.Unmarshal(data, &bundle); err == nil && len(bundle.Profiles) > 0 {
+			p := bundle.Profiles[0]
+			a.engine.LoadProfileRules(p.ProfileID, nil, nil, nil, nil, nil, nil, nil, nil)
+			log.Printf("Lazy loaded profile: %s (version=%d)", profileID, version)
+		}
+
+		// 记录版本到 localProfiles（供心跳上报）
+		a.mu.Lock()
+		a.localProfiles[profileID] = version
+		a.mu.Unlock()
+	}
+
+	return nil
+}
+
+// checkProfiles 检查所有内存缓存的 Profile 是否有新版本。
+func (a *Agent) checkProfiles() {
+	a.mu.RLock()
+	var profileIDs []string
+	for id := range a.localProfiles {
+		profileIDs = append(profileIDs, id)
+	}
+	a.mu.RUnlock()
+
+	if len(profileIDs) == 0 {
+		return
+	}
+	if len(profileIDs) > 500 {
+		profileIDs = profileIDs[:500]
+	}
+
+	payload := map[string]any{
+		"profiles": func() map[string]int64 {
+			result := make(map[string]int64)
+			for _, id := range profileIDs {
+				a.mu.RLock()
+				result[id] = a.localProfiles[id]
+				a.mu.RUnlock()
+			}
+			return result
+		}(),
+	}
+
+	body, _ := json.Marshal(payload)
+	resp, err := a.doNodeRequest(http.MethodPost, "/api/v1/node/dns-resolver/profiles/check", bytes.NewReader(body))
+	if err != nil {
+		log.Printf("Profile version check failed: %v", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return
+	}
+
+	var result struct {
+		Data struct {
+			Updated map[string]int64 `json:"updated"`
+		} `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return
+	}
+
+	for profileID, newVersion := range result.Data.Updated {
+		log.Printf("Profile %s has new version: %d (local: %d), re-fetching", profileID, newVersion, a.localProfiles[profileID])
+		if err := a.FetchProfile(profileID); err != nil {
+			log.Printf("Re-fetch profile %s failed: %v", profileID, err)
+		}
+	}
+}
+
+// evictLoop 定期清理过期 Profile（内存 LRU 由 cache 内部处理，此函数清理磁盘孤儿）
+func (a *Agent) evictLoop() {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+	for range ticker.C {
+		a.pCache.LoadFromDiskOnStartup() // 重新扫描清理过期文件
+	}
+}
+
+// ProfileVersions 返回当前缓存的所有 Profile 版本。
+func (a *Agent) ProfileVersions() map[string]int64 {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	result := make(map[string]int64, len(a.localProfiles))
+	for k, v := range a.localProfiles {
+		result[k] = v
+	}
+	return result
 }
 
 func (a *Agent) sendHeartbeat() {

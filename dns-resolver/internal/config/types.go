@@ -1,5 +1,13 @@
 package config
 
+type GlobalConfig struct {
+	Version   int64              `json:"version"`
+	Upstreams []Upstream         `json:"upstreams"`
+	Plans     map[string]any     `json:"plans"`
+	Rulesets  map[string]int64   `json:"rulesets"`
+	Limits    map[string]int64   `json:"limits"`
+}
+
 type RuntimeConfig struct {
 	NodeID         string
 	APIRoot        string

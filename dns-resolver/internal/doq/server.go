@@ -26,12 +26,13 @@ import (
 
 // Server handles DNS over QUIC (RFC 9250) with full Profile Resolution Layer.
 type Server struct {
-	cfg       *config.Config
-	handler   *resolver.Handler
-	logBuffer *logging.Buffer
-	metrics   *metrics.Metrics
-	listener  *quic.Listener
-	mu        sync.Mutex
+	cfg           *config.Config
+	handler       *resolver.Handler
+	logBuffer     *logging.Buffer
+	metrics       *metrics.Metrics
+	listener      *quic.Listener
+	mu            sync.Mutex
+	profileLoader func(string) error
 }
 
 // activeConfig mirrors the DNS/DoH profile config schema.
@@ -54,12 +55,14 @@ func New(
 	handler *resolver.Handler,
 	logBuffer *logging.Buffer,
 	collector *metrics.Metrics,
+	profileLoader func(string) error,
 ) *Server {
 	return &Server{
-		cfg:       cfg,
-		handler:   handler,
-		logBuffer: logBuffer,
-		metrics:   collector,
+		cfg:           cfg,
+		handler:       handler,
+		logBuffer:     logBuffer,
+		metrics:       collector,
+		profileLoader: profileLoader,
 	}
 }
 
@@ -221,6 +224,12 @@ func (s *Server) resolveRuntimeProfile(remoteAddr string, profileUID string) (pr
 
 	// 如果通过 TLS SNI 直接拿到了 profileUID，优先使用
 	if profileUID != "" {
+		// 按需加载 Profile（loader 内部有缓存，幂等安全）
+		if s.profileLoader != nil {
+			if err := s.profileLoader(profileUID); err != nil {
+				log.Printf("doq: lazy load profile %s: %v", profileUID, err)
+			}
+		}
 		for _, p := range cfg.Profiles {
 			if p.ProfileID == profileUID {
 				safeSearch = boolFromMap(p.Parental, "safe_search") || boolFromMap(p.Parental, "force_safe_search")

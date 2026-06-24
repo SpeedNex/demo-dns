@@ -20,13 +20,14 @@ import (
 )
 
 type Server struct {
-	cfg       *config.Config
-	handler   *resolver.Handler
-	metrics   *metrics.Metrics
-	udpServer *dns.Server
-	tcpServer *dns.Server
-	dotServer *dns.Server
-	sniMap    sync.Map // key: remoteAddr -> sni (用于 DoT 按 SNI 识别 Profile)
+	cfg           *config.Config
+	handler       *resolver.Handler
+	metrics       *metrics.Metrics
+	udpServer     *dns.Server
+	tcpServer     *dns.Server
+	dotServer     *dns.Server
+	sniMap        sync.Map // key: remoteAddr -> sni (用于 DoT 按 SNI 识别 Profile)
+	profileLoader func(string) error
 }
 
 type activeConfig struct {
@@ -46,6 +47,7 @@ func New(
 	cfg *config.Config,
 	handler *resolver.Handler,
 	metrics *metrics.Metrics,
+	profileLoader func(string) error,
 ) *Server {
 	s := &Server{
 		cfg:     cfg,
@@ -91,6 +93,7 @@ func New(
 		}
 	}
 
+	s.profileLoader = profileLoader
 	return s
 }
 
@@ -200,6 +203,12 @@ func (s *Server) resolveRuntimeProfile(addr net.Addr, profileUID string) (profil
 
 	// 如果通过 SNI 直接拿到了 profileUID，优先使用
 	if profileUID != "" {
+		// 按需加载 Profile（loader 内部有缓存，幂等安全）
+		if s.profileLoader != nil {
+			if err := s.profileLoader(profileUID); err != nil {
+				log.Printf("dns: lazy load profile %s: %v", profileUID, err)
+			}
+		}
 		for _, p := range cfg.Profiles {
 			if p.ProfileID == profileUID {
 				safeSearch = boolFromMap(p.Parental, "safe_search") || boolFromMap(p.Parental, "force_safe_search")

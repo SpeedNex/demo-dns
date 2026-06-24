@@ -197,13 +197,13 @@ func main() {
 	_ = ctx
 
 	// Initialize and start DoH server with resolver and metrics
-	dohServer := doh.NewServer(cfg, engine, resolutionLayer, logBuffer, metricsCollector, queryCache)
+	dohServer := doh.NewServer(cfg, engine, resolutionLayer, logBuffer, metricsCollector, queryCache, agt.FetchProfile)
 
 	// Create shared resolution handler for DNS and DoQ servers
 	resolverHandler := resolver.NewHandler(cfg, resolutionLayer, logBuffer, metricsCollector, queryCache, dnsCache)
 
 	// Initialize DNS server (UDP, TCP, DoT) with shared handler
-	dnsServer := dnsserver.New(cfg, resolverHandler, metricsCollector)
+	dnsServer := dnsserver.New(cfg, resolverHandler, metricsCollector, agt.FetchProfile)
 
 	// Create main mux and attach DoH handler
 	mainMux := http.NewServeMux()
@@ -280,7 +280,7 @@ func main() {
 		if err != nil {
 			log.Printf("doq: failed to load TLS config: %v (DoQ not started)", err)
 		} else {
-			doqServer = doq.New(cfg, resolverHandler, logBuffer, metricsCollector)
+			doqServer = doq.New(cfg, resolverHandler, logBuffer, metricsCollector, agt.FetchProfile)
 			go func() {
 				if err := doqServer.Run(ctx, tlsCfg); err != nil {
 					log.Fatalf("DoQ server error: %v", err)

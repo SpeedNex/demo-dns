@@ -270,6 +270,23 @@ func (e *Engine) MatchWithProfile(profileID, domain string) *Decision {
 	return e.Match(domain)
 }
 
+// HasProfile returns true if the per-profile engine slot exists.
+// Safe for concurrent use.
+func (e *Engine) HasProfile(profileID string) bool {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	_, ok := e.profileEngines[profileID]
+	return ok
+}
+
+// RemoveProfile deletes a per-profile engine slot.
+// Safe for concurrent use.
+func (e *Engine) RemoveProfile(profileID string) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	delete(e.profileEngines, profileID)
+}
+
 func matchProfileEngine(pe *profileEngine, domain string) *Decision {
 	domain = normalizeDomain(domain)
 	rev := reverseDomain(domain)

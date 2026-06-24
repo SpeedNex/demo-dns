@@ -45,12 +45,14 @@ type Server struct {
 	hostname        string
 	dedupTTL        time.Duration
 	validator       *validation.Validator // optional (UI.md #40)
+	profileLoader   func(string) error    // 按需拉取 Profile 回调
 }
 
 // NewServer creates a new DoH server.
 func NewServer(cfg *config.Config, engine *matching.Engine,
 	resolutionLayer *resolver.ProfileResolutionLayer,
-	logBuffer *logging.Buffer, metrics *metrics.Metrics, cacheClient *cache.Cache) *Server {
+	logBuffer *logging.Buffer, metrics *metrics.Metrics, cacheClient *cache.Cache,
+	profileLoader func(string) error) *Server {
 
 	hostname, _ := os.Hostname()
 
@@ -65,8 +67,9 @@ func NewServer(cfg *config.Config, engine *matching.Engine,
 			Net:     "udp",
 			Timeout: 5 * time.Second,
 		},
-		hostname: hostname,
-		dedupTTL: 5 * time.Second,
+		hostname:      hostname,
+		dedupTTL:      5 * time.Second,
+		profileLoader: profileLoader,
 	}
 }
 
@@ -323,6 +326,13 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 
 		// P1: 去端口化客户端 IP，防止将 127.0.0.1:55309 记录为设备标识
 		clientAddr = remoteIPFromAddr(r.RemoteAddr).String()
+
+		// P0: 按需加载 Profile（内存/磁盘 MISS 时从 Portal 拉取）
+		if profileUID != "" && s.profileLoader != nil && !s.engine.HasProfile(profileUID) {
+			if err := s.profileLoader(profileUID); err != nil {
+				log.Printf("doh: lazy load profile %s: %v", profileUID, err)
+			}
+		}
 
 		resolvedProfileUID, blockMode, runtimeDeviceID, safeSearchEnabled, ok := s.resolveRuntimeProfile(r.RemoteAddr, profileUID)
 		if !ok {

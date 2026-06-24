@@ -57,6 +57,8 @@ Route::prefix('node')->middleware(['api.log'])->group(function (): void {
         Route::prefix('dns-resolver')->group(function (): void {
             Route::get('config', [ConfigPullController::class, 'show']);
             Route::post('config/ack', [ConfigAckController::class, 'store']);
+            Route::get('profiles/{profileId}', [ConfigPullController::class, 'showProfile']);
+            Route::post('profiles/check', [ConfigPullController::class, 'checkProfiles']);
             Route::post('query-logs', [QueryLogController::class, 'batch']);
             Route::post('devices/seen', [DeviceSeenController::class, 'store']);
         });

@@ -82,6 +82,13 @@ type ControlPlaneConfig struct {
 	// 旧格式的 ocnd_/ntk_ token，被服务端 401 "invalid api_key format" 拒掉。
 	// 留空时回退到 "configs/api_key"（与历史行为兼容）。
 	APIKeyPath string `yaml:"api_key_path"`
+	// Profile 缓存配置
+	ProfilesCacheDir    string `yaml:"profiles_cache_dir"`
+	ProfileCacheMemory  int    `yaml:"profile_cache_memory"`   // 内存上限
+	ProfileCacheDisk    int    `yaml:"profile_cache_disk"`     // 磁盘上限
+	ProfileEvictTTLMin  int    `yaml:"profile_evict_ttl_min"`  // 内存淘汰 TTL（分钟）
+	ProfileDiskTTLDays  int    `yaml:"profile_disk_ttl_days"`  // 磁盘淘汰 TTL（天）
+	VersionCheckMinutes int    `yaml:"version_check_minutes"`  // 版本检查间隔（分钟）
 }
 
 type NATSConfig struct {
@@ -174,6 +181,12 @@ func Default() *Config {
 			ProfilesPath:       "./data/profiles",
 			APIKey:             "",
 			NodeID:             "",
+			ProfilesCacheDir:   "./data/profiles",
+			ProfileCacheMemory: 5000,
+			ProfileCacheDisk:   20000,
+			ProfileEvictTTLMin: 30,
+			ProfileDiskTTLDays: 7,
+			VersionCheckMinutes: 5,
 		},
 		NATS: NATSConfig{
 			Endpoints: []string{"nats://localhost:4222"},
