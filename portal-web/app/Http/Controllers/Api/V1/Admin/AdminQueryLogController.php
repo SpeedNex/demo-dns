@@ -11,6 +11,14 @@ final class AdminQueryLogController
 {
     public function __construct(private readonly ClickHouseClient $clickhouse = new ClickHouseClient())
     {
+        // 2026-06-24: 兼容旧 dns_logs 表（缺少 event_id 列）。
+        // 添加 event_id 列以支持行级 ALTER TABLE DELETE。
+        // 已有 event_id 列时 CH 会忽略 IF NOT EXISTS,不会报错。
+        try {
+            $this->clickhouse->send("ALTER TABLE dns_logs ADD COLUMN IF NOT EXISTS event_id String");
+        } catch (\Throwable) {
+            // 忽略 — 已添加过或表不存在,不影响后续查询
+        }
     }
 
     public function index(Request $request): JsonResponse

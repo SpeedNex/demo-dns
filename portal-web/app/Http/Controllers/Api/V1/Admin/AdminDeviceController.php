@@ -86,10 +86,13 @@ final class AdminDeviceController
     {
         $validated = $request->validate([
             'ids' => 'required|array|min:1',
-            'ids.*' => 'string',
+            // 2026-06-24: 前端有时发整数数组,有时发字符串数组。
+            // Device id 实际是 string(uid),统一转字符串后做 whereIn,避免校验报错。
+            'ids.*' => ['required'],
         ]);
 
-        $deleted = Device::whereIn('id', $validated['ids'])->delete();
+        $ids = array_map(static fn ($v): string => (string) $v, $validated['ids']);
+        $deleted = Device::whereIn('id', $ids)->delete();
 
         return response()->json(['message' => "Deleted {$deleted} device(s).", 'deleted' => $deleted]);
     }
