@@ -217,18 +217,18 @@ func (a *Agent) FetchProfile(profileID string) error {
 	}
 
 	// 1. 检查内存缓存
-	if _, _, ok := a.pCache.GetFromMemory(profileID); ok {
-		return nil
+	if data, version, ok := a.pCache.GetFromMemory(profileID); ok {
+		return a.loadProfileIntoEngine(profileID, data, version)
 	}
 
 	// 2. 检查磁盘缓存
 	if data, version, ok := a.pCache.GetFromDisk(profileID); ok {
 		a.pCache.SetToMemory(profileID, data, version)
-		return nil
+		return a.loadProfileIntoEngine(profileID, data, version)
 	}
 
 	// 3. 回源 Portal（SingleFlight 防击穿）
-	_, _, err := a.pCache.DoOnce(profileID, func() (json.RawMessage, int64, error) {
+	rawData, version, err := a.pCache.DoOnce(profileID, func() (json.RawMessage, int64, error) {
 		path := fmt.Sprintf("/api/v1/node/dns-resolver/profiles/%s", profileID)
 		resp, fetchErr := a.doNodeRequest(http.MethodGet, path, nil)
 		if fetchErr != nil {
@@ -273,24 +273,30 @@ func (a *Agent) FetchProfile(profileID string) error {
 		return err
 	}
 
-	// 4. 从内存缓存读取（刚写入）并加载到引擎
-	if data, version, ok := a.pCache.GetFromMemory(profileID); ok {
-		a.pCache.SetToMemory(profileID, data, version)
+	// 4. 从内存缓存读取（刚写入 DoOnce）并加载到引擎
+	return a.loadProfileIntoEngine(profileID, rawData, version)
+}
 
-		// 解析 ProfileConfig 并加载到 engine
-		var bundle config.ResolverConfig
-		if err := json.Unmarshal(data, &bundle); err == nil && len(bundle.Profiles) > 0 {
-			p := bundle.Profiles[0]
-			a.engine.LoadProfileRules(p.ProfileID, nil, nil, nil, nil, nil, nil, nil, nil)
-			log.Printf("Lazy loaded profile: %s (version=%d)", profileID, version)
-		}
+// loadProfileIntoEngine 将缓存的 Profile 数据加载到引擎并记录版本。
+func (a *Agent) loadProfileIntoEngine(profileID string, data json.RawMessage, version int64) error {
+	var meta struct {
+		Version int64 `json:"version"`
+	}
+	json.Unmarshal(data, &meta)
 
-		// 记录版本到 localProfiles（供心跳上报）
-		a.mu.Lock()
-		a.localProfiles[profileID] = version
-		a.mu.Unlock()
+	// 加载到 engine
+	var bundle config.ResolverConfig
+	if err := json.Unmarshal(data, &bundle); err == nil && len(bundle.Profiles) > 0 {
+		p := bundle.Profiles[0]
+		a.engine.LoadProfileRules(p.ProfileID, nil, nil, nil, nil, nil, nil, nil, nil)
 	}
 
+	// 记录版本到 localProfiles（供心跳上报）
+	a.mu.Lock()
+	a.localProfiles[profileID] = meta.Version
+	a.mu.Unlock()
+
+	log.Printf("Lazy loaded profile: %s (version=%d)", profileID, meta.Version)
 	return nil
 }
 
