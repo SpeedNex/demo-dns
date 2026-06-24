@@ -1,0 +1,128 @@
+{
+  "plans": [
+    {
+      "code": "free",
+      "name": "Free",
+      "billing_model": "free_quota",
+      "query_limit_monthly": 300000,
+      "profile_limit": null,
+      "device_limit": null,
+      "unit_label": "account",
+      "log_retention_days": 90,
+      "features": {
+        "adblock": true,
+        "security": true,
+        "parental": true,
+        "privacy": true
+      },
+      "prices": [
+        {
+          "billing_interval": "month",
+          "unit_amount_minor": 0,
+          "currency": "USD",
+          "unit_label": "account"
+        }
+      ]
+    },
+    {
+      "code": "pro",
+      "name": "Pro",
+      "billing_model": "flat_subscription",
+      "query_limit_monthly": null,
+      "profile_limit": null,
+      "device_limit": null,
+      "unit_label": "account",
+      "log_retention_days": 90,
+      "features": {
+        "adblock": true,
+        "security": true,
+        "parental": true,
+        "privacy": true
+      },
+      "prices": [
+        {
+          "billing_interval": "month",
+          "unit_amount_minor": 199,
+          "currency": "USD",
+          "unit_label": "account"
+        },
+        {
+          "billing_interval": "year",
+          "unit_amount_minor": 1990,
+          "currency": "USD",
+          "unit_label": "account"
+        }
+      ]
+    },
+    {
+      "code": "business",
+      "name": "Business",
+      "billing_model": "employee_block",
+      "query_limit_monthly": null,
+      "profile_limit": null,
+      "device_limit": null,
+      "block_size": 50,
+      "unit_label": "employee_block_50",
+      "log_retention_days": 90,
+      "features": {
+        "adblock": true,
+        "security": true,
+        "parental": true,
+        "team": true,
+        "audit": true,
+        "privacy": true
+      },
+      "prices": [
+        {
+          "billing_interval": "month",
+          "unit_amount_minor": 1990,
+          "currency": "USD",
+          "unit_label": "employee_block_50",
+          "block_size": 50
+        },
+        {
+          "billing_interval": "year",
+          "unit_amount_minor": 19900,
+          "currency": "USD",
+          "unit_label": "employee_block_50",
+          "block_size": 50
+        }
+      ]
+    },
+    {
+      "code": "education",
+      "name": "Education",
+      "billing_model": "student_block",
+      "query_limit_monthly": null,
+      "profile_limit": null,
+      "device_limit": null,
+      "block_size": 250,
+      "unit_label": "student_block_250",
+      "log_retention_days": 90,
+      "features": {
+        "adblock": true,
+        "security": true,
+        "parental": true,
+        "team": true,
+        "audit": true,
+        "privacy": true
+      },
+      "prices": [
+        {
+          "billing_interval": "month",
+          "unit_amount_minor": 1990,
+          "currency": "USD",
+          "unit_label": "student_block_250",
+          "block_size": 250
+        },
+        {
+          "billing_interval": "year",
+          "unit_amount_minor": 19900,
+          "currency": "USD",
+          "unit_label": "student_block_250",
+          "block_size": 250
+        }
+      ]
+    }
+  ]
+}

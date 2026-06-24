@@ -1,0 +1,10 @@
+{
+  "node_id": "node_01HAMPLE",
+  "status": "online",
+  "uptime_seconds": 3600,
+  "version": "0.1.0",
+  "current_config_version": 1,
+  "profiles_loaded": 1,
+  "last_config_pull_at": "2026-06-12T10:00:00Z",
+  "last_log_flush_at": "2026-06-12T10:00:05Z"
+}

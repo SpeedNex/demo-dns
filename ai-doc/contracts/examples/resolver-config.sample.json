@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "generated_at": "2026-06-12T10:00:00Z",
+  "expires_at": null,
+  "profiles": [
+    {
+      "profile_id": "prf_01HAMPLE",
+      "user_id": "usr_01HAMPLE",
+      "team_id": null,
+      "version": 1,
+      "default_action": "allow",
+      "block_response": "nxdomain",
+      "security": {
+        "enabled": true,
+        "block_malware": true,
+        "block_phishing": true,
+        "block_command_and_control": true,
+        "block_cryptojacking": true
+      },
+      "adblock": {
+        "enabled": false
+      },
+      "parental": {
+        "enabled": false,
+        "block_adult_content": false,
+        "safe_search": false,
+        "youtube_restricted_mode": false,
+        "block_gambling_basic": false
+      },
+      "devices": [],
+      "rules": [
+        {
+          "rule_id": "rule_01HAMPLE",
+          "list_type": "deny",
+          "match_type": "exact",
+          "domain": "ads.example.com",
+          "normalized_domain": "ads.example.com",
+          "action": "block",
+          "category": "custom",
+          "enabled": true
+        }
+      ],
+      "quota": {
+        "plan_code": "free",
+        "monthly_query_limit": 300000,
+        "used_query_count": 250000,
+        "quota_status": "normal",
+        "log_retention_days": 90,
+        "features": {}
+      },
+      "privacy": {
+        "enabled": true,
+        "block_trackers": true,
+        "block_analytics": true,
+        "block_telemetry": true,
+        "anonymize_client_ip": true,
+        "log_mode": "full"
+      }
+    }
+  ],
+  "rulesets": [],
+  "upstreams": [
+    {
+      "address": "1.1.1.1:53",
+      "protocol": "udp",
+      "timeout_ms": 1500,
+      "weight": 100
+    }
+  ],
+  "runtime": {
+    "dnssec_validate": false,
+    "ecs_enabled": false,
+    "qname_minimization": false
+  },
+  "signature": null
+}

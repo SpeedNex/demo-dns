@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GeoDNSHealthView",
+  "type": "object",
+  "required": [
+    "generated_at",
+    "ttl_seconds",
+    "nodes"
+  ],
+  "properties": {
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ttl_seconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "node_id",
+          "region",
+          "status",
+          "supported_protocols",
+          "weight"
+        ],
+        "properties": {
+          "node_id": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "country": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "city": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "online",
+              "offline",
+              "disabled"
+            ]
+          },
+          "public_ipv4": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "public_ipv6": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "supported_protocols": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "udp",
+                "tcp",
+                "doh",
+                "dot"
+              ]
+            }
+          },
+          "weight": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "last_heartbeat_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

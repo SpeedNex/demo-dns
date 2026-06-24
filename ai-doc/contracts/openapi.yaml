@@ -1,0 +1,5307 @@
+openapi: 3.1.0
+info:
+  title: OcerDNS Security Platform API
+  version: 0.1.0
+  description: NextDNS Lite V1 API contract for portal-web and dns-console-web. V1 uses Free quota + flat subscription, not
+    DNS query overage billing.
+servers:
+- url: https://portal.example.com
+  description: portal-web
+- url: https://dns-console.example.com
+  description: OcerDNS
+security:
+- bearerAuth: []
+paths:
+  /api/v1/public/auth/register:
+    post:
+      tags:
+      - portal-public
+      summary: Register user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/public/auth/login:
+    post:
+      tags:
+      - portal-public
+      summary: Login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/member/me:
+    get:
+      tags:
+      - portal-member
+      summary: Current user
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+  /api/v1/member/profiles:
+    get:
+      tags:
+      - portal-member
+      summary: List profiles
+      parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Profile list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Profile'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+    post:
+      tags:
+      - portal-member
+      summary: Create profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileCreateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Profile'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/member/profiles/{profile_id}:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    get:
+      tags:
+      - portal-member
+      summary: Get profile
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Profile'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - portal-member
+      summary: Update profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdateRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Profile'
+    delete:
+      tags:
+      - portal-member
+      summary: Delete profile
+      responses:
+        '204':
+          description: Deleted
+  /api/v1/member/profiles/{profile_id}/rules:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    get:
+      tags:
+      - portal-member
+      summary: List profile rules
+      responses:
+        '200':
+          description: Rule list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProfileRule'
+    post:
+      tags:
+      - portal-member
+      summary: Create profile rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileRuleCreateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProfileRule'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/member/profiles/{profile_id}/rules/{rule_id}:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    - name: rule_id
+      in: path
+      required: true
+      schema:
+        type: string
+    delete:
+      tags:
+      - portal-member
+      summary: Delete profile rule
+      responses:
+        '204':
+          description: Deleted
+  /api/v1/member/profiles/{profile_id}/publish:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    post:
+      tags:
+      - portal-member
+      summary: Publish profile config
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  maxLength: 255
+                force:
+                  type: boolean
+                  default: false
+      responses:
+        '200':
+          description: Publish queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PublishResult'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '424':
+          $ref: '#/components/responses/FailedDependency'
+  /api/v1/member/profiles/{profile_id}/logs:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    get:
+      tags:
+      - portal-member
+      summary: Query DNS logs
+      parameters:
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: action
+        in: query
+        schema:
+          type: string
+          enum:
+          - allowed
+          - blocked
+          - rewritten
+          - error
+      - name: domain
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: DNS logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/QueryLogItem'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+  /api/v1/internal/profile-publishes:
+    post:
+      tags:
+      - console-internal
+      summary: Publish profile config from portal-web to dns-console-web
+      security:
+      - internalHmac: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternalPublishRequest'
+      responses:
+        '200':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/InternalPublishResponse'
+  /api/v1/internal/geodns/health-view:
+    get:
+      tags:
+      - console-internal
+      security:
+      - internalHmac: []
+      summary: Health view for geodns
+      responses:
+        '200':
+          description: Health view
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeodnsHealthViewResponse'
+  /api/v1/admin/nodes:
+    post:
+      tags:
+      - console-admin
+      summary: Provision a resolver node and issue its pre-issued credentials
+      description: |
+        Admin-side endpoint. Creates a resolver node record and issues
+        `(node_id, api_key, secret)` tuple used by `resolver install`.
+        The plain-text api_key and secret are returned **exactly once** in
+        the response and must be handed to the operator who runs
+        `resolver install`. The console only stores the SHA-256 hash.
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NodeProvisionRequest'
+      responses:
+        '201':
+          description: Provisioned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/NodeProvisionResponse'
+  /api/v1/admin/nodes/{node_id}/credentials:
+    parameters:
+    - name: node_id
+      in: path
+      required: true
+      schema:
+        type: string
+    post:
+      tags:
+      - console-admin
+      summary: Re-issue pre-issued credentials for an existing node
+      description: |
+        Revokes the previous api_key/secret pair and issues a new
+        `(api_key, secret)` tuple. Plain-text values are returned exactly
+        once. The previous credentials stop working immediately.
+      security:
+      - adminBearer: []
+      responses:
+        '200':
+          description: New credentials issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/NodeProvisionResponse'
+  /api/v1/agent/nodes/heartbeat:
+    post:
+      tags:
+      - console-agent
+      summary: Submit node heartbeat
+      security:
+      - nodeBearer: []
+      - apiKeyHmac: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NodeHeartbeatRequest'
+      responses:
+        '200':
+          description: Heartbeat accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/NodeHeartbeatResponse'
+  /api/v1/agent/resolver/config:
+    get:
+      tags:
+      - console-agent
+      summary: Pull resolver config
+      security:
+      - nodeBearer: []
+      parameters:
+      - name: node_id
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: current_version
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 0
+      responses:
+        '200':
+          description: Config bundle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResolverConfigResponse'
+        '204':
+          description: No change
+  /api/v1/agent/resolver/config/ack:
+    post:
+      tags:
+      - console-agent
+      summary: Ack resolver config
+      security:
+      - nodeBearer: []
+      - apiKeyHmac: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigAckRequest'
+      responses:
+        '200':
+          description: Ack accepted
+  /api/v1/agent/query-logs/batch:
+    post:
+      tags:
+      - console-agent
+      summary: Upload DNS query logs
+      security:
+      - nodeBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryLogBatch'
+      responses:
+        '200':
+          description: Batch accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchAcceptedResponse'
+  /api/v1/public/plans:
+    get:
+      tags:
+      - portal-public
+      summary: List public plans and active prices
+      security: []
+      responses:
+        '200':
+          description: Plans
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Plan'
+  /api/v1/member/subscription:
+    get:
+      tags:
+      - portal-billing
+      summary: Get current subscription
+      responses:
+        '200':
+          description: Subscription
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Subscription'
+  /api/v1/member/subscription/checkout:
+    post:
+      tags:
+      - portal-billing
+      summary: Create checkout for subscription
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequest'
+      responses:
+        '200':
+          description: Checkout created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CheckoutResponse'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/member/invoices:
+    get:
+      tags:
+      - portal-billing
+      summary: List member invoices
+      responses:
+        '200':
+          description: Invoices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Invoice'
+  /api/v1/member/payments:
+    get:
+      tags:
+      - portal-billing
+      summary: List member payments
+      responses:
+        '200':
+          description: Payments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Payment'
+  /api/v1/public/billing/webhooks/{provider}:
+    post:
+      tags:
+      - portal-billing
+      summary: Receive payment provider webhook
+      security: []
+      parameters:
+      - name: provider
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook accepted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/internal/usage/batches:
+    post:
+      tags:
+      - portal-internal
+      summary: '[V2+ 待落地] Receive query usage batch for Free quota and analytics only'
+      security:
+      - internalHmac: []
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsageBatchRequest'
+      responses:
+        '200':
+          description: Usage accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageBatchResponse'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      description: |
+        V1 **不实现**。当前 dns-console-web 在 `query_log_ingest_batches` 内完成
+        使用量派生，由 `portal-web` 主动 `GET /api/v1/internal/query-logs` /
+        `GET /api/v1/internal/query-analytics` 反向拉取汇总（见 dns-console-web
+        `routes/api.php` 实际路由）。V2+ 评估替换为 push 模型。
+  /api/v1/internal/publish-status/callback:
+    post:
+      tags:
+      - portal-internal
+      summary: '[V2+ 待落地] Receive publish status callback from dns-console-web'
+      security:
+      - internalHmac: []
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishStatusCallback'
+      responses:
+        '200':
+          description: Callback accepted
+        '409':
+          $ref: '#/components/responses/Conflict'
+      description: |
+        V1 **不实现**。portal-web 通过 `GET /api/v1/admin/publishes` 主动轮询
+        publish_tasks 状态。V2+ 评估 push 回调。
+  /api/v1/admin/refunds:
+    post:
+      tags:
+      - portal-admin
+      summary: Create refund
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundCreateRequest'
+      responses:
+        '201':
+          description: Refund created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Refund'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/internal/quota/snapshots:
+    post:
+      tags:
+      - console-internal
+      summary: '[V2+ 待落地] Receive quota snapshot from portal-web'
+      security:
+      - internalHmac: []
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuotaSnapshotRequest'
+      responses:
+        '200':
+          description: Quota snapshot accepted
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      description: |
+        V1 **不实现**。V1 由 portal-web 在 Profile / publish 流程中内嵌 quota
+        snapshot，并通过 `POST /api/v1/internal/profile-publishes` 的 `quota` 字段
+        一次性下发；dns-console-web 落 `quota_snapshots` 表供 resolver 拉取。
+  /api/v1/internal/query-logs:
+    get:
+      tags:
+      - console-internal
+      summary: Read aggregated query logs for a user
+      security:
+      - internalHmac: []
+      parameters:
+      - name: user_id
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: action
+        in: query
+        schema:
+          type: string
+      - name: domain
+        in: query
+        schema:
+          type: string
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+      responses:
+        '200':
+          description: Query log list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/QueryLogItem'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+  /api/v1/internal/query-analytics:
+    get:
+      tags:
+      - console-internal
+      summary: Read aggregated query analytics summary for a user
+      security:
+      - internalHmac: []
+      parameters:
+      - name: user_id
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Analytics summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+  /api/v1/member/usage/quota:
+    get:
+      tags:
+      - portal-member
+      summary: Get current NextDNS Lite quota status
+      responses:
+        '200':
+          description: Quota status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotaStatusResponse'
+  /api/v1/member/overview:
+    get:
+      tags:
+      - portal-member
+      summary: Get member overview and navigation
+      responses:
+        '200':
+          description: Member overview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberCenterOverviewResponse'
+  /api/v1/member/dashboard:
+    get:
+      tags:
+      - portal-member
+      summary: Get member dashboard summary
+      responses:
+        '200':
+          description: Dashboard
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardResponse'
+      parameters:
+      - name: profile_id
+        in: query
+        schema:
+          type: string
+      - name: range
+        in: query
+        schema:
+          type: string
+          enum:
+          - 24h
+          - 7d
+          - 30d
+          default: 24h
+  /api/v1/member/profiles/{profile_id}/settings:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    get:
+      tags:
+      - portal-member
+      summary: Get all profile settings
+      description: |
+        Get all settings for a profile including security, privacy, and parental control.
+        This consolidates all profile-level settings into one endpoint.
+      responses:
+        '200':
+          description: Profile settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      security:
+                        $ref: '#/components/schemas/SecuritySettings'
+                      privacy:
+                        $ref: '#/components/schemas/PrivacySettings'
+                      parental:
+                        $ref: '#/components/schemas/ParentalSettings'
+    put:
+      tags:
+      - portal-member
+      summary: Update profile settings
+      description: |
+        Update all or part of profile settings.
+        Can update security, privacy, parental control settings individually or together.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                security:
+                  $ref: '#/components/schemas/SecuritySettings'
+                privacy:
+                  $ref: '#/components/schemas/PrivacySettings'
+                parental:
+                  $ref: '#/components/schemas/ParentalSettings'
+      responses:
+        '200':
+          description: Updated
+  /api/v1/member/profiles/{profile_id}/settings/security:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    get:
+      tags:
+      - portal-member
+      summary: Get profile Security settings
+      responses:
+        '200':
+          description: Security settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SecuritySettings'
+    put:
+      tags:
+      - portal-member
+      summary: Update profile Security settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SecuritySettings'
+      responses:
+        '200':
+          description: Updated
+  /api/v1/member/profiles/{profile_id}/settings/privacy:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    get:
+      tags:
+      - portal-member
+      summary: Get profile Privacy settings
+      responses:
+        '200':
+          description: Privacy settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PrivacySettings'
+    put:
+      tags:
+      - portal-member
+      summary: Update profile Privacy settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrivacySettings'
+      responses:
+        '200':
+          description: Updated
+  /api/v1/member/profiles/{profile_id}/settings/parental:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    get:
+      tags:
+      - portal-member
+      summary: Get Parental control settings
+      responses:
+        '200':
+          description: Parental control settings
+          content:
+            application/json:
+              schema: &id006
+                type: object
+                properties:
+                  data: &id005
+                    $ref: '#/components/schemas/ParentalSettings'
+    put:
+      tags:
+      - portal-member
+      summary: Update Parental control settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: *id005
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: *id006
+  /api/v1/member/profiles/{profile_id}/allowlist:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    get:
+      tags:
+      - portal-member
+      summary: List allowlist
+      responses:
+        '200':
+          description: allowlist rules
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProfileRule'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+      parameters:
+      - name: keyword
+        in: query
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+    post:
+      tags:
+      - portal-member
+      summary: Create allowlist rule
+      description: Alias of profile rules with list_type=allow and action=allow.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListRuleCreateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProfileRule'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/member/profiles/{profile_id}/allowlist/{rule_id}:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    - $ref: '#/components/parameters/RuleId'
+    delete:
+      tags:
+      - portal-member
+      summary: Delete allowlist rule
+      responses:
+        '204':
+          description: Deleted
+  /api/v1/member/profiles/{profile_id}/denylist:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    get:
+      tags:
+      - portal-member
+      summary: List denylist
+      responses:
+        '200':
+          description: denylist rules
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProfileRule'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+      parameters:
+      - name: keyword
+        in: query
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+    post:
+      tags:
+      - portal-member
+      summary: Create denylist rule
+      description: Alias of profile rules with list_type=deny and action=block.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListRuleCreateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProfileRule'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/member/profiles/{profile_id}/denylist/{rule_id}:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    - $ref: '#/components/parameters/RuleId'
+    put:
+      tags:
+      - portal-member
+      summary: Update denylist rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListRuleCreateRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProfileRule'
+    delete:
+      tags:
+      - portal-member
+      summary: Delete denylist rule
+      responses:
+        '204':
+          description: Deleted
+  /api/v1/member/profiles/{profile_id}/rules/import:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    post:
+      tags:
+      - portal-member
+      summary: Import rules from file
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                list_type:
+                  type: string
+                  enum:
+                  - allowlist
+                  - denylist
+                duplicate_action:
+                  type: string
+                  enum:
+                  - skip
+                  - overwrite
+                  - add
+                  default: skip
+      responses:
+        '200':
+          description: Rules imported
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      imported:
+                        type: integer
+                      skipped:
+                        type: integer
+                      overwritten:
+                        type: integer
+  /api/v1/member/profiles/{profile_id}/rules/export:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    get:
+      tags:
+      - portal-member
+      summary: Export rules to file
+      parameters:
+      - name: list_type
+        in: query
+        schema:
+          type: string
+          enum:
+          - allowlist
+          - denylist
+          - all
+          default: all
+      - name: format
+        in: query
+        schema:
+          type: string
+          enum:
+          - txt
+          - json
+          - csv
+          default: txt
+      responses:
+        '200':
+          description: Rules file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+  /api/v1/member/profiles/{profile_id}/publishes:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    get:
+      tags:
+      - portal-member
+      summary: List profile publish history
+      responses:
+        '200':
+          description: Publish history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProfilePublish'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+  /api/v1/member/profiles/{profile_id}/publishes/{publish_id}:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    - name: publish_id
+      in: path
+      required: true
+      schema:
+        type: string
+    get:
+      tags:
+      - portal-member
+      summary: Get publish details
+      responses:
+        '200':
+          description: Publish details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProfilePublish'
+  /api/v1/member/profiles/{profile_id}/clone:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    post:
+      tags:
+      - portal-member
+      summary: Clone profile
+      description: Create a copy of the profile including all rules and settings.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Name for the new profile
+                clone_rules:
+                  type: boolean
+                  default: true
+                clone_settings:
+                  type: boolean
+                  default: true
+      responses:
+        '201':
+          description: Profile cloned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Profile'
+  /api/v1/member/profiles/{profile_id}/stats/summary:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    get:
+      tags:
+      - portal-member
+      summary: Get profile stats summary
+      responses:
+        '200':
+          description: Stats summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatsSummaryResponse'
+      parameters:
+      - name: range
+        in: query
+        schema:
+          type: string
+          enum:
+          - 24h
+          - 7d
+          - 30d
+          default: 24h
+  /api/v1/member/profiles/{profile_id}/stats/top-domains:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    get:
+      tags:
+      - portal-member
+      summary: Get top domains
+      responses:
+        '200':
+          description: Top domains
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopDomainsResponse'
+      parameters:
+      - name: range
+        in: query
+        schema:
+          type: string
+          enum:
+          - 24h
+          - 7d
+          - 30d
+          default: 24h
+      - name: action
+        in: query
+        schema:
+          type: string
+          enum:
+          - allowed
+          - blocked
+  /api/v1/member/profiles/{profile_id}/stats/timeseries:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    get:
+      tags:
+      - portal-member
+      summary: Get DNS query timeseries
+      responses:
+        '200':
+          description: Timeseries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeseriesResponse'
+      parameters:
+      - name: range
+        in: query
+        schema:
+          type: string
+          enum:
+          - 24h
+          - 7d
+          - 30d
+          default: 24h
+      - name: interval
+        in: query
+        schema:
+          type: string
+          enum:
+          - 1h
+          - 1d
+          default: 1h
+  /api/v1/member/settings:
+    get:
+      tags:
+      - portal-member
+      summary: Get member settings
+      responses:
+        '200':
+          description: Settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberSettingsResponse'
+    put:
+      tags:
+      - portal-member
+      summary: Update member settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberSettingsUpdateRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberSettingsResponse'
+  /api/v1/member/profiles/{profile_id}/settings/dns:
+    parameters:
+    - $ref: '#/components/parameters/ProfileId'
+    get:
+      tags:
+      - portal-member
+      summary: Get DNS setup endpoints for profile
+      responses:
+        '200':
+          description: DNS setup
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileDnsSettingsResponse'
+  /api/v1/member/membership:
+    get:
+      tags:
+      - portal-billing
+      summary: Get membership plan, quota and billing overview
+      responses:
+        '200':
+          description: Membership
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembershipResponse'
+  /api/v1/admin/auth/login:
+    post:
+      tags:
+      - console-admin
+      summary: Admin login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminLoginRequest'
+      responses:
+        '200':
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/member/logout:
+    post:
+      tags:
+      - portal-member
+      summary: Logout current user
+      responses:
+        '200':
+          description: Logged out
+  /api/v1/member/password:
+    put:
+      tags:
+      - portal-member
+      summary: Update password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordUpdateRequest'
+      responses:
+        '200':
+          description: Password updated
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/member/security:
+    get:
+      tags:
+      - portal-member
+      summary: Get Security settings
+      responses:
+        '200':
+          description: Security settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecuritySettings'
+    put:
+      tags:
+      - portal-member
+      summary: Update Security settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SecuritySettings'
+      responses:
+        '200':
+          description: Updated
+  /api/v1/member/privacy:
+    get:
+      tags:
+      - portal-member
+      summary: Get Privacy settings
+      responses:
+        '200':
+          description: Privacy settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacySettings'
+    put:
+      tags:
+      - portal-member
+      summary: Update Privacy settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrivacySettings'
+      responses:
+        '200':
+          description: Updated
+  /api/v1/member/parental:
+    get:
+      tags:
+      - portal-member
+      summary: Get Parental control settings
+      responses:
+        '200':
+          description: Parental control settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParentalSettings'
+    put:
+      tags:
+      - portal-member
+      summary: Update Parental control settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParentalSettings'
+      responses:
+        '200':
+          description: Updated
+  /api/v1/member/logs:
+    get:
+      tags:
+      - portal-member
+      summary: Query DNS logs
+      parameters:
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: action
+        in: query
+        schema:
+          type: string
+          enum:
+          - allowed
+          - blocked
+          - rewritten
+          - error
+      - name: domain
+        in: query
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: DNS logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/QueryLogItem'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+  /api/v1/member/analytics:
+    get:
+      tags:
+      - portal-member
+      summary: Get analytics summary
+      parameters:
+      - name: range
+        in: query
+        schema:
+          type: string
+          enum:
+          - 24h
+          - 7d
+          - 30d
+          default: 24h
+      responses:
+        '200':
+          description: Analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+  /api/v1/member/api-keys:
+    get:
+      tags:
+      - portal-member
+      summary: List API keys
+      responses:
+        '200':
+          description: API keys
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiKey'
+    post:
+      tags:
+      - portal-member
+      summary: Create API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiKeyCreateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ApiKey'
+  /api/v1/member/api-keys/{key_id}:
+    parameters:
+    - name: key_id
+      in: path
+      required: true
+      schema:
+        type: string
+    get:
+      tags:
+      - portal-member
+      summary: Get API key details
+      responses:
+        '200':
+          description: API key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ApiKey'
+    put:
+      tags:
+      - portal-member
+      summary: Update API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 100
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+      - portal-member
+      summary: Delete API key
+      responses:
+        '204':
+          description: Deleted
+  /api/v1/member/api-keys/{key_id}/rotate:
+    parameters:
+    - name: key_id
+      in: path
+      required: true
+      schema:
+        type: string
+    post:
+      tags:
+      - portal-member
+      summary: Rotate API key
+      description: Generate a new key value while keeping the same key metadata. The old key will be invalidated immediately.
+      responses:
+        '200':
+          description: Key rotated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ApiKey'
+  /api/v1/member/teams:
+    get:
+      tags:
+      - portal-member
+      summary: List teams
+      responses:
+        '200':
+          description: Teams
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Team'
+    post:
+      tags:
+      - portal-member
+      summary: Create team
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamCreateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Team'
+  /api/v1/member/teams/{team_id}:
+    parameters:
+    - name: team_id
+      in: path
+      required: true
+      schema:
+        type: string
+    get:
+      tags:
+      - portal-member
+      summary: Get team details
+      responses:
+        '200':
+          description: Team details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+    put:
+      tags:
+      - portal-member
+      summary: Update team
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamUpdateRequest'
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+      - portal-member
+      summary: Delete team
+      responses:
+        '204':
+          description: Deleted
+  /api/v1/member/teams/{team_id}/members:
+    parameters:
+    - name: team_id
+      in: path
+      required: true
+      schema:
+        type: string
+    get:
+      tags:
+      - portal-member
+      summary: List team members
+      responses:
+        '200':
+          description: Members
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TeamMember'
+    post:
+      tags:
+      - portal-member
+      summary: Add team member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                role:
+                  type: string
+                  enum:
+                  - admin
+                  - member
+                  default: member
+      responses:
+        '201':
+          description: Member added
+  /api/v1/member/teams/{team_id}/members/{member_id}:
+    parameters:
+    - name: team_id
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: member_id
+      in: path
+      required: true
+      schema:
+        type: string
+    put:
+      tags:
+      - portal-member
+      summary: Update team member role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  enum:
+                  - admin
+                  - member
+      responses:
+        '200':
+          description: Member updated
+    delete:
+      tags:
+      - portal-member
+      summary: Remove team member
+      responses:
+        '204':
+          description: Member removed
+  /api/v1/member/teams/{team_id}/invitations:
+    parameters:
+    - name: team_id
+      in: path
+      required: true
+      schema:
+        type: string
+    get:
+      tags:
+      - portal-member
+      summary: List team invitations
+      responses:
+        '200':
+          description: Invitations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TeamInvitation'
+  /api/v1/member/teams/{team_id}/leave:
+    post:
+      tags:
+      - portal-member
+      summary: Leave team
+      responses:
+        '200':
+          description: Left
+  /api/v1/member/teams/invitations/pending:
+    get:
+      tags:
+      - portal-member
+      summary: List pending invitations
+      responses:
+        '200':
+          description: Pending invitations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TeamInvitation'
+  /api/v1/member/teams/accept-invitation:
+    post:
+      tags:
+      - portal-member
+      summary: Accept team invitation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+      responses:
+        '200':
+          description: Accepted
+  /api/v1/member/devices:
+    get:
+      tags:
+      - portal-member
+      summary: List member devices
+      responses:
+        '200':
+          description: Devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Device'
+  /api/v1/member/devices/{device_id}:
+    parameters:
+    - name: device_id
+      in: path
+      required: true
+      schema:
+        type: string
+    get:
+      tags:
+      - portal-member
+      summary: Get device details
+      responses:
+        '200':
+          description: Device
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Device'
+  /api/v1/member/devices/{device_id}/disable:
+    parameters:
+    - name: device_id
+      in: path
+      required: true
+      schema:
+        type: string
+    post:
+      tags:
+      - portal-member
+      summary: Disable device
+      responses:
+        '200':
+          description: Device disabled
+  /api/v1/member/devices/{device_id}/enable:
+    parameters:
+    - name: device_id
+      in: path
+      required: true
+      schema:
+        type: string
+    post:
+      tags:
+      - portal-member
+      summary: Enable device
+      responses:
+        '200':
+          description: Device enabled
+  /api/v1/member/dns-endpoints:
+    get:
+      tags:
+      - portal-member
+      summary: Get DNS setup endpoints
+      responses:
+        '200':
+          description: DNS endpoints
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      doh:
+                        type: string
+                      dot:
+                        type: string
+                      udp:
+                        type: string
+                      tcp:
+                        type: string
+  # Admin APIs
+  /api/v1/admin/overview:
+    get:
+      tags:
+      - console-admin
+      summary: Get admin overview
+      security:
+      - adminBearer: []
+      responses:
+        '200':
+          description: Overview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminOverviewResponse'
+  /api/v1/admin/users:
+    get:
+      tags:
+      - console-admin
+      summary: List users
+      security:
+      - adminBearer: []
+      parameters:
+      - name: keyword
+        in: query
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+    post:
+      tags:
+      - console-admin
+      summary: Create user
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+  /api/v1/admin/users/{user_id}:
+    parameters:
+    - name: user_id
+      in: path
+      required: true
+      schema:
+        type: string
+    put:
+      tags:
+      - console-admin
+      summary: Update user
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+      - console-admin
+      summary: Delete user
+      security:
+      - adminBearer: []
+      responses:
+        '204':
+          description: Deleted
+  /api/v1/admin/users/{user_id}/{action}:
+    parameters:
+    - name: user_id
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: action
+      in: path
+      required: true
+      schema:
+        type: string
+        enum:
+        - enable
+        - disable
+    post:
+      tags:
+      - console-admin
+      summary: Enable or disable user
+      security:
+      - adminBearer: []
+      responses:
+        '200':
+          description: Updated
+  /api/v1/admin/nodes/{node_id}/tokens:
+    parameters:
+    - name: node_id
+      in: path
+      required: true
+      schema:
+        type: string
+    post:
+      tags:
+      - console-admin
+      summary: Issue node token
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                expires_in_days:
+                  type: integer
+      responses:
+        '200':
+          description: Token issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+  /api/v1/admin/rbac/roles:
+    get:
+      tags:
+      - console-admin
+      summary: List roles
+      security:
+      - adminBearer: []
+      responses:
+        '200':
+          description: Roles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Role'
+    post:
+      tags:
+      - console-admin
+      summary: Create role
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleCreateRequest'
+      responses:
+        '201':
+          description: Created
+  /api/v1/admin/rbac/roles/{role_id}:
+    parameters:
+    - name: role_id
+      in: path
+      required: true
+      schema:
+        type: string
+    put:
+      tags:
+      - console-admin
+      summary: Update role
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleUpdateRequest'
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+      - console-admin
+      summary: Delete role
+      security:
+      - adminBearer: []
+      responses:
+        '204':
+          description: Deleted
+  /api/v1/admin/rbac/roles/{role_id}/permissions:
+    parameters:
+    - name: role_id
+      in: path
+      required: true
+      schema:
+        type: string
+    get:
+      tags:
+      - console-admin
+      summary: Get role permissions
+      security:
+      - adminBearer: []
+      responses:
+        '200':
+          description: Permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: string
+    put:
+      tags:
+      - console-admin
+      summary: Update role permissions
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                permissions:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Updated
+  /api/v1/admin/rbac/permissions:
+    get:
+      tags:
+      - console-admin
+      summary: List all permissions
+      security:
+      - adminBearer: []
+      responses:
+        '200':
+          description: Permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: string
+  /api/v1/admin/rbac/admins:
+    get:
+      tags:
+      - console-admin
+      summary: List admins
+      security:
+      - adminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Admins
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Admin'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+    post:
+      tags:
+      - console-admin
+      summary: Assign role to admin
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                admin_id:
+                  type: string
+                role_ids:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Assigned
+  /api/v1/admin/rules:
+    get:
+      tags:
+      - console-admin
+      summary: List global rules
+      security:
+      - adminBearer: []
+      responses:
+        '200':
+          description: Rules
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GlobalRule'
+    post:
+      tags:
+      - console-admin
+      summary: Create global rule
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GlobalRuleCreateRequest'
+      responses:
+        '201':
+          description: Created
+  /api/v1/admin/rules/{rule_id}:
+    parameters:
+    - name: rule_id
+      in: path
+      required: true
+      schema:
+        type: string
+    put:
+      tags:
+      - console-admin
+      summary: Update global rule
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GlobalRuleUpdateRequest'
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+      - console-admin
+      summary: Delete global rule
+      security:
+      - adminBearer: []
+      responses:
+        '204':
+          description: Deleted
+  /api/v1/admin/rules/batch-destroy:
+    post:
+      tags:
+      - console-admin
+      summary: Batch delete rules
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Deleted
+  /api/v1/admin/rules/{rule_id}/sync:
+    parameters:
+    - name: rule_id
+      in: path
+      required: true
+      schema:
+        type: string
+    post:
+      tags:
+      - console-admin
+      summary: Sync rule to blocklists
+      security:
+      - adminBearer: []
+      responses:
+        '200':
+          description: Synced
+  /api/v1/admin/geo-dns:
+    get:
+      tags:
+      - console-admin
+      summary: List GeoDNS records
+      security:
+      - adminBearer: []
+      parameters:
+      - name: keyword
+        in: query
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: GeoDNS records
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GeoDnsRecord'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+    post:
+      tags:
+      - console-admin
+      summary: Create GeoDNS record
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GeoDnsRecordCreateRequest'
+      responses:
+        '201':
+          description: Created
+  /api/v1/admin/geo-dns/{record_id}:
+    parameters:
+    - name: record_id
+      in: path
+      required: true
+      schema:
+        type: string
+    put:
+      tags:
+      - console-admin
+      summary: Update GeoDNS record
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GeoDnsRecordUpdateRequest'
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+      - console-admin
+      summary: Delete GeoDNS record
+      security:
+      - adminBearer: []
+      responses:
+        '204':
+          description: Deleted
+  /api/v1/admin/geo-dns/batch-destroy:
+    post:
+      tags:
+      - console-admin
+      summary: Batch delete GeoDNS records
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Deleted
+  /api/v1/admin/alerts:
+    get:
+      tags:
+      - console-admin
+      summary: List alerts
+      security:
+      - adminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Alerts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Alert'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+  /api/v1/admin/alerts/{alert_id}/acknowledge:
+    parameters:
+    - name: alert_id
+      in: path
+      required: true
+      schema:
+        type: string
+    post:
+      tags:
+      - console-admin
+      summary: Acknowledge alert
+      security:
+      - adminBearer: []
+      responses:
+        '200':
+          description: Acknowledged
+  /api/v1/admin/audit-logs:
+    get:
+      tags:
+      - console-admin
+      summary: List audit logs
+      security:
+      - adminBearer: []
+      parameters:
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: action
+        in: query
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Audit logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLog'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+  /api/v1/admin/audit-logs/export:
+    get:
+      tags:
+      - console-admin
+      summary: Export audit logs
+      security:
+      - adminBearer: []
+      parameters:
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date-time
+      responses:
+        '200':
+          description: CSV file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+  /api/v1/admin/audit-logs/batch-destroy:
+    post:
+      tags:
+      - console-admin
+      summary: Batch delete audit logs
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Deleted
+  /api/v1/admin/query-logs:
+    get:
+      tags:
+      - console-admin
+      summary: Query DNS logs
+      security:
+      - adminBearer: []
+      parameters:
+      - name: user_id
+        in: query
+        schema:
+          type: string
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: action
+        in: query
+        schema:
+          type: string
+          enum:
+          - allowed
+          - blocked
+          - rewritten
+          - error
+      - name: domain
+        in: query
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Query logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/QueryLogItem'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+  /api/v1/admin/system-config:
+    get:
+      tags:
+      - console-admin
+      summary: Get system config
+      security:
+      - adminBearer: []
+      responses:
+        '200':
+          description: System config
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      tags:
+      - console-admin
+      summary: Update system config
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+  /api/v1/admin/publishes:
+    get:
+      tags:
+      - console-admin
+      summary: List publish tasks
+      security:
+      - adminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Publish tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PublishTask'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+    post:
+      tags:
+      - console-admin
+      summary: Create publish task
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                profile_ids:
+                  type: array
+                  items:
+                    type: string
+                message:
+                  type: string
+      responses:
+        '201':
+          description: Created
+  /api/v1/admin/publishes/{task_id}/retry:
+    parameters:
+    - name: task_id
+      in: path
+      required: true
+      schema:
+        type: string
+    post:
+      tags:
+      - console-admin
+      summary: Retry publish task
+      security:
+      - adminBearer: []
+      responses:
+        '200':
+          description: Retried
+  /api/v1/admin/publishes/{task_id}/cancel:
+    parameters:
+    - name: task_id
+      in: path
+      required: true
+      schema:
+        type: string
+    post:
+      tags:
+      - console-admin
+      summary: Cancel publish task
+      security:
+      - adminBearer: []
+      responses:
+        '200':
+          description: Cancelled
+  /api/v1/admin/publishes/batch-retry:
+    post:
+      tags:
+      - console-admin
+      summary: Batch retry publish tasks
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Retried
+  /api/v1/admin/publishes/batch-cancel:
+    post:
+      tags:
+      - console-admin
+      summary: Batch cancel publish tasks
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Cancelled
+  /api/v1/admin/publishes/cleanup-completed:
+    post:
+      tags:
+      - console-admin
+      summary: Cleanup completed publish tasks
+      security:
+      - adminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                older_than_days:
+                  type: integer
+      responses:
+        '200':
+          description: Cleaned up
+  /api/v1/admin/devices:
+    get:
+      tags:
+      - console-admin
+      summary: List devices
+      security:
+      - adminBearer: []
+      parameters:
+      - name: keyword
+        in: query
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Device'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+    delete:
+      tags:
+      - console-admin
+      summary: Delete device
+      security:
+      - adminBearer: []
+      parameters:
+      - name: device_id
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Deleted
+  /api/v1/admin/billing/charge:
+    post:
+      tags:
+      - console-admin
+      summary: Charge user
+      security:
+      - adminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                amount:
+                  type: integer
+                  format: int64
+                currency:
+                  type: string
+                note:
+                  type: string
+      responses:
+        '200':
+          description: Charged
+  /api/v1/admin/billing/refund:
+    post:
+      tags:
+      - console-admin
+      summary: Refund user
+      security:
+      - adminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                amount:
+                  type: integer
+                  format: int64
+                currency:
+                  type: string
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Refunded
+  /api/v1/admin/finance/bills:
+    get:
+      tags:
+      - console-admin
+      summary: List bills
+      security:
+      - adminBearer: []
+      parameters:
+      - name: user_id
+        in: query
+        schema:
+          type: string
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Bills
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Bill'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+  /api/v1/admin/finance/bills/export:
+    get:
+      tags:
+      - console-admin
+      summary: Export bills
+      security:
+      - adminBearer: []
+      parameters:
+      - name: user_id
+        in: query
+        schema:
+          type: string
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date-time
+      responses:
+        '200':
+          description: CSV file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+  /api/v1/admin/finance/balances:
+    get:
+      tags:
+      - console-admin
+      summary: List user balances
+      security:
+      - adminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Balances
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        user_id:
+                          type: string
+                        balance:
+                          $ref: '#/components/schemas/Money'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+  /api/v1/admin/finance/recharges:
+    get:
+      tags:
+      - console-admin
+      summary: List recharges
+      security:
+      - adminBearer: []
+      parameters:
+      - name: user_id
+        in: query
+        schema:
+          type: string
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Recharges
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Recharge'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+  /api/v1/admin/finance/recharges/export:
+    get:
+      tags:
+      - console-admin
+      summary: Export recharges
+      security:
+      - adminBearer: []
+      parameters:
+      - name: user_id
+        in: query
+        schema:
+          type: string
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date-time
+      responses:
+        '200':
+          description: CSV file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+  /api/v1/admin/finance/refunds:
+    get:
+      tags:
+      - console-admin
+      summary: List refunds
+      security:
+      - adminBearer: []
+      parameters:
+      - name: user_id
+        in: query
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Refunds
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Refund'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+  /api/v1/admin/finance/refunds/{refund_id}/approve:
+    parameters:
+    - name: refund_id
+      in: path
+      required: true
+      schema:
+        type: string
+    post:
+      tags:
+      - console-admin
+      summary: Approve refund
+      security:
+      - adminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Approved
+  /api/v1/admin/finance/refunds/export:
+    get:
+      tags:
+      - console-admin
+      summary: Export refunds
+      security:
+      - adminBearer: []
+      parameters:
+      - name: user_id
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: CSV file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+    nodeBearer:
+      type: http
+      scheme: bearer
+      description: |
+        Resolver pre-issued API key. Issued exactly once by
+        `POST /api/v1/admin/nodes` (or re-issued by
+        `POST /api/v1/admin/nodes/{node_id}/credentials`).
+        Stored in `configs/server.yaml` as `control_plane.api_key`.
+        Used as `Authorization: Bearer <api_key>` on every agent
+        request.
+    apiKeyHmac:
+      type: apiKey
+      in: header
+      name: X-Signature
+      description: |
+        HMAC-SHA256 of `<ts>\n<METHOD>\n<path>\n<sha256(body) hex>` keyed
+        by the resolver's pre-issued secret. Companion headers:
+        `X-Hmac-Key` (the secret), `X-Timestamp` (unix seconds), `X-Nonce`
+        (16 random bytes hex). The console stores only the SHA-256 hash
+        of the secret.
+    adminBearer:
+      type: http
+      scheme: bearer
+      description: Admin session bearer; required for `POST /api/v1/admin/nodes`.
+    internalHmac:
+      type: apiKey
+      in: header
+      name: X-Internal-Signature
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PerPage:
+      name: per_page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    ProfileId:
+      name: profile_id
+      in: path
+      required: true
+      schema:
+        type: string
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 120
+    RuleId:
+      name: rule_id
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    FailedDependency:
+      description: Failed dependency
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+      - error
+      - trace_id
+      properties:
+        error:
+          type: object
+          required:
+          - code
+          - message
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+        trace_id:
+          type: string
+    PageMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        trace_id:
+          type: string
+    RegisterRequest:
+      type: object
+      required:
+      - name
+      - email
+      - password
+      - password_confirmation
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        password_confirmation:
+          type: string
+          minLength: 8
+        timezone:
+          type: string
+          default: UTC
+        locale:
+          type: string
+          default: en
+    LoginRequest:
+      type: object
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        device_name:
+          type: string
+    AuthResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+            user:
+              $ref: '#/components/schemas/User'
+    User:
+      type: object
+      required:
+      - id
+      - name
+      - email
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum:
+          - member
+          - admin
+        timezone:
+          type: string
+        locale:
+          type: string
+        plan_code:
+          type: string
+    Profile:
+      type: object
+      required:
+      - id
+      - name
+      - status
+      - current_version
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum:
+          - active
+          - disabled
+          - deleted
+        default_action:
+          type: string
+          enum:
+          - allow
+          - block
+        block_response:
+          type: string
+          enum:
+          - nxdomain
+          - zero_ip
+          - refused
+          - block_page
+        current_version:
+          type: integer
+          format: int64
+        created_at:
+          type: string
+          format: date-time
+        security_enabled:
+          type: boolean
+        privacy_enabled:
+          type: boolean
+        parental_enabled:
+          type: boolean
+        safe_search_enabled:
+          type: boolean
+        log_mode:
+          type: string
+          enum:
+          - full
+          - blocked_only
+          - disabled
+    ProfileCreateRequest:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        default_action:
+          type: string
+          enum:
+          - allow
+          - block
+          default: allow
+        block_response:
+          type: string
+          enum:
+          - nxdomain
+          - zero_ip
+          - refused
+          default: nxdomain
+        security_enabled:
+          type: boolean
+        privacy_enabled:
+          type: boolean
+        parental_enabled:
+          type: boolean
+        safe_search_enabled:
+          type: boolean
+        log_mode:
+          type: string
+          enum:
+          - full
+          - blocked_only
+          - disabled
+          default: full
+    ProfileUpdateRequest:
+      allOf:
+      - $ref: '#/components/schemas/ProfileCreateRequest'
+      properties:
+        security_enabled:
+          type: boolean
+        privacy_enabled:
+          type: boolean
+        parental_enabled:
+          type: boolean
+        safe_search_enabled:
+          type: boolean
+        log_mode:
+          type: string
+          enum:
+          - full
+          - blocked_only
+          - disabled
+          default: full
+    ProfilePublish:
+      type: object
+      properties:
+        id:
+          type: string
+        profile_id:
+          type: string
+        status:
+          type: string
+          enum:
+          - pending
+          - in_progress
+          - completed
+          - failed
+        message:
+          type: string
+          nullable: true
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        triggered_by:
+          type: string
+          description: User ID who triggered the publish
+        triggered_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        error:
+          type: string
+          nullable: true
+    ProfileRule:
+      type: object
+      properties:
+        id:
+          type: string
+        profile_id:
+          type: string
+        list_type:
+          type: string
+          enum:
+          - allow
+          - deny
+        match_type:
+          type: string
+          enum:
+          - exact
+          - suffix
+          - wildcard
+        domain:
+          type: string
+        normalized_domain:
+          type: string
+        action:
+          type: string
+          enum:
+          - allow
+          - block
+          - rewrite
+        category:
+          type: string
+        enabled:
+          type: boolean
+    ProfileRuleCreateRequest:
+      type: object
+      required:
+      - list_type
+      - match_type
+      - domain
+      properties:
+        list_type:
+          type: string
+          enum:
+          - allow
+          - deny
+        match_type:
+          type: string
+          enum:
+          - exact
+          - suffix
+          - wildcard
+        domain:
+          type: string
+          maxLength: 255
+        action:
+          type: string
+          enum:
+          - allow
+          - block
+          nullable: true
+        category:
+          type: string
+          default: custom
+        note:
+          type: string
+    PublishResult:
+      type: object
+      properties:
+        profile_id:
+          type: string
+        version:
+          type: integer
+          format: int64
+        checksum:
+          type: string
+        publish_id:
+          type: string
+        status:
+          type: string
+    InternalPublishRequest:
+      type: object
+      required:
+      - profile_id
+      - user_id
+      - version
+      - checksum
+      - config
+      properties:
+        profile_id:
+          type: string
+        user_id:
+          type: string
+        team_id:
+          type: string
+          nullable: true
+        version:
+          type: integer
+          format: int64
+        checksum:
+          type: string
+        config:
+          type: object
+        quota:
+          type: object
+        message:
+          type: string
+    InternalPublishResponse:
+      type: object
+      properties:
+        publish_id:
+          type: string
+        config_version:
+          type: integer
+          format: int64
+        status:
+          type: string
+        target_node_count:
+          type: integer
+    PublishStatus:
+      type: object
+      properties:
+        publish_id:
+          type: string
+        status:
+          type: string
+        target_node_count:
+          type: integer
+        applied_node_count:
+          type: integer
+        failed_node_count:
+          type: integer
+        latest_error:
+          type: string
+          nullable: true
+    NodeProvisionRequest:
+      type: object
+      required:
+      - node_name
+      - region
+      - supported_protocols
+      properties:
+        node_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Unique resolver node name, e.g. "resolver-hk-01"
+        region:
+          type: string
+          description: Region tag, e.g. "ap-east-1"
+        country:
+          type: string
+        city:
+          type: string
+        provider:
+          type: string
+        public_ipv4:
+          type: string
+        public_ipv6:
+          type: string
+        supported_protocols:
+          type: array
+          items:
+            type: string
+            enum:
+            - udp
+            - tcp
+            - doh
+            - dot
+        capacity_qps:
+          type: integer
+          minimum: 1
+          default: 5000
+        weight:
+          type: integer
+          minimum: 1
+          default: 100
+        labels:
+          type: object
+    NodeProvisionResponse:
+      type: object
+      required:
+      - node_id
+      - api_key
+      - secret
+      - heartbeat_interval_seconds
+      - config_poll_interval_seconds
+      properties:
+        node_id:
+          type: string
+          description: Pre-assigned node id; must be passed to `resolver install --node-id`.
+        api_key:
+          type: string
+          description: |
+            Plain-text API key. Returned **exactly once**. Operator must run
+            `resolver install --api-key=...` immediately and never store it
+            in plaintext outside the resolver's `configs/server.yaml`.
+        secret:
+          type: string
+          description: |
+            Plain-text HMAC secret. Returned **exactly once**. Same handling
+            as `api_key`.
+        heartbeat_interval_seconds:
+          type: integer
+        config_poll_interval_seconds:
+          type: integer
+        latest_config_version:
+          type: integer
+          format: int64
+        server_time:
+          type: string
+          format: date-time
+    NodeHeartbeatRequest:
+      type: object
+      required:
+      - node_id
+      - status
+      - uptime_seconds
+      - current_config_version
+      properties:
+        node_id:
+          type: string
+        status:
+          type: string
+          enum:
+          - online
+          - offline
+          description: |
+            节点是否在岗；不再表达 healthy/degraded/unhealthy 等健康度信息
+        uptime_seconds:
+          type: integer
+          format: int64
+        version:
+          type: string
+        current_config_version:
+          type: integer
+          format: int64
+        profiles_loaded:
+          type: integer
+        last_config_pull_at:
+          type: string
+          format: date-time
+        last_log_flush_at:
+          type: string
+          format: date-time
+    NodeHeartbeatResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        server_time:
+          type: string
+          format: date-time
+        node_status:
+          type: string
+        latest_config_version:
+          type: integer
+          format: int64
+        should_pull_config:
+          type: boolean
+        next_heartbeat_after_seconds:
+          type: integer
+    ResolverConfigResponse:
+      type: object
+      properties:
+        data:
+          type: object
+    ConfigAckRequest:
+      type: object
+      required:
+      - node_id
+      - config_version
+      - checksum
+      - status
+      properties:
+        node_id:
+          type: string
+        config_version:
+          type: integer
+          format: int64
+        checksum:
+          type: string
+        status:
+          type: string
+          enum:
+          - applied
+          - failed
+        applied_at:
+          type: string
+          format: date-time
+        error_code:
+          type: string
+          nullable: true
+        error_message:
+          type: string
+          nullable: true
+    QueryLogItem:
+      type: object
+      required:
+      - timestamp
+      - profile_id
+      - query_name
+      - query_type
+      - action
+      - latency_ms
+      - node_id
+      - event_id
+      - user_id
+      - profile_version
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        profile_id:
+          type: string
+        user_id:
+          type: string
+        team_id:
+          type: string
+          nullable: true
+        device_id:
+          type: string
+          nullable: true
+        query_name:
+          type: string
+        query_type:
+          type: string
+        action:
+          type: string
+          enum:
+          - allowed
+          - blocked
+          - rewritten
+          - error
+        reason:
+          type: string
+        category:
+          type: string
+        rule_id:
+          type: string
+          nullable: true
+        latency_ms:
+          type: integer
+        upstream:
+          type: string
+          nullable: true
+        rcode:
+          type: string
+        client_ip_hash:
+          type: string
+        profile_version:
+          type: integer
+          format: int64
+        node_id:
+          type: string
+        event_id:
+          type: string
+        query_name_hash:
+          type: string
+          nullable: true
+    QueryLogBatch:
+      type: object
+      required:
+      - batch_id
+      - node_id
+      - sent_at
+      - items
+      properties:
+        batch_id:
+          type: string
+        node_id:
+          type: string
+        sent_at:
+          type: string
+          format: date-time
+        items:
+          type: array
+          maxItems: 1000
+          items:
+            $ref: '#/components/schemas/QueryLogItem'
+    BatchAcceptedResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            accepted:
+              type: boolean
+            batch_id:
+              type: string
+            received_count:
+              type: integer
+            duplicate:
+              type: boolean
+    MetricsBatch:
+      type: object
+      description: |
+        已下线：ops 监控只关心节点在线/离线，不再接收 resolver 指标 batch
+        （保留 schema 占位，仅用于 openapi 旧版本兼容，不得作为 Agent 端契约）
+      properties:
+        node_id:
+          type: string
+        sent_at:
+          type: string
+          format: date-time
+    GeodnsHealthViewResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            generated_at:
+              type: string
+              format: date-time
+            ttl_seconds:
+              type: integer
+            nodes:
+              type: array
+              items:
+                type: object
+                properties:
+                  node_id:
+                    type: string
+                  region:
+                    type: string
+                  country:
+                    type: string
+                  city:
+                    type: string
+                  status:
+                    type: string
+                  public_ipv4:
+                    type: string
+                  public_ipv6:
+                    type: string
+                  supported_protocols:
+                    type: array
+                    items:
+                      type: string
+                  weight:
+                    type: integer
+                  last_heartbeat_at:
+                    type: string
+                    format: date-time
+    Money:
+      type: object
+      required:
+      - amount_minor
+      - currency
+      properties:
+        amount_minor:
+          type: integer
+          format: int64
+          minimum: 0
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        minor_unit:
+          type: integer
+          minimum: 0
+          maximum: 3
+    Plan:
+      type: object
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+          enum:
+          - free
+          - pro
+          - business
+          - education
+          - enterprise
+        name:
+          type: string
+        billing_model:
+          type: string
+          enum:
+          - free_quota
+          - flat_subscription
+          - employee_block
+          - student_block
+          - custom_contract
+        status:
+          type: string
+        profile_limit:
+          type:
+          - integer
+          - 'null'
+        device_limit:
+          type:
+          - integer
+          - 'null'
+        query_limit_monthly:
+          type:
+          - integer
+          - 'null'
+          format: int64
+        block_size:
+          type:
+          - integer
+          - 'null'
+        unit_label:
+          type: string
+          enum:
+          - account
+          - employee_block_50
+          - student_block_250
+          - contract
+        log_retention_days:
+          type: integer
+        prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanPrice'
+    PlanPrice:
+      type: object
+      required:
+      - id
+      - plan_id
+      - billing_interval
+      - unit_amount_minor
+      - currency
+      properties:
+        id:
+          type: string
+        plan_id:
+          type: string
+        billing_interval:
+          type: string
+          enum:
+          - month
+          - year
+        unit_amount_minor:
+          type: integer
+          format: int64
+          minimum: 0
+        currency:
+          type: string
+        trial_days:
+          type: integer
+          minimum: 0
+        status:
+          type: string
+          enum:
+          - active
+          - archived
+        unit_label:
+          type: string
+          enum:
+          - account
+          - employee_block_50
+          - student_block_250
+          - contract
+        block_size:
+          type:
+          - integer
+          - 'null'
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: string
+        plan_id:
+          type: string
+        plan_price_id:
+          type: string
+        status:
+          type: string
+          enum:
+          - trialing
+          - active
+          - past_due
+          - canceled
+          - expired
+        current_period_start:
+          type: string
+          format: date-time
+        current_period_end:
+          type: string
+          format: date-time
+        cancel_at_period_end:
+          type: boolean
+        seat_count:
+          type:
+          - integer
+          - 'null'
+        block_quantity:
+          type:
+          - integer
+          - 'null'
+    CheckoutRequest:
+      type: object
+      required:
+      - plan_price_id
+      - success_url
+      - cancel_url
+      properties:
+        plan_price_id:
+          type: string
+        success_url:
+          type: string
+          format: uri
+        cancel_url:
+          type: string
+          format: uri
+        seat_count:
+          type:
+          - integer
+          - 'null'
+          minimum: 1
+          description: Business employee count or Education student count. Personal Pro should omit it.
+    CheckoutResponse:
+      type: object
+      properties:
+        checkout_id:
+          type: string
+        checkout_url:
+          type: string
+        order_id:
+          type: string
+        amount_minor:
+          type: integer
+          format: int64
+        currency:
+          type: string
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: string
+        invoice_no:
+          type: string
+        currency:
+          type: string
+        subtotal_amount_minor:
+          type: integer
+          format: int64
+        discount_amount_minor:
+          type: integer
+          format: int64
+        tax_amount_minor:
+          type: integer
+          format: int64
+        total_amount_minor:
+          type: integer
+          format: int64
+        amount_paid_minor:
+          type: integer
+          format: int64
+        amount_due_minor:
+          type: integer
+          format: int64
+        status:
+          type: string
+        finalized_at:
+          type: string
+          format: date-time
+          nullable: true
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+        provider:
+          type: string
+        amount_minor:
+          type: integer
+          format: int64
+        currency:
+          type: string
+        status:
+          type: string
+        paid_at:
+          type: string
+          format: date-time
+          nullable: true
+    RefundCreateRequest:
+      type: object
+      required:
+      - payment_id
+      - amount_minor
+      - currency
+      - reason
+      properties:
+        payment_id:
+          type: string
+        amount_minor:
+          type: integer
+          format: int64
+          minimum: 1
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        reason:
+          type: string
+          maxLength: 120
+    Refund:
+      type: object
+      properties:
+        id:
+          type: string
+        payment_id:
+          type: string
+        amount_minor:
+          type: integer
+          format: int64
+        currency:
+          type: string
+        status:
+          type: string
+    UsageBatchRequest:
+      type: object
+      required:
+      - source
+      - source_batch_id
+      - sent_at
+      - items
+      properties:
+        source:
+          type: string
+          enum:
+          - dns-console-web
+        source_batch_id:
+          type: string
+        sent_at:
+          type: string
+          format: date-time
+        checksum:
+          type: string
+        items:
+          type: array
+          minItems: 1
+          maxItems: 10000
+          items:
+            $ref: '#/components/schemas/UsageBatchItem'
+        billing_semantics:
+          type: string
+          enum:
+          - quota_and_analytics_only
+          description: V1 usage batches are not usage-overage invoices.
+    UsageBatchItem:
+      type: object
+      required:
+      - profile_id
+      - user_id
+      - period_start
+      - period_end
+      - query_count
+      - blocked_count
+      properties:
+        profile_id:
+          type: string
+        user_id:
+          type: string
+        period_start:
+          type: string
+          format: date-time
+        period_end:
+          type: string
+          format: date-time
+        query_count:
+          type: integer
+          format: int64
+          minimum: 0
+        blocked_count:
+          type: integer
+          format: int64
+          minimum: 0
+    UsageBatchResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            accepted:
+              type: boolean
+            source_batch_id:
+              type: string
+            received_count:
+              type: integer
+            duplicate:
+              type: boolean
+    PublishStatusCallback:
+      type: object
+      required:
+      - publish_id
+      - profile_id
+      - profile_version
+      - config_version
+      - status
+      - status_version
+      properties:
+        publish_id:
+          type: string
+        profile_id:
+          type: string
+        profile_version:
+          type: integer
+          format: int64
+        config_version:
+          type: integer
+          format: int64
+        status:
+          type: string
+        target_node_count:
+          type: integer
+        applied_node_count:
+          type: integer
+        failed_node_count:
+          type: integer
+        status_version:
+          type: integer
+          format: int64
+        latest_error:
+          type: string
+          nullable: true
+    QuotaSnapshotRequest:
+      type: object
+      required:
+      - profile_id
+      - user_id
+      - plan_code
+      - quota_version
+      - monthly_query_limit
+      - used_query_count
+      - quota_status
+      properties:
+        profile_id:
+          type: string
+        user_id:
+          type: string
+        plan_code:
+          type: string
+          enum:
+          - free
+          - pro
+          - business
+          - education
+          - enterprise
+        quota_version:
+          type: integer
+          format: int64
+        monthly_query_limit:
+          type:
+          - integer
+          - 'null'
+          format: int64
+        used_query_count:
+          type: integer
+          format: int64
+        quota_status:
+          type: string
+          enum:
+          - normal
+          - exceeded
+          - unlimited
+          description: |
+            normal=Free 未超额可服务；exceeded=Free 超额 resolver 硬拒绝返回 SERVFAIL；unlimited=付费套餐不触发拒绝
+        log_retention_days:
+          type: integer
+        features:
+          type: object
+    QuotaStatusResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/QuotaSnapshotRequest'
+    SecuritySettings:
+      type: object
+      required:
+      - enabled
+      properties:
+        enabled:
+          type: boolean
+        block_malware:
+          type: boolean
+          default: true
+        block_phishing:
+          type: boolean
+          default: true
+        block_command_and_control:
+          type: boolean
+          default: true
+        block_cryptojacking:
+          type: boolean
+          default: true
+      additionalProperties: false
+    PrivacySettings:
+      type: object
+      required:
+      - enabled
+      - log_mode
+      properties:
+        enabled:
+          type: boolean
+        block_trackers:
+          type: boolean
+          default: true
+        block_analytics:
+          type: boolean
+          default: true
+        block_telemetry:
+          type: boolean
+          default: true
+        anonymize_client_ip:
+          type: boolean
+          default: true
+        log_mode:
+          type: string
+          enum:
+          - full
+          - blocked_only
+          - disabled
+          default: full
+      additionalProperties: false
+    ParentalSettings:
+      type: object
+      required:
+      - enabled
+      properties:
+        enabled:
+          type: boolean
+        block_adult_content:
+          type: boolean
+          default: false
+        safe_search:
+          type: boolean
+          default: false
+        youtube_restricted_mode:
+          type: boolean
+          default: false
+        block_gambling_basic:
+          type: boolean
+          default: false
+      additionalProperties: false
+    ListRuleCreateRequest:
+      type: object
+      required:
+      - match_type
+      - domain
+      properties:
+        match_type:
+          type: string
+          enum:
+          - exact
+          - suffix
+          - wildcard
+        domain:
+          type: string
+          maxLength: 255
+        note:
+          type: string
+          maxLength: 255
+      additionalProperties: false
+    MemberCenterOverviewResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            navigation:
+              type: array
+              items:
+                type: string
+                enum:
+                - security
+                - privacy
+                - parental
+                - denylist
+                - allowlist
+                - analytics
+                - logs
+                - settings
+                - membership
+            current_profile_id:
+              type:
+              - string
+              - 'null'
+            plan_code:
+              type: string
+            monthly_query_limit:
+              type:
+              - integer
+              - 'null'
+              format: int64
+            used_query_count:
+              type: integer
+              format: int64
+            quota_status:
+              type: string
+              enum:
+              - normal
+              - exceeded
+              - unlimited
+            security_enabled:
+              type: boolean
+            privacy_enabled:
+              type: boolean
+            parental_enabled:
+              type: boolean
+    TopDomainItem:
+      type: object
+      properties:
+        domain:
+          type: string
+        query_count:
+          type: integer
+          format: int64
+        blocked_count:
+          type: integer
+          format: int64
+    DashboardResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            query_count:
+              type: integer
+              format: int64
+            blocked_count:
+              type: integer
+              format: int64
+            block_rate:
+              type: number
+            active_devices:
+              type: integer
+            top_domains:
+              type: array
+              items:
+                $ref: '#/components/schemas/TopDomainItem'
+            top_blocked_domains:
+              type: array
+              items:
+                $ref: '#/components/schemas/TopDomainItem'
+            quota:
+              $ref: '#/components/schemas/QuotaSnapshotRequest'
+    StatsSummaryResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            query_count:
+              type: integer
+              format: int64
+            blocked_count:
+              type: integer
+              format: int64
+            allowed_count:
+              type: integer
+              format: int64
+            block_rate:
+              type: number
+    TopDomainsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopDomainItem'
+    TimeseriesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              bucket_start:
+                type: string
+                format: date-time
+              query_count:
+                type: integer
+                format: int64
+              blocked_count:
+                type: integer
+                format: int64
+    MemberSettingsUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        timezone:
+          type: string
+        locale:
+          type: string
+        default_profile_id:
+          type:
+          - string
+          - 'null'
+        ui_theme:
+          type: string
+          enum:
+          - system
+          - light
+          - dark
+        email_notifications_enabled:
+          type: boolean
+      additionalProperties: false
+    MemberSettingsResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/MemberSettingsUpdateRequest'
+    ProfileDnsSettingsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            profile_id:
+              type: string
+            doh_url:
+              type: string
+              format: uri
+            dot_hostname:
+              type: string
+            udp_endpoint:
+              type: string
+            ipv6_endpoint:
+              type:
+              - string
+              - 'null'
+            setup_guides:
+              type: array
+              items:
+                type: string
+    MembershipResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            plan_code:
+              type: string
+            subscription_status:
+              type: string
+            monthly_query_limit:
+              type:
+              - integer
+              - 'null'
+              format: int64
+            used_query_count:
+              type: integer
+              format: int64
+            quota_status:
+              type: string
+            current_period_start:
+              type: string
+              format: date-time
+            current_period_end:
+              type: string
+              format: date-time
+            upgrade_options:
+              type: array
+              items:
+                $ref: '#/components/schemas/Plan'
+            latest_invoice:
+              oneOf:
+              - $ref: '#/components/schemas/Invoice'
+              - type: 'null'
+    AdminLoginRequest:
+      type: object
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    PasswordUpdateRequest:
+      type: object
+      required:
+      - current_password
+      - new_password
+      properties:
+        current_password:
+          type: string
+        new_password:
+          type: string
+          minLength: 6
+    AnalyticsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            query_count:
+              type: integer
+              format: int64
+            blocked_count:
+              type: integer
+              format: int64
+            allowed_count:
+              type: integer
+              format: int64
+            block_rate:
+              type: number
+            timeseries:
+              type: array
+              items:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                  query_count:
+                    type: integer
+                    format: int64
+                  blocked_count:
+                    type: integer
+                    format: int64
+    ApiKey:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        key:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        last_used_at:
+          type: string
+          format: date-time
+          nullable: true
+    ApiKeyCreateRequest:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          maxLength: 100
+    Team:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        owner_id:
+          type: string
+        member_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+    TeamCreateRequest:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          maxLength: 100
+    TeamUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+    TeamMember:
+      type: object
+      properties:
+        user_id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum:
+          - owner
+          - admin
+          - member
+        joined_at:
+          type: string
+          format: date-time
+    TeamInvitation:
+      type: object
+      properties:
+        id:
+          type: string
+        team_id:
+          type: string
+        team_name:
+          type: string
+        token:
+          type: string
+        status:
+          type: string
+          enum:
+          - pending
+          - accepted
+          - declined
+        invited_by:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+    AdminOverviewResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            total_users:
+              type: integer
+            active_users_today:
+              type: integer
+            total_queries:
+              type: integer
+              format: int64
+            blocked_queries:
+              type: integer
+              format: int64
+            total_nodes:
+              type: integer
+            online_nodes:
+              type: integer
+    UserCreateRequest:
+      type: object
+      required:
+      - name
+      - email
+      - password
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+    UserUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum:
+          - member
+          - admin
+    Admin:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        roles:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+    Role:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        permissions:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+    RoleCreateRequest:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+          maxLength: 255
+    RoleUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+          maxLength: 255
+    GlobalRule:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        rule_type:
+          type: string
+          enum:
+          - blocklist
+          - allowlist
+        match_type:
+          type: string
+          enum:
+          - exact
+          - suffix
+          - wildcard
+          - regex
+        domain:
+          type: string
+        action:
+          type: string
+          enum:
+          - block
+          - allow
+        enabled:
+          type: boolean
+        note:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    GlobalRuleCreateRequest:
+      type: object
+      required:
+      - name
+      - rule_type
+      - match_type
+      - domain
+      - action
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        rule_type:
+          type: string
+          enum:
+          - blocklist
+          - allowlist
+        match_type:
+          type: string
+          enum:
+          - exact
+          - suffix
+          - wildcard
+          - regex
+        domain:
+          type: string
+          maxLength: 255
+        action:
+          type: string
+          enum:
+          - block
+          - allow
+        enabled:
+          type: boolean
+          default: true
+        note:
+          type: string
+          maxLength: 255
+    GlobalRuleUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        action:
+          type: string
+          enum:
+          - block
+          - allow
+        enabled:
+          type: boolean
+        note:
+          type: string
+          maxLength: 255
+    GeoDnsRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+          - A
+          - AAAA
+          - CNAME
+        country_codes:
+          type: array
+          items:
+            type: string
+        ip:
+          type: string
+        cname:
+          type: string
+        ttl:
+          type: integer
+        enabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+    GeoDnsRecordCreateRequest:
+      type: object
+      required:
+      - name
+      - type
+      - country_codes
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        type:
+          type: string
+          enum:
+          - A
+          - AAAA
+          - CNAME
+        country_codes:
+          type: array
+          items:
+            type: string
+        ip:
+          type: string
+        cname:
+          type: string
+        ttl:
+          type: integer
+          default: 300
+    GeoDnsRecordUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        country_codes:
+          type: array
+          items:
+            type: string
+        ip:
+          type: string
+        cname:
+          type: string
+        ttl:
+          type: integer
+        enabled:
+          type: boolean
+    Alert:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        severity:
+          type: string
+          enum:
+          - info
+          - warning
+          - critical
+        message:
+          type: string
+        acknowledged:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        acknowledged_at:
+          type: string
+          format: date-time
+          nullable: true
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        user_email:
+          type: string
+        action:
+          type: string
+        resource_type:
+          type: string
+        resource_id:
+          type: string
+          nullable: true
+        details:
+          type: object
+          nullable: true
+        ip_address:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    PublishTask:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum:
+          - pending
+          - in_progress
+          - completed
+          - failed
+        profile_ids:
+          type: array
+          items:
+            type: string
+        message:
+          type: string
+        progress:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+    Bill:
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        type:
+          type: string
+          enum:
+          - charge
+          - refund
+          - subscription
+        amount:
+          $ref: '#/components/schemas/Money'
+        status:
+          type: string
+          enum:
+          - pending
+          - completed
+          - failed
+        note:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    Recharge:
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        amount:
+          $ref: '#/components/schemas/Money'
+        payment_method:
+          type: string
+        status:
+          type: string
+          enum:
+          - pending
+          - completed
+          - failed
+        created_at:
+          type: string
+          format: date-time
+    Refund:
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        amount:
+          $ref: '#/components/schemas/Money'
+        reason:
+          type: string
+        status:
+          type: string
+          enum:
+          - pending
+          - approved
+          - rejected
+          - completed
+        created_at:
+          type: string
+          format: date-time

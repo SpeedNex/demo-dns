@@ -1,0 +1,369 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/contracts/resolver-config.schema.json",
+  "title": "ResolverConfigBundle",
+  "type": "object",
+  "required": [
+    "version",
+    "checksum",
+    "generated_at",
+    "profiles",
+    "upstreams"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "checksum": {
+      "type": "string",
+      "pattern": "^sha256:[a-fA-F0-9]{64}$"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "profiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "profile_id",
+          "user_id",
+          "version",
+          "default_action",
+          "block_response",
+          "rules"
+        ],
+        "properties": {
+          "profile_id": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "team_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "default_action": {
+            "type": "string",
+            "enum": [
+              "allow",
+              "block"
+            ]
+          },
+          "block_response": {
+            "type": "string",
+            "enum": [
+              "nxdomain",
+              "zero_ip",
+              "refused",
+              "block_page"
+            ]
+          },
+          "security": {
+            "$ref": "#/$defs/featureSwitch"
+          },
+          "adblock": {
+            "$ref": "#/$defs/featureSwitch"
+          },
+          "privacy": {
+            "$ref": "#/$defs/featureSwitch"
+          },
+          "parental": {
+            "$ref": "#/$defs/featureSwitch"
+          },
+          "devices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/device"
+            }
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/rule"
+            }
+          },
+          "quota": {
+            "$ref": "#/$defs/quota"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "rulesets": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "upstreams": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/upstream"
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "properties": {
+        "dnssec_validate": {
+          "type": "boolean",
+          "default": false
+        },
+        "ecs_enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "qname_minimization": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": true
+    },
+    "signature": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "$defs": {
+    "featureSwitch": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "mode": {
+          "type": "string"
+        },
+        "block_malware": {
+          "type": "boolean"
+        },
+        "block_phishing": {
+          "type": "boolean"
+        },
+        "block_command_and_control": {
+          "type": "boolean"
+        },
+        "block_cryptojacking": {
+          "type": "boolean"
+        },
+        "block_trackers": {
+          "type": "boolean"
+        },
+        "block_analytics": {
+          "type": "boolean"
+        },
+        "block_telemetry": {
+          "type": "boolean"
+        },
+        "anonymize_client_ip": {
+          "type": "boolean"
+        },
+        "log_mode": {
+          "type": "string",
+          "enum": [
+            "full",
+            "blocked_only",
+            "disabled"
+          ]
+        },
+        "block_adult_content": {
+          "type": "boolean"
+        },
+        "safe_search": {
+          "type": "boolean"
+        },
+        "youtube_restricted_mode": {
+          "type": "boolean"
+        },
+        "block_gambling_basic": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    },
+    "device": {
+      "type": "object",
+      "required": [
+        "device_id",
+        "name"
+      ],
+      "properties": {
+        "device_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "device_type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_ip": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "device_key_hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "rule": {
+      "type": "object",
+      "required": [
+        "rule_id",
+        "list_type",
+        "match_type",
+        "normalized_domain",
+        "action",
+        "enabled"
+      ],
+      "properties": {
+        "rule_id": {
+          "type": "string"
+        },
+        "list_type": {
+          "type": "string",
+          "enum": [
+            "allow",
+            "deny"
+          ]
+        },
+        "match_type": {
+          "type": "string",
+          "enum": [
+            "exact",
+            "suffix",
+            "wildcard"
+          ]
+        },
+        "domain": {
+          "type": "string"
+        },
+        "normalized_domain": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "allow",
+            "block",
+            "rewrite"
+          ]
+        },
+        "category": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "quota": {
+      "type": "object",
+      "properties": {
+        "monthly_query_limit": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "log_retention_days": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "features": {
+          "type": "object"
+        },
+        "plan_code": {
+          "type": "string",
+          "enum": [
+            "free",
+            "pro",
+            "business",
+            "education",
+            "enterprise"
+          ]
+        },
+        "used_query_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "quota_status": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "exceeded",
+            "unlimited"
+          ],
+          "description": "normal=Free 未超额可服务；exceeded=Free 超额 resolver 返回 SERVFAIL 硬拒绝；unlimited=付费套餐不受限额约束"
+        }
+      },
+      "additionalProperties": true
+    },
+    "upstream": {
+      "type": "object",
+      "required": [
+        "address",
+        "protocol",
+        "timeout_ms"
+      ],
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "udp",
+            "tcp",
+            "doh",
+            "dot"
+          ]
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 100
+        },
+        "weight": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 100
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,271 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NextDNSLiteBillingContracts",
+  "$defs": {
+    "money": {
+      "type": "object",
+      "required": [
+        "amount_minor",
+        "currency"
+      ],
+      "properties": {
+        "amount_minor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "currency": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 3
+        },
+        "minor_unit": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        }
+      },
+      "additionalProperties": false
+    },
+    "plan": {
+      "type": "object",
+      "required": [
+        "code",
+        "billing_model"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": [
+            "free",
+            "pro",
+            "business",
+            "education",
+            "enterprise"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "billing_model": {
+          "type": "string",
+          "enum": [
+            "free_quota",
+            "flat_subscription",
+            "employee_block",
+            "student_block",
+            "custom_contract"
+          ]
+        },
+        "profile_limit": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "device_limit": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "query_limit_monthly": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "block_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "unit_label": {
+          "type": "string",
+          "enum": [
+            "account",
+            "employee_block_50",
+            "student_block_250",
+            "contract"
+          ]
+        },
+        "log_retention_days": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "features": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "usage_batch": {
+      "type": "object",
+      "required": [
+        "source",
+        "source_batch_id",
+        "sent_at",
+        "items"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": [
+            "dns-console-web"
+          ]
+        },
+        "source_batch_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "sent_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "checksum": {
+          "type": "string"
+        },
+        "billing_semantics": {
+          "type": "string",
+          "enum": [
+            "quota_and_analytics_only"
+          ]
+        },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10000,
+          "items": {
+            "type": "object",
+            "required": [
+              "profile_id",
+              "user_id",
+              "period_start",
+              "period_end",
+              "query_count",
+              "blocked_count"
+            ],
+            "properties": {
+              "profile_id": {
+                "type": "string"
+              },
+              "user_id": {
+                "type": "string"
+              },
+              "period_start": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "period_end": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "query_count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "blocked_count": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "quota_snapshot": {
+      "type": "object",
+      "required": [
+        "profile_id",
+        "user_id",
+        "plan_code",
+        "monthly_query_limit",
+        "used_query_count",
+        "quota_status",
+        "quota_version"
+      ],
+      "properties": {
+        "profile_id": {
+          "type": "string"
+        },
+        "user_id": {
+          "type": "string"
+        },
+        "plan_code": {
+          "type": "string",
+          "enum": [
+            "free",
+            "pro",
+            "business",
+            "education",
+            "enterprise"
+          ]
+        },
+        "monthly_query_limit": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "used_query_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "quota_status": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "exceeded",
+            "unlimited"
+          ],
+          "description": "normal=Free 未超额可服务；exceeded=Free 超额 resolver 返回 SERVFAIL 硬拒绝；unlimited=付费套餐不受限额约束"
+        },
+        "log_retention_days": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "quota_version": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "invoice_total_check": {
+      "type": "object",
+      "required": [
+        "subtotal_amount_minor",
+        "discount_amount_minor",
+        "tax_amount_minor",
+        "total_amount_minor"
+      ],
+      "properties": {
+        "subtotal_amount_minor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "discount_amount_minor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tax_amount_minor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_amount_minor": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,58 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: smart-dns-mysql
+    environment:
+      MYSQL_DATABASE: ocer_dns
+      MYSQL_ROOT_PASSWORD: smart_dns_dev_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: smart-dns-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
+    container_name: smart-dns-clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    environment:
+      CLICKHOUSE_DB: smart_dns
+      CLICKHOUSE_USER: smart_dns
+      CLICKHOUSE_PASSWORD: smart_dns_dev_password
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ../migrations/clickhouse:/docker-entrypoint-initdb.d:ro
+
+  nats:
+    image: nats:2.10-alpine
+    container_name: smart-dns-nats
+    command: ["-js", "-sd", "/data", "-m", "8222"]
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    volumes:
+      - nats_data:/data
+
+volumes:
+  mysql_data:
+  redis_data:
+  clickhouse_data:
+  nats_data:
+

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NodeHeartbeat",
+  "type": "object",
+  "required": [
+    "node_id",
+    "status",
+    "uptime_seconds",
+    "current_config_version"
+  ],
+  "properties": {
+    "node_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "online",
+        "offline"
+      ],
+      "description": "节点是否在岗；不再表达 healthy/degraded/unhealthy 等健康度信息"
+    },
+    "uptime_seconds": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "version": {
+      "type": "string"
+    },
+    "current_config_version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "profiles_loaded": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "last_config_pull_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "last_log_flush_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

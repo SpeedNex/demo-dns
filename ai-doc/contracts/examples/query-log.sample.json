@@ -1,0 +1,31 @@
+{
+  "batch_id": "batch_01HAMPLE",
+  "node_id": "node_01HAMPLE",
+  "sent_at": "2026-06-12T10:00:10Z",
+  "items": [
+    {
+      "event_id": "evt_node_01HAMPLE_batch_01HAMPLE_000001",
+      "timestamp": "2026-06-12T10:00:01Z",
+      "profile_id": "prf_01HAMPLE",
+      "user_id": "usr_01HAMPLE",
+      "team_id": null,
+      "device_id": null,
+      "query_name": "ads.example.com",
+      "query_type": "A",
+      "action": "blocked",
+      "reason": "denylist",
+      "category": "custom",
+      "rule_id": "rule_01HAMPLE",
+      "latency_ms": 3,
+      "upstream": null,
+      "rcode": "NXDOMAIN",
+      "client_ip_hash": "sha256_first16",
+      "profile_version": 1,
+      "node_id": "node_01HAMPLE",
+      "node_region": "local",
+      "node_country": "ZZ",
+      "cache_hit": false,
+      "protocol": "doh"
+    }
+  ]
+}

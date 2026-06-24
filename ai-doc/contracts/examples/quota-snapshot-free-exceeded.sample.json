@@ -1,0 +1,10 @@
+{
+  "profile_id": "prf_01H...",
+  "user_id": "usr_01H...",
+  "plan_code": "free",
+  "monthly_query_limit": 300000,
+  "used_query_count": 300000,
+  "quota_status": "exceeded",
+  "log_retention_days": 90,
+  "quota_version": 12
+}

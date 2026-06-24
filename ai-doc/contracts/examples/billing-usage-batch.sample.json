@@ -1,0 +1,17 @@
+{
+  "source": "dns-console-web",
+  "source_batch_id": "batch_01H_usage_20260612_1000",
+  "sent_at": "2026-06-12T10:01:00Z",
+  "checksum": "sha256:replace-with-canonical-json-hash",
+  "billing_semantics": "quota_and_analytics_only",
+  "items": [
+    {
+      "profile_id": "prf_01H...",
+      "user_id": "usr_01H...",
+      "period_start": "2026-06-12T10:00:00Z",
+      "period_end": "2026-06-12T10:01:00Z",
+      "query_count": 1234,
+      "blocked_count": 120
+    }
+  ]
+}
