@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -236,15 +238,22 @@ func main() {
 		Handler: mainMux,
 	}
 
+	// DoH 直接使用 TLS（certbot 证书），不再依赖上游反向代理
+	dohTLS, err := dnsserver.LoadTLSConfig(cfg.Listen.TLSCertFile, cfg.Listen.TLSKeyFile, cfg.ControlPlane.DNSDomain)
+	if err != nil {
+		log.Fatalf("doh: failed to load TLS config: %v", err)
+	}
+
 	go func() {
-		// DoH listener speaks plain HTTP on purpose: TLS is expected to be
-		// terminated by an upstream reverse proxy (nginx / Caddy / Envoy).
-		// Pointing a browser directly at http://<host>:<DoH>/dns-query is
-		// supported; the upgrade to HTTPS happens in front of us.
-		log.Printf("dns-resolver DoH listening on http://0.0.0.0:%d (TLS terminated upstream)", cfg.Listen.DoH)
+		ln, err := net.Listen("tcp", httpServer.Addr)
+		if err != nil {
+			log.Fatalf("doh: failed to listen on %s: %v", httpServer.Addr, err)
+		}
+		tlsLn := tls.NewListener(ln, dohTLS)
+		log.Printf("dns-resolver DoH listening on https://0.0.0.0:%d (direct TLS)", cfg.Listen.DoH)
 		log.Printf("Node: %s (%s v%s)", cfg.Node.Name, cfg.Node.NodeUID, cfg.Node.Version)
 		log.Printf("Upstream DNS: %v", cfg.Upstream)
-		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := httpServer.Serve(tlsLn); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server error: %v", err)
 		}
 	}()
