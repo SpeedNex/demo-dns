@@ -137,7 +137,9 @@ func main() {
 	// Initialize agent with console-issued credentials (no registration flow)
 	agt := agent.New(cfg, engine, metricsCollector)
 
-	// Initialize reliable log buffer (receives credentials directly, not from disk)
+	// Initialize reliable log buffer (reads credentials via agt.LoadBearer() —
+	// the same path the agent uses for heartbeat / config poll, so yaml and
+	// the api_key file can never disagree about which token to send).
 	logBuffer := logging.NewBuffer(
 		cfg.Logging.BufferPath,
 		fmt.Sprintf("%s/api/v1/node/dns-resolver/query-logs", cfg.ControlPlane.Endpoint),
@@ -145,7 +147,7 @@ func main() {
 		10*time.Second,
 		logging.Credentials{
 			NodeID: cfg.ControlPlane.NodeID,
-			APIKey: cfg.ControlPlane.APIKey,
+			APIKey: agt.LoadBearer(),
 		},
 		agt.MarkLogFlush,
 	)

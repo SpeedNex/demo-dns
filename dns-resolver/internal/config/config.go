@@ -63,6 +63,9 @@ type ControlPlaneConfig struct {
 	// APIKey 是 portal-web 后台预创建节点时签发的凭据，
 	// 由 `resolver install --console=... --node-id=... --api-key=...` 写入
 	// 节点启动后直接使用此凭据鉴权，不再走任何自助注册/兜底流程
+	// 2026-06-24 deprecated: 不再使用,凭据统一走 APIKeyPath 指向的文件。
+	// 保留字段仅为兼容旧 yaml 文件,运行时由 agent.LoadBearer() 直接读文件,
+	// 不再回退到此字段。
 	APIKey string `yaml:"api_key"`
 	// NodeID 是 console 预签发的节点标识，必须与 control_plane.api_key 配对使用
 	NodeID string `yaml:"node_id"`

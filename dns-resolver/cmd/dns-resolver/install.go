@@ -137,10 +137,10 @@ func runInstall(args []string) error {
 	}
 
 	fmt.Printf("✔ config written to %s\n", opts.ConfigPath)
-	fmt.Printf("  console   = %s\n", cfg.ControlPlane.Endpoint)
-	fmt.Printf("  node_id   = %s\n", cfg.ControlPlane.NodeID)
-	fmt.Printf("  api_key   = %s\n", maskCredential(cfg.ControlPlane.APIKey))
-	fmt.Printf("  log_buf   = %s\n", cfg.Logging.BufferPath)
+	fmt.Printf("  console     = %s\n", cfg.ControlPlane.Endpoint)
+	fmt.Printf("  node_id     = %s\n", cfg.ControlPlane.NodeID)
+	fmt.Printf("  api_key     = (kept in %s, not in yaml)\n", cfg.ControlPlane.APIKeyPath)
+	fmt.Printf("  log_buf     = %s\n", cfg.Logging.BufferPath)
 
 	// 2026-06-22: install 完成后调用控制面 register API，告知 console 节点已注册。
 	// register 失败不阻塞 install（配置已写入），仅打印警告。
@@ -239,15 +239,17 @@ func exchangeToken(server, token string) (apiKey string, err error) {
 	return result.Data.APIKey, nil
 }
 
-// buildInstalledConfig 在 config.Default() 的基础上覆盖控制面凭据和节点标识
+// buildInstalledConfig 在 config.Default() 的基础上覆盖控制面凭据和节点标识。
+// 2026-06-24: api_key 不再写进 yaml,只指向 api_key_path 文件 — 凭据单一来源,
+// 避免双源不一致导致 401。
 func buildInstalledConfig(opts *installOptions) *config.Config {
 	cfg := config.Default()
 
 	cfg.ControlPlane.Endpoint = strings.TrimRight(opts.Console, "/")
-	cfg.ControlPlane.APIKey = strings.TrimSpace(opts.APIKey)
+	cfg.ControlPlane.APIKey = "" // 留空,凭据走 api_key_path 文件
 	cfg.ControlPlane.NodeID = strings.TrimSpace(opts.NodeID)
 
-	// 2026-06-22: 把 api_key 缓存路径固定为 config 同目录下的绝对路径，
+	// 2026-06-22: 把 api_key 缓存路径固定为 config 同目录下的绝对路径,
 	// 避免 systemd / nohup 启动时 CWD=/ 找不到 CWD-相对的 "configs/api_key"
 	// 而 fallback 到 yaml 中旧格式的 ocnd_ token (被服务端 401 拒掉)。
 	if cfg.ControlPlane.APIKeyPath == "" {
@@ -258,6 +260,16 @@ func buildInstalledConfig(opts *installOptions) *config.Config {
 			}
 		}
 		cfg.ControlPlane.APIKeyPath = filepath.Join(cfgDir, "api_key")
+	}
+
+	// 2026-06-24: 把用户传入的 --api-key / --token 换出来的 key
+	// 立即写入 api_key_path 文件 — install 完成后节点启动即可使用。
+	// register 接口若返回新 key,会再次覆盖。
+	if k := strings.TrimSpace(opts.APIKey); k != "" {
+		if err := writeAPIKeyFile(cfg.ControlPlane.APIKeyPath, k); err != nil {
+			// 写入失败不阻塞 install,让 register 阶段补救
+			fmt.Printf("⚠ write api_key to %s failed: %v\n", cfg.ControlPlane.APIKeyPath, err)
+		}
 	}
 
 	// 同步节点标识，便于 console 在 Node 表上做匹配
@@ -427,25 +439,36 @@ func registerNodeToConsole(cfg *config.Config) (dnsDomain string, err error) {
 		return result.Data.DNSDomain, nil
 	}
 
-	// 2026-06-22: 始终用 cfg.ControlPlane.APIKeyPath (绝对路径) 写 api_key，
-	// 避免 CWD 不同时文件落到错误位置，并让运行时 loadBearer() 能直接读到。
-	apiKeyPath := strings.TrimSpace(cfg.ControlPlane.APIKeyPath)
-	if apiKeyPath == "" {
-		apiKeyPath = "configs/api_key"
+	// 2026-06-24: 始终用 cfg.ControlPlane.APIKeyPath (绝对路径) 写 api_key,
+	// 与 buildInstalledConfig 走同一份 writeAPIKeyFile() — 路径解析和权限一致。
+	if err := writeAPIKeyFile(cfg.ControlPlane.APIKeyPath, result.Data.APIKey); err != nil {
+		return result.Data.DNSDomain, fmt.Errorf("write api_key: %w", err)
 	}
-	if !filepath.IsAbs(apiKeyPath) {
-		if abs, err := filepath.Abs(apiKeyPath); err == nil {
-			apiKeyPath = abs
+	fmt.Printf("✔ api_key cached to %s\n", cfg.ControlPlane.APIKeyPath)
+	return result.Data.DNSDomain, nil
+}
+
+// writeAPIKeyFile 2026-06-24: 唯一写入 api_key 的入口。
+// 解析为绝对路径,创建目录,0600 权限。install 阶段所有 api_key 写入必须走这里,
+// 保证 yaml 和文件不会出现两份内容不一致的 token。
+func writeAPIKeyFile(path, key string) error {
+	if strings.TrimSpace(key) == "" {
+		return fmt.Errorf("api_key is empty")
+	}
+	if p := strings.TrimSpace(path); p != "" {
+		path = p
+	} else {
+		path = "configs/api_key"
+	}
+	if !filepath.IsAbs(path) {
+		if abs, err := filepath.Abs(path); err == nil {
+			path = abs
 		}
 	}
-	if err := os.MkdirAll(filepath.Dir(apiKeyPath), 0o755); err != nil {
-		return result.Data.DNSDomain, fmt.Errorf("create api_key dir: %w", err)
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return fmt.Errorf("create dir: %w", err)
 	}
-	if err := os.WriteFile(apiKeyPath, []byte(result.Data.APIKey), 0o600); err != nil {
-		return result.Data.DNSDomain, fmt.Errorf("write api_key to %s: %w", apiKeyPath, err)
-	}
-	fmt.Printf("✔ api_key cached to %s\n", apiKeyPath)
-	return result.Data.DNSDomain, nil
+	return os.WriteFile(path, []byte(strings.TrimSpace(key)), 0o600)
 }
 
 // =============================================================================

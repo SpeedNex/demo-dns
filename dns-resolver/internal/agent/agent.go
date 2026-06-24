@@ -580,25 +580,19 @@ func (a *Agent) doNodeRequest(method, path string, body io.Reader) (*http.Respon
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	if bearer := a.loadBearer(); bearer != "" {
+	if bearer := a.LoadBearer(); bearer != "" {
 		req.Header.Set("Authorization", "Bearer "+bearer)
 	}
 
 	return a.client.Do(req)
 }
 
-// loadBearer 2026-06-22: 优先从 control_plane.api_key_path 读，fallback 到
-// "configs/api_key" (CWD-相对)，最后回退到 yaml 里的 APIKey 字段。
-// 关键：优先使用绝对路径，避免 systemd CWD=/ 时 CWD-相对路径解析不到
-// 而误用 yaml 中可能已过期的旧格式 token。
-func (a *Agent) loadBearer() string {
-	candidates := []string{}
+// LoadBearer 2026-06-24: 唯一从 control_plane.api_key_path 指向的文件读取鉴权 token。
+// 不再 fallback 到 "configs/api_key" (CWD-相对) 或 yaml 的 APIKey 字段 —
+// 安装阶段只把凭据写到单一文件 (api_key_path)，任何其他来源都是过期或无效 token。
+// 找不到文件时返回空字符串，让请求以无凭据形式发出，由 server 端拒绝。
+func (a *Agent) LoadBearer() string {
 	if p := strings.TrimSpace(a.cfg.ControlPlane.APIKeyPath); p != "" {
-		candidates = append(candidates, p)
-	}
-	candidates = append(candidates, "configs/api_key")
-
-	for _, p := range candidates {
 		if data, err := os.ReadFile(p); err == nil {
 			key := strings.TrimSpace(string(data))
 			if key != "" {
@@ -606,7 +600,7 @@ func (a *Agent) loadBearer() string {
 			}
 		}
 	}
-	return a.cred.APIKey
+	return ""
 }
 
 func (a *Agent) controlPlaneURL(path string) string {
