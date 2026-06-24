@@ -353,11 +353,13 @@ final class UserWorkspaceService
         $profilePk = null;
         if ($profileUid !== null && $profileUid !== '') {
             try {
-                $profilePk = (int) $this->resolveProfile($userId, $profileUid)->id;
-                $filters['profile_pk'] = $profilePk;
+                // 校验 ownership：用户拥有该 profile
+                $this->resolveProfile($userId, $profileUid);
+                // CH 存的是 profile_uid 字符串，直接传原文
+                $filters['profile_id'] = $profileUid;
             } catch (\Throwable) {
                 // 越权访问 / profile 不存在 → 强制 0 行
-                $filters['profile_pk'] = -1;
+                $filters['profile_id'] = '-';
             }
         }
 

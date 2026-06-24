@@ -25,8 +25,8 @@ final class QueryLogReadService
             $like = strtolower((string) $filters['domain']);
             $where[] = 'domain LIKE ' . $this->q('%' . $like . '%');
         }
-        if (isset($filters['profile_pk']) && (int) $filters['profile_pk'] > 0) {
-            $where[] = 'profile_id = ' . $this->q((string) $filters['profile_pk']);
+        if (! empty($filters['profile_id'])) {
+            $where[] = 'profile_id = ' . $this->q((string) $filters['profile_id']);
         }
 
         $page = max(1, (int) ($filters['page'] ?? 1));
