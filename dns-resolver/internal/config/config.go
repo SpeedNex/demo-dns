@@ -181,7 +181,7 @@ func Default() *Config {
 			ProfilesPath:       "./data/profiles",
 			APIKey:             "",
 			NodeID:             "",
-			ProfilesCacheDir:   "./data/profiles",
+			ProfilesCacheDir:   "",
 			ProfileCacheMemory: 5000,
 			ProfileCacheDisk:   20000,
 			ProfileEvictTTLMin: 30,
