@@ -31,7 +31,7 @@ Laravel + Vue 3 package for:
 - Usage data can be aggregated into billing records, then linked to orders, payment transactions, wallet balance changes, invoices, and publish snapshots.
 - Member center supports profile management, device management, wallet recharge, and DNS endpoint delivery from the same API surface.
 - Admin console supports menu configuration, member catalog configuration, audit logs, plans, billing, and publish task operations.
-- Control-plane to resolver integration is now verified end to end: `heartbeat -> should_pull_config -> /agent/resolver/config -> active.json hot reload -> /agent/resolver/config/ack`.
+- Control-plane to resolver integration: `heartbeat -> should_pull_config -> GET /config (Global Config) -> GET /profiles/{id} (Lazy Profile) -> local cache hot reload`.
 - DoH integration is verified against the live local resolver on `http://127.0.0.1:18444/dns-query`: the node matched `127.0.0.1 -> dev-localhost -> profile`, applied version `2`, and returned a valid DNS answer for `example.com`.
 
 ## Integration Evidence

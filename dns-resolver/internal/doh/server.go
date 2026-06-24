@@ -182,7 +182,7 @@ func (s *Server) resolveRuntimeProfile(remoteAddr string, requestedProfile strin
 		return "", blockresponse.ModeNXDomain, "", false, false
 	}
 	if len(cfg.Profiles) == 0 {
-		log.Printf("doh: resolveRuntimeProfile: no profiles in active.json (requestedProfile=%s)", requestedProfile)
+		log.Printf("doh: resolveRuntimeProfile: no profiles in cache (requestedProfile=%s)", requestedProfile)
 		return "", blockresponse.ModeNXDomain, "", false, false
 	}
 

@@ -124,9 +124,9 @@ func TestPreissuedCredentialsFlow(t *testing.T) {
 		t.Fatalf("expected blocked.example to be blocked, got %s", decision.Action)
 	}
 
-	activeConfig := filepath.Join(cfg.ControlPlane.ProfilesPath, "active.json")
-	if _, err := os.Stat(activeConfig); err != nil {
-		t.Fatalf("expected active config file: %v", err)
+	globalConfig := filepath.Join(cfg.ControlPlane.ProfilesPath, "global.json")
+	if _, err := os.Stat(globalConfig); err != nil {
+		t.Fatalf("expected global config file: %v", err)
 	}
 }
 

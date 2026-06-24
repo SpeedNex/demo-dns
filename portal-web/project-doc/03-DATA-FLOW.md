@@ -137,7 +137,7 @@ listen:
 │                              │                                      │
 │  ┌──────────────────────────────────────────────────────────────┐ │
 │  │  Step 3: 配额检查 (quota_status)                              │ │
-│  │  active.json → profile.quota.quota_status                     │ │
+│  │  cached profile → profile.quota.quota_status                 │ │
 │  │  exceeded → HTTP 403 "quota exceeded"                        │ │
 │  └──────────────────────────────────────────────────────────────┘ │
 │                              │                                      │
@@ -309,7 +309,7 @@ listen:
 │                  Resolver (UDP/TCP DNS Server)                      │
 │                          :53                                       │
 │                                                                    │
-│  1. 客户端 IP → 匹配 active.json 中的 devices                     │
+│  1. 客户端 IP → 匹配本地缓存 devices                             │
 │  2. 获取对应 profile_id                                           │
 │  3. 其余流程同 DoH (规则匹配 → 缓存 → 上游 → 日志)               │
 │                                                                    │
@@ -363,7 +363,7 @@ listen:
 │           Resolver (DoH Server)             │
 │                                            │
 │  1. 提取 profile_id: b543d4                │
-│  2. 从 active.json 匹配设备 IP → Profile   │
+│  2. 从本地缓存匹配设备 IP → Profile       │
 │  3. 规则引擎判定 (allow/block/rewrite)     │
 │  4. DNS 缓存查询                           │
 │  5. 上游转发 (1.1.1.1 / 8.8.8.8)          │
@@ -403,7 +403,7 @@ listen:
 │             连接到 :853                      │
 │                                            │
 │  1. 从 SNI 提取 profile_id: bcfe3a         │
-│  2. 从 active.json 匹配设备 IP → Profile   │
+│  2. 从本地缓存匹配设备 IP → Profile        │
 │  3. 规则引擎判定                            │
 │  4. DNS 缓存 / 上游转发                    │
 │  5. 写日志到本地 buffer                    │
@@ -497,7 +497,7 @@ listen:
 3. portal-web 返回 latest_config_version: 101
 4. Resolver 比较：101 > 100，主动拉取新配置
 5. Resolver 拉取 config bundle 并校验 checksum
-6. checksum 通过后，原子写入 active.json
+6. 新配置写入本地缓存
 7. Resolver 热加载新配置
 8. Resolver 发送 ACK 确认
 ```

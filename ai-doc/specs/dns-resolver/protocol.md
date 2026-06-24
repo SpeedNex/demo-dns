@@ -17,7 +17,7 @@
   - 域名归一化函数 `internal/rules/normalize.go`
   - allow 优先规则引擎 `internal/rules/engine.go`
   - 控制面 Agent：凭据直驱心跳、配置轮询、checksum 校验、ACK `internal/agent/agent.go`（凭据来自 `config.ControlPlane.{APIKey,Secret,NodeID}`）
-  - 本地配置原子替换和 `profiles/active.json` 写入
+  - 本地配置原子替换和 `profiles/{prefix}/{id}.json` 写入（CacheEnvelope）
   - 运行时配置结构 `internal/config/config.go`（含 `Validate()`）
   - `resolver install` 子命令 `cmd/dns-resolver/install.go`，把 console 预签发的 `(node_id, api_key, secret)` 写入 `configs/server.yaml`
   - DoH path / UDP source IP 的 Profile 识别 `internal/profile/resolver.go`

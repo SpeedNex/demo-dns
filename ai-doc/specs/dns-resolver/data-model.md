@@ -37,10 +37,10 @@
 ```text
 /etc/smart-dns/
 ├── server.yaml         # 控制面凭据 + 节点元数据（resolver install 写入）
-├── profiles/
-│   ├── active.json
-│   ├── active.json.sha256
-│   └── previous.json
+├── global.json                         # Global Config（upstreams / plans / limits）
+├── profiles/                            # Profile 按需缓存
+│   └── b5/
+│       └── b543d4.json                  # CacheEnvelope { profile_id, version, cached_at, data }
 ├── rules/
 │   ├── adblock.bin
 │   ├── security.bin
@@ -275,7 +275,7 @@ START
   → load configs/server.yaml
   → cfg.Validate()：缺 api_key / secret / node_id 任一项 → log.Fatalf 拒绝启动
   → 构造 agent.Credentials{NodeID, APIKey, Secret}（全部来自 yaml）
-  → start DNS server with last known config (active.json)
+  → start DNS server with cached profiles + global.json
   → heartbeat loop（Bearer + HMAC）
   → config poll loop（Bearer + HMAC）
   → log flush loop（Bearer + HMAC）
@@ -292,16 +292,10 @@ START
 
 ```text
 GET config
-  → canonical JSON checksum verify
-  → write profiles/staging-{version}.json
-  → parse and compile RuleEngine
-  → if compile success:
-       rename active.json to previous.json
-       rename staging to active.json
-       swap pointer atomically
-       ACK applied
-    else:
-       delete staging
+  → global config → write data/global.json
+  → profile version > local → GET /profiles/{id}
+  → write profiles/{prefix}/{id}.json (CacheEnvelope)
+  → engine.LoadProfileRules → 热更新
        keep current config
        ACK failed
 ```

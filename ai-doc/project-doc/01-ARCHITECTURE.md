@@ -215,7 +215,7 @@ resolver 处理 DNS 查询
 ```text
 用户下发 DNS 查询
   → geodns 返回 resolver 入口
-  → dns-resolver 按 active.json 做 IP → Device → Profile 识别
+  → dns-resolver 按本地缓存做 IP → Device → Profile 识别
   → 命中安全 / 隐私 / 家长规则则 BLOCK
   → 命中 SafeSearch 重写则返回 CNAME
   → 未命中则上游递归解析
