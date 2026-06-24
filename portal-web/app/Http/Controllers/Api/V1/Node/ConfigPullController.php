@@ -40,7 +40,7 @@ final class ConfigPullController
             'version'   => (int) (ConfigVersion::max('version') ?? 0),
             'upstreams' => [$this->defaultUpstream()],
             'plans'     => $plans,
-            'rulesets'  => [],
+            'rulesets'  => (object) [],
             'limits'    => [
                 'max_qps'        => (int) config('dns.max_qps', 1000),
                 'rate_limit_rps' => (int) config('dns.rate_limit_rps', 100),
