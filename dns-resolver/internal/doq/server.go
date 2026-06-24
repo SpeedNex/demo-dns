@@ -276,7 +276,7 @@ func (s *Server) resolveRuntimeProfile(remoteAddr string, profileUID string) (pr
 }
 
 func (s *Server) loadActiveConfig() (*activeConfig, error) {
-	profilesDir := filepath.Join(s.cfg.ControlPlane.ProfilesPath, "profiles")
+	profilesDir := s.cfg.ControlPlane.ProfilesPath
 	cfg := &activeConfig{}
 
 	entries, err := os.ReadDir(profilesDir)
