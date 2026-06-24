@@ -106,22 +106,52 @@ type activeConfig struct {
 var profileUIDPattern = regexp.MustCompile(`^[0-9a-f]{6}$`)
 
 func (s *Server) loadActiveConfig() (*activeConfig, error) {
-	if s.cfg.ControlPlane.ProfilesPath == "" {
-		log.Printf("doh: loadActiveConfig: ProfilesPath is empty")
-		return &activeConfig{}, nil
-	}
-	path := filepath.Join(s.cfg.ControlPlane.ProfilesPath, "active.json")
-	data, err := os.ReadFile(path)
-	if err != nil {
-		log.Printf("doh: loadActiveConfig: cannot read %s: %v", path, err)
-		return &activeConfig{}, err
-	}
+	profilesDir := filepath.Join(s.cfg.ControlPlane.ProfilesPath, "profiles")
 	cfg := &activeConfig{}
-	if err := json.Unmarshal(data, cfg); err != nil {
-		log.Printf("doh: loadActiveConfig: json unmarshal error: %v", err)
-		return nil, err
+
+	entries, err := os.ReadDir(profilesDir)
+	if err != nil {
+		// 目录可能还不存在
+		return cfg, nil
 	}
-	log.Printf("doh: loadActiveConfig: loaded %d profiles from %s", len(cfg.Profiles), path)
+
+	for _, entry := range entries {
+		if !entry.IsDir() || len(entry.Name()) != 2 {
+			continue
+		}
+		prefixPath := filepath.Join(profilesDir, entry.Name())
+		files, _ := filepath.Glob(filepath.Join(prefixPath, "*.json"))
+		for _, f := range files {
+			data, err := os.ReadFile(f)
+			if err != nil {
+				continue
+			}
+			// CacheEnvelope 格式：{ profile_id, version, cached_at, data }
+			var envelope struct {
+				ProfileID string          `json:"profile_id"`
+				Version   int64           `json:"version"`
+				Data      json.RawMessage `json:"data"`
+			}
+			if err := json.Unmarshal(data, &envelope); err != nil {
+				continue
+			}
+			var profile struct {
+				ProfileID     string         `json:"profile_id"`
+				BlockResponse string         `json:"block_response"`
+				Quota         map[string]any `json:"quota"`
+				Parental      map[string]any `json:"parental"`
+				Devices       []struct {
+					DeviceID string `json:"device_id"`
+					SourceIP string `json:"source_ip"`
+				} `json:"devices"`
+			}
+			if err := json.Unmarshal(envelope.Data, &profile); err != nil {
+				continue
+			}
+			cfg.Profiles = append(cfg.Profiles, profile)
+		}
+	}
+	log.Printf("doh: loadActiveConfig: loaded %d profiles from cache", len(cfg.Profiles))
 	return cfg, nil
 }
 
