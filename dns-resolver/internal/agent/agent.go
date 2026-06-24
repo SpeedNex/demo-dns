@@ -123,7 +123,8 @@ func New(cfg *config.Config, engine *matching.Engine, collector *metrics.Metrics
 		metrics: collector,
 		cred: Credentials{
 			NodeID: strings.TrimSpace(cfg.ControlPlane.NodeID),
-			APIKey: strings.TrimSpace(cfg.ControlPlane.APIKey),
+			// 2026-06-24: APIKey 字段已 deprecated,凭据改由 LoadBearer() 从文件读取。
+			// 留空防止任何意外 fallback 到 yaml 旧值。
 		},
 		localProfiles: make(map[string]int64),
 		client: &http.Client{
