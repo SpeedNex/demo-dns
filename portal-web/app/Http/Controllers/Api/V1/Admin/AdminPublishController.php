@@ -252,13 +252,15 @@ final class AdminPublishController
         $search = $request->input('search', '');
 
         $query = \App\Models\Profile::with(['user:id,username,email'])
-            ->withCount(['configVersions'])
-            ->orderByDesc('created_at');
+            ->leftJoin('dns_config_versions', 'dns_profiles.id', '=', 'dns_config_versions.target_profile_id')
+            ->select('dns_profiles.*', \Illuminate\Support\Facades\DB::raw('COUNT(dns_config_versions.id) as config_versions_count'))
+            ->groupBy('dns_profiles.id')
+            ->orderByDesc('dns_profiles.created_at');
 
         if ($search !== '') {
             $query->where(function ($q) use ($search): void {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('profile_uid', 'like', "%{$search}%");
+                $q->where('dns_profiles.name', 'like', "%{$search}%")
+                    ->orWhere('dns_profiles.profile_uid', 'like', "%{$search}%");
             });
         }
 

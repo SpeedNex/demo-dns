@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('dns_publish_tasks', function (Blueprint $table) {
+        Schema::create('publish_tasks', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('config_version_id');
             $table->unsignedBigInteger('profile_id')->nullable();
@@ -26,8 +26,8 @@ return new class extends Migration {
             $table->timestamps();
             $table->index('status', 'idx_publish_tasks_status');
             $table->index('config_version_id', 'idx_publish_tasks_cv');
-            $table->foreign('config_version_id', 'fk_publish_tasks_cv')->references('id')->on('dns_config_versions')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->foreign('profile_id', 'fk_publish_tasks_profile')->references('id')->on('dns_profiles')->nullOnDelete()->cascadeOnUpdate();
+            $table->foreign('config_version_id', 'fk_publish_tasks_cv')->references('id')->on('config_versions')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreign('profile_id', 'fk_publish_tasks_profile')->references('id')->on('profiles')->nullOnDelete()->cascadeOnUpdate();
         });
     }
 

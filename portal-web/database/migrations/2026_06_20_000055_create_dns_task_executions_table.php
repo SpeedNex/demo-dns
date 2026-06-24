@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('dns_task_executions', function (Blueprint $table) {
+        Schema::create('task_executions', function (Blueprint $table) {
             // UI.md P0#1: 真实库使用字符串主键 (PublishService 生成 texec_xxx)，
             // 与 TaskExecution::$keyType='string' 和 booted() ULID 生成对齐。
             $table->string('id', 32)->primary();
@@ -26,10 +26,10 @@ return new class extends Migration {
             $table->index('node_id', 'idx_task_exec_node');
             $table->index('status', 'idx_task_exec_status');
             $table->foreign('publish_task_id', 'fk_task_exec_pubtask')
-                ->references('id')->on('dns_publish_tasks')
+                ->references('id')->on('publish_tasks')
                 ->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreign('node_id', 'fk_task_exec_node')
-                ->references('id')->on('dns_nodes')
+                ->references('id')->on('nodes')
                 ->cascadeOnDelete()->cascadeOnUpdate();
         });
     }
