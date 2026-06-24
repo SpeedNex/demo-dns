@@ -93,9 +93,19 @@ final class QueryLogController
             }
 
             if ($userPk !== null && $profilePk !== null) {
+                // 2026-06-24: 优先按 (profile_id, fingerprint) 查找,
+                // 避免 device_uid 为空时 INSERT 重复记录导致 uniq_devices_profile_fingerprint 冲突。
+                // fingerprint 已经包含 profile_id + protocol + clientIp + deviceUid,
+                // 足以唯一标识一台设备。
+                $fingerprint = hash('sha256', implode('|', [
+                    (string) $profilePk,
+                    'doh',
+                    $clientIp,
+                    $deviceUid,
+                ]));
                 $device = Device::query()
                     ->where('profile_id', $profilePk)
-                    ->where('device_uid', $deviceUid !== '' ? $deviceUid : 'dev_localhost')
+                    ->where('fingerprint', $fingerprint)
                     ->first();
 
                 if (! $device) {
@@ -103,12 +113,7 @@ final class QueryLogController
                         'user_id' => $userPk,
                         'profile_id' => $profilePk,
                         'device_uid' => $deviceUid !== '' ? $deviceUid : 'dev_' . substr(hash('sha256', $clientIp), 0, 16),
-                        'fingerprint' => hash('sha256', implode('|', [
-                            (string) $profilePk,
-                            'doh',
-                            $clientIp,
-                            $deviceUid,
-                        ])),
+                        'fingerprint' => $fingerprint,
                         'name' => $deviceUid !== '' ? $deviceUid : ('Device ' . ($clientIp !== '' ? $clientIp : substr(hash('sha256', $clientIp), 0, 6))),
                         'source' => 'auto',
                         'protocol' => 'doh',
