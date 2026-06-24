@@ -11,6 +11,11 @@ use Illuminate\Support\Facades\DB;
 
 final class ProfileService
 {
+    public function __construct(
+        private readonly ProfilePublishService $publishService,
+    ) {
+    }
+
     private function resolveProfile(string $userId, string $profileId): Profile
     {
         return Profile::query()
@@ -60,7 +65,12 @@ final class ProfileService
             'version' => 1,
         ]);
 
-        return $profile->toArray();
+        // 2026-06-24: 创建 Profile 后自动触发首次发布，确保立即可用
+        $profileData = $profile->toArray();
+        $profileData['profile_uid'] = $profile->profile_uid;
+        $this->publishService->publish($profileData, [], ['security_enabled' => $profile->security_enabled]);
+
+        return $profileData;
     }
 
     /**
