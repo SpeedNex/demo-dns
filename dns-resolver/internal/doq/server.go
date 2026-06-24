@@ -276,16 +276,50 @@ func (s *Server) resolveRuntimeProfile(remoteAddr string, profileUID string) (pr
 }
 
 func (s *Server) loadActiveConfig() (*activeConfig, error) {
-	path := filepath.Join(s.cfg.ControlPlane.ProfilesPath, "active.json")
-	data, err := os.ReadFile(path)
+	profilesDir := filepath.Join(s.cfg.ControlPlane.ProfilesPath, "profiles")
+	cfg := &activeConfig{}
+
+	entries, err := os.ReadDir(profilesDir)
 	if err != nil {
-		return nil, err
+		return cfg, nil
 	}
-	var cfg activeConfig
-	if err := json.Unmarshal(data, &cfg); err != nil {
-		return nil, err
+
+	for _, entry := range entries {
+		if !entry.IsDir() || len(entry.Name()) != 2 {
+			continue
+		}
+		prefixPath := filepath.Join(profilesDir, entry.Name())
+		files, _ := filepath.Glob(filepath.Join(prefixPath, "*.json"))
+		for _, f := range files {
+			data, err := os.ReadFile(f)
+			if err != nil {
+				continue
+			}
+			var envelope struct {
+				ProfileID string          `json:"profile_id"`
+				Version   int64           `json:"version"`
+				Data      json.RawMessage `json:"data"`
+			}
+			if err := json.Unmarshal(data, &envelope); err != nil {
+				continue
+			}
+			var profile struct {
+				ProfileID     string         `json:"profile_id"`
+				BlockResponse string         `json:"block_response"`
+				Quota         map[string]any `json:"quota"`
+				Parental      map[string]any `json:"parental"`
+				Devices       []struct {
+					DeviceID string `json:"device_id"`
+					SourceIP string `json:"source_ip"`
+				} `json:"devices"`
+			}
+			if err := json.Unmarshal(envelope.Data, &profile); err != nil {
+				continue
+			}
+			cfg.Profiles = append(cfg.Profiles, profile)
+		}
 	}
-	return &cfg, nil
+	return cfg, nil
 }
 
 func remoteHost(addr string) string {

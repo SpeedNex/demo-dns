@@ -451,7 +451,7 @@ func (a *Agent) sendHeartbeat() {
 	}
 
 	if envelope.Data.ShouldPullConfig {
-		a.pullLatestConfig()
+		a.pullGlobalConfig()
 	}
 }
 
