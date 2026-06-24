@@ -405,7 +405,8 @@ func registerNodeToConsole(cfg *config.Config) (dnsDomain string, err error) {
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if t := strings.TrimSpace(cfg.ControlPlane.APIKey); t != "" {
+	// 2026-06-24: 凭据已从 yaml 移到 api_key_path 文件,直接从文件读 token。
+	if t := readAPIKeyFile(cfg.ControlPlane.APIKeyPath); t != "" {
 		req.Header.Set("Authorization", "Bearer "+t)
 	}
 
@@ -469,6 +470,18 @@ func writeAPIKeyFile(path, key string) error {
 		return fmt.Errorf("create dir: %w", err)
 	}
 	return os.WriteFile(path, []byte(strings.TrimSpace(key)), 0o600)
+}
+
+// readAPIKeyFile 2026-06-24: install 阶段从 api_key_path 文件读 token 用于
+// console register 等 install 期内的鉴权调用。运行时由 agent.LoadBearer() 负责,
+// 不重复实现。
+func readAPIKeyFile(path string) string {
+	if p := strings.TrimSpace(path); p != "" {
+		if data, err := os.ReadFile(p); err == nil {
+			return strings.TrimSpace(string(data))
+		}
+	}
+	return ""
 }
 
 // =============================================================================
