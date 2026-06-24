@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS ocer_dns.dns_logs (
 ) ENGINE = MergeTree()
 PARTITION BY toYYYYMM(event_time)
 ORDER BY (profile_id, event_time)
-TTL event_time + INTERVAL 90 DAY
+TTL (event_time + INTERVAL 90 DAY)
 SETTINGS index_granularity = 8192;
 
 -- Usage Events (计费用,供 UsageBillingService 聚合)
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS ocer_dns.usage_events (
     billing_category LowCardinality(String)
 ) ENGINE = SummingMergeTree()
 ORDER BY (user_id, profile_id, toDate(timestamp))
-TTL timestamp + INTERVAL 365 DAY
+TTL (timestamp + INTERVAL 365 DAY)
 SETTINGS index_granularity = 8192;
 
 -- Indexes (用于按域名/IP 查找)
