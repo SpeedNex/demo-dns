@@ -195,6 +195,14 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin.only', 'permission:ad
         Route::post('publishes/cleanup-completed', [AdminPublishController::class, 'cleanupCompleted']);
     });
 
+    // Profile Publish (配置文件发布管理)
+    Route::middleware('permission:admin.publishes.read')->group(function (): void {
+        Route::get('profile-publish', [AdminPublishController::class, 'profilePublishList']);
+    });
+    Route::middleware('permission:admin.publishes.write')->group(function (): void {
+        Route::post('profile-publish/{profileId}', [AdminPublishController::class, 'publishProfile']);
+    });
+
     // GeoDNS
     Route::middleware('permission:admin.geo_dns.read')->group(function (): void {
         Route::get('geo-dns', [AdminGeoDnsController::class, 'index']);

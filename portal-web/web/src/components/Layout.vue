@@ -490,12 +490,13 @@ onMounted(async () => {
     gap: 6px;
     height: 54px;
     line-height: 54px;
-    padding: 0 12px !important;
+    padding: 0 14px !important;
     border-radius: 12px;
     font-size: 13px;
     font-weight: 600;
     color: #475569;
     border-bottom: none !important;
+    white-space: nowrap;
 }
 
 .nav-center :deep(.el-menu-item:hover),

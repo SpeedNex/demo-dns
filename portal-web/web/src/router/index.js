@@ -50,6 +50,7 @@ import AdminAdmins from '@/views/admin/AdminAdmins.vue'
 import AdminUserPolicyServices from '@/views/admin/UserPolicyServices.vue'
 import AdminMemberPolicies from '@/views/admin/MemberPolicies.vue'
 import AdminBlacklistWhitelist from '@/views/admin/BlacklistWhitelist.vue'
+import AdminProfilePublish from '@/views/admin/ProfilePublish.vue'
 
 const routes = [
     // Public routes
@@ -115,6 +116,7 @@ const routes = [
             { path: 'user-policy-services', name: 'AdminUserPolicyServices', component: AdminUserPolicyServices },
             { path: 'member-policies', name: 'AdminMemberPolicies', component: AdminMemberPolicies },
             { path: 'blacklist-whitelist', name: 'AdminBlacklistWhitelist', component: AdminBlacklistWhitelist },
+            { path: 'profile-publish', name: 'AdminProfilePublish', component: AdminProfilePublish },
         ],
     },
 

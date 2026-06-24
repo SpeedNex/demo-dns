@@ -42,7 +42,7 @@ final class OrderController
         $validated = $request->validate([
             'plan_code' => 'required|string|max:30',
             'description' => 'nullable|string|max:255',
-            'billing_cycle' => 'required|string|in:monthly,yearly',
+            'billing_cycle' => 'nullable|string|in:monthly,yearly',
             'idempotency_key' => 'nullable|string|max:80',
             'meta' => 'sometimes|array',
         ]);
@@ -53,16 +53,38 @@ final class OrderController
             : (string) ($validated['idempotency_key'] ?? '');
 
         $plan = \App\Models\Plan::where('code', $validated['plan_code'])->first();
-        $billingCycle = $validated['billing_cycle'];
-        $price = $plan
-            ?->prices()
-            ->where('billing_cycle', $billingCycle)
-            ->where('status', 'active')
-            ->first();
+
+        // billing_cycle 可选：如果前端没传，自动取第一个有金额的价格
+        $billingCycle = $validated['billing_cycle'] ?? null;
+        $price = null;
+
+        if ($billingCycle && $plan) {
+            $price = $plan
+                ->prices()
+                ->where('billing_cycle', $billingCycle)
+                ->where('status', 'active')
+                ->first();
+        }
+
+        // 如果没有找到价格，取第一个有金额的有效价格
+        if ($price === null && $plan) {
+            $price = $plan
+                ->prices()
+                ->where('status', 'active')
+                ->where('amount_minor', '>', 0)
+                ->first();
+
+            // 如果还是没有，取第一个有效价格
+            if ($price === null) {
+                $price = $plan->prices()->where('status', 'active')->first();
+            }
+
+            $billingCycle = $price?->billing_cycle ?? 'monthly';
+        }
 
         if ($price === null) {
             return response()->json([
-                'message' => "No active price for plan [{$validated['plan_code']}] with cycle [{$billingCycle}].",
+                'message' => "No active price for plan [{$validated['plan_code']}].",
             ], 422);
         }
 

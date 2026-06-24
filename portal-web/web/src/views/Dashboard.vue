@@ -232,20 +232,34 @@ const topVisited = ref([])
 const topBlocked = ref([])
 const recentDevices = ref([])
 
-const chartBars = [
-    { label: 'Mon', height: 42 },
-    { label: 'Tue', height: 58 },
-    { label: 'Wed', height: 48 },
-    { label: 'Thu', height: 72 },
-    { label: 'Fri', height: 66 },
-    { label: 'Sat', height: 86 },
-    { label: 'Sun', height: 76 },
-]
+const chartBars = ref([])
 
 function formatNumber(n) {
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M'
     if (n >= 1000) return (n / 1000).toFixed(1) + 'K'
     return String(n)
+}
+
+function buildChartBars(data) {
+    // data: [{ date: '2024-01-01', queries: 1234 }, ...]
+    if (!data || !data.length) {
+        return [
+            { label: 'Mon', height: 10 },
+            { label: 'Tue', height: 10 },
+            { label: 'Wed', height: 10 },
+            { label: 'Thu', height: 10 },
+            { label: 'Fri', height: 10 },
+            { label: 'Sat', height: 10 },
+            { label: 'Sun', height: 10 },
+        ]
+    }
+    const maxQueries = Math.max(...data.map(d => d.queries || 1), 1)
+    const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    return data.map(d => ({
+        label: dayLabels[new Date(d.date).getDay()] || d.date,
+        height: Math.max(Math.round((d.queries / maxQueries) * 100), 5),
+        queries: d.queries,
+    }))
 }
 
 async function copyText(text) {
@@ -291,6 +305,16 @@ const fetchData = async () => {
         recentDevices.value = (data.data || []).slice(0, 3)
     } catch {
         // Devices optional
+    }
+
+    // 获取最近7天查询趋势数据
+    try {
+        const { data } = await client.get('/user/query-trend', { params: { ...params, days: 7 } })
+        const trend = data.data || []
+        chartBars.value = buildChartBars(trend)
+    } catch {
+        // 如果API不可用，显示空图表
+        chartBars.value = buildChartBars([])
     }
 }
 

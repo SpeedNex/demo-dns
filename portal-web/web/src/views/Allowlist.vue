@@ -29,14 +29,16 @@
             </el-table-column>
             <el-table-column :label="$t('allowlist.actions')" width="180">
                 <template #default="{ row }">
-                    <el-button size="small" @click="openEditDialog(row)">
-                        <el-icon><Edit /></el-icon>
-                        {{ $t('allowlist.edit') }}
-                    </el-button>
-                    <el-button size="small" type="danger" @click="handleDelete(row.id)">
-                        <el-icon><Delete /></el-icon>
-                        {{ $t('allowlist.delete') }}
-                    </el-button>
+                    <div class="action-buttons">
+                        <el-button size="small" @click="openEditDialog(row)">
+                            <el-icon><Edit /></el-icon>
+                            {{ $t('allowlist.edit') }}
+                        </el-button>
+                        <el-button size="small" type="danger" @click="handleDelete(row.id)">
+                            <el-icon><Delete /></el-icon>
+                            {{ $t('allowlist.delete') }}
+                        </el-button>
+                    </div>
                 </template>
             </el-table-column>
         </el-table>
@@ -191,3 +193,11 @@ onMounted(fetchRules)
 // 切换 profile 时重新加载数据
 watch(currentProfileId, fetchRules)
 </script>
+
+<style scoped>
+.action-buttons {
+    display: flex;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+</style>

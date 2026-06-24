@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\User\ProfilePublishController;
 use App\Http\Controllers\Api\V1\User\ProfileRuleController;
 use App\Http\Controllers\Api\V1\User\TeamController;
 use App\Http\Controllers\Api\V1\User\OrderController;
+use App\Http\Controllers\Api\V1\User\QueryTrendController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -119,4 +120,7 @@ Route::prefix('user')->middleware(['auth:api', 'user.only'])->group(function ():
 
     // 套餐购买入口
     Route::get('plans', [OrderController::class, 'plans']);
+
+    // 查询趋势数据（会员首页 7 天图表）
+    Route::get('query-trend', [QueryTrendController::class, 'index']);
 });

@@ -29,10 +29,14 @@ final class ProfileController
 
     public function store(Request $request): JsonResponse
     {
-        $result = $this->service->create(
-            $request->user()->uid,
-            $request->only(['name', 'description', 'default_action', 'block_response', 'security_enabled', 'privacy_enabled']),
-        );
+        try {
+            $result = $this->service->create(
+                $request->user()->uid,
+                $request->only(['name', 'description', 'default_action', 'block_response', 'security_enabled', 'privacy_enabled']),
+            );
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
         return response()->json(['data' => $result], 201);
     }

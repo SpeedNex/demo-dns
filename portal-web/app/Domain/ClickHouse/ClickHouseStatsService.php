@@ -104,4 +104,40 @@ final class ClickHouseStatsService
             ),
         ];
     }
+
+    /**
+     * 返回最近 N 天的每日查询量趋势。
+     *
+     * @param string|null $profileId 如果提供，则按 profile_id 过滤
+     * @param int $days 天数 (1-30)
+     * @return array<int, array{date: string, queries: int}>
+     */
+    public function dailyTrend(?string $profileId = null, int $days = 7): array
+    {
+        $days = max(1, min(30, $days));
+        $whereClause = "event_time >= now() - INTERVAL {$days} DAY";
+
+        if ($profileId) {
+            $whereClause .= " AND profile_id = '{$profileId}'";
+        }
+
+        try {
+            $rows = $this->client->jsonSelect(
+                "SELECT toDate(event_time) AS date, count() AS queries "
+                . "FROM dns_logs "
+                . "WHERE {$whereClause} "
+                . "GROUP BY date ORDER BY date ASC",
+            );
+        } catch (\Throwable) {
+            return [];
+        }
+
+        return array_map(
+            static fn (array $row): array => [
+                'date' => (string) ($row['date'] ?? ''),
+                'queries' => (int) ($row['queries'] ?? 0),
+            ],
+            $rows,
+        );
+    }
 }

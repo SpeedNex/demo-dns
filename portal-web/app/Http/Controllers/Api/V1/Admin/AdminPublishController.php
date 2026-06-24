@@ -241,4 +241,97 @@ final class AdminPublishController
             default => $scope,
         };
     }
+
+    /**
+     * 列出所有 Profile 及其发布状态
+     */
+    public function profilePublishList(Request $request): JsonResponse
+    {
+        $perPage = (int) $request->input('per_page', 50);
+        $page = (int) $request->input('page', 1);
+        $search = $request->input('search', '');
+
+        $query = \App\Models\Profile::with(['user:id,username,email'])
+            ->withCount(['configVersions'])
+            ->orderByDesc('created_at');
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search): void {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('profile_uid', 'like', "%{$search}%");
+            });
+        }
+
+        $profiles = $query->paginate($perPage, ['*'], 'page', $page);
+        $profilesArray = $profiles->toArray();
+
+        $data = collect($profilesArray['data'])->map(fn ($profile): array => [
+            'id' => $profile['id'],
+            'profile_uid' => $profile['profile_uid'],
+            'name' => $profile['name'],
+            'user_id' => $profile['user_id'],
+            'username' => $profile['user']['username'] ?? null,
+            'email' => $profile['user']['email'] ?? null,
+            'version' => $profile['version'],
+            'status' => $profile['status'],
+            'published_at' => $profile['published_at'],
+            'created_at' => $profile['created_at'],
+            'has_published_config' => ($profile['config_versions_count'] ?? 0) > 0,
+            'config_versions_count' => $profile['config_versions_count'] ?? 0,
+        ])->all();
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'total' => $profilesArray['total'],
+                'per_page' => $profilesArray['per_page'],
+                'current_page' => $profilesArray['current_page'],
+                'last_page' => $profilesArray['last_page'],
+            ],
+        ]);
+    }
+
+    /**
+     * 手动发布指定 Profile
+     */
+    public function publishProfile(Request $request, string $profileId): JsonResponse
+    {
+        $actorId = $request->user()?->admin_id;
+
+        $profile = \App\Models\Profile::where('profile_uid', $profileId)
+            ->orWhere('id', $profileId)
+            ->firstOrFail();
+
+        $profilePublishService = app(\App\Domain\Profile\ProfilePublishService::class);
+        $publishService = app(\App\Domain\Publish\PublishService::class);
+
+        $configBuilder = app(\App\Domain\Profile\ProfileConfigBuilder::class);
+        $profilePublishService = new \App\Domain\Profile\ProfilePublishService($configBuilder, $publishService);
+
+        $result = $profilePublishService->publish(
+            array_merge($profile->toArray(), [
+                'profile_uid' => $profile->profile_uid,
+                'devices' => $profile->devices()->get()->toArray(),
+            ]),
+            $profile->rules()->get()->toArray(),
+            ['security_enabled' => $profile->security_enabled],
+        );
+
+        AdminAuditLog::record('publish.profile', 'profile', $profile->id, [
+            'profile_uid' => $profile->profile_uid,
+            'profile_name' => $profile->name,
+            'config_version' => $result['config_version'],
+        ], $actorId, null, $request->ip(), $request->userAgent());
+
+        return response()->json([
+            'data' => [
+                'profile_uid' => $profile->profile_uid,
+                'profile_name' => $profile->name,
+                'config_version' => $result['config_version'],
+                'publish_id' => $result['publish_id'],
+                'status' => $result['status'],
+                'message' => 'Profile published successfully',
+            ],
+        ]);
+    }
 }

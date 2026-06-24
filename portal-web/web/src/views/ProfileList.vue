@@ -27,10 +27,9 @@
             <el-table-column :label="$t('profile.devices')" width="160">
                 <template #default="{ row }">{{ row.device_count ?? 0 }}</template>
             </el-table-column>
-            <el-table-column :label="$t('profile.actions')" width="260">
+            <el-table-column :label="$t('profile.actions')" width="200">
                 <template #default="{ row }">
                     <el-button size="small" @click="$router.push(`/user/profiles/${row.id}`)">{{ $t('profile.edit') }}</el-button>
-                    <el-button size="small" type="primary" plain @click="handleCopy(row.id)">{{ $t('profile.copy') }}</el-button>
                     <el-button size="small" type="danger" @click="handleDelete(row.id)">{{ $t('profile.delete') }}</el-button>
                 </template>
             </el-table-column>
@@ -114,16 +113,6 @@ const handleDelete = async (id) => {
         if (e !== 'cancel') {
             ElMessage.error(t('profile.failedToDeleteProfile'))
         }
-    }
-}
-
-const handleCopy = async (id) => {
-    try {
-        const { data } = await client.post(`/user/profiles/${id}/copy`)
-        ElMessage.success(t('profile.profileCopied').replace('{name}', data.data.name))
-        await fetchProfiles()
-    } catch {
-        ElMessage.error(t('profile.failedToCopyProfile'))
     }
 }
 

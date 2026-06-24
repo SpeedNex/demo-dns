@@ -46,6 +46,16 @@ final class ProfileService
      */
     public function create(string $userId, array $payload): array
     {
+        $profileName = $payload['name'] ?? 'My Profile';
+
+        // 检查同名 Profile 是否已存在
+        $exists = Profile::where('user_id', $userId)
+            ->where('name', $profileName)
+            ->exists();
+        if ($exists) {
+            throw new \InvalidArgumentException("Profile with name '{$profileName}' already exists");
+        }
+
         // V2.4: 用户首个 Profile 自动设为默认；之后由用户手动在 API 切换
         $hasAny = Profile::where('user_id', $userId)->exists();
         $isDefault = $hasAny ? (bool) ($payload['is_default'] ?? false) : true;
@@ -53,7 +63,7 @@ final class ProfileService
         $profile = Profile::create([
             'profile_uid' => Profile::generateProfileUid(),
             'user_id' => $userId,
-            'name' => $payload['name'] ?? 'My Profile',
+            'name' => $profileName,
             'description' => $payload['description'] ?? null,
             'is_default' => $isDefault,
             'status' => $payload['status'] ?? 'active',
