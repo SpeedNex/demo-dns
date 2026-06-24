@@ -109,23 +109,43 @@ final class QueryLogController
                     ->first();
 
                 if (! $device) {
-                    $device = Device::query()->create([
-                        'user_id' => $userPk,
-                        'profile_id' => $profilePk,
-                        'device_uid' => $deviceUid !== '' ? $deviceUid : 'dev_' . substr(hash('sha256', $clientIp), 0, 16),
-                        'fingerprint' => $fingerprint,
-                        'name' => $deviceUid !== '' ? $deviceUid : ('Device ' . ($clientIp !== '' ? $clientIp : substr(hash('sha256', $clientIp), 0, 6))),
-                        'source' => 'auto',
-                        'protocol' => 'doh',
-                        'ip_hash' => $clientIp !== '' ? hash('sha256', $clientIp) : null,
-                        'first_seen_at' => $queriedAt,
-                        'last_seen_at' => $queriedAt,
-                        'last_query_at' => $queriedAt,
-                        'query_count' => 1,
-                        'status' => 'active',
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ]);
+                    // 2026-06-24: 先按 fingerprint 查不到，再按 device_uid 查
+                    // (同客户端可能因间隙性 fingerprint 变化导致首次 lookup miss)
+                    if ($deviceUid !== '') {
+                        $device = Device::query()
+                            ->where('profile_id', $profilePk)
+                            ->where('device_uid', $deviceUid)
+                            ->first();
+                    }
+
+                    if (! $device) {
+                        $device = Device::query()->create([
+                            'user_id' => $userPk,
+                            'profile_id' => $profilePk,
+                            'device_uid' => $deviceUid !== '' ? $deviceUid : 'dev_' . substr(hash('sha256', $clientIp), 0, 16),
+                            'fingerprint' => $fingerprint,
+                            'name' => $deviceUid !== '' ? $deviceUid : ('Device ' . ($clientIp !== '' ? $clientIp : substr(hash('sha256', $clientIp), 0, 6))),
+                            'source' => 'auto',
+                            'protocol' => 'doh',
+                            'ip_hash' => $clientIp !== '' ? hash('sha256', $clientIp) : null,
+                            'first_seen_at' => $queriedAt,
+                            'last_seen_at' => $queriedAt,
+                            'last_query_at' => $queriedAt,
+                            'query_count' => 1,
+                            'status' => 'active',
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ]);
+                    } else {
+                        // 通过 device_uid 找到已有设备，更新 fingerprint
+                        $device->forceFill([
+                            'fingerprint' => $fingerprint,
+                            'last_seen_at' => $queriedAt,
+                            'last_query_at' => $queriedAt,
+                            'updated_at' => $now,
+                        ])->save();
+                        $device->increment('query_count');
+                    }
                 } else {
                     $device->forceFill([
                         'last_seen_at' => $queriedAt,
