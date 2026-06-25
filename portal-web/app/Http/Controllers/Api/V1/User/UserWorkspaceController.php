@@ -422,7 +422,14 @@ final class UserWorkspaceController
                 'string',
                 Rule::in($payment->configuredPaymentMethods()),
             ],
+            'idempotency_key' => 'nullable|string|max:80',
         ]);
+
+        $idempotencyKey = (string) $request->header('Idempotency-Key', '') !== ''
+            ? (string) $request->header('Idempotency-Key')
+            : ((string) ($validated['idempotency_key'] ?? '') !== ''
+                ? (string) $validated['idempotency_key']
+                : 'wallet-topup-' . $request->user()->uid . '-' . now()->format('YmdHisv'));
 
         $amountMinor = (int) round(((float) $validated['amount']) * 100);
         $order = (new OrderService())->create(
@@ -432,7 +439,7 @@ final class UserWorkspaceController
             currency: 'USD',
             description: 'Wallet recharge',
             meta: ['source' => 'member_wallet_recharge'],
-            idempotencyKey: 'wallet-topup-' . $request->user()->uid . '-' . now()->format('YmdHisv'),
+            idempotencyKey: $idempotencyKey,
         );
 
         return response()->json([
