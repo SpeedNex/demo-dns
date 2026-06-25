@@ -42,12 +42,12 @@ final class ProfileConfigBuilder
     private function mapRule(array $rule): array
     {
         return [
-            'rule_id' => (string) $rule['id'],
+            'rule_id' => (string) ($rule['id'] ?? $rule['rule_id'] ?? ''),
             'list_type' => $rule['list_type'],
-            'match_type' => $rule['match_type'],
+            'match_type' => $rule['match_type'] ?? 'exact',
             'domain' => $rule['domain'],
             'normalized_domain' => DomainNormalizer::normalize($rule['normalized_domain'] ?? $rule['domain']),
-            'action' => $rule['action'],
+            'action' => $rule['action'] ?? 'block',
             'category' => $rule['category'] ?? null,
             'enabled' => (bool) ($rule['enabled'] ?? true),
         ];

@@ -312,22 +312,69 @@ func (a *Agent) FetchProfile(profileID string) error {
 		return err
 	}
 
-	// 4. 从内存缓存读取（刚写入）并加载到引擎
+	// 4. 从内存缓存读取（刚写入）并加载到 engine
 	if data, version, ok := a.pCache.GetFromMemory(profileID); ok {
 		a.pCache.SetToMemory(profileID, data, version)
 
-		// 解析 ProfileConfig 并加载到 engine
-		var bundle config.ResolverConfig
-		if err := json.Unmarshal(data, &bundle); err == nil && len(bundle.Profiles) > 0 {
-			p := bundle.Profiles[0]
-			a.engine.LoadProfileRules(p.ProfileID, nil, nil, nil, nil, nil, nil, nil, nil)
-			log.Printf("Lazy loaded profile: %s (version=%d)", profileID, version)
-		}
+		// 加载到 engine：portal-web showProfile 直接返回单 profile 对象，按 list_type/match_type 分桶
+		var p config.ProfileConfig
+		if err := json.Unmarshal(data, &p); err == nil && p.ProfileID != "" {
+			var allowExact, allowWild, denyExact, denyWild []string
+			security := make(map[string][]string)
+			parental := make(map[string][]string)
+			for _, r := range p.Rules {
+				if r.Action == "" {
+					continue
+				}
+				d := r.NormalizedDomain
+				if d == "" {
+					d = r.Domain
+				}
+				// list_type 格式：allowlist / denylist / category:<top>:<sub>
+				// category top: security → security[<sub>]; parental → parental[<sub>];
+				//              privacy → security[<sub>] (复用 security 桶)
+				if strings.HasPrefix(r.ListType, "category:") {
+					parts := strings.SplitN(strings.TrimPrefix(r.ListType, "category:"), ":", 2)
+					if len(parts) != 2 {
+						continue
+					}
+					top, sub := parts[0], parts[1]
+					switch top {
+					case "security", "privacy":
+						security[sub] = append(security[sub], d)
+					case "parental":
+						parental[sub] = append(parental[sub], d)
+					}
+					continue
+				}
+				switch r.ListType {
+				case "allowlist":
+					if r.MatchType == "wildcard" || r.MatchType == "suffix" {
+						allowWild = append(allowWild, d)
+					} else {
+						allowExact = append(allowExact, d)
+					}
+				case "denylist":
+					if r.MatchType == "wildcard" || r.MatchType == "suffix" {
+						denyWild = append(denyWild, d)
+					} else {
+						denyExact = append(denyExact, d)
+					}
+				}
+			}
+			a.engine.LoadProfileRules(p.ProfileID,
+				allowExact, allowWild,
+				denyExact, denyWild,
+				nil, nil,
+				security, parental)
+			log.Printf("Engine rules loaded: profile=%s allow=%d allow_wild=%d deny=%d deny_wild=%d security_cats=%d parental_cats=%d",
+				p.ProfileID, len(allowExact), len(allowWild), len(denyExact), len(denyWild), len(security), len(parental))
 
-		// 记录版本到 localProfiles（供心跳上报）
-		a.mu.Lock()
-		a.localProfiles[profileID] = version
-		a.mu.Unlock()
+			// 记录版本到 localProfiles（供心跳上报）
+			a.mu.Lock()
+			a.localProfiles[profileID] = version
+			a.mu.Unlock()
+		}
 	}
 
 	return nil

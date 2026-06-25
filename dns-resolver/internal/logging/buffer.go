@@ -20,6 +20,7 @@ import (
 type LogEntry struct {
 	ProfileUID     string `json:"profile_id"`
 	DeviceUID      string `json:"device_id"`
+	DeviceType     string `json:"device_type,omitempty"`
 	Domain         string `json:"query_name"`
 	Action         string `json:"action"`
 	Reason         string `json:"reason"`
@@ -30,7 +31,7 @@ type LogEntry struct {
 	ResponseTimeMs int64  `json:"latency_ms"`
 	QueriedAt      int64  `json:"queried_at"`
 	// 2026-06-22: 上报协议 doh/dot/udp/tcp，便于按协议分账/告警
-	Protocol       string `json:"protocol,omitempty"`
+	Protocol string `json:"protocol,omitempty"`
 }
 
 // Credentials 是 console 预签发凭据在日志上报场景下的最小投影。
@@ -82,12 +83,14 @@ func NewBuffer(bufPath, cpURL string, maxSize int, flushInterval time.Duration, 
 
 func (b *Buffer) Append(entry LogEntry) {
 	if b == nil {
+		log.Printf("log_buffer: Append called on nil buffer (domain=%s)", entry.Domain)
 		return
 	}
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
 	b.entries = append(b.entries, entry)
+	log.Printf("log_buffer: Append domain=%s action=%s entries_len=%d", entry.Domain, entry.Action, len(b.entries))
 	if len(b.entries) >= b.maxSize {
 		go b.Flush()
 	}
@@ -118,18 +121,21 @@ func (b *Buffer) Flush() {
 	b.mu.Lock()
 	if len(b.entries) == 0 {
 		b.mu.Unlock()
+		log.Printf("log_buffer: Flush skipped, no entries")
 		return
 	}
 
 	batch := append([]LogEntry(nil), b.entries...)
 	b.entries = make([]LogEntry, 0, 1000)
 	b.mu.Unlock()
+	log.Printf("log_buffer: Flush sending batch size=%d", len(batch))
 
 	if err := b.sendBatch(batch); err != nil {
 		log.Printf("Failed to send log batch: %v (writing to local buffer)", err)
 		b.writeToDisk(batch)
 		return
 	}
+	log.Printf("log_buffer: Flush sent ok size=%d", len(batch))
 
 	if b.onFlush != nil {
 		b.onFlush(time.Now().UTC())
@@ -148,6 +154,7 @@ func (b *Buffer) sendBatch(batch []LogEntry) error {
 	if err != nil {
 		return fmt.Errorf("marshal log batch: %w", err)
 	}
+	log.Printf("log_buffer: sendBatch body=%s", string(body)[:min(500, len(body))])
 
 	req, err := http.NewRequest(http.MethodPost, b.cpURL, bytes.NewReader(body))
 	if err != nil {
@@ -165,7 +172,8 @@ func (b *Buffer) sendBatch(batch []LogEntry) error {
 	}
 	defer resp.Body.Close()
 
-	_, _ = io.Copy(io.Discard, resp.Body)
+	respBody, _ := io.ReadAll(resp.Body)
+	log.Printf("log_buffer: sendBatch url=%s status=%d body=%s", b.cpURL, resp.StatusCode, string(respBody)[:min(500, len(respBody))])
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("http status %d", resp.StatusCode)
 	}
@@ -271,7 +279,7 @@ type DirectLogEntry struct {
 	ResponseTimeMs int64
 	Rcode          int
 	// 2026-06-22: 协议透传，CH 列名 protocol
-	Protocol       string
+	Protocol string
 }
 
 // UsageEvent is written to ClickHouse independently of the dedup

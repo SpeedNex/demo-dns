@@ -337,4 +337,16 @@ delivery_level
 |---|---|---|---|---|
 | 2026-06-25 | code | 按原有发布链路回收 `profile_versions` 方案，配置发布只使用 `config_versions` / `publish_tasks`；移除应用层重复写入 `config_versions` 的逻辑 | portal-web/app/Application/Member/ProfilePublishApplicationService.php, portal-web/app/Domain/Publish/PublishService.php | 已验证 |
 | 2026-06-25 | code | Stripe 配置增加信用卡/微信/支付宝多选，用户账户页、订单页、钱包充值按后台启用方式创建 Checkout Session；账户页只保留一个订阅入口并改为真实额度进度 | portal-web/app/Domain/Billing/PaymentService.php, portal-web/app/Http/Controllers/Api/V1/User/OrderController.php, portal-web/app/Http/Controllers/Api/V1/User/UserWorkspaceController.php, portal-web/web/src/views/admin/SystemConfig.vue, portal-web/web/src/views/user/Account.vue, portal-web/web/src/views/Membership.vue | 已验证 |
-| 2026-06-25 | code | 移除用户端“系统设置”菜单和 profile-scoped 设置路由，密码修改保留在账户页并修复后端错误提示展示 | portal-web/web/src/components/Layout.vue, portal-web/web/src/router/index.js, portal-web/web/src/views/user/Account.vue | 已验证 |
+| 2026-06-25 | code | 移除用户端"系统设置"菜单和 profile-scoped 设置路由，密码修改保留在账户页并修复后端错误提示展示 | portal-web/web/src/components/Layout.vue, portal-web/web/src/router/index.js, portal-web/web/src/views/user/Account.vue | 已验证 |
+
+## 2026-06-25 — 多 Profile / 威胁情报 / 多设备 / 时区修复
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-06-25 | code | dns-resolver DoH 协议日志补齐 DeviceUID + DeviceType 字段 | dns-resolver/internal/doh/server.go | ok |
+| 2026-06-25 | code | resolver.Handler 签名扩展 deviceType 参数；appendLog 同步补字段 | dns-resolver/internal/resolver/handler.go | ok |
+| 2026-06-25 | code | LogEntry 增加 DeviceType 字段(omitempty) | dns-resolver/internal/logging/buffer.go | ok |
+| 2026-06-25 | code | portal-web QueryLogController 提取并保存 device_type 到 dns_devices | portal-web/app/Http/Controllers/Api/V1/Node/QueryLogController.php | ok |
+| 2026-06-25 | code | 修复 dns_logs.event_time 时区不一致（PHP 输出 UTC 字符串被 ClickHouse CST 服务端解析产生 8h 漂移），统一按 Asia/Shanghai 格式化 | portal-web/app/Http/Controllers/Api/V1/Node/QueryLogController.php | ok |
+| 2026-06-25 | test | 全链路最终回归 P0~P3 共 28 用例全部通过（97.2s） | /tmp/regression_final.py | ok |
+| 2026-06-25 | docs | 同步本变更日志 | project-doc/07-CHANGE-LOG.md | ok |

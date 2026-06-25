@@ -459,10 +459,16 @@ final class UserWorkspaceService
             ->map(fn (Device $device): array => [
                 'id' => $device->id,
                 'name' => $device->name,
-                'device_type' => $device->protocol ?: 'device',
-                'source_ip' => $device->ip_hash ? 'hashed' : null,
+                // 2026-06-25: 修复 P3-B — device_type 改读 devices.device_type 字段，
+                // 兼容历史无值情况时回退到 protocol 列，保持向后兼容
+                'device_type' => $device->device_type ?: ($device->protocol ?: 'device'),
+                'device_os' => $device->device_os,
+                'protocol' => $device->protocol,
+                'source_ip' => $device->ip_hash ? 'hashed' : ($device->source_ip ?? null),
+                // 2026-06-25: 修复 P3-B — 与 Admin API 字段对齐，统一返回 device_uid
+                'device_uid' => $device->device_uid,
                 'device_id' => $device->device_uid,
-                'info' => trim(($device->protocol ?: 'device') . ' ' . ($device->device_uid ?: '')),
+                'info' => trim(($device->device_type ?: $device->protocol ?: 'device') . ' ' . ($device->device_uid ?: '')),
                 'last_seen_at' => optional($device->last_seen_at)?->toIso8601String(),
             ])
             ->all();

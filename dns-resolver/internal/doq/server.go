@@ -181,7 +181,7 @@ func (s *Server) handleStream(stream *quic.Stream, remoteAddr string, profileUID
 	}
 
 	// ③ 共享 pipeline
-	result := s.handler.Handle(req, remoteAddr, "doq", profileID, deviceID, blockResponse, safeSearchEnabled)
+	result := s.handler.Handle(req, remoteAddr, "doq", profileID, deviceID, "", blockResponse, safeSearchEnabled)
 
 	// ④ 写出响应
 	s.writeStream(stream, result.Reply)

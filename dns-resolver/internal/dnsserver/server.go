@@ -172,7 +172,7 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg, proto string) {
 	}
 
 	// ③ 共享 pipeline：去重 → 规则判定 → DNS 缓存 → 上游转发 → 日志
-	result := s.handler.Handle(req, w.RemoteAddr().String(), proto, profileID, deviceID, blockResponse, safeSearchEnabled)
+	result := s.handler.Handle(req, w.RemoteAddr().String(), proto, profileID, deviceID, "", blockResponse, safeSearchEnabled)
 
 	// ④ 写出响应
 	_ = w.WriteMsg(result.Reply)

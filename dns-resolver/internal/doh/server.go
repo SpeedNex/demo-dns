@@ -305,6 +305,8 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 	var decision *matching.Decision
 	firstSeen := true
 	clientAddr := remoteIPFromAddr(r.RemoteAddr).String()
+	var deviceUID string
+	var deviceType string
 
 	if len(msg.Question) > 0 {
 		domain = msg.Question[0].Name
@@ -350,7 +352,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 		}
 
 		// Extract device info from headers
-		deviceUID, deviceType := resolver.ExtractDeviceFromHeaders(map[string]string{
+		deviceUID, deviceType = resolver.ExtractDeviceFromHeaders(map[string]string{
 			"X-Device-ID":   r.Header.Get("X-Device-ID"),
 			"X-Device-Type": r.Header.Get("X-Device-Type"),
 		})
@@ -402,6 +404,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 				s.logBuffer.Append(logging.LogEntry{
 					ProfileUID:     resolvedProfileUID,
 					DeviceUID:      deviceUID,
+					DeviceType:     deviceType,
 					Domain:         domain,
 					Action:         "BLOCK",
 					Reason:         decision.Reason,
@@ -496,6 +499,8 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 		elapsed := time.Since(startTime).Milliseconds()
 		s.logBuffer.Append(logging.LogEntry{
 			ProfileUID:     profileUID,
+			DeviceUID:      deviceUID,
+			DeviceType:     deviceType,
 			Domain:         domain,
 			Action:         "ALLOW",
 			Reason:         "default",
