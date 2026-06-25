@@ -1,7 +1,7 @@
 <template>
     <ListPage
         :title="$t('admin.geoDns.title')"
-        :desc="'默认监听端口：DNS 53 (UDP/TCP) · DoH 443 · DoT 853 · DoQ 784'"
+        :desc="'HTTP API 端口：15354（健康视图 / 节点调度）· 权威 DNS：53（DoT/DoQ SNI 解析）'"
         i18n-key="admin.geoDns"
         icon-name="Aim"
         :total="meta?.total ?? 0"

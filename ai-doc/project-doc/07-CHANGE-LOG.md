@@ -2,6 +2,16 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-06-25 — 端口配置修正
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-06-25 | code | Nodes.vue: DoQ 端口 784→853，DoH 保持 443 | portal-web/web/src/views/admin/Nodes.vue | ok |
+| 2026-06-25 | code | GeoDNS.vue: 改为正确描述（HTTP API 15354 / 权威 DNS 53） | portal-web/web/src/views/admin/GeoDNS.vue | ok |
+| 2026-06-25 | docs | START.md: DoH 端口 8443→443，GeoDNS 端口 5354→15354 | ai-doc/START.md | ok |
+| 2026-06-25 | code | config.go: DoH 默认端口 8443→443 | dns-resolver/internal/config/config.go | ok |
+| 2026-06-25 | code | config.example.yaml: DoH 端口 8443→443 | dns-resolver/configs/config.example.yaml | ok |
+
 ## 2026-06-24 — UI.md 问题修复
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |

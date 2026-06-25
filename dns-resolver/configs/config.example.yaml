@@ -9,7 +9,7 @@ node:
     provider: "local"
     public_ipv4: "127.0.0.1"
 listen:
-    doh: 8443                        # DoH 端口
+    doh: 443                        # DoH 端口
     dot: 853                         # DoT 端口
     doq: 853                         # DoQ 端口
     udp: 53                          # DNS UDP 端口

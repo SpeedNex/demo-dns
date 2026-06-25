@@ -422,13 +422,13 @@ return $this->belongsTo(User::class);
 18. Resolver 必须实现配额超限拒绝策略（quota_status=exceeded 时 DNS 返回 REFUSED，DoH 返回 403）
 19. 注册时必须自动创建 Free 订阅记录
 20. 设备IP识别必须去端口化
-21. GeoDNS HTTP API 端口统一为 5354
-22. GeoDNS 通过 HTTP API 提供健康视图和节点选择服务（端口 5354），不提供 DNS 协议接入
+21. GeoDNS HTTP API 端口统一为 15354
+22. GeoDNS 通过 HTTP API 提供健康视图和节点选择服务（端口 15354），不提供 DNS 协议接入
 23. GeoDNS 必须定时拉取并本地缓存 portal-web 健康视图
 24. DoH 查询直接访问 Resolver，不经过 GeoDNS
 25. DoT/DoQ 查询必须经过 GeoDNS 调度
 26. Resolver 配置拉取机制应使用版本号比较
-27. Resolver 端口配置：DNS UDP 53、DNS TCP 53、DoT 853、DoQ 853/UDP、DoH 8443
+27. Resolver 端口配置：DNS UDP 53、DNS TCP 53、DoT 853、DoQ 853、DoH 443
 28. dns-resolver 日志上报必须使用与 heartbeat/config 相同的 api_key
 29. dns-resolver 所有鉴权接口必须统一从 api_key_path 文件读取 token
 30. Profile 同名冲突检查：ProfileService::create() 需添加同名检查
