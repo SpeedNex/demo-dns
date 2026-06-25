@@ -143,6 +143,8 @@ final class UserWorkspaceService
             'security_settings' => $settings,
         ]);
 
+        $this->autoPublish($profile);
+
         return $this->securityPayload($profile->fresh());
     }
 
@@ -160,6 +162,8 @@ final class UserWorkspaceService
             'privacy_enabled' => (bool) $settings['enabled'],
             'privacy_settings' => $settings,
         ]);
+
+        $this->autoPublish($profile);
 
         return $this->privacyPayload($profile->fresh());
     }
@@ -179,6 +183,8 @@ final class UserWorkspaceService
             'parental_settings' => $settings,
             'safe_search_enabled' => (bool) $settings['safe_search'],
         ]);
+
+        $this->autoPublish($profile);
 
         return $this->parentalPayload($profile->fresh());
     }
@@ -252,12 +258,16 @@ final class UserWorkspaceService
             $matchType = 'suffix';
         }
 
-        return $this->profileRuleService->create($userId, $profile->id, [
+        $result = $this->profileRuleService->create($userId, $profile->id, [
             'list_type' => $normalizedListType,
             'match_type' => $matchType,
             'domain' => $payload['domain'] ?? '',
             'action' => $listType === 'allow' ? 'allow' : 'block',
         ]);
+
+        $this->autoPublish($profile);
+
+        return $result;
     }
 
     public function deleteRule(string $userId, string $listType, string $ruleId, ?string $profileId = null): array
@@ -270,6 +280,8 @@ final class UserWorkspaceService
             ->firstOrFail();
 
         $rule->delete();
+
+        $this->autoPublish($profile);
 
         return [
             'id' => $ruleId,
@@ -305,6 +317,8 @@ final class UserWorkspaceService
             ->where('list_type', $normalizedListType)
             ->whereIn('id', $existingIds)
             ->delete();
+
+        $this->autoPublish($profile);
 
         return [
             'requested' => count($ruleIds),
@@ -729,5 +743,59 @@ final class UserWorkspaceService
                 'currency' => (string) $order->currency,
             ])
             ->all();
+    }
+
+    /**
+     * 自动发布 Profile 配置。
+     * 当规则或设置变更后自动触发，无需用户手动发布。
+     */
+    private function autoPublish(Profile $profile): void
+    {
+        try {
+            $publishService = new ProfilePublishService(
+                new ProfileConfigBuilder(),
+                new \App\Domain\Publish\PublishService(),
+            );
+
+            $rules = ProfileRule::where('profile_id', $profile->id)
+                ->where('enabled', true)
+                ->get()
+                ->toArray();
+
+            $featureSettings = [
+                'security' => $profile->security_settings ?? self::DEFAULT_SECURITY,
+                'privacy' => $profile->privacy_settings ?? self::DEFAULT_PRIVACY,
+                'parental' => $profile->parental_settings ?? self::DEFAULT_PARENTAL,
+            ];
+
+            \Illuminate\Support\Facades\Log::info('AutoPublish triggered', [
+                'profile_id' => $profile->profile_id,
+                'rules_count' => count($rules),
+                'feature_settings' => $featureSettings,
+            ]);
+
+            $result = $publishService->publish(
+                $profile->toArray(),
+                $rules,
+                $featureSettings,
+            );
+
+            // 同步更新 Profile 的 version 和 published_at，确保下次发布版本号递增
+            $profile->update([
+                'version' => (int) ($result['config_version'] ?? 0),
+                'published_at' => now(),
+            ]);
+
+            \Illuminate\Support\Facades\Log::info('AutoPublish succeeded', [
+                'profile_id' => $profile->profile_id,
+                'result' => $result,
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('AutoPublish failed', [
+                'profile_id' => $profile->profile_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
     }
 }

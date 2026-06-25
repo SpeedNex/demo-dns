@@ -14,6 +14,9 @@
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |
 |---|---|---|---|---|
+| 2026-06-26 | code | **自动发布修复 + 心跳快速拉取**：① 修复 PublishService::recordPublish 只更新在线节点 desired_config_version 的问题，改为更新所有已安装节点，确保离线节点下次心跳也能收到正确版本号；② Heartbeat 响应携带 latest_config_version，Resolver 收到后立即比较并触发拉取（配置生效延迟从 5 分钟降至 ≤30 秒） | app/Domain/Publish/PublishService.php, app/Http/Controllers/Api/V1/Node/HeartbeatController.php, dns-resolver/internal/agent/agent.go | ok |
+| 2026-06-26 | test | **E2E 端到端测试脚本**：新增 `tests/Feature/E2ETest.php`，覆盖用户注册登录、Profile 获取、安全/隐私/家长监护配置、黑名单/白名单规则管理、批量删除、自动发布 ConfigVersion、Profile 版本递增验证、Resolver 配置拉取模拟、DNS 查询规则验证、审计字段验证等 14 个测试步骤。用于验证 OcerDNS 全链路功能 | tests/Feature/E2ETest.php | ok |
+| 2026-06-26 | code | **自动发布版本号修复**：修复 `UserWorkspaceService::autoPublish()` 发布后 Profile 版本号不递增的问题。`ProfilePublishApplicationService::publishForUser()` 在发布后会更新 Profile.version，但 `autoPublish` 调用 `ProfilePublishService::publish()` 时缺少此步骤，导致自动发布时版本号相同、Resolver 检测不到配置更新。新增 `autoPublish` 方法，在 `createRule/deleteRule/batchDeleteRules/updateSecurity/updatePrivacy/updateParental` 处调用；发布后同步更新 Profile 的 `version` 和 `published_at` 字段 | app/Domain/Profile/UserWorkspaceService.php | ok |
 | 2026-06-25 | code | **心跳存储优化：Redis 高频写入 + MySQL 低频持久化**。HeartbeatController 每次心跳写 Redis（`node:{id}:heartbeat` TTL 90s）+ 更新 `nodes:online` 集合；MySQL 写入降至每 5 分钟一次（`node:{id}:mysql_hb_at` 控制间隔），保留历史心跳表用于审计。Node::isOnline() 优先查 Redis，兜底 MySQL | app/Http/Controllers/Api/V1/Node/HeartbeatController.php, app/Models/Node.php | ok |
 | 2026-06-24 | code | **ProfileService::update() 添加自动发布**：配置变更（安全/隐私/家长监护/规则等）后自动调用 publish()，确保 resolver 立即获取最新配置 | app/Domain/Profile/ProfileService.php | ok |
 | 2026-06-24 | code | **Profile 同名冲突检查**：ProfileService::create() 添加同名检查，防止同一用户创建同名 Profile 触发唯一索引冲突；ProfileController::store() 捕获 InvalidArgumentException 返回 422 | app/Domain/Profile/ProfileService.php, app/Http/Controllers/Api/V1/User/ProfileController.php | ok |

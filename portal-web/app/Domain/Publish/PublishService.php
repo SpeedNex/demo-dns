@@ -81,8 +81,10 @@ final class PublishService
             TaskExecution::insert($rows);
         }
 
-        // 2026-06-22: desired_config_version 只下发给真正能拉到配置的节点。
-        Node::online()->update([
+        // 2026-06-26: 更新所有已安装节点的目标配置版本，不限制在线状态。
+        // 即使节点心跳过期（离线），也要更新 desired_config_version，
+        // 这样节点下次心跳时 HeartbeatService 能返回正确的版本号，触发拉取。
+        Node::where('install_status', 'installed')->update([
             'desired_config_version' => $globalVersion,
         ]);
 

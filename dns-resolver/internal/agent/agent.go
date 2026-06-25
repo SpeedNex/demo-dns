@@ -70,6 +70,8 @@ type heartbeatEnvelope struct {
 		ServerTime                string `json:"server_time"`
 		NodeStatus                string `json:"node_status"`
 		NextHeartbeatAfterSeconds int    `json:"next_heartbeat_after_seconds"`
+		// 2026-06-26: 携带最新全局配置版本，触发快速拉取
+		LatestConfigVersion       int64  `json:"latest_config_version"`
 	} `json:"data"`
 }
 
@@ -473,7 +475,14 @@ func (a *Agent) sendHeartbeat() {
 		return
 	}
 
-	_ = envelope // heartbeat acknowledged, no action needed
+	// 2026-06-26: 收到心跳响应后，检查全局配置版本是否有更新
+	// 如果服务端返回的 latest_config_version > 本地缓存的 globalVersion，立即拉取
+	if envelope.Data.LatestConfigVersion > a.globalVersion {
+		log.Printf("Heartbeat: global config version changed %d -> %d, pulling immediately",
+			a.globalVersion, envelope.Data.LatestConfigVersion)
+		a.globalVersion = envelope.Data.LatestConfigVersion
+		go a.pullGlobalConfig() // 异步拉取，不阻塞心跳循环
+	}
 }
 
 func (a *Agent) doNodeRequest(method, path string, body io.Reader) (*http.Response, error) {

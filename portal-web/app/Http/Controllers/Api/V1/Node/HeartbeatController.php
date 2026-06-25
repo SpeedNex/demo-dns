@@ -127,9 +127,11 @@ final class HeartbeatController
         // ================================================================
         // 3. 构造响应 & 告警检测
         // ================================================================
+        // 2026-06-26: heartbeat 响应携带 latest_config_version，触发 Resolver 快速拉取
         $result = response()->json([
             'data' => $service->evaluate($heartbeat, [
                 'desired_config_version' => $node->desired_config_version,
+                'latest_config_version' => (int) ($node->desired_config_version ?? $node->current_config_version ?? 0),
             ]),
         ]);
 
