@@ -2,6 +2,16 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-06-26 — 前台账户页面优化 + i18n 修复
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-06-26 | code | Account.vue: 删除订阅面板、支付弹窗、邮件面板，移除自动弹窗逻辑 | portal-web/web/src/views/user/Account.vue | ok |
+| 2026-06-26 | code | Account.vue: 清理无用的 JS 代码和 CSS 样式 | portal-web/web/src/views/user/Account.vue | ok |
+| 2026-06-26 | code | 修复 allowlist.matchSubdomainHint 翻译 key 缺失 | portal-web/web/src/locales/{en,zh-CN,ko}.json | ok |
+| 2026-06-26 | code | MemberCatalogs rulesTitle: "全站黑白名单记录"→"配置列表" | portal-web/web/src/locales/{en,zh-CN,ko}.json | ok |
+| 2026-06-26 | docs | 同步本变更日志 | project-doc/07-CHANGE-LOG.md | ok |
+
 ## 2026-06-25 — 端口配置修正
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |
