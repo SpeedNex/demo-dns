@@ -98,14 +98,18 @@ final class UsageBillingService
                 ? []
                 : DB::table('devices')->whereIn('id', $deviceIds)->pluck('id')->all();
             $validDeviceSet = array_flip(array_map('intval', $validDeviceIds));
+
+            // 有效 billing_category 列表（对应数据库 ENUM）
+            $validCategories = ['query', 'block', 'safe_search', 'parental'];
             $skippedOrphans = 0;
 
-            // 5) 聚合成 bucket，跳过 profile 或 device 不存在的孤儿事件
+            // 5) 聚合成 bucket，跳过 profile/device/category 不合法的事件
             $buckets = [];
             foreach ($events as $e) {
                 $pid = (int) ($e['profile_id'] ?? 0);
                 $did = (int) ($e['device_id'] ?? 0);
-                if ($pid <= 0 || ! isset($validProfileSet[$pid]) || ($did > 0 && ! isset($validDeviceSet[$did]))) {
+                $cat = (string) ($e['billing_category'] ?? '');
+                if ($pid <= 0 || ! isset($validProfileSet[$pid]) || ($did > 0 && ! isset($validDeviceSet[$did])) || ! in_array($cat, $validCategories, true)) {
                     $skippedOrphans++;
                     continue;
                 }
