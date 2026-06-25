@@ -9,6 +9,8 @@
     "preview": "vite preview",
     "lint": "eslint . --ext .vue,.js",
     "lint:fix": "eslint . --ext .vue,.js --fix"
+  },
+  "dependencies": {
     "element-plus": "^2.9.0",
     "vue": "^3.5.0",
     "vue-i18n": "^9.14.5",

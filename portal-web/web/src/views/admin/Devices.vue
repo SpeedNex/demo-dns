@@ -79,7 +79,7 @@
             </el-table-column>
             <el-table-column prop="source_ip" :label="$t('admin.devicesPage.sourceIp') || '来源IP'" width="140" />
             <el-table-column :label="$t('admin.devicesPage.lastSeen') || '最后在线'" width="170">
-                <template #default="{ row }">{{ row.last_seen_at ? new Date(row.last_seen_at).toLocaleString() : '-' }}</template>
+                <template #default="{ row }">{{ formatDateTime(row.last_seen_at) }}</template>
             </el-table-column>
             <el-table-column :label="$t('common.actions') || '操作'" width="80" fixed="right">
                 <template #default="{ row }">
@@ -98,6 +98,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Connection, Delete, Monitor, RefreshLeft, Search } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
+import { formatDateTime } from '@/composables/useDateFormat'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()

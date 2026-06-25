@@ -38,9 +38,9 @@
                 </div>
             </div>
 
-            <el-table :data="logs" stripe :empty-text="$t('logs.noLogs')">
+            <el-table v-loading="loading" :data="logs" stripe :empty-text="$t('logs.noLogs')">
                 <el-table-column :label="$t('logs.time')" width="220">
-                    <template #default="{ row }">{{ formatTime(row.timestamp) }}</template>
+                    <template #default="{ row }">{{ formatDateTime(row.timestamp) }}</template>
                 </el-table-column>
                 <el-table-column prop="domain" :label="$t('logs.domain')" min-width="250" />
                 <el-table-column :label="$t('logs.action')" width="140">
@@ -70,14 +70,17 @@
 <script setup>
 import { useI18n } from 'vue-i18n'
 import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 import { Search, Filter, RefreshLeft } from '@element-plus/icons-vue'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
 import { useCurrentProfile } from '@/composables/useCurrentProfile'
+import { formatDateTime } from '@/composables/useDateFormat'
 
 const { t } = useI18n()
 const { currentProfileId } = useCurrentProfile()
 
+const loading = ref(false)
 const logs = ref([])
 const page = ref(1)
 const total = ref(0)
@@ -91,17 +94,13 @@ const activeFilterCount = computed(() => {
     return n
 })
 
-const formatTime = (ts) => {
-    if (!ts) return '-'
-    return new Date(ts).toLocaleString()
-}
-
 const resetFilters = () => {
     filter.action = null
     filter.domain = ''
 }
 
 const fetchLogs = async () => {
+    loading.value = true
     try {
         const params = { page: page.value, per_page: 20, profile_id: currentProfileId.value }
         if (filter.action) params.action = filter.action
@@ -109,7 +108,11 @@ const fetchLogs = async () => {
         const { data } = await client.get('/user/logs', { params })
         logs.value = data.data || []
         total.value = data.meta?.total || 0
-    } catch {}
+    } catch {
+        ElMessage.error(t('common.loadFailed'))
+    } finally {
+        loading.value = false
+    }
 }
 
 onMounted(fetchLogs)

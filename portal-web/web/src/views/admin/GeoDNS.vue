@@ -184,6 +184,7 @@ import { Aim, CopyDocument, Delete, Edit, InfoFilled, Plus, Refresh, Search } fr
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
 import { useSystemConfig } from '@/composables/useSystemConfig'
+import { formatDateTime } from '@/composables/useDateFormat'
 
 const { t } = useI18n()
 const mappings = ref([])
@@ -227,11 +228,7 @@ const onSelectionChange = (rows) => { selected.value = rows }
 
 let heartbeatTimer = null
 
-// 与节点列表一致：toLocaleString 显示完整时间
-const formatTime = (ts) => {
-    if (!ts) return '-'
-    return new Date(ts).toLocaleString()
-}
+const formatTime = (ts) => formatDateTime(ts)
 
 const fetchMappings = async () => {
     try {

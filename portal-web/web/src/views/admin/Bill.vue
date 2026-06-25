@@ -75,7 +75,7 @@
                 </template>
             </el-table-column>
             <el-table-column prop="issued_at" :label="$t('admin.finance.issuedAt') || '开具日期'" width="180">
-                <template #default="{ row }">{{ row.issued_at ? new Date(row.issued_at).toLocaleString() : '-' }}</template>
+                <template #default="{ row }">{{ formatDateTime(row.issued_at) }}</template>
             </el-table-column>
             <el-table-column :label="$t('admin.finance.actions') || '操作'" width="120">
                 <template #default="{ row }">
@@ -100,7 +100,7 @@
             <el-descriptions-item :label="$t('admin.finance.status') || '状态'">
                 <el-tag :type="getStatusType(selectedBill.status)" size="small">{{ transactionStatusLabel(selectedBill.status) }}</el-tag>
             </el-descriptions-item>
-            <el-descriptions-item :label="$t('admin.finance.issuedAt') || '开具日期'">{{ selectedBill.issued_at ? new Date(selectedBill.issued_at).toLocaleString() : '-' }}</el-descriptions-item>
+            <el-descriptions-item :label="$t('admin.finance.issuedAt') || '开具日期'">{{ formatDateTime(selectedBill.issued_at) }}</el-descriptions-item>
         </el-descriptions>
         <template #footer>
             <el-button @click="showBillDetail = false">{{ $t('common.close') || '关闭' }}</el-button>
@@ -115,6 +115,7 @@ import { useI18n } from 'vue-i18n'
 import { Tickets, Search, RefreshLeft, Download } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
+import { formatDateTime } from '@/composables/useDateFormat'
 
 const { t } = useI18n()
 

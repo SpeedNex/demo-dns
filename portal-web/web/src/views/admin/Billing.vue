@@ -48,7 +48,7 @@
                     </template>
                 </el-table-column>
                 <el-table-column :label="$t('admin.billing.time') || 'Time'" width="180">
-                    <template #default="{ row }">{{ row.created_at ? new Date(row.created_at).toLocaleString() : '-' }}</template>
+                    <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
                 </el-table-column>
             </el-table>
 
@@ -116,6 +116,7 @@ import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { CaretRight, Search, Download, List } from '@element-plus/icons-vue'
 import client from '@/api/client'
+import { formatDateTime } from '@/composables/useDateFormat'
 
 const { t } = useI18n()
 

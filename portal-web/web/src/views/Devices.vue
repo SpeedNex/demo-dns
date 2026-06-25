@@ -56,7 +56,7 @@
                     </el-table-column>
                     <el-table-column :label="$t('devices.lastSeen')" min-width="160">
                         <template #default="{ row }">
-                            <span>{{ row.last_seen_at ? new Date(row.last_seen_at).toLocaleString() : '-' }}</span>
+                            <span>{{ formatDateTime(row.last_seen_at) }}</span>
                         </template>
                     </el-table-column>
                     <el-table-column :label="$t('devices.sourceIp')" width="140">
@@ -99,6 +99,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Connection } from '@element-plus/icons-vue'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
+import { formatDateTime } from '@/composables/useDateFormat'
 
 const { t } = useI18n()
 
@@ -114,6 +115,7 @@ const fetchDevices = async () => {
         devices.value = data.data ?? []
     } catch {
         devices.value = []
+        ElMessage.error(t('common.loadFailed'))
     }
 }
 

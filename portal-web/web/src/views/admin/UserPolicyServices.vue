@@ -89,7 +89,7 @@
                                 </el-table-column>
                                 <el-table-column :label="$t('admin.userPolicyServices.subscribedAt') || '注册时间'" min-width="200">
                                     <template #default="{ row: u }">
-                                        {{ u.subscribed_at ? new Date(u.subscribed_at).toLocaleString() : '-' }}
+                                        {{ formatDateTime(u.subscribed_at) }}
                                     </template>
                                 </el-table-column>
                             </el-table>
@@ -151,6 +151,7 @@ import { useI18n } from 'vue-i18n'
 import { Tickets } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
+import { formatDateTime } from '@/composables/useDateFormat'
 
 const { t } = useI18n()
 

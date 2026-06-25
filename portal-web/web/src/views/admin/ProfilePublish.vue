@@ -108,6 +108,7 @@ import { ElMessage } from 'element-plus'
 import { Search, Refresh, Upload } from '@element-plus/icons-vue'
 import client from '@/api/client'
 import { useI18n } from 'vue-i18n'
+import { formatDateTime } from '@/composables/useDateFormat'
 
 const { t } = useI18n()
 
@@ -119,11 +120,7 @@ const currentPage = ref(1)
 const pageSize = ref(50)
 const total = ref(0)
 
-const formatDate = (dateStr) => {
-    if (!dateStr) return '-'
-    const date = new Date(dateStr)
-    return date.toLocaleString()
-}
+const formatDate = (dateStr) => formatDateTime(dateStr)
 
 const loadProfiles = async () => {
     loading.value = true

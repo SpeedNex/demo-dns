@@ -220,6 +220,7 @@ import {
 import { useI18n } from 'vue-i18n'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
+import { formatDateTime } from '@/composables/useDateFormat'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -267,14 +268,7 @@ const matchTypeLabel = (type) => {
     return type || '-'
 }
 
-const formatTime = (time) => {
-    if (!time) return '-'
-    try {
-        return new Date(time).toLocaleString()
-    } catch {
-        return time
-    }
-}
+const formatTime = (time) => formatDateTime(time)
 
 const fetchData = async () => {
     try {

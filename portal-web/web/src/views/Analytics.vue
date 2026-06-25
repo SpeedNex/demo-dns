@@ -202,6 +202,7 @@
 <script setup>
 import { useI18n } from 'vue-i18n'
 import { ref, computed, onMounted, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
 import { useCurrentProfile } from '@/composables/useCurrentProfile'
@@ -243,7 +244,9 @@ const fetchData = async () => {
         rootDomains.value = d.root_domains || []
         encryptedDns.value = d.encrypted_dns || null
         dnssec.value = d.dnssec || null
-    } catch {}
+    } catch {
+        ElMessage.error(t('common.loadFailed'))
+    }
 }
 
 onMounted(fetchData)

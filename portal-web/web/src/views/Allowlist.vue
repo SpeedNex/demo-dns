@@ -19,7 +19,7 @@
             {{ $t('allowlist.priorityNote') }}
         </el-alert>
 
-        <el-table :data="rules" stripe>
+        <el-table v-loading="loading" :data="rules" stripe :empty-text="$t('common.noData')">
             <el-table-column prop="domain" :label="$t('allowlist.domain')" min-width="280" show-overflow-tooltip />
             <el-table-column prop="action" :label="$t('allowlist.action')" width="100" />
             <el-table-column :label="$t('allowlist.enabled')" width="110">
@@ -92,6 +92,7 @@ const { t } = useI18n()
 const { currentProfileId } = useCurrentProfile()
 
 const rules = ref([])
+const loading = ref(false)
 const showDialog = ref(false)
 const showEditDialog = ref(false)
 const saving = ref(false)
@@ -102,11 +103,14 @@ const form = ref({ domain: '' })
 const editForm = ref({ id: null, domain: '', enabled: true })
 
 const fetchRules = async () => {
+    loading.value = true
     try {
         const { data } = await client.get('/user/allowlist', { params: { profile_id: currentProfileId.value } })
         rules.value = data.data
     } catch {
         ElMessage.error(t('common.loadFailed'))
+    } finally {
+        loading.value = false
     }
 }
 

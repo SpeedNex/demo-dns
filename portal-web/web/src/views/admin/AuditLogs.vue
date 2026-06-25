@@ -114,6 +114,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Document, Search, RefreshLeft, Download } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
+import { formatDateTime } from '@/composables/useDateFormat'
 
 const { t } = useI18n()
 const logs = ref([])
@@ -125,10 +126,7 @@ const filters = ref({ action: '', actor_id: '', target_type: '', range: [] })
 const page = ref(1)
 const perPage = ref(20)
 
-const formatTime = (ts) => {
-    if (!ts) return '-'
-    return new Date(ts).toLocaleString()
-}
+const formatTime = (ts) => formatDateTime(ts)
 
 // 2026-06-22: 把 action 拆分为人类可读名（"user.create" -> "Create"）
 const actionLabel = (action) => {

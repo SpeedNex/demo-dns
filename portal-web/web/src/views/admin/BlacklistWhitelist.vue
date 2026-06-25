@@ -60,7 +60,7 @@
             </el-table-column>
             <el-table-column :label="$t('admin.blacklistWhitelist.createdAt') || '创建时间'" min-width="180">
                 <template #default="{ row }">
-                    {{ row.created_at ? new Date(row.created_at).toLocaleString() : '—' }}
+                    {{ formatDateTime(row.created_at) }}
                 </template>
             </el-table-column>
         </el-table>
@@ -74,6 +74,7 @@ import { List } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
+import { formatDateTime } from '@/composables/useDateFormat'
 
 const { t } = useI18n()
 const loading = ref(false)

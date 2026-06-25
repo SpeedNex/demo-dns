@@ -61,7 +61,7 @@
                 </template>
             </el-table-column>
             <el-table-column prop="created_at" :label="$t('admin.finance.createdAt') || '充值时间'" width="160">
-                <template #default="{ row }">{{ row.created_at ? new Date(row.created_at).toLocaleString() : '-' }}</template>
+                <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
             </el-table-column>
         </el-table>
     </ListPage>
@@ -74,6 +74,7 @@ import { useI18n } from 'vue-i18n'
 import { CreditCard, Search, RefreshLeft, Download } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
+import { formatDateTime } from '@/composables/useDateFormat'
 
 const { t } = useI18n()
 

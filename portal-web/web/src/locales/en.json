@@ -491,7 +491,10 @@
     "profilesNotFound": "{count} not found",
     "nameRequired": "Please enter a profile name",
     "created": "Created",
-    "createFailed": "Failed to create"
+    "createFailed": "Failed to create",
+    "publish": "Publish Config",
+    "publishSuccess": "Config published",
+    "publishFailed": "Publish failed"
   },
   "profileDetail": {
     "title": "Profile Detail",

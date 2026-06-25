@@ -76,8 +76,8 @@
                     {{ selectedBalance.status === 'active' ? ($t('admin.usersPage.enabled') || '启用') : ($t('admin.usersPage.disabled') || '禁用') }}
                 </span>
             </el-descriptions-item>
-            <el-descriptions-item :label="$t('admin.finance.createdAt') || '创建时间'">{{ selectedBalance.created_at ? new Date(selectedBalance.created_at).toLocaleString() : '-' }}</el-descriptions-item>
-            <el-descriptions-item v-if="selectedBalance.balance_updated_at" label="最后更新">{{ selectedBalance.balance_updated_at ? new Date(selectedBalance.balance_updated_at).toLocaleString() : '-' }}</el-descriptions-item>
+            <el-descriptions-item :label="$t('admin.finance.createdAt') || '创建时间'">{{ formatDateTime(selectedBalance.created_at) }}</el-descriptions-item>
+            <el-descriptions-item v-if="selectedBalance.balance_updated_at" label="最后更新">{{ selectedBalance.balance_updated_at ? formatDateTime(selectedBalance.balance_updated_at) : '-' }}</el-descriptions-item>
         </el-descriptions>
         <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
             <el-button size="small" type="success" :disabled="!selectedBalance" @click="openQuickCharge">
@@ -120,6 +120,7 @@ import { useI18n } from 'vue-i18n'
 import { Wallet, Search, RefreshLeft, Coin } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
+import { formatDateTime } from '@/composables/useDateFormat'
 
 const { t } = useI18n()
 

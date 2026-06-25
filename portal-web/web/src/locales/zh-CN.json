@@ -491,7 +491,10 @@
     "profilesNotFound": "{count} 个未找到",
     "nameRequired": "请输入方案名称",
     "created": "已创建",
-    "createFailed": "创建失败"
+    "createFailed": "创建失败",
+    "publish": "发布配置",
+    "publishSuccess": "配置已发布",
+    "publishFailed": "发布失败"
   },
   "profileDetail": {
     "title": "Profile 详情",

@@ -1,7 +1,7 @@
 <template>
     <ListPage
         :title="t('admin.nodes.title')"
-        :desc="'默认监听端口：DNS 53 (UDP/TCP) · DoH 443 · DoT 853 · DoQ 784'"
+        :desc="t('admin.nodes.desc')"
         i18n-key="admin.nodes"
         icon-name="Monitor"
         :total="meta?.total ?? 0"
@@ -217,6 +217,7 @@ import { CopyDocument, Delete, Edit, InfoFilled, Refresh } from '@element-plus/i
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
 import { useSystemConfig } from '@/composables/useSystemConfig'
+import { formatDateTime } from '@/composables/useDateFormat'
 
 const { t } = useI18n()
 
@@ -269,10 +270,7 @@ const rules = {
     region: [{ required: true, message: t('admin.nodes.regionRequired') || 'Region is required', trigger: 'change' }],
 }
 
-const formatTime = (ts) => {
-    if (!ts) return '-'
-    return new Date(ts).toLocaleString()
-}
+const formatTime = (ts) => formatDateTime(ts)
 
 const fetchNodes = async () => {
     loading.value = true

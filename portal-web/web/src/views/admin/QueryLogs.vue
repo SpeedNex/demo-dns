@@ -92,7 +92,7 @@
         <el-table v-loading="loading" :data="logs" stripe style="margin-top:0" @selection-change="onSelectionChange">
             <el-table-column type="selection" width="40" />
             <el-table-column :label="$t('admin.queryLogsPage.time')" width="190" fixed>
-                <template #default="{ row }">{{ row.queried_at ? new Date(row.queried_at).toLocaleString() : '-' }}</template>
+                <template #default="{ row }">{{ formatDateTime(row.queried_at) }}</template>
             </el-table-column>
             <el-table-column label="域名" min-width="220" show-overflow-tooltip>
                 <template #default="{ row }">
@@ -173,6 +173,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, DeleteFilled, Document, Search, RefreshLeft, Download, CopyDocument, User } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
+import { formatDateTime } from '@/composables/useDateFormat'
 
 const { t } = useI18n()
 

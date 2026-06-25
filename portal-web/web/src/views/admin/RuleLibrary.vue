@@ -120,6 +120,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Collection, Plus, Edit, Refresh, Delete } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
+import { formatDateTime } from '@/composables/useDateFormat'
 
 const { t } = useI18n()
 const ruleSources = ref([])
@@ -139,10 +140,7 @@ const rules = {
     url: [{ required: true, message: t('admin.ruleLibrary.required') || 'Required', trigger: 'blur' }],
 }
 
-const formatTime = (ts) => {
-    if (!ts) return '-'
-    return new Date(ts).toLocaleString()
-}
+const formatTime = (ts) => formatDateTime(ts)
 
 const fetchRules = async () => {
     loading.value = true

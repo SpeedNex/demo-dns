@@ -10,7 +10,7 @@
         </div>
 
         <el-card shadow="never" class="profile-card">
-        <el-table :data="profiles" stripe>
+        <el-table v-loading="loading" :data="profiles" stripe :empty-text="$t('common.noData')">
             <el-table-column :label="$t('profile.name')" min-width="220">
                 <template #default="{ row }">
                     <span class="profile-name-cell">
@@ -38,7 +38,7 @@
                         @click="handlePublish(row)"
                     >
                         <el-icon><Upload /></el-icon>
-                        发布
+                        {{ $t('profile.publish') }}
                     </el-button>
                     <el-button size="small" type="danger" @click="handleDelete(row.id)">{{ $t('profile.delete') }}</el-button>
                 </template>
@@ -80,6 +80,7 @@ import Layout from '@/components/Layout.vue'
 const { t } = useI18n()
 
 const profiles = ref([])
+const loading = ref(false)
 const showDialog = ref(false)
 const saving = ref(false)
 const publishingId = ref(null)
@@ -87,11 +88,14 @@ const formRef = ref(null)
 const form = ref({ name: '', description: '', default_action: 'allow' })
 
 const fetchProfiles = async () => {
+    loading.value = true
     try {
         const { data } = await client.get('/user/profiles')
         profiles.value = data.data
-    } catch {
-        ElMessage.error(t('common.loadFailed'))
+    } catch (e) {
+        ElMessage.error(e?.response?.data?.message || t('common.loadFailed'))
+    } finally {
+        loading.value = false
     }
 }
 
@@ -132,10 +136,10 @@ const handlePublish = async (row) => {
     publishingId.value = id
     try {
         await client.post(`/user/profiles/${id}/publish`)
-        ElMessage.success('配置已发布')
+        ElMessage.success(t('profile.publishSuccess'))
         await fetchProfiles()
     } catch (e) {
-        ElMessage.error(e?.response?.data?.message || '发布失败')
+        ElMessage.error(e?.response?.data?.message || t('profile.publishFailed'))
     } finally {
         publishingId.value = null
     }

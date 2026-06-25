@@ -76,7 +76,7 @@
             </el-table-column>
             <el-table-column prop="reason" :label="$t('admin.finance.reason') || '原因'" min-width="150" show-overflow-tooltip />
             <el-table-column prop="created_at" :label="$t('admin.finance.createdAt') || '申请时间'" width="160">
-                <template #default="{ row }">{{ row.created_at ? new Date(row.created_at).toLocaleString() : '-' }}</template>
+                <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
             </el-table-column>
             <el-table-column :label="$t('admin.finance.actions') || '操作'" width="160">
                 <template #default="{ row }">
@@ -100,8 +100,8 @@
                 <el-tag :type="getStatusType(selectedRefund.status)" size="small">{{ selectedRefund.status }}</el-tag>
             </el-descriptions-item>
             <el-descriptions-item :label="$t('admin.finance.reason') || '原因'" :span="2">{{ selectedRefund.reason || '-' }}</el-descriptions-item>
-            <el-descriptions-item :label="$t('admin.finance.createdAt') || '申请时间'">{{ selectedRefund.created_at ? new Date(selectedRefund.created_at).toLocaleString() : '-' }}</el-descriptions-item>
-            <el-descriptions-item :label="$t('admin.finance.refundedAt') || '处理时间'">{{ selectedRefund.refunded_at ? new Date(selectedRefund.refunded_at).toLocaleString() : '-' }}</el-descriptions-item>
+            <el-descriptions-item :label="$t('admin.finance.createdAt') || '申请时间'">{{ formatDateTime(selectedRefund.created_at) }}</el-descriptions-item>
+            <el-descriptions-item :label="$t('admin.finance.refundedAt') || '处理时间'">{{ formatDateTime(selectedRefund.refunded_at) }}</el-descriptions-item>
         </el-descriptions>
         <template #footer>
             <el-button @click="showRefundDetail = false">{{ $t('common.close') || '关闭' }}</el-button>
@@ -116,6 +116,7 @@ import { useI18n } from 'vue-i18n'
 import { Wallet, Search, RefreshLeft, Download } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
+import { formatDateTime } from '@/composables/useDateFormat'
 
 const { t } = useI18n()
 
