@@ -32,27 +32,6 @@
                 </div>
             </div>
 
-            <!-- 推广链接 -->
-            <div class="card">
-                <div class="card-header">
-                    <el-icon class="card-icon"><Share /></el-icon>
-                    <h3>{{ $t('account.referral.title') }}</h3>
-                </div>
-                <div class="card-body">
-                    <p class="referral-desc">{{ $t('account.referral.desc') }}</p>
-                    <div class="referral-link">
-                        <el-input v-model="referralLink" readonly>
-                            <template #append>
-                                <el-button @click="copyReferralLink">
-                                    <el-icon><CopyDocument /></el-icon>
-                                </el-button>
-                            </template>
-                        </el-input>
-                    </div>
-                    <p class="referral-reward">{{ $t('account.referral.reward') }}</p>
-                </div>
-            </div>
-
             <!-- 余额 -->
             <div class="card">
                 <div class="card-header">
@@ -317,7 +296,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
-import { Coin, Share, Wallet, Tickets, Message, Lock, CopyDocument } from '@element-plus/icons-vue'
+import { Coin, Wallet, Tickets, Message, Lock } from '@element-plus/icons-vue'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
 
@@ -349,9 +328,6 @@ const walletBalance = ref({
 
 // 当前订阅
 const currentSubscription = ref(null)
-
-// 推广链接
-const referralLink = ref('https://nextdns.io/?from=ehcat7b4')
 
 // 弹窗状态
 const showRechargeDialog = ref(false)
@@ -458,14 +434,6 @@ const loadAccountData = async () => {
             const { data: subRes } = await client.get('/user/subscription')
             if (subRes.data) {
                 currentSubscription.value = subRes.data
-            }
-        } catch {}
-
-        // 加载推广链接
-        try {
-            const { data: refRes } = await client.get('/user/referral-link')
-            if (refRes.data?.link) {
-                referralLink.value = refRes.data.link
             }
         } catch {}
 
@@ -668,16 +636,6 @@ const refreshSubscriptionData = async () => {
             currentPlanCode.value = planRes.data.plan
         }
     } catch {}
-}
-
-// 复制推广链接
-const copyReferralLink = async () => {
-    try {
-        await navigator.clipboard.writeText(referralLink.value)
-        ElMessage.success(t('common.copied') || '已复制')
-    } catch {
-        ElMessage.error(t('common.copyFailed') || '复制失败')
-    }
 }
 
 // 充值
@@ -887,22 +845,6 @@ onMounted(() => {
 .quota-upgrade p {
     margin: 0;
     font-size: 14px;
-}
-
-/* 推广 */
-.referral-desc {
-    margin: 0 0 16px;
-    font-size: 14px;
-}
-
-.referral-link {
-    margin-bottom: 12px;
-}
-
-.referral-reward {
-    margin: 0;
-    font-size: 13px;
-    color: #64748b;
 }
 
 /* 余额 */

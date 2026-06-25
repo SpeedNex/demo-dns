@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "대시보드",
     "security": "보안",
+    "securitySettings": "보안 설정",
     "privacy": "개인 정보 보호",
     "parental": "부모 제어",
     "denylist": "차단 목록",
