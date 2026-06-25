@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 
 class Node extends Model
 {
@@ -83,9 +85,25 @@ class Node extends Model
         return (int) env('NODE_HEARTBEAT_STALE_SECONDS', 90);
     }
 
-    /** 心跳新鲜 = 真正在岗。 */
+    /** 心跳新鲜 = 真正在岗。优先查 Redis，兜底 MySQL。 */
     public function isOnline(): bool
     {
+        // 优先从 Redis 最新心跳判断（TTL 90 秒）
+        try {
+            $exists = Redis::exists("node:{$this->id}:heartbeat");
+            if ($exists) {
+                return true;
+            }
+            // Redis key 不存在 → 心跳超时，但可能 Redis 数据丢失，需 fallback 到 MySQL
+        } catch (\Throwable $e) {
+            // Redis 不可用时静默 fallback 到 MySQL
+            Log::debug('Redis unavailable for isOnline check, fallback to MySQL', [
+                'node_id' => $this->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // MySQL fallback：last_heartbeat_at 在 90 秒内 → 在线
         if (! $this->last_heartbeat_at) {
             return false;
         }

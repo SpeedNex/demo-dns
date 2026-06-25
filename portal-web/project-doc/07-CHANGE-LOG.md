@@ -14,6 +14,7 @@
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |
 |---|---|---|---|---|
+| 2026-06-25 | code | **心跳存储优化：Redis 高频写入 + MySQL 低频持久化**。HeartbeatController 每次心跳写 Redis（`node:{id}:heartbeat` TTL 90s）+ 更新 `nodes:online` 集合；MySQL 写入降至每 5 分钟一次（`node:{id}:mysql_hb_at` 控制间隔），保留历史心跳表用于审计。Node::isOnline() 优先查 Redis，兜底 MySQL | app/Http/Controllers/Api/V1/Node/HeartbeatController.php, app/Models/Node.php | ok |
 | 2026-06-24 | code | **ProfileService::update() 添加自动发布**：配置变更（安全/隐私/家长监护/规则等）后自动调用 publish()，确保 resolver 立即获取最新配置 | app/Domain/Profile/ProfileService.php | ok |
 | 2026-06-24 | code | **Profile 同名冲突检查**：ProfileService::create() 添加同名检查，防止同一用户创建同名 Profile 触发唯一索引冲突；ProfileController::store() 捕获 InvalidArgumentException 返回 422 | app/Domain/Profile/ProfileService.php, app/Http/Controllers/Api/V1/User/ProfileController.php | ok |
 | 2026-06-24 | code | **后台配置文件发布管理**：新增 AdminPublishController::profilePublishList() 和 publishProfile() 方法；新增 /admin/profile-publish 路由；新增 ProfilePublish.vue 页面（列表+手动发布）；创建迁移文件添加后台导航菜单项 | app/Http/Controllers/Api/V1/Admin/AdminPublishController.php, routes/v1/admin.php, web/src/views/admin/ProfilePublish.vue, web/src/router/index.js, database/migrations/2026_06_24_000001_add_profile_publish_menu.php | ok |
