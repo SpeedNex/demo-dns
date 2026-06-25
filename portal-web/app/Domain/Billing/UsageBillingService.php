@@ -80,7 +80,7 @@ final class UsageBillingService
                 }
             }
 
-            // 4) 预加载有效 profile_id 集合，孤儿事件直接 skip
+            // 4) 预加载有效 profile_id / device_id 集合，孤儿事件直接 skip
             $profileIds = array_values(array_unique(array_filter(array_map(
                 static fn (array $e) => (int) ($e['profile_id'] ?? 0),
                 $events
@@ -89,13 +89,23 @@ final class UsageBillingService
                 ? []
                 : DB::table('profiles')->whereIn('id', $profileIds)->pluck('id')->all();
             $validProfileSet = array_flip(array_map('intval', $validProfileIds));
+
+            $deviceIds = array_values(array_unique(array_filter(array_map(
+                static fn (array $e) => (int) ($e['device_id'] ?? 0),
+                $events
+            ))));
+            $validDeviceIds = $deviceIds === []
+                ? []
+                : DB::table('devices')->whereIn('id', $deviceIds)->pluck('id')->all();
+            $validDeviceSet = array_flip(array_map('intval', $validDeviceIds));
             $skippedOrphans = 0;
 
-            // 5) 聚合成 bucket
+            // 5) 聚合成 bucket，跳过 profile 或 device 不存在的孤儿事件
             $buckets = [];
             foreach ($events as $e) {
                 $pid = (int) ($e['profile_id'] ?? 0);
-                if ($pid <= 0 || ! isset($validProfileSet[$pid])) {
+                $did = (int) ($e['device_id'] ?? 0);
+                if ($pid <= 0 || ! isset($validProfileSet[$pid]) || ($did > 0 && ! isset($validDeviceSet[$did]))) {
                     $skippedOrphans++;
                     continue;
                 }

@@ -1,10 +1,12 @@
 package config
 
+import "encoding/json"
+
 type GlobalConfig struct {
 	Version   int64              `json:"version"`
 	Upstreams []Upstream         `json:"upstreams"`
 	Plans     map[string]any     `json:"plans"`
-	Rulesets  map[string]int64   `json:"rulesets"`
+	Rulesets  json.RawMessage      `json:"rulesets"`
 	Limits    map[string]int64   `json:"limits"`
 }
 
