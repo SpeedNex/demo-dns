@@ -267,6 +267,8 @@ func (a *Agent) FetchProfile(profileID string) error {
 	}
 
 	// 3. 回源 Portal（SingleFlight 防击穿）
+	var rawData json.RawMessage
+	var fetchVersion int64
 	_, _, err := a.pCache.DoOnce(profileID, func() (json.RawMessage, int64, error) {
 		path := fmt.Sprintf("/api/v1/node/dns-resolver/profiles/%s", profileID)
 		resp, fetchErr := a.doNodeRequest(http.MethodGet, path, nil)
@@ -306,6 +308,8 @@ func (a *Agent) FetchProfile(profileID string) error {
 			log.Printf("Write profile %s to disk cache failed: %v", profileID, diskErr)
 		}
 
+		rawData = dataEnv.Data
+		fetchVersion = profileMeta.Version
 		return dataEnv.Data, profileMeta.Version, nil
 	})
 	if err != nil {
@@ -313,7 +317,7 @@ func (a *Agent) FetchProfile(profileID string) error {
 	}
 
 	// 4. 从内存缓存读取（刚写入 DoOnce）并加载到引擎
-	return a.loadProfileIntoEngine(profileID, rawData, version)
+	return a.loadProfileIntoEngine(profileID, rawData, fetchVersion)
 }
 
 // loadProfileIntoEngine 将缓存的 Profile 数据加载到引擎并记录版本。
@@ -376,13 +380,11 @@ func (a *Agent) loadProfileIntoEngine(profileID string, data json.RawMessage, ve
 			security, parental)
 		log.Printf("Engine rules loaded: profile=%s allow=%d allow_wild=%d deny=%d deny_wild=%d security_cats=%d parental_cats=%d",
 			p.ProfileID, len(allowExact), len(allowWild), len(denyExact), len(denyWild), len(security), len(parental))
-	}
 
-			// 记录版本到 localProfiles（供心跳上报）
-			a.mu.Lock()
-			a.localProfiles[profileID] = version
-			a.mu.Unlock()
-		}
+		// 记录版本到 localProfiles（供心跳上报）
+		a.mu.Lock()
+		a.localProfiles[profileID] = version
+		a.mu.Unlock()
 	}
 
 	return nil
