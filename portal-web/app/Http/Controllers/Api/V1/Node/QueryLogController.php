@@ -34,6 +34,7 @@ final class QueryLogController
             'items' => 'required|array|min:1|max:1000',
             'items.*.profile_id' => 'nullable|string|max:40',
             'items.*.device_id' => 'nullable|string|max:80',
+            'items.*.device_type' => 'nullable|string|max:30',
             'items.*.query_name' => 'nullable|string|max:255',
             'items.*.domain' => 'nullable|string|max:255',
             'items.*.query_type' => 'nullable|string|max:20',
@@ -95,6 +96,7 @@ final class QueryLogController
 
             $devicePk = null;
             $deviceUid = trim((string) ($item['device_id'] ?? ''));
+            $deviceType = strtolower(trim((string) ($item['device_type'] ?? '')));
 
             // Fallback: profile not found via profile_id -> try resolving via device_id.
             // 这里只解析 profile/user，不在这里累加 query_count，避免后续主流程再次累加导致重复计数。
@@ -124,6 +126,7 @@ final class QueryLogController
                     userPk: (int) $userPk,
                     profilePk: (int) $profilePk,
                     deviceUid: $deviceUid,
+                    deviceType: $deviceType,
                     fingerprint: $fingerprint,
                     clientIp: $clientIp,
                     protocol: $protocol,
@@ -137,12 +140,14 @@ final class QueryLogController
 
             $dnsLogs[] = [
                 'event_id' => Str::uuid()->toString(),
-                'event_time' => $queriedAt->format('Y-m-d H:i:s'),
-                'timestamp' => $queriedAt->format('Y-m-d H:i:s'),
+                // ClickHouse 服务器时区为 Asia/Shanghai，需按服务端时区格式化
+                'event_time' => $queriedAt->copy()->setTimezone('Asia/Shanghai')->format('Y-m-d H:i:s'),
+                'timestamp' => $queriedAt->copy()->setTimezone('Asia/Shanghai')->format('Y-m-d H:i:s'),
                 'node_id' => (string) $node->id,
                 'user_id' => $userPk !== null ? (string) $userPk : '',
                 'profile_id' => $profileUid ?? '',
                 'device_id' => $deviceUid,
+                'device_type' => $deviceType,
                 'domain' => $domain !== '' ? $domain : $queryName,
                 'query_type' => strtoupper((string) ($item['query_type'] ?? 'A')),
                 'action' => strtoupper((string) $item['action']),
@@ -156,7 +161,7 @@ final class QueryLogController
 
             if ($userPk !== null && $profilePk !== null) {
                 $usageEvents[] = [
-                    'timestamp' => $queriedAt->format('Y-m-d H:i:s'),
+                    'timestamp' => $queriedAt->copy()->setTimezone('Asia/Shanghai')->format('Y-m-d H:i:s'),
                     'user_id' => (string) $userPk,
                     'profile_id' => (int) $profilePk,
                     'device_id' => $devicePk,
@@ -191,6 +196,7 @@ final class QueryLogController
         int $userPk,
         int $profilePk,
         string $deviceUid,
+        string $deviceType,
         string $fingerprint,
         string $clientIp,
         string $protocol,
@@ -215,6 +221,7 @@ final class QueryLogController
                         : ('Device ' . ($clientIp !== '' ? $clientIp : 'Unknown')),
                     'source' => 'auto',
                     'protocol' => $protocol,
+                    'device_type' => $deviceType !== '' ? $deviceType : null,
                     'ip_hash' => $clientIp !== ''
                         ? hash('sha256', $clientIp)
                         : null,
@@ -245,6 +252,7 @@ final class QueryLogController
             device: $device,
             userPk: $userPk,
             profilePk: $profilePk,
+            deviceType: $deviceType,
             fingerprint: $fingerprint,
             clientIp: $clientIp,
             protocol: $protocol,
@@ -278,25 +286,31 @@ final class QueryLogController
         Device $device,
         int $userPk,
         int $profilePk,
+        string $deviceType,
         string $fingerprint,
         string $clientIp,
         string $protocol,
         Carbon $queriedAt,
         Carbon $now
     ): void {
+        $update = [
+            'user_id' => $userPk,
+            'profile_id' => $profilePk,
+            'fingerprint' => $fingerprint,
+            'protocol' => $protocol,
+            'ip_hash' => $clientIp !== ''
+                ? hash('sha256', $clientIp)
+                : null,
+            'last_seen_at' => $queriedAt,
+            'last_query_at' => $queriedAt,
+            'updated_at' => $now,
+        ];
+        // 仅当 resolver 上报了具体设备类型时才覆盖，避免后续空值把已有类型清空
+        if ($deviceType !== '') {
+            $update['device_type'] = $deviceType;
+        }
         try {
-            $device->forceFill([
-                'user_id' => $userPk,
-                'profile_id' => $profilePk,
-                'fingerprint' => $fingerprint,
-                'protocol' => $protocol,
-                'ip_hash' => $clientIp !== ''
-                    ? hash('sha256', $clientIp)
-                    : null,
-                'last_seen_at' => $queriedAt,
-                'last_query_at' => $queriedAt,
-                'updated_at' => $now,
-            ])->save();
+            $device->forceFill($update)->save();
         } catch (QueryException $e) {
             if (! $this->isDuplicateKeyException($e)) {
                 throw $e;

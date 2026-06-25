@@ -79,6 +79,7 @@ func (h *Handler) Handle(
 	protocol string,
 	profileID string,
 	deviceID string,
+	deviceType string,
 	blockResponse string,
 	safeSearchEnabled bool,
 ) *Result {
@@ -125,7 +126,7 @@ func (h *Handler) Handle(
 		h.metrics.IncBlocked()
 		blockresponse.ApplyTo(reply, question, blockResponse)
 		if firstSeen {
-			h.appendLog(profileID, deviceID, domain, "BLOCK", decision.Reason, decision.Category, clientIP, queryType, protocol, reply.Rcode, startedAt)
+			h.appendLog(profileID, deviceID, deviceType, domain, "BLOCK", decision.Reason, decision.Category, clientIP, queryType, protocol, reply.Rcode, startedAt)
 		}
 		return &Result{
 			Reply: reply, Action: "BLOCK", Reason: decision.Reason, Category: decision.Category,
@@ -143,7 +144,7 @@ func (h *Handler) Handle(
 		}
 		h.metrics.IncAllowed()
 		if firstSeen {
-			h.appendLog(profileID, deviceID, domain, "REWRITE", decision.Reason, decision.Category, clientIP, queryType, protocol, reply.Rcode, startedAt)
+			h.appendLog(profileID, deviceID, deviceType, domain, "REWRITE", decision.Reason, decision.Category, clientIP, queryType, protocol, reply.Rcode, startedAt)
 		}
 		return &Result{
 			Reply: reply, Action: "REWRITE", Reason: decision.Reason, Category: decision.Category,
@@ -156,7 +157,7 @@ func (h *Handler) Handle(
 	if cached, ok := h.dnsCache.Get(context.Background(), cacheKey); ok {
 		h.metrics.IncAllowed()
 		if firstSeen {
-			h.appendLog(profileID, deviceID, domain, "ALLOW", "cache_hit", "", clientIP, queryType, protocol, cached.Rcode, startedAt)
+			h.appendLog(profileID, deviceID, deviceType, domain, "ALLOW", "cache_hit", "", clientIP, queryType, protocol, cached.Rcode, startedAt)
 		}
 		return &Result{
 			Reply: cached, Action: "ALLOW", Reason: "cache_hit",
@@ -173,7 +174,7 @@ func (h *Handler) Handle(
 		reply.Rcode = dns.RcodeServerFailure
 		h.metrics.IncErrors()
 		if firstSeen {
-			h.appendLog(profileID, deviceID, domain, "ERROR", "upstream_timeout", "", clientIP, queryType, protocol, reply.Rcode, startedAt)
+			h.appendLog(profileID, deviceID, deviceType, domain, "ERROR", "upstream_timeout", "", clientIP, queryType, protocol, reply.Rcode, startedAt)
 		}
 		return &Result{
 			Reply: reply, Action: "ERROR", Reason: "upstream_timeout",
@@ -184,7 +185,7 @@ func (h *Handler) Handle(
 	h.dnsCache.Set(context.Background(), cacheKey, upstreamReply)
 	h.metrics.IncAllowed()
 	if firstSeen {
-		h.appendLog(profileID, deviceID, domain, "ALLOW", "default", "", clientIP, queryType, protocol, upstreamReply.Rcode, startedAt)
+		h.appendLog(profileID, deviceID, deviceType, domain, "ALLOW", "default", "", clientIP, queryType, protocol, upstreamReply.Rcode, startedAt)
 	}
 	return &Result{
 		Reply: upstreamReply, Action: "ALLOW", Reason: "default",
@@ -193,13 +194,14 @@ func (h *Handler) Handle(
 }
 
 // appendLog 写入日志缓冲。
-func (h *Handler) appendLog(profileID, deviceID, domain, action, reason, category, clientIP, queryType, protocol string, rcode int, startedAt time.Time) {
+func (h *Handler) appendLog(profileID, deviceID, deviceType, domain, action, reason, category, clientIP, queryType, protocol string, rcode int, startedAt time.Time) {
 	if h.logBuffer == nil {
 		return
 	}
 	h.logBuffer.Append(logging.LogEntry{
 		ProfileUID:     profileID,
 		DeviceUID:      deviceID,
+		DeviceType:     deviceType,
 		Domain:         domain,
 		Action:         strings.ToUpper(action),
 		Reason:         reason,

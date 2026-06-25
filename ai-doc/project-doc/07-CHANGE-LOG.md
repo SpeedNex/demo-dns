@@ -330,3 +330,15 @@ delivery_level
 | 2026-06-24 | code | 订单管理页补齐刷新、查看详情和 Stripe 支付动作；账户页普通订单/订阅续费统一走 Stripe Checkout，余额仅保留充值入口；Stripe secret/webhook secret 改读后台 System Config | portal-web/web/src/views/Membership.vue, portal-web/web/src/views/user/Account.vue, portal-web/app/Domain/Billing/PaymentService.php, portal-web/app/Http/Controllers/Api/V1/User/OrderController.php, portal-web/app/Http/Controllers/Api/V1/StripeWebhookController.php, portal-web/app/Http/Controllers/Api/V1/Admin/AdminSystemConfigController.php | 已通过 |
 | 2026-06-24 | code | 修复用户/管理端查询日志与统计的 ClickHouse 参数、action 值兼容、profile_id 筛选和 CSV 导出链路 | portal-web/app/Infrastructure/ClickHouse/ClickHouseClient.php, portal-web/app/Infrastructure/ClickHouse/UserAnalyticsService.php, portal-web/app/Domain/Ingest/QueryLogReadService.php, portal-web/app/Http/Controllers/Api/V1/Admin/AdminQueryLogController.php, portal-web/web/src/views/admin/QueryLogs.vue | 已通过 |
 | 2026-06-24 | test | `php -l` 覆盖本次修改的 PHP 文件通过；`npm run build` 通过（1778 modules transformed） | portal-web/app, portal-web/web | 已通过 |
+
+## 2026-06-25 — 多 Profile / 威胁情报 / 多设备 / 时区修复
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-06-25 | code | dns-resolver DoH 协议日志补齐 DeviceUID + DeviceType 字段 | dns-resolver/internal/doh/server.go | ok |
+| 2026-06-25 | code | resolver.Handler 签名扩展 deviceType 参数；appendLog 同步补字段 | dns-resolver/internal/resolver/handler.go | ok |
+| 2026-06-25 | code | LogEntry 增加 DeviceType 字段(omitempty) | dns-resolver/internal/logging/buffer.go | ok |
+| 2026-06-25 | code | portal-web QueryLogController 提取并保存 device_type 到 dns_devices | portal-web/app/Http/Controllers/Api/V1/Node/QueryLogController.php | ok |
+| 2026-06-25 | code | 修复 dns_logs.event_time 时区不一致（PHP 输出 UTC 字符串被 ClickHouse CST 服务端解析产生 8h 漂移），统一按 Asia/Shanghai 格式化 | portal-web/app/Http/Controllers/Api/V1/Node/QueryLogController.php | ok |
+| 2026-06-25 | test | 全链路最终回归 P0~P3 共 28 用例全部通过（97.2s） | /tmp/regression_final.py | ok |
+| 2026-06-25 | docs | 同步本变更日志 | project-doc/07-CHANGE-LOG.md | ok |

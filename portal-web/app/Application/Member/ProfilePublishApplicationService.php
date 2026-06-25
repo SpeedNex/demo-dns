@@ -6,6 +6,7 @@ namespace App\Application\Member;
 
 use App\Domain\Profile\ProfileConfigBuilder;
 use App\Domain\Profile\ProfilePublishService;
+use App\Domain\Profile\RuleCategoryResolver;
 use App\Domain\Publish\PublishService;
 use App\Models\Profile;
 use App\Models\ConfigVersion;
@@ -17,6 +18,7 @@ final class ProfilePublishApplicationService
     public function __construct(
         private readonly ProfileConfigBuilder $configBuilder,
         private readonly PublishService $publishService,
+        private readonly RuleCategoryResolver $categoryResolver,
     ) {
     }
 
@@ -36,6 +38,7 @@ final class ProfilePublishApplicationService
 
         $rules = $profile->rules()->get()->toArray();
         $devices = $profile->devices()->get()->toArray();
+        $categoryRules = $this->categoryResolver->loadCategoryRules();
 
         $security = array_merge([
             'enabled' => true,
@@ -142,7 +145,7 @@ final class ProfilePublishApplicationService
 
         $profilePublishService = new ProfilePublishService($this->configBuilder, $this->publishService);
 
-        return DB::transaction(function () use ($profile, $profilePublishService, $featureSettings, $rules, $devices, $userId): array {
+        return DB::transaction(function () use ($profile, $profilePublishService, $featureSettings, $rules, $categoryRules, $devices, $userId): array {
             $publishResult = $profilePublishService->publish(
                 array_merge($profile->toArray(), [
                     'devices' => $devices,
@@ -150,7 +153,7 @@ final class ProfilePublishApplicationService
                     'privacy_settings' => $featureSettings['privacy'],
                     'parental_settings' => $featureSettings['parental'],
                 ]),
-                $rules,
+                array_merge($rules, $categoryRules),
                 $featureSettings,
                 $this->loadQuotaData((int) $userId),
             );
