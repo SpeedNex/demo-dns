@@ -30,7 +30,7 @@ var ErrProfileInactive = errors.New("profile inactive")
 var ErrSubscriptionInactive = errors.New("subscription inactive")
 
 // ProfileLookup is the minimal contract the validator needs.  The
-// control plane or local active.json adapter implements this; tests
+// control plane or local ProfileCache adapter implements this; tests
 // can supply a stub.
 type ProfileLookup interface {
 	GetProfile(profileID string) (Profile, error)

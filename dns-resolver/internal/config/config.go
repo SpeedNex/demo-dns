@@ -73,8 +73,7 @@ type ControlPlaneConfig struct {
 	HeartbeatInterval  int `yaml:"heartbeat_interval"`
 	ConfigPollInterval int `yaml:"config_poll_interval"`
 	RequestTimeoutSec  int `yaml:"request_timeout_seconds"`
-	// ProfilesPath 是本地 config bundle 持久化根目录
-	// active.json / previous.json / active.json.sha256 都放在此目录下
+	// ProfilesPath 是 Global Config（global.json）持久化根目录
 	ProfilesPath string `yaml:"profiles_path"`
 	// 2026-06-22: APIKeyPath 是 register 签发的明文 api_key 缓存文件路径。
 	// install 阶段会写入绝对路径，避免 systemd / nohup 启动时 CWD 不固定

@@ -4,12 +4,9 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/binary"
-	"encoding/json"
 	"io"
 	"log"
 	"net"
-	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -17,7 +14,6 @@ import (
 	"ocer-dns/dns-resolver/internal/config"
 	"ocer-dns/dns-resolver/internal/logging"
 	"ocer-dns/dns-resolver/internal/metrics"
-	"ocer-dns/dns-resolver/internal/profile"
 	"ocer-dns/dns-resolver/internal/resolver"
 
 	"github.com/miekg/dns"
@@ -35,19 +31,7 @@ type Server struct {
 	profileLoader func(string) error
 }
 
-// activeConfig mirrors the DNS/DoH profile config schema.
-type activeConfig struct {
-	Profiles []struct {
-		ProfileID     string         `json:"profile_id"`
-		BlockResponse string         `json:"block_response"`
-		Quota         map[string]any `json:"quota"`
-		Parental      map[string]any `json:"parental"`
-		Devices       []struct {
-			DeviceID string `json:"device_id"`
-			SourceIP string `json:"source_ip"`
-		} `json:"devices"`
-	} `json:"profiles"`
-}
+
 
 // New creates a new DoQ server.
 func New(
@@ -160,7 +144,7 @@ func (s *Server) handleStream(stream *quic.Stream, remoteAddr string, profileUID
 	}
 
 	// ① Profile 匹配 — 优先通过 TLS SNI(profileUID) 识别，回退到源 IP
-	profileID, blockResponse, deviceID, safeSearchEnabled, ok := s.resolveRuntimeProfile(remoteAddr, profileUID)
+	profileID, blockResponse, deviceID, safeSearchEnabled, ok := profileUID, "nxdomain", "", false, profileUID != ""
 	if !ok {
 		reply := new(dns.Msg)
 		reply.SetReply(req)
@@ -199,94 +183,7 @@ func (s *Server) writeStream(stream *quic.Stream, reply *dns.Msg) {
 	(*stream).Write(packed)
 }
 
-func (s *Server) isQuotaExceeded(profileID string) bool {
-	cfg, err := s.loadActiveConfig()
-	if err != nil {
-		return false
-	}
-	for _, p := range cfg.Profiles {
-		if p.ProfileID == profileID {
-			if p.Quota == nil {
-				return false
-			}
-			status, _ := p.Quota["quota_status"].(string)
-			return status == "exceeded"
-		}
-	}
-	return false
-}
 
-func (s *Server) resolveRuntimeProfile(remoteAddr string, profileUID string) (profileID string, blockResponse string, deviceID string, safeSearch bool, ok bool) {
-	cfg, err := s.loadActiveConfig()
-	if err != nil || len(cfg.Profiles) == 0 {
-		return "", "nxdomain", "", false, false
-	}
-
-	// 如果通过 TLS SNI 直接拿到了 profileUID，优先使用
-	if profileUID != "" {
-		// 按需加载 Profile（loader 内部有缓存，幂等安全）
-		if s.profileLoader != nil {
-			if err := s.profileLoader(profileUID); err != nil {
-				log.Printf("doq: lazy load profile %s: %v", profileUID, err)
-			}
-		}
-		for _, p := range cfg.Profiles {
-			if p.ProfileID == profileUID {
-				safeSearch = boolFromMap(p.Parental, "safe_search") || boolFromMap(p.Parental, "force_safe_search")
-				return profileUID, firstNonEmpty(p.BlockResponse, "nxdomain"), "", safeSearch, true
-			}
-		}
-		// SNI 指定的 Profile UID 在配置中不存在时，回退到源 IP
-	}
-
-	sourceMap := make(map[string]string)
-	deviceMap := make(map[string]string)
-	blockMap := make(map[string]string)
-
-	for _, profileConfig := range cfg.Profiles {
-		if profileConfig.ProfileID == "" {
-			continue
-		}
-		blockMap[profileConfig.ProfileID] = firstNonEmpty(profileConfig.BlockResponse, "nxdomain")
-		for _, device := range profileConfig.Devices {
-			if device.SourceIP == "" {
-				continue
-			}
-			sourceMap[device.SourceIP] = profileConfig.ProfileID
-			deviceMap[device.SourceIP] = device.DeviceID
-		}
-	}
-
-	resolver := profile.New(sourceMap)
-	pid, err := resolver.ResolveSourceIP(remoteAddr)
-	if err != nil || pid == "" {
-		return "", "nxdomain", "", false, false
-	}
-
-	host := remoteHost(remoteAddr)
-	for _, profileConfig := range cfg.Profiles {
-		if profileConfig.ProfileID != pid {
-			continue
-		}
-		safeSearch = boolFromMap(profileConfig.Parental, "safe_search") || boolFromMap(profileConfig.Parental, "force_safe_search")
-		break
-	}
-
-	return pid, firstNonEmpty(blockMap[pid], "nxdomain"), deviceMap[host], safeSearch, true
-}
-
-func (s *Server) loadActiveConfig() (*activeConfig, error) {
-	path := filepath.Join(s.cfg.ControlPlane.ProfilesPath, "active.json")
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	var cfg activeConfig
-	if err := json.Unmarshal(data, &cfg); err != nil {
-		return nil, err
-	}
-	return &cfg, nil
-}
 
 func remoteHost(addr string) string {
 	host, _, err := net.SplitHostPort(addr)
@@ -296,26 +193,7 @@ func remoteHost(addr string) string {
 	return host
 }
 
-func firstNonEmpty(values ...string) string {
-	for _, value := range values {
-		if value != "" {
-			return value
-		}
-	}
-	return ""
-}
 
-func boolFromMap(values map[string]any, key string) bool {
-	if values == nil {
-		return false
-	}
-	raw, ok := values[key]
-	if !ok {
-		return false
-	}
-	boolean, ok := raw.(bool)
-	return ok && boolean
-}
 
 func intToStr(n int) string {
 	if n == 0 {

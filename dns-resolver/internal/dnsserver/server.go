@@ -3,17 +3,14 @@ package dnsserver
 import (
 	"context"
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net"
-	"os"
-	"path/filepath"
 	"sync"
 
+	"ocer-dns/dns-resolver/internal/blockresponse"
 	"ocer-dns/dns-resolver/internal/config"
 	"ocer-dns/dns-resolver/internal/metrics"
-	"ocer-dns/dns-resolver/internal/profile"
 	"ocer-dns/dns-resolver/internal/resolver"
 
 	"github.com/miekg/dns"
@@ -28,19 +25,6 @@ type Server struct {
 	dotServer     *dns.Server
 	sniMap        sync.Map // key: remoteAddr -> sni (用于 DoT 按 SNI 识别 Profile)
 	profileLoader func(string) error
-}
-
-type activeConfig struct {
-	Profiles []struct {
-		ProfileID     string         `json:"profile_id"`
-		BlockResponse string         `json:"block_response"`
-		Quota         map[string]any `json:"quota"`
-		Parental      map[string]any `json:"parental"`
-		Devices       []struct {
-			DeviceID string `json:"device_id"`
-			SourceIP string `json:"source_ip"`
-		} `json:"devices"`
-	} `json:"profiles"`
 }
 
 func New(
@@ -142,131 +126,19 @@ func (s *Server) Run(ctx context.Context) error {
 }
 
 func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg, proto string) {
-	// ① Profile 匹配
-	//    DoT: 优先通过 TLS SNI 识别; 若 SNI 无匹配则回退到源 IP
-	//    UDP/TCP: 沿用源 IP 匹配
+	// ① Profile 匹配 — 通过 SNI 或 profileUID
 	profileUID := ""
 	if proto == "dot" {
 		if sni, ok := s.sniMap.Load(w.RemoteAddr().String()); ok {
 			profileUID = resolver.ExtractProfileFromSNI(sni.(string))
 		}
 	}
-	profileID, blockResponse, deviceID, safeSearchEnabled, ok := s.resolveRuntimeProfile(w.RemoteAddr(), profileUID)
-	if !ok {
-		reply := new(dns.Msg)
-		reply.SetReply(req)
-		reply.Rcode = dns.RcodeNameError
-		_ = w.WriteMsg(reply)
-		s.metrics.IncErrors()
-		return
-	}
 
-	// ② 配额检查 — quota_status=exceeded 时拒绝
-	if s.isQuotaExceeded(profileID) {
-		reply := new(dns.Msg)
-		reply.SetReply(req)
-		reply.Rcode = dns.RcodeRefused
-		_ = w.WriteMsg(reply)
-		s.metrics.IncErrors()
-		return
-	}
+	// ② 共享 pipeline：去重 → 规则判定 → DNS 缓存 → 上游转发 → 日志
+	result := s.handler.Handle(req, w.RemoteAddr().String(), proto, profileUID, "", "", blockresponse.ModeNXDomain, false)
 
-	// ③ 共享 pipeline：去重 → 规则判定 → DNS 缓存 → 上游转发 → 日志
-	result := s.handler.Handle(req, w.RemoteAddr().String(), proto, profileID, deviceID, "", blockResponse, safeSearchEnabled)
-
-	// ④ 写出响应
+	// ③ 写出响应
 	_ = w.WriteMsg(result.Reply)
-}
-
-func (s *Server) isQuotaExceeded(profileID string) bool {
-	cfg, err := s.loadActiveConfig()
-	if err != nil {
-		return false
-	}
-	for _, p := range cfg.Profiles {
-		if p.ProfileID == profileID {
-			if p.Quota == nil {
-				return false
-			}
-			status, _ := p.Quota["quota_status"].(string)
-			return status == "exceeded"
-		}
-	}
-	return false
-}
-
-func (s *Server) resolveRuntimeProfile(addr net.Addr, profileUID string) (profileID string, blockResponse string, deviceID string, safeSearch bool, ok bool) {
-	cfg, err := s.loadActiveConfig()
-	if err != nil || len(cfg.Profiles) == 0 {
-		return "", "nxdomain", "", false, false
-	}
-
-	// 如果通过 SNI 直接拿到了 profileUID，优先使用
-	if profileUID != "" {
-		// 按需加载 Profile（loader 内部有缓存，幂等安全）
-		if s.profileLoader != nil {
-			if err := s.profileLoader(profileUID); err != nil {
-				log.Printf("dns: lazy load profile %s: %v", profileUID, err)
-			}
-		}
-		for _, p := range cfg.Profiles {
-			if p.ProfileID == profileUID {
-				safeSearch = boolFromMap(p.Parental, "safe_search") || boolFromMap(p.Parental, "force_safe_search")
-				return profileUID, firstNonEmpty(p.BlockResponse, "nxdomain"), "", safeSearch, true
-			}
-		}
-		// SNI 指定的 Profile UID 在配置中不存在时，回退到源 IP
-	}
-
-	sourceMap := make(map[string]string)
-	deviceMap := make(map[string]string)
-	blockMap := make(map[string]string)
-
-	for _, profileConfig := range cfg.Profiles {
-		if profileConfig.ProfileID == "" {
-			continue
-		}
-		blockMap[profileConfig.ProfileID] = firstNonEmpty(profileConfig.BlockResponse, "nxdomain")
-		for _, device := range profileConfig.Devices {
-			if device.SourceIP == "" {
-				continue
-			}
-			sourceMap[device.SourceIP] = profileConfig.ProfileID
-			deviceMap[device.SourceIP] = device.DeviceID
-		}
-	}
-
-	resolver := profile.New(sourceMap)
-	pid, err := resolver.ResolveSourceIP(addr.String())
-	if err != nil || pid == "" {
-		return "", "nxdomain", "", false, false
-	}
-
-	host := remoteHost(addr.String())
-	for _, profileConfig := range cfg.Profiles {
-		if profileConfig.ProfileID != pid {
-			continue
-		}
-		safeSearch = boolFromMap(profileConfig.Parental, "safe_search") || boolFromMap(profileConfig.Parental, "force_safe_search")
-		break
-	}
-
-	return pid, firstNonEmpty(blockMap[pid], "nxdomain"), deviceMap[host], safeSearch, true
-}
-
-func (s *Server) loadActiveConfig() (*activeConfig, error) {
-	path := filepath.Join(s.cfg.ControlPlane.ProfilesPath, "active.json")
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	var cfg activeConfig
-	if err := json.Unmarshal(data, &cfg); err != nil {
-		return nil, err
-	}
-
-	return &cfg, nil
 }
 
 func remoteHost(addr string) string {
@@ -275,25 +147,4 @@ func remoteHost(addr string) string {
 		return addr
 	}
 	return host
-}
-
-func firstNonEmpty(values ...string) string {
-	for _, value := range values {
-		if value != "" {
-			return value
-		}
-	}
-	return ""
-}
-
-func boolFromMap(values map[string]any, key string) bool {
-	if values == nil {
-		return false
-	}
-	raw, ok := values[key]
-	if !ok {
-		return false
-	}
-	boolean, ok := raw.(bool)
-	return ok && boolean
 }

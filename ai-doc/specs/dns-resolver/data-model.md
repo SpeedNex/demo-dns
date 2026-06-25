@@ -37,10 +37,9 @@
 ```text
 /etc/smart-dns/
 ├── server.yaml         # 控制面凭据 + 节点元数据（resolver install 写入）
-├── profiles/
-│   ├── active.json
-│   ├── active.json.sha256
-│   └── previous.json
+├── data/
+│   └── profiles/
+│       └── {prefix2}/{profileID}.json
 ├── rules/
 │   ├── adblock.bin
 │   ├── security.bin
@@ -275,7 +274,7 @@ START
   → load configs/server.yaml
   → cfg.Validate()：缺 api_key / secret / node_id 任一项 → log.Fatalf 拒绝启动
   → 构造 agent.Credentials{NodeID, APIKey, Secret}（全部来自 yaml）
-  → start DNS server with last known config (active.json)
+  → start DNS server with cached profiles (ProfileCache)
   → heartbeat loop（Bearer + HMAC）
   → config poll loop（Bearer + HMAC）
   → log flush loop（Bearer + HMAC）
@@ -291,19 +290,20 @@ START
 ### 10.1 配置热加载
 
 ```text
-GET config
+GET config (global.json)
   → canonical JSON checksum verify
-  → write profiles/staging-{version}.json
-  → parse and compile RuleEngine
-  → if compile success:
-       rename active.json to previous.json
-       rename staging to active.json
+  → parse global config, extract profile list
+  → for each profile in profile list:
+       → if profile not in local cache (data/profiles/{prefix2}/{profileID}.json):
+            → FetchProfile: first try local cache, then try portal-web, finally return error
+       → parse and compile RuleEngine
+  → if all profiles succeed:
+       write data/profiles/{prefix2}/{profileID}.json for each new profile
        swap pointer atomically
        ACK applied
     else:
-       delete staging
        keep current config
-       ACK failed
+       ACK failed (with details on which profile failed)
 ```
 
 ### 10.2 本地 buffer

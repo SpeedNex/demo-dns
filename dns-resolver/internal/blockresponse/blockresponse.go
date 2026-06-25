@@ -11,7 +11,7 @@ import (
 	"github.com/miekg/dns"
 )
 
-// Mode constants map 1:1 to the block_response string in active.json.
+// Mode constants map 1:1 to the block_response string in profile config.
 const (
 	ModeNXDomain = "nxdomain"
 	ModeRefused  = "refused"
