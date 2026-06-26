@@ -1576,7 +1576,19 @@
       "operationFailed": "작업 실패",
       "userEmail": "사용자 이메일",
       "paymentFlows": "결제 내역",
-      "paymentFlowsDesc": "모든 결제 거래 내역 보기"
+      "paymentFlowsDesc": "모든 결제 거래 내역 보기",
+      "paymentStatusCreated": "생성됨",
+      "paymentStatusProcessing": "처리 중",
+      "paymentStatusSucceeded": "성공",
+      "paymentStatusFailed": "실패",
+      "paymentStatusRefunded": "환불됨",
+      "txId": "거래 ID",
+      "subscriptionNo": "구독 번호",
+      "provider": "채널",
+      "type": "유형",
+      "paymentTypeRefund": "환불",
+      "paymentTypePayment": "결제",
+      "time": "시간"
     },
     "rbac": {
       "title": "역할 및 권한",

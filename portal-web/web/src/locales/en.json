@@ -1612,7 +1612,19 @@
       "operationFailed": "Operation failed",
       "userEmail": "User Email",
       "paymentFlows": "Payment Flows",
-      "paymentFlowsDesc": "View all payment transactions"
+      "paymentFlowsDesc": "View all payment transactions",
+      "paymentStatusCreated": "Created",
+      "paymentStatusProcessing": "Processing",
+      "paymentStatusSucceeded": "Succeeded",
+      "paymentStatusFailed": "Failed",
+      "paymentStatusRefunded": "Refunded",
+      "txId": "Tx ID",
+      "subscriptionNo": "Subscription No",
+      "provider": "Provider",
+      "type": "Type",
+      "paymentTypeRefund": "Refund",
+      "paymentTypePayment": "Payment",
+      "time": "Time"
     },
     "rbac": {
       "title": "Roles & Permissions",

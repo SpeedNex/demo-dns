@@ -1612,7 +1612,19 @@
       "operationFailed": "操作失败",
       "userEmail": "用户邮箱",
       "paymentFlows": "支付流水",
-      "paymentFlowsDesc": "查看所有支付交易流水"
+      "paymentFlowsDesc": "查看所有支付交易流水",
+      "paymentStatusCreated": "已创建",
+      "paymentStatusProcessing": "处理中",
+      "paymentStatusSucceeded": "已成功",
+      "paymentStatusFailed": "已失败",
+      "paymentStatusRefunded": "已退款",
+      "txId": "交易ID",
+      "subscriptionNo": "订阅编号",
+      "provider": "渠道",
+      "type": "类型",
+      "paymentTypeRefund": "退款",
+      "paymentTypePayment": "支付",
+      "time": "时间"
     },
     "rbac": {
       "title": "角色权限",

@@ -83,7 +83,7 @@
       </el-table-column>
       <el-table-column prop="status" :label="$t('admin.finance.status')" width="110">
         <template #default="{ row }">
-          <el-tag :type="getStatusType(row.status)" size="small" effect="light">{{ row.status }}</el-tag>
+          <el-tag :type="getStatusType(row.status)" size="small" effect="light">{{ statusLabel(row.status) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column :label="$t('admin.finance.time')" width="180">
@@ -121,6 +121,12 @@ const formatMoney = (minor, currency = 'USD') => {
 const getStatusType = (status) => {
   const map = { created: 'info', processing: 'warning', succeeded: 'success', failed: 'danger', refunded: 'warning' }
   return map[status] || 'info'
+}
+
+const statusLabel = (status) => {
+  if (!status) return '-'
+  const key = `admin.finance.paymentStatus${status.charAt(0).toUpperCase() + status.slice(1)}`
+  return t(key)
 }
 
 const fetchData = async () => {
