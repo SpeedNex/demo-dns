@@ -384,7 +384,6 @@ onMounted(async () => {
     align-items: center !important;
     justify-content: center !important;
     width: 100%;
-    max-width: 1400px;
     margin: 0 auto;
     min-height: 76px;
     padding: 0 20px !important;
@@ -552,7 +551,7 @@ onMounted(async () => {
 }
 
 .main-content {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 24px;
 }
