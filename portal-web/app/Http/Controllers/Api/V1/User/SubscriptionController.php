@@ -47,6 +47,7 @@ final class SubscriptionController
                     'code' => $plan->code,
                     'name' => $plan->name,
                     'description' => $plan->description,
+                    'sort_order' => (int) ($plan->sort_order ?? 0),
                     'prices' => $prices,
                     'features' => $features,
                 ];

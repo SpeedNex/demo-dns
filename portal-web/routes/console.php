@@ -7,6 +7,12 @@ Artisan::command('portal:about', function (): void {
     $this->comment('portal-web command scaffold ready');
 });
 
+Schedule::command(\App\Console\Commands\PublishCleanupCommand::class, ['--minutes=30', '--keep=5'])
+    ->everySixHours()
+    ->onOneServer()
+    ->withoutOverlapping()
+    ->runInBackground();
+
 /*
 |--------------------------------------------------------------------------
 | Scheduled Tasks — UI.md 闭环调度
@@ -41,3 +47,5 @@ Schedule::command('quota:check')
     ->onOneServer()
     ->withoutOverlapping()
     ->runInBackground();
+
+

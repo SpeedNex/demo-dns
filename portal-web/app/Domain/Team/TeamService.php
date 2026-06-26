@@ -177,7 +177,7 @@ final class TeamService
     public function switchTeam(string $teamId, string $userId): void
     {
         $this->assertMember($teamId, $userId);
-        User::where('id', $userId)->update(['current_team_id' => $teamId]);
+        User::whereKey($userId)->update(['current_team_id' => $teamId]);
     }
 
     /**

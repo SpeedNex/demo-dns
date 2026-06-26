@@ -68,10 +68,18 @@
                             v-for="p in plans"
                             :key="p.code"
                             class="plan-col"
-                            :class="{ selected: selectedPlan === p.code }"
-                            @click="selectedPlan = p.code"
+                            :class="{
+                                selected: selectedPlan === p.code && !disabledPlans.includes(p.code),
+                                disabled: disabledPlans.includes(p.code),
+                            }"
+                            @click="handlePlanClick(p.code)"
                         >
-                            <div class="plan-col-name">{{ p.name }}</div>
+                            <div class="plan-col-name">
+                                {{ p.name }}
+                                <el-tag v-if="currentPlanCode === p.code" type="info" size="small" class="current-badge">
+                                    {{ $t('subscription.current') }}
+                                </el-tag>
+                            </div>
                             <div class="plan-col-price">
                                 <span class="price-main">{{ formatMoney(getPrice(p, selectedCycle).amount_minor, getPrice(p, selectedCycle).currency) }}</span>
                                 <span class="price-unit">/{{ selectedCycle === 'yearly' ? $t('subscription.year') : $t('subscription.month') }}</span>
@@ -87,11 +95,13 @@
                     </div>
                     <div class="dialog-footer">
                         <el-button @click="showSubscriptionDialog = false">{{ $t('common.cancel') }}</el-button>
-                        <el-button v-if="!canUpgrade" type="info" disabled>
-                            {{ $t('subscription.noUpgrade') }}
-                        </el-button>
-                        <el-button v-else type="primary" :loading="creating || paying" @click="handleSubscribe">
-                            {{ $t('subscription.continueSubscription') }}
+                        <el-button
+                            :type="subscriptionState.disabled ? 'info' : 'primary'"
+                            :disabled="subscriptionState.disabled"
+                            :loading="creating || paying"
+                            @click="handleSubscribe"
+                        >
+                            {{ subscriptionState.text }}
                         </el-button>
                     </div>
                 </div>
@@ -170,7 +180,6 @@ const usageData = ref({
     plan_code: 'free',
 })
 const currentSubscription = ref(null)
-const currentPlanCode = ref('free')
 
 const showPasswordDialog = ref(false)
 const updatingPassword = ref(false)
@@ -202,13 +211,46 @@ const getPlanSortOrder = (planCode) => {
     return plan?.sort_order ?? 0
 }
 
-const canUpgrade = computed(() => {
-    if (!selectedPlan.value) return false
-    const currentPlan = currentSubscription.value?.plan_code || usageData.value.plan_code || 'free'
-    const currentSort = getPlanSortOrder(currentPlan)
+// 被禁用的套餐列表（当前套餐及更低等级）
+const currentPlanCode = computed(() => usageData.value.plan_code || 'free')
+
+const hasActivePaidSub = computed(() =>
+    currentSubscription.value && ['active', 'trialing'].includes(currentSubscription.value.status)
+        && currentPlanCode.value !== 'free'
+)
+
+const disabledPlans = computed(() => {
+    const currentSort = getPlanSortOrder(currentPlanCode.value)
+    return plans.value
+        .filter(p => getPlanSortOrder(p.code) <= currentSort)
+        .map(p => p.code)
+})
+
+const handlePlanClick = (code) => {
+    if (disabledPlans.value.includes(code)) return
+    selectedPlan.value = code
+}
+
+// 订阅对话框按钮状态：subscribe=立即订阅, upgrade=升级, current=当前套餐, noUpgrade=无需升级
+const subscriptionState = computed(() => {
+    if (!selectedPlan.value) return { text: t('subscription.selectPlan'), disabled: true }
+
     const selectedSort = getPlanSortOrder(selectedPlan.value)
-    // 只有选择更高等级套餐时才允许升级
-    return selectedSort > currentSort
+    const currentSort = getPlanSortOrder(currentPlanCode.value)
+
+    // 没有活跃付费订阅（免费用户）→ 选择任何可用套餐都允许订阅
+    if (!hasActivePaidSub.value) {
+        return { text: t('subscription.subscribeBtn'), disabled: false }
+    }
+
+    // 已有活跃付费订阅 → 按等级比较
+    if (selectedSort > currentSort) {
+        return { text: t('subscription.continueSubscription'), disabled: false }
+    } else if (selectedSort === currentSort) {
+        return { text: t('subscription.current'), disabled: true }
+    } else {
+        return { text: t('subscription.noUpgrade'), disabled: true }
+    }
 })
 
 const handleSubscribe = async () => {
@@ -462,6 +504,23 @@ onMounted(loadAccountData)
 .plan-col:hover::before { opacity: 1; }
 .plan-col.selected { border-color: #2563eb; background: linear-gradient(180deg, #eff6ff 0%, #fff 100%); box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12); }
 .plan-col.selected::before { opacity: 1; }
+.plan-col.disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    pointer-events: none;
+}
+.plan-col.disabled .plan-col-name,
+.plan-col.disabled .plan-col-desc,
+.plan-col.disabled .plan-features,
+.plan-col.disabled .price-equiv {
+    color: #94a3b8;
+}
+.plan-col.disabled .price-main {
+    color: #94a3b8;
+}
+.current-badge { margin-left: 6px; vertical-align: middle; }
 .plan-col-name { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 6px; text-align: center; }
 .plan-col-price { display: flex; align-items: baseline; justify-content: center; gap: 2px; margin-bottom: 10px; }
 .price-main { font-size: 28px; font-weight: 800; color: #0f172a; }

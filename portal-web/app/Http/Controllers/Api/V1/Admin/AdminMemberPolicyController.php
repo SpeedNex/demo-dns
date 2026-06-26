@@ -34,14 +34,14 @@ final class AdminMemberPolicyController extends Controller
             });
         }
 
-        $users = $query->get(['id', 'uid_code', 'email', 'username', 'created_at']);
+        $users = $query->get(['uid', 'uid_code', 'email', 'username', 'created_at']);
 
         $rows = $users->map(function (User $u): array {
-            $profile = Profile::query()->where('user_id', $u->id)->orderByDesc('id')->first();
+            $profile = Profile::query()->where('user_id', $u->uid)->orderByDesc('id')->first();
             $settings = $profile?->member_center_settings ?? [];
 
             return [
-                'user_id' => $u->id,
+                'user_id' => $u->uid,
                 'user_uid' => $u->uid_code,
                 'email' => $u->email,
                 'profile_count' => $u->profiles_count ?? 0,
