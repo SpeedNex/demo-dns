@@ -44,7 +44,7 @@
                 </div>
             </div>
 
-            <!-- Right: Bound IP (IPv4 only, IPv6 hidden per 2026-06-22 request) -->
+            <!-- Right: 已绑定的 IP (IPv4 only, IPv6 hidden per 2026-06-22 request) -->
             <div class="card">
                 <div class="card-header">
                     <h2>{{ $t('dashboard.boundIpTitle') }}</h2>
@@ -65,6 +65,17 @@
                             <div class="code">—</div>
                         </div>
                     </div>
+
+                    <!-- 已绑定的设备 IP -->
+                    <div class="endpoint-block" v-if="recentDevices.length">
+                        <div class="endpoint-label">{{ $t('dashboard.boundDeviceIps') }}</div>
+                        <div class="bound-ip-list">
+                            <div v-for="(d, i) in recentDevices" :key="i" class="bound-ip-row">
+                                <span class="bound-ip-device">{{ d.name }}</span>
+                                <span class="bound-ip-addr">{{ d.source_ip || '—' }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -83,26 +94,6 @@
                         <div class="chart-box">
                             <div v-for="(bar, i) in chartBars" :key="i" class="bar" :style="{ height: bar.height + '%' }">
                                 <span>{{ bar.label }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Devices -->
-                <div class="card section-gap">
-                    <div class="card-header">
-                        <h2>{{ $t('dashboard.recentDevices') }}</h2>
-                        <button class="btn" @click="$router.push('/user/devices')">{{ $t('dashboard.manageDevices') }}</button>
-                    </div>
-                    <div class="card-body">
-                        <div class="device-grid">
-                            <div v-for="(d, i) in recentDevices" :key="i" class="device">
-                                <strong>{{ d.name }}</strong>
-                                <span>{{ d.info }}</span>
-                            </div>
-                            <div v-if="!recentDevices.length" class="device">
-                                <strong>—</strong>
-                                <span>{{ $t('dashboard.noDevices') }}</span>
                             </div>
                         </div>
                     </div>
@@ -294,8 +285,8 @@ const fetchData = async () => {
     try {
         const { data } = await client.get('/user/top-domains', { params })
         const td = data.data || {}
-        topVisited.value = td.visited || []
-        topBlocked.value = td.blocked || []
+        topVisited.value = td.top_visited || []
+        topBlocked.value = td.top_blocked || []
     } catch {
         // Top domains optional
     }
@@ -584,6 +575,33 @@ watch(currentProfileId, fetchData)
     border-radius: 4px;
 }
 .mt-6 { margin-top: 6px; }
+
+/* ========== Bound IP Device List ========== */
+.bound-ip-list {
+    display: grid;
+    gap: 0;
+}
+.bound-ip-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #edf2f7;
+    font-size: 13px;
+}
+.bound-ip-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.bound-ip-device {
+    color: var(--color-text, #0f172a);
+    font-weight: 600;
+}
+.bound-ip-addr {
+    color: var(--color-text-muted, #64748b);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+}
 
 /* 保留 access-item 兼容老样式 */
 .access-item {

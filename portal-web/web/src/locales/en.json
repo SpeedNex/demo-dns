@@ -167,6 +167,7 @@
     "endpointsTag": "NextDNS Style",
     "boundIpTitle": "Bound IPs",
     "boundIpTag": "Resolved Addresses",
+    "boundDeviceIps": "Bound Device IPs",
     "endpointId": "ID",
     "endpointDot": "DNS-over-TLS",
     "endpointDoh": "DNS-over-HTTPS",
