@@ -15,10 +15,8 @@ final class AdminUserController
 {
     public function index(Request $request): JsonResponse
     {
-        $prefix = DB::getTablePrefix();
         $query = User::query()
             ->from('users as u')
-            ->leftJoin('wallets as w', 'w.user_id', '=', 'u.uid')
             ->select([
                 'u.uid',
                 'u.username',
@@ -30,8 +28,6 @@ final class AdminUserController
                 'u.email_verified_at',
                 'u.created_at',
                 'u.updated_at',
-                DB::raw("COALESCE({$prefix}w.balance_minor, 0) as balance_minor"),
-                DB::raw("COALESCE({$prefix}w.currency, 'USD') as currency"),
             ]);
 
         if ($email = $request->input('email')) {
@@ -59,8 +55,6 @@ final class AdminUserController
             'role' => 'member',
             'current_team_id' => $row->current_team_id,
             'locale' => $row->locale,
-            'balance_minor' => (int) $row->balance_minor,
-            'currency' => (string) $row->currency,
             'email_verified_at' => $row->email_verified_at,
             'last_login_at' => null,
             'created_at' => $row->created_at,

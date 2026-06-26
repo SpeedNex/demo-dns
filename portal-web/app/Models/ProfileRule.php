@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ProfileRule extends Model
+class ProfileRule extends BaseModel
 {
+    protected $table = 'profile_rules';
 
     public $incrementing = true;
     protected $keyType = 'int';

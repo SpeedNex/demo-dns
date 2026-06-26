@@ -86,7 +86,8 @@ class User extends Authenticatable
 
     public function wallet(): HasOne
     {
-        return $this->hasOne(Wallet::class, 'user_id');
+        // 钱包表已删除（SaaS 订阅模式），保留方法签名返回 null 避免调用方报错
+        return $this->hasOne(Subscription::class, 'user_id')->whereRaw('1=0');
     }
 
     public function teams(): BelongsToMany
@@ -107,11 +108,6 @@ class User extends Authenticatable
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class, 'user_id');
-    }
-
-    public function orders(): HasMany
-    {
-        return $this->hasMany(Order::class, 'user_id');
     }
 
     public function billings(): HasMany

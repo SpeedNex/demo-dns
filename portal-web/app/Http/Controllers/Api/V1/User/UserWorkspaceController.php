@@ -376,46 +376,11 @@ final class UserWorkspaceController
                 'queries_used' => $queriesUsed,
                 'queries_total' => $monthlyLimit,
                 'is_unlimited' => $monthlyLimit === null,
-                'upgrade_price' => 'US$3.99',
+                'upgrade_price' => 'USD3.99',
                 'quota_status' => (string) ($subscription->quota_status ?? 'normal'),
                 'plan_code' => $planCode,
             ]
         ]);
-    }
-
-    public function wallet(Request $request): JsonResponse
-    {
-        $user = $request->user();
-        $wallet = DB::table('wallets')->where('user_id', $user->uid)->first();
-
-        if (!$wallet) {
-            DB::table('wallets')->insert([
-                'user_id' => $user->uid,
-                'balance_minor' => 0,
-                'currency' => 'USD',
-                'frozen_minor' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            $wallet = DB::table('wallets')->where('user_id', $user->uid)->first();
-        }
-
-        $balance = ((int) ($wallet->balance_minor ?? 0)) / 100;
-
-        return response()->json([
-            'data' => [
-                'balance' => number_format($balance, 2, '.', ''),
-                'balance_minor' => (int) ($wallet->balance_minor ?? 0),
-                'currency' => $wallet->currency ?? 'USD',
-            ]
-        ]);
-    }
-
-    public function rechargeWallet(Request $request): JsonResponse
-    {
-        return response()->json([
-            'message' => 'Member wallet recharge is disabled. Please contact an administrator.',
-        ], 410);
     }
 
     public function subscription(Request $request): JsonResponse

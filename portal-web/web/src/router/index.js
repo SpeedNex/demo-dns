@@ -14,7 +14,7 @@ import Analytics from '@/views/Analytics.vue'
 import Logs from '@/views/Logs.vue'
 import Devices from '@/views/Devices.vue'
 import APIKeys from '@/views/APIKeys.vue'
-import Membership from '@/views/Membership.vue'
+import Membership from '@/views/SubscriptionCheckout.vue'
 import Account from '@/views/user/Account.vue'
 import TeamList from '@/views/TeamList.vue'
 import TeamCreate from '@/views/TeamCreate.vue'
@@ -34,14 +34,12 @@ import AdminQueryLogs from '@/views/admin/QueryLogs.vue'
 import AdminAlerts from '@/views/admin/Alerts.vue'
 import AdminUsers from '@/views/admin/Users.vue'
 import AdminDevices from '@/views/admin/Devices.vue'
-import AdminBilling from '@/views/admin/Billing.vue'
 import AdminPlans from '@/views/admin/Plans.vue'
 import AdminMemberCatalogs from '@/views/admin/MemberCatalogs.vue'
 import AdminLogin from '@/views/admin/AdminLogin.vue'
-import AdminBalance from '@/views/admin/Balance.vue'
-import AdminRecharge from '@/views/admin/Recharge.vue'
 import AdminBill from '@/views/admin/Bill.vue'
-import AdminRefundRecords from '@/views/admin/RefundRecords.vue'
+import AdminSubscriptions from '@/views/admin/Subscriptions.vue'
+import AdminPaymentFlows from '@/views/admin/PaymentFlows.vue'
 import AdminRegionManage from '@/views/admin/RegionManage.vue'
 import AdminRoleManagement from '@/views/admin/RoleManagement.vue'
 import AdminMenuConfig from '@/views/admin/MenuConfig.vue'
@@ -70,13 +68,13 @@ const routes = [
     },
     { path: '/user/profiles', name: 'Profiles', component: ProfileList, meta: { auth: true } },
     { path: '/user/profiles/:id', name: 'ProfileDetail', component: ProfileDetail, meta: { auth: true }, props: true },
-    { path: '/user/order', name: 'Order', component: Membership, meta: { auth: true } },
     { path: '/user/account', name: 'Account', component: Account, meta: { auth: true } },
     { path: '/user/teams', name: 'TeamList', component: TeamList, meta: { auth: true } },
     { path: '/user/teams/create', name: 'TeamCreate', component: TeamCreate, meta: { auth: true } },
     { path: '/user/teams/:id', name: 'TeamDetail', component: TeamDetail, meta: { auth: true }, props: true },
     { path: '/user/invitations', name: 'TeamInvitations', component: TeamInvitations, meta: { auth: true } },
     { path: '/user/plans', name: 'Plans', component: Plans, meta: { auth: true } },
+    { path: '/user/subscription', name: 'Subscription', component: Membership, meta: { auth: true } },
 
     { path: '/user/:profile_id', name: 'MemberDashboard', component: Dashboard, meta: { auth: true } },
     { path: '/user/:profile_id/security', name: 'Security', component: Security, meta: { auth: true } },
@@ -106,12 +104,10 @@ const routes = [
             { path: 'users', name: 'AdminUsers', component: AdminUsers },
             { path: 'devices', name: 'AdminDevices', component: AdminDevices },
             { path: 'member-catalogs', name: 'AdminMemberCatalogs', component: AdminMemberCatalogs },
-            { path: 'billing', name: 'AdminBilling', component: AdminBilling },
             { path: 'plans', name: 'AdminPlans', component: AdminPlans },
-            { path: 'balance', name: 'AdminBalance', component: AdminBalance },
-            { path: 'recharge', name: 'AdminRecharge', component: AdminRecharge },
             { path: 'bill', name: 'AdminBill', component: AdminBill },
-            { path: 'refund-records', name: 'AdminRefundRecords', component: AdminRefundRecords },
+            { path: 'subscriptions', name: 'AdminSubscriptions', component: AdminSubscriptions },
+            { path: 'payment-flows', name: 'AdminPaymentFlows', component: AdminPaymentFlows },
             { path: 'system-config', name: 'AdminSystemConfig', component: AdminSystemConfig },
             { path: 'audit-logs', redirect: { name: 'AdminAuditLogs' } },
             { path: 'admin-audit-logs', name: 'AdminAuditLogs', component: AdminAuditLogs },
@@ -164,7 +160,7 @@ router.beforeEach((to, from, next) => {
             return next('/login')
         }
         // 如果路由有 :profile_id 参数但没传，跳转到默认 profile
-        if (to.params.profile_id === undefined && to.path.startsWith('/user/') && !to.path.startsWith('/user/profiles') && !to.path.startsWith('/user/teams') && !to.path.startsWith('/user/invitations') && to.path !== '/user/order' && to.path !== '/user/account' && to.path !== '/user/plans') {
+        if (to.params.profile_id === undefined && to.path.startsWith('/user/') && !to.path.startsWith('/user/profiles') && !to.path.startsWith('/user/teams') && !to.path.startsWith('/user/invitations') && to.path !== '/user/subscription' && to.path !== '/user/account' && to.path !== '/user/plans') {
             const savedId = localStorage.getItem('current_profile_id')
             if (savedId) {
                 return next({ path: `/user/${savedId}${to.path.replace(/^\/user/, '') || ''}` })

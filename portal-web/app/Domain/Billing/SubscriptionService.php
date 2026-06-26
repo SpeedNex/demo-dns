@@ -6,42 +6,158 @@ namespace App\Domain\Billing;
 
 use App\Application\Member\ProfilePublishApplicationService;
 use App\Models\Profile;
+use App\Models\Subscription;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
- * UI.md #50 — Single Source of Truth for plan / subscription state.
+ * SaaS 订阅服务 — 管理订阅生命周期。
  *
- * All callers that previously did `$user->plan_code` for *permission*
- * decisions MUST go through `SubscriptionService::getActive($userId)`
- * instead.  The legacy `users.plan_code` column is kept only as a
- * write-through cache; reading from it for business decisions is
- * forbidden.
+ * 流程: create(pending) → checkout → activate(active) → cancel/expire
  */
 final class SubscriptionService
 {
+    public const STATUS_PENDING   = 'pending';
     public const STATUS_ACTIVE    = 'active';
     public const STATUS_TRIALING  = 'trialing';
     public const STATUS_PAST_DUE  = 'past_due';
-    public const STATUS_SUSPENDED = 'suspended';   // 欠费超过 grace
-    public const STATUS_EXPIRED   = 'expired';     // 周期到期未续
+    public const STATUS_SUSPENDED = 'suspended';
+    public const STATUS_EXPIRED   = 'expired';
     public const STATUS_CANCELLED = 'cancelled';
 
     /**
-     * Return the active subscription for a user, materialising a free
-     * row on first access.  Returns null only if the user does not exist.
-     *
-     * @return array{
-     *   plan_code: string,
-     *   status: string,
-     *   monthly_query_limit: int|null,
-     *   current_period_end: string|null,
-     *   grace_until: string|null
-     * }|null
+     * 创建订阅（pending 状态）。
      */
-    public function getActive(string $userId): ?array
+    public function create(int $userId, string $planCode, string $billingCycle = 'monthly'): Subscription
     {
-        if ($userId === '') {
+        $plan = DB::table('plans')->where('code', $planCode)->first();
+        if ($plan === null) {
+            throw new \RuntimeException("Plan not found: {$planCode}");
+        }
+
+        $price = DB::table('plan_prices')
+            ->where('plan_id', $plan->id)
+            ->where('billing_cycle', $billingCycle)
+            ->first();
+
+        $amountMinor = $price ? (int) $price->amount_minor : 0;
+        $subscriptionNo = 'SUB-' . now()->format('YmdHis') . '-' . strtoupper(Str::random(6));
+
+        $subscription = Subscription::create([
+            'subscription_no' => $subscriptionNo,
+            'user_id' => $userId,
+            'plan_id' => $plan->id,
+            'plan_code' => $planCode,
+            'billing_cycle' => $billingCycle,
+            'amount_minor' => $amountMinor,
+            'currency' => $price->currency ?? 'USD',
+            'status' => self::STATUS_PENDING,
+            'quota_status' => 'normal',
+            'auto_renew' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return $subscription;
+    }
+
+    /**
+     * 激活订阅（支付成功后调用）。
+     * 1. 更新 subscription.status=active + current_period
+     * 2. 生成 Invoice（dns_billings）
+     * 3. 更新 Profile.plan_id + 触发 republish
+     */
+    public function activate(string $subscriptionId, string $paymentRef): void
+    {
+        $sub = Subscription::findOrFail($subscriptionId);
+        if ($sub->status === self::STATUS_ACTIVE) {
+            return; // 幂等
+        }
+
+        $now = Carbon::now();
+        $periodStart = $now;
+        $periodEnd = $sub->billing_cycle === 'yearly'
+            ? $now->copy()->addYear()
+            : $now->copy()->addMonth();
+
+        $sub->update([
+            'status' => self::STATUS_ACTIVE,
+            'started_at' => $periodStart,
+            'current_period_start' => $periodStart,
+            'current_period_end' => $periodEnd,
+            'updated_at' => $now,
+        ]);
+
+        // 生成 Invoice
+        $this->generateInvoice($sub, $paymentRef);
+
+        // 更新 Profile.plan_id + 触发 republish
+        $this->setPlan($sub->user_id, $sub->plan_code);
+    }
+
+    /**
+     * 取消订阅（cancel_at_period_end=true）。
+     * 当前周期继续使用，到期后自动降级。
+     */
+    public function cancel(string $subscriptionId): void
+    {
+        $sub = Subscription::findOrFail($subscriptionId);
+        $sub->update([
+            'cancel_at_period_end' => true,
+            'updated_at' => now(),
+        ]);
+    }
+
+    /**
+     * 到期后降级为 Free。
+     */
+    public function markExpired(int $userId): void
+    {
+        $now = now();
+        DB::table('subscriptions')->where('user_id', $userId)->update([
+            'status' => self::STATUS_EXPIRED,
+            'expired_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        // 降级为 Free
+        $this->setPlan($userId, 'free');
+    }
+
+    /**
+     * 进入 past_due：默认 7 天宽限期。
+     */
+    public function markPastDue(int $userId, int $graceDays = 7): void
+    {
+        $now = now();
+        DB::table('subscriptions')->where('user_id', $userId)->update([
+            'status' => self::STATUS_PAST_DUE,
+            'grace_until' => $now->copy()->addDays($graceDays),
+            'updated_at' => $now,
+        ]);
+    }
+
+    /**
+     * 进入 suspended：超过 grace 期，强制停服。
+     */
+    public function markSuspended(int $userId): void
+    {
+        $now = now();
+        DB::table('subscriptions')->where('user_id', $userId)->update([
+            'status' => self::STATUS_SUSPENDED,
+            'suspended_at' => $now,
+            'updated_at' => $now,
+        ]);
+    }
+
+    /**
+     * 获取当前活跃订阅。
+     */
+    public function getActive(int $userId): ?array
+    {
+        if ($userId <= 0) {
             return null;
         }
         $row = DB::table('subscriptions')->where('user_id', $userId)->first();
@@ -70,15 +186,7 @@ final class SubscriptionService
         ];
     }
 
-    /**
-     * Returns true when the user has a usable subscription.  This is the
-     * canonical entry point for permission checks.
-     *
-     *  - active / trialing：直接可用
-     *  - past_due：在 grace 期内仍可用
-     *  - suspended / expired / cancelled：不可用
-     */
-    public function isActive(string $userId): bool
+    public function isActive(int $userId): bool
     {
         $sub = $this->getActive($userId);
         if ($sub === null) {
@@ -97,28 +205,12 @@ final class SubscriptionService
     }
 
     /**
-     * Set / change the user's plan.  Keep users.plan_code in sync so
-     * legacy read paths still work, but the source of truth is the
-     * subscriptions row.
-     *
-     * 幂等：传入同一个 $orderId 重复调用 setPlan 不会创建新订阅。
+     * 设置/更新用户 plan，同步 Profile + 触发 republish。
      */
-    public function setPlan(string $userId, string $planCode, ?int $monthlyLimit = null, ?string $orderId = null): void
+    public function setPlan(int $userId, string $planCode, ?int $monthlyLimit = null): void
     {
         $now = now();
-
-        // 幂等回查：orderId 命中则直接返回（重复 webhook）
-        if ($orderId !== null && $orderId !== '') {
-            $existingByOrder = DB::table('subscriptions')->where('order_id', $orderId)->first();
-            if ($existingByOrder !== null) {
-                return;
-            }
-        }
-
-        $oldCode = DB::table('subscriptions')->where('user_id', $userId)->value('plan_code');
         $planId = $this->resolvePlanId($planCode);
-
-        // 2026-06-24 fix: 升级套餐时重置 quota_status，确保超额 Free 用户升级后立即可用
         $currentQuotaStatus = DB::table('subscriptions')->where('user_id', $userId)->value('quota_status');
 
         DB::table('subscriptions')->updateOrInsert(
@@ -126,11 +218,9 @@ final class SubscriptionService
             [
                 'plan_id' => $planId,
                 'plan_code' => $planCode,
-                'plan_code_old' => $oldCode,
-                'order_id' => $orderId,
                 'status' => self::STATUS_ACTIVE,
                 'monthly_query_limit' => $monthlyLimit,
-                'quota_status' => 'normal',   // 重置超额状态，使 resolver 不再返回 REFUSED/403
+                'quota_status' => 'normal',
                 'started_at' => $now,
                 'grace_until' => null,
                 'updated_at' => $now,
@@ -138,11 +228,11 @@ final class SubscriptionService
             ]
         );
 
-        // Write-through cache (column retained for compatibility).
+        // Write-through cache
         User::whereKey($userId)->update(['plan_code' => $planCode]);
 
-        // 2026-06-24 fix: 升级后触发 re-publish，确保 resolver 立即获取最新 quota_status
-        if ($currentQuotaStatus === 'exceeded') {
+        // 升级后触发 re-publish
+        if ($currentQuotaStatus === 'exceeded' || $planCode !== 'free') {
             $profiles = Profile::where('user_id', $userId)->get(['profile_id']);
             if ($profiles->isNotEmpty()) {
                 $publishService = app(ProfilePublishApplicationService::class);
@@ -162,40 +252,33 @@ final class SubscriptionService
     }
 
     /**
-     * 进入 past_due：默认 7 天宽限期。期间可降级能力但服务可用。
+     * 生成 Invoice（账单）。
      */
-    public function markPastDue(string $userId, int $graceDays = 7): void
+    private function generateInvoice(Subscription $sub, string $paymentRef): void
     {
         $now = now();
-        DB::table('subscriptions')->where('user_id', $userId)->update([
-            'status' => self::STATUS_PAST_DUE,
-            'grace_until' => $now->copy()->addDays($graceDays),
-            'updated_at' => $now,
-        ]);
-    }
+        $billingNo = 'INV-' . $now->format('YmdHis') . '-' . strtoupper(Str::random(6));
 
-    /**
-     * 进入 suspended：超过 grace 期，强制停服。
-     */
-    public function markSuspended(string $userId): void
-    {
-        $now = now();
-        DB::table('subscriptions')->where('user_id', $userId)->update([
-            'status' => self::STATUS_SUSPENDED,
-            'suspended_at' => $now,
-            'updated_at' => $now,
-        ]);
-    }
-
-    /**
-     * 进入 expired：周期到期且未续费。
-     */
-    public function markExpired(string $userId): void
-    {
-        $now = now();
-        DB::table('subscriptions')->where('user_id', $userId)->update([
-            'status' => self::STATUS_EXPIRED,
-            'expired_at' => $now,
+        DB::table('billings')->insert([
+            'billing_no' => $billingNo,
+            'user_id' => $sub->user_id,
+            'currency' => $sub->currency,
+            'subtotal_minor' => $sub->amount_minor,
+            'discount_minor' => 0,
+            'tax_minor' => 0,
+            'total_minor' => $sub->amount_minor,
+            'status' => 'paid',
+            'issued_at' => $now,
+            'paid_at' => $now,
+            'meta' => json_encode([
+                'kind' => 'subscription',
+                'subscription_id' => $sub->id,
+                'subscription_no' => $sub->subscription_no,
+                'plan_code' => $sub->plan_code,
+                'billing_cycle' => $sub->billing_cycle,
+                'payment_ref' => $paymentRef,
+            ], JSON_UNESCAPED_UNICODE),
+            'created_at' => $now,
             'updated_at' => $now,
         ]);
     }

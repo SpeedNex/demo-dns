@@ -36,10 +36,6 @@
                 <div class="summary-value">{{ featuredCount }}</div>
                 <div class="summary-label">{{ $t('admin.userPolicyServices.featured') }}</div>
             </div>
-            <div class="summary-card warn">
-                <div class="summary-value">{{ meta.user_total ?? 0 }}</div>
-                <div class="summary-label">{{ $t('admin.userPolicyServices.userTotal') }}</div>
-            </div>
         </div>
 
         <el-table v-loading="loading" :data="plans" stripe style="margin-top:12px" row-key="id">
@@ -50,55 +46,7 @@
                     <p class="empty-desc">{{ $t('admin.userPolicyServices.emptyDesc') }}</p>
                 </div>
             </template>
-            <el-table-column type="expand">
-                <template #default="{ row }">
-                    <div class="plan-detail">
-                        <div class="plan-detail__section">
-                            <div class="plan-detail__title">{{ $t('admin.userPolicyServices.prices') }}</div>
-                            <div v-if="(row.prices || []).length" class="price-list">
-                                <span v-for="price in row.prices" :key="price.id" class="price-pill">
-                                    {{ price.billing_cycle }} · {{ formatPrice(price.amount_minor, price.currency) }}
-                                </span>
-                            </div>
-                            <span v-else class="cell-sub">-</span>
-                        </div>
-                        <div class="plan-detail__section">
-                            <div class="plan-detail__title">{{ $t('admin.userPolicyServices.features') }}</div>
-                            <div v-if="(row.features || []).length" class="feature-list">
-                                <el-tag v-for="(f, idx) in row.features" :key="idx" size="small" effect="plain" class="feature-pill">
-                                    {{ f }}
-                                </el-tag>
-                            </div>
-                            <span v-else class="cell-sub">-</span>
-                        </div>
-                        <div class="plan-detail__section plan-detail__section--full">
-                            <div class="plan-detail__title">
-                                {{ $t('admin.userPolicyServices.users') }}
-                                <span class="cell-sub">({{ row.user_count }})</span>
-                            </div>
-                            <el-table v-if="(row.users || []).length" :data="row.users" size="small" stripe>
-                                <el-table-column :label="$t('admin.userPolicyServices.userId')" prop="uid" width="120" />
-                                <el-table-column :label="$t('admin.userPolicyServices.username')" prop="username" min-width="160" show-overflow-tooltip />
-                                <el-table-column :label="$t('admin.userPolicyServices.email')" prop="email" min-width="200" show-overflow-tooltip />
-                                <el-table-column :label="$t('admin.userPolicyServices.userStatus')" width="120">
-                                    <template #default="{ row: u }">
-                                        <el-tag size="small" :type="u.status === 'active' ? 'success' : 'info'" effect="light">
-                                            {{ u.status || '-' }}
-                                        </el-tag>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column :label="$t('admin.userPolicyServices.subscribedAt')" min-width="200">
-                                    <template #default="{ row: u }">
-                                        {{ u.subscribed_at ? new Date(u.subscribed_at).toLocaleString() : '-' }}
-                                    </template>
-                                </el-table-column>
-                            </el-table>
-                            <div v-else class="cell-sub">{{ $t('admin.userPolicyServices.noUsers') }}</div>
-                        </div>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column :label="$t('admin.userPolicyServices.planId')" prop="id" width="90" />
+            <el-table-column :label="$t('admin.userPolicyServices.planId')" prop="id" width="80" />
             <el-table-column :label="$t('admin.userPolicyServices.planCode')" prop="code" width="140">
                 <template #default="{ row }">
                     <el-tag size="small" effect="plain">{{ row.code }}</el-tag>
@@ -123,7 +71,7 @@
                     <span v-else>-</span>
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.userPolicyServices.price')" min-width="200">
+            <el-table-column :label="$t('admin.userPolicyServices.price')" min-width="220">
                 <template #default="{ row }">
                     <div class="price-list">
                         <span v-for="price in row.prices" :key="price.id" class="price-pill">
@@ -133,11 +81,41 @@
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.userPolicyServices.userCount')" width="110" align="right">
+            <el-table-column :label="$t('admin.userPolicyServices.features')" min-width="200">
                 <template #default="{ row }">
-                    <el-tag size="small" :type="row.user_count > 0 ? 'success' : 'info'" effect="light">
+                    <div class="feature-list">
+                        <el-tag v-for="(f, idx) in (row.features || []).slice(0, 3)" :key="idx" size="small" effect="plain" class="feature-pill">
+                            {{ f }}
+                        </el-tag>
+                        <el-tag v-if="(row.features || []).length > 3" size="small" effect="plain" class="feature-pill">
+                            +{{ row.features.length - 3 }}
+                        </el-tag>
+                        <span v-if="!(row.features || []).length" class="cell-sub">-</span>
+                    </div>
+                </template>
+            </el-table-column>
+            <el-table-column :label="$t('admin.userPolicyServices.userCount')" width="120" align="center">
+                <template #default="{ row }">
+                    <el-tag v-if="row.user_count > 0" type="success" size="small" effect="light" class="user-count-tag">
                         {{ row.user_count }}
                     </el-tag>
+                    <el-tag v-else type="info" size="small" effect="plain">
+                        0
+                    </el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column :label="$t('admin.userPolicyServices.actions')" width="120" align="center" fixed="right">
+                <template #default="{ row }">
+                    <el-button
+                        v-if="row.user_count > 0"
+                        size="small"
+                        type="primary"
+                        link
+                        @click="viewUsers(row)"
+                    >
+                        {{ $t('admin.userPolicyServices.viewUsers') }}
+                    </el-button>
+                    <span v-else class="cell-sub">-</span>
                 </template>
             </el-table-column>
         </el-table>
@@ -146,6 +124,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { Tickets } from '@element-plus/icons-vue'
@@ -153,6 +132,7 @@ import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
 
 const { t } = useI18n()
+const router = useRouter()
 
 const plans = ref([])
 const meta = reactive({})
@@ -168,13 +148,17 @@ const formatPrice = (amountMinor, currency) => {
     const amount = (Number(amountMinor) || 0) / 100
     const code = String(currency || 'USD').toUpperCase()
     if (code === 'USD') {
-        return `US$${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        return `USD${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     }
     try {
         return new Intl.NumberFormat(undefined, { style: 'currency', currency: code }).format(amount)
     } catch (e) {
         return `${code} ${amount.toFixed(2)}`
     }
+}
+
+const viewUsers = (plan) => {
+    router.push({ path: '/admin/users', query: { plan_code: plan.code } })
 }
 
 const fetchPlans = async () => {
@@ -218,10 +202,6 @@ onMounted(() => {
     flex-direction: column;
     gap: 4px;
 }
-.summary-card.warn {
-    background: linear-gradient(180deg, #fff7ed, #ffedd5);
-    border-color: #fdba74;
-}
 .summary-value {
     font-size: 22px;
     font-weight: 700;
@@ -230,29 +210,6 @@ onMounted(() => {
 .summary-label {
     font-size: 12px;
     color: var(--color-text-muted, #64748b);
-}
-.plan-detail {
-    padding: 4px 0 12px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-.plan-detail__section {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 12px 14px;
-}
-.plan-detail__section--full {
-    grid-column: 1 / -1;
-}
-.plan-detail__title {
-    font-size: 12px;
-    font-weight: 700;
-    color: #475569;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 8px;
 }
 .price-list {
     display: flex;
@@ -276,6 +233,9 @@ onMounted(() => {
 }
 .feature-pill {
     background: #fff;
+}
+.user-count-tag {
+    cursor: pointer;
 }
 .cell-sub {
     font-size: 12px;

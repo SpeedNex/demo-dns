@@ -3,7 +3,6 @@
 use App\Http\Controllers\Api\V1\Admin\AdminMenuConfigController;
 use App\Http\Controllers\Api\V1\Admin\AdminAlertController;
 use App\Http\Controllers\Api\V1\Admin\AdminAuditLogController;
-use App\Http\Controllers\Api\V1\Admin\AdminBillingController;
 use App\Http\Controllers\Api\V1\Admin\AdminBillingStatsController;
 use App\Http\Controllers\Api\V1\Admin\AdminConsoleAuditLogController;
 use App\Http\Controllers\Api\V1\Admin\AdminDeviceController;
@@ -89,16 +88,11 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin.only', 'permission:ad
         Route::delete('audit-logs', [AdminConsoleAuditLogController::class, 'clear'])->middleware('permission:admin.audit.read');
     });
 
-    // Billing
+    // Plans (套餐管理)
     Route::middleware('permission:admin.billing.read')->group(function (): void {
-        Route::get('billing/balance/{user_id}', [AdminBillingController::class, 'balance']);
-        Route::get('billing/bills', [AdminBillingController::class, 'bills']);
-        Route::get('billing/export', [AdminBillingController::class, 'export']);
         Route::get('plans', [AdminPlanController::class, 'index']);
     });
     Route::middleware('permission:admin.billing.write')->group(function (): void {
-        Route::post('billing/charge', [AdminBillingController::class, 'charge']);
-        Route::post('billing/refund', [AdminBillingController::class, 'refund']);
         Route::post('plans', [AdminPlanController::class, 'store']);
         Route::put('plans/{id}', [AdminPlanController::class, 'update']);
         Route::delete('plans/{id}', [AdminPlanController::class, 'destroy']);
@@ -106,16 +100,12 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin.only', 'permission:ad
 
     // Finance
     Route::middleware('permission:admin.finance.read')->group(function (): void {
-        Route::get('finance/balances', [AdminFinanceController::class, 'balances']);
-        Route::get('finance/recharges', [AdminFinanceController::class, 'recharges']);
-        Route::get('finance/recharges/export', [AdminFinanceController::class, 'rechargeExport']);
         Route::get('finance/bills', [AdminFinanceController::class, 'bills']);
         Route::get('finance/bills/export', [AdminFinanceController::class, 'billExport']);
-        Route::get('finance/refunds', [AdminFinanceController::class, 'refunds']);
-        Route::get('finance/refunds/export', [AdminFinanceController::class, 'refundExport']);
-    });
-    Route::middleware('permission:admin.finance.write')->group(function (): void {
-        Route::post('finance/refunds/{id}/approve', [AdminFinanceController::class, 'approveRefund']);
+        Route::get('finance/subscriptions', [AdminFinanceController::class, 'subscriptions']);
+        Route::get('finance/subscriptions/{id}', [AdminFinanceController::class, 'subscriptionDetail']);
+        Route::get('finance/payment-flows', [AdminFinanceController::class, 'paymentFlows']);
+        Route::get('finance/payment-flows/export', [AdminFinanceController::class, 'paymentFlowExport']);
     });
 
     // RBAC

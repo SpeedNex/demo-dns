@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * UI.md #57 — 账单明细。
  */
-class BillingItem extends Model
+class BillingItem extends BaseModel
 {
     public const ITEM_TYPE_PLAN = 'subscription';
     public const ITEM_TYPE_USAGE = 'usage';

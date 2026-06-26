@@ -83,7 +83,7 @@ const money = (minor, currency = 'USD') => {
     const code = String(currency || 'USD').toUpperCase()
     const amount = Number(minor || 0) / 100
     if (code === 'USD') {
-        return `US$${amount.toLocaleString(undefined, { minimumFractionDigits: amount >= 100 ? 0 : 2, maximumFractionDigits: 2 })}`
+        return `USD${amount.toLocaleString(undefined, { minimumFractionDigits: amount >= 100 ? 0 : 2, maximumFractionDigits: 2 })}`
     }
     return new Intl.NumberFormat(undefined, {
         style: 'currency',

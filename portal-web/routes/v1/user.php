@@ -8,7 +8,7 @@ use App\Http\Controllers\Api\V1\User\ProfileController;
 use App\Http\Controllers\Api\V1\User\ProfilePublishController;
 use App\Http\Controllers\Api\V1\User\ProfileRuleController;
 use App\Http\Controllers\Api\V1\User\TeamController;
-use App\Http\Controllers\Api\V1\User\OrderController;
+use App\Http\Controllers\Api\V1\User\SubscriptionController;
 use App\Http\Controllers\Api\V1\User\QueryTrendController;
 use Illuminate\Support\Facades\Route;
 
@@ -61,8 +61,6 @@ Route::prefix('user')->middleware(['auth:api', 'user.only'])->group(function ():
     Route::get('payment-methods', [UserWorkspaceController::class, 'paymentMethods']);
     // upgrade 路由已移除 — 升级必须走订单 + Stripe 支付流程
     Route::get('usage', [UserWorkspaceController::class, 'usage']);
-    Route::get('wallet', [UserWorkspaceController::class, 'wallet']);
-    Route::post('wallet/recharge', [UserWorkspaceController::class, 'rechargeWallet']);
     Route::get('subscription', [UserWorkspaceController::class, 'subscription']);
     Route::get('referral-link', [UserWorkspaceController::class, 'referralLink']);
     Route::put('devices/{device_id}', [UserWorkspaceController::class, 'updateDevice']);
@@ -110,23 +108,22 @@ Route::prefix('user')->middleware(['auth:api', 'user.only'])->group(function ():
     Route::post('api-keys', [ApiKeyController::class, 'store']);
     Route::delete('api-keys/{key_id}', [ApiKeyController::class, 'destroy']);
 
-    // User Orders + Stripe Checkout (member-facing purchase loop)
-    Route::prefix('orders')->group(function (): void {
-        Route::get('', [OrderController::class, 'index']);
-        Route::post('', [OrderController::class, 'create']);
-        Route::get('{id}', [OrderController::class, 'show']);
-        Route::post('{id}/checkout', [OrderController::class, 'checkout']);
-        Route::post('{id}/payment-intent', [OrderController::class, 'createPaymentIntent']);
-        Route::post('{id}/qr-payment', [OrderController::class, 'createQrPayment']);
-        Route::post('{id}/pay-with-wallet', [OrderController::class, 'payWithWallet']);
+    // User Subscriptions + Stripe Checkout (member-facing purchase loop)
+    Route::prefix('subscriptions')->group(function (): void {
+        Route::get('', [SubscriptionController::class, 'index']);
+        Route::post('', [SubscriptionController::class, 'create']);
+        Route::get('current', [SubscriptionController::class, 'current']);
+        Route::get('{id}', [SubscriptionController::class, 'show']);
+        Route::post('{id}/checkout', [SubscriptionController::class, 'checkout']);
+        Route::post('{id}/cancel', [SubscriptionController::class, 'cancel']);
     });
 
-    Route::get('payment-transactions/{id}/status', [OrderController::class, 'paymentTransactionStatus']);
-    Route::post('payment-transactions/{id}/mock-success', [OrderController::class, 'mockPaymentSuccess']);
-    Route::get('stripe-config', [OrderController::class, 'stripeConfig']);
+    Route::get('payment-transactions/{id}/status', [SubscriptionController::class, 'paymentTransactionStatus']);
+    Route::post('payment-transactions/{id}/mock-success', [SubscriptionController::class, 'mockPaymentSuccess']);
+    Route::get('stripe-config', [SubscriptionController::class, 'stripeConfig']);
 
     // 套餐购买入口
-    Route::get('plans', [OrderController::class, 'plans']);
+    Route::get('plans', [SubscriptionController::class, 'plans']);
 
     // 查询趋势数据（会员首页 7 天图表）
     Route::get('query-trend', [QueryTrendController::class, 'index']);

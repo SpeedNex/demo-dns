@@ -2,11 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Profile extends Model
+class Profile extends BaseModel
 {
     // V2.2: id 改为 BIGINT 自增
     public $incrementing = true;

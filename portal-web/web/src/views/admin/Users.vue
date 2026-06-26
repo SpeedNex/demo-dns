@@ -81,18 +81,6 @@
             <el-table-column :label="$t('admin.usersPage.created')" width="120">
                 <template #default="{ row }">{{ row.created_at ? new Date(row.created_at).toLocaleDateString() : '-' }}</template>
             </el-table-column>
-            <el-table-column :label="$t('admin.usersPage.balance')" width="140">
-                <template #default="{ row }">
-                    <span class="balance-value">{{ formatBalance(row.balance_minor, row.currency) }}</span>
-                </template>
-            </el-table-column>
-            <el-table-column :label="$t('admin.usersPage.charge')" width="90" align="center">
-                <template #default="{ row }">
-                    <el-button size="small" type="primary" text @click="openChargeDialog(row)">
-                        {{ $t('admin.usersPage.charge') }}
-                    </el-button>
-                </template>
-            </el-table-column>
             <el-table-column :label="$t('admin.usersPage.actions')" width="190" fixed="right">
                 <template #default="{ row }">
                     <el-tooltip :content="$t('common.edit')" :show-after="500">
@@ -147,22 +135,6 @@
             <el-button type="primary" :loading="saving" @click="handleSave">{{ t('common.save') }}</el-button>
         </template>
     </el-dialog>
-
-    <!-- Charge Dialog -->
-    <el-dialog v-model="showChargeDialog" :title="t('admin.usersPage.charge') + ' - ' + chargeUser?.email" width="480">
-        <el-form label-position="top">
-            <el-form-item :label="t('admin.usersPage.chargeAmount')">
-                <el-input-number v-model="chargeAmount" :min="1" :max="1000000" :precision="2" :step="100" style="width:100%" />
-            </el-form-item>
-            <el-form-item :label="t('admin.usersPage.chargeDesc')">
-                <el-input v-model="chargeDesc" type="textarea" :rows="2" :placeholder="t('admin.usersPage.chargeDescPlaceholder')" />
-            </el-form-item>
-        </el-form>
-        <template #footer>
-            <el-button @click="showChargeDialog = false">{{ t('common.cancel') }}</el-button>
-            <el-button type="primary" :loading="charging" @click="handleCharge">{{ t('common.confirm') }}</el-button>
-        </template>
-    </el-dialog>
 </template>
 
 <script setup>
@@ -175,18 +147,7 @@ import client from '@/api/client'
 
 const { t } = useI18n()
 
-const currencySymbol = (currency) => {
-    if ((currency || 'USD').toUpperCase() === 'USD') return 'US$'
-    const map = { CNY: '¥', EUR: '€', GBP: '£', JPY: '¥', KRW: '₩' }
-    return map[(currency || '').toUpperCase()] || (currency || 'USD') + ' '
-}
-
-const formatBalance = (minor, currency) => {
-    if (minor === null || minor === undefined) return '-'
-    const symbol = currencySymbol(currency || 'USD')
-    const amount = (minor / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    return symbol + amount
-}
+const extractError = (err, fallback) => err?.response?.data?.error?.message || err?.response?.data?.message || err?.message || fallback
 
 const statusLabel = (status) => {
     if (status === 'active') return t('admin.usersPage.enabled')
@@ -194,8 +155,6 @@ const statusLabel = (status) => {
     if (status === 'closed') return t('admin.usersPage.closed')
     return status || '-'
 }
-
-const extractError = (err, fallback) => err?.response?.data?.error?.message || err?.response?.data?.message || err?.message || fallback
 
 const users = ref([])
 const meta = ref(null)
@@ -344,39 +303,6 @@ const handleDelete = async (row) => {
         if (e !== 'cancel') {
             ElMessage.error(extractError(e, t('admin.usersPage.operationFailed') || 'Operation failed'))
         }
-    }
-}
-
-// Charge dialog
-const showChargeDialog = ref(false)
-const chargeUser = ref(null)
-const chargeAmount = ref(100)
-const chargeDesc = ref('')
-const charging = ref(false)
-
-const openChargeDialog = (row) => {
-    chargeUser.value = row
-    chargeAmount.value = 100
-    chargeDesc.value = ''
-    showChargeDialog.value = true
-}
-
-const handleCharge = async () => {
-    if (!chargeUser.value) return
-    charging.value = true
-    try {
-        await client.post('/admin/billing/charge', {
-            user_id: chargeUser.value.id,
-            amount_minor: Math.round(chargeAmount.value * 100),
-            description: chargeDesc.value || `Admin charge for ${chargeUser.value.email}`,
-        })
-        ElMessage.success(t('admin.usersPage.chargeSuccess'))
-        showChargeDialog.value = false
-        await fetchUsers()
-    } catch (err) {
-        ElMessage.error(err.response?.data?.message || t('admin.usersPage.chargeFailed'))
-    } finally {
-        charging.value = false
     }
 }
 

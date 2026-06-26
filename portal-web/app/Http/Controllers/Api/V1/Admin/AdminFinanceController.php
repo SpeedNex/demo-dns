@@ -7,47 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Admin Finance controller (balances, recharges, bills, refunds).
+ * Admin Finance controller — SaaS 订阅模式。
+ * 仅保留: bills, subscriptions, payment-flows
  */
 final class AdminFinanceController
 {
-    /** GET /admin/finance/balances — all user balances (SSOT: `dns_wallets`) */
-    public function balances(): JsonResponse
-    {
-        // SSOT 余额在 `dns_wallets` 表
-        $prefix = DB::getTablePrefix();
-        $rows = DB::table('users as u')
-            ->leftJoin('wallets as w', 'w.user_id', '=', 'u.uid')
-            ->select([
-                'u.uid as id',
-                'u.username',
-                'u.email',
-                'u.plan_code',
-                'u.status',
-                DB::raw("COALESCE({$prefix}w.balance_minor, 0) as balance_minor"),
-                DB::raw("COALESCE({$prefix}w.currency, 'USD') as currency"),
-                DB::raw("{$prefix}w.updated_at as balance_updated_at"),
-                'u.created_at',
-            ])
-            ->orderBy('u.created_at', 'desc')
-            ->limit(200)
-            ->get();
-
-        return response()->json(['data' => $rows]);
-    }
-
-    /** GET /admin/finance/recharges */
-    public function recharges(Request $request): JsonResponse
-    {
-        return response()->json($this->listTransactions($request, 'credit', ['topup', 'manual']));
-    }
-
-    /** GET /admin/finance/recharges/export */
-    public function rechargeExport(Request $request): JsonResponse
-    {
-        return response()->json(['data' => $this->exportTransactions($request, 'credit', ['topup', 'manual'])]);
-    }
-
     /** GET /admin/finance/bills */
     public function bills(Request $request): JsonResponse
     {
@@ -84,123 +48,195 @@ final class AdminFinanceController
         return response()->json(['data' => $result['data'] ?? []]);
     }
 
-    /** GET /admin/finance/refunds */
-    public function refunds(Request $request): JsonResponse
-    {
-        return response()->json($this->listTransactions($request, 'refund'));
-    }
-
-    /** POST /admin/finance/refunds/{id}/approve */
-    public function approveRefund(string $id): JsonResponse
-    {
-        $refund = DB::table('wallet_transactions')->where('id', $id)->where('type', 'refund')->first();
-        if ($refund === null) {
-            abort(404, 'Refund not found.');
-        }
-
-        if ($refund->status !== 'pending') {
-            return response()->json([
-                'data' => [
-                    'id' => (string) $refund->id,
-                    'status' => $refund->status,
-                    'approved' => false,
-                ],
-            ]);
-        }
-
-        DB::table('wallet_transactions')->where('id', $id)->update([
-            'status' => 'succeeded',
-            'updated_at' => now(),
-        ]);
-
-        return response()->json([
-            'data' => [
-                'id' => $id,
-                'status' => 'succeeded',
-                'approved' => true,
-            ],
-        ]);
-    }
-
-    /** GET /admin/finance/refunds/export */
-    public function refundExport(Request $request): JsonResponse
-    {
-        return response()->json(['data' => $this->exportTransactions($request, 'refund')]);
-    }
-
-    /**
-     * @return array{data: array<int, array<string, mixed>>, meta: array<string, int>}
-     */
-    private function listTransactions(Request $request, string $type, string|array|null $source = null): array
+    /** GET /admin/finance/subscriptions */
+    public function subscriptions(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'user_id' => 'nullable|string',
-            'status' => 'nullable|string',
+            'plan_code' => 'nullable|string|max:50',
+            'status' => 'nullable|string|max:30',
+            'quota_status' => 'nullable|string|max:30',
             'page' => 'nullable|integer|min:1',
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
         $page = (int) ($validated['page'] ?? 1);
         $perPage = (int) ($validated['per_page'] ?? 20);
-        $query = DB::table('wallet_transactions as wt')
-            ->leftJoin('users as u', 'u.uid', '=', 'wt.user_id')
-            ->where('wt.type', $type)
-            ->orderByDesc('wt.created_at')
+
+        $query = DB::table('subscriptions as s')
+            ->leftJoin('users as u', 'u.uid', '=', 's.user_id')
+            ->orderByDesc('s.created_at')
             ->select([
-                'wt.*',
+                's.*',
                 'u.username as user_name',
                 'u.email as user_email',
             ]);
-        if ($source !== null) {
-            if (is_array($source)) {
-                $query->whereIn('wt.source', $source);
-            } else {
-                $query->where('wt.source', $source);
-            }
-        }
+
         if (! empty($validated['user_id'])) {
-            $query->where('wt.user_id', $validated['user_id']);
+            $query->where('s.user_id', $validated['user_id']);
+        }
+        if (! empty($validated['plan_code'])) {
+            $query->where('s.plan_code', $validated['plan_code']);
         }
         if (! empty($validated['status'])) {
-            $query->where('wt.status', $validated['status']);
+            $query->where('s.status', $validated['status']);
+        }
+        if (! empty($validated['quota_status'])) {
+            $query->where('s.quota_status', $validated['quota_status']);
         }
 
         $total = (clone $query)->count();
-        $items = $query->forPage($page, $perPage)->get()->map(fn ($row): array => [
-            'id' => (string) $row->id,
-            'user_id' => $row->user_id,
-            'username' => $row->user_name,
-            'user_name' => $row->user_name,
-            'user_email' => $row->user_email,
-            'type' => $row->type,
-            'amount_minor' => (int) $row->amount_minor,
-            'currency' => $row->currency,
-            'description' => $row->description,
-            'status' => $row->status,
-            'source' => $row->source,
-            'payment_method' => $row->source === 'manual' ? 'admin' : $row->source,
-            'billing_id' => $row->billing_id,
-            'transaction_no' => $row->transaction_no,
-            'transaction_id' => $row->transaction_no ?: (string) $row->id,
-            'balance_after_minor' => (int) $row->balance_after_minor,
-            'created_at' => $row->created_at,
-            'updated_at' => $row->updated_at,
-        ])->all();
+        $items = $query->forPage($page, $perPage)->get()->map(function ($row): array {
+            return [
+                'id' => (int) $row->id,
+                'subscription_no' => $row->subscription_no,
+                'user_id' => (int) $row->user_id,
+                'user_name' => $row->user_name,
+                'user_email' => $row->user_email,
+                'plan_id' => $row->plan_id !== null ? (int) $row->plan_id : null,
+                'plan_code' => $row->plan_code,
+                'billing_cycle' => $row->billing_cycle,
+                'amount_minor' => (int) ($row->amount_minor ?? 0),
+                'currency' => $row->currency,
+                'status' => $row->status,
+                'quota_status' => $row->quota_status,
+                'auto_renew' => (bool) $row->auto_renew,
+                'cancel_at_period_end' => (bool) $row->cancel_at_period_end,
+                'started_at' => $row->started_at,
+                'current_period_start' => $row->current_period_start,
+                'current_period_end' => $row->current_period_end,
+                'cancelled_at' => $row->cancelled_at,
+                'expired_at' => $row->expired_at,
+                'created_at' => $row->created_at,
+            ];
+        })->all();
 
-        return [
+        return response()->json([
             'data' => $items,
             'meta' => [
                 'total' => $total,
                 'page' => $page,
                 'per_page' => $perPage,
             ],
-        ];
+        ]);
     }
 
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    private function exportTransactions(Request $request, string $type, string|array|null $source = null): array
+    /** GET /admin/finance/subscriptions/{id} */
+    public function subscriptionDetail(string $id): JsonResponse
+    {
+        $row = DB::table('subscriptions as s')
+            ->leftJoin('users as u', 'u.uid', '=', 's.user_id')
+            ->where('s.id', $id)
+            ->select(['s.*', 'u.username as user_name', 'u.email as user_email'])
+            ->first();
+
+        if ($row === null) {
+            abort(404, 'Subscription not found.');
+        }
+
+        return response()->json([
+            'data' => [
+                'id' => (int) $row->id,
+                'subscription_no' => $row->subscription_no,
+                'user_id' => (int) $row->user_id,
+                'user_name' => $row->user_name,
+                'user_email' => $row->user_email,
+                'plan_id' => $row->plan_id !== null ? (int) $row->plan_id : null,
+                'plan_code' => $row->plan_code,
+                'billing_cycle' => $row->billing_cycle,
+                'amount_minor' => (int) ($row->amount_minor ?? 0),
+                'currency' => $row->currency,
+                'provider' => $row->provider,
+                'status' => $row->status,
+                'quota_status' => $row->quota_status,
+                'auto_renew' => (bool) $row->auto_renew,
+                'cancel_at_period_end' => (bool) $row->cancel_at_period_end,
+                'started_at' => $row->started_at,
+                'current_period_start' => $row->current_period_start,
+                'current_period_end' => $row->current_period_end,
+                'cancelled_at' => $row->cancelled_at,
+                'expired_at' => $row->expired_at,
+                'meta' => json_decode((string) ($row->meta ?? '{}'), true),
+                'created_at' => $row->created_at,
+                'updated_at' => $row->updated_at,
+            ],
+        ]);
+    }
+
+    /** GET /admin/finance/payment-flows */
+    public function paymentFlows(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'user_id' => 'nullable|string',
+            'status' => 'nullable|string',
+            'type' => 'nullable|string|in:payment,refund',
+            'page' => 'nullable|integer|min:1',
+            'per_page' => 'nullable|integer|min:1|max:100',
+        ]);
+
+        $page = (int) ($validated['page'] ?? 1);
+        $perPage = (int) ($validated['per_page'] ?? 20);
+
+        $query = DB::table('payment_transactions as pt')
+            ->leftJoin('users as u', 'u.uid', '=', 'pt.user_id')
+            ->leftJoin('subscriptions as s', 's.id', '=', 'pt.subscription_id')
+            ->orderByDesc('pt.created_at')
+            ->select([
+                'pt.*',
+                'u.username as user_name',
+                'u.email as user_email',
+                's.subscription_no',
+                's.plan_code',
+            ]);
+
+        if (! empty($validated['user_id'])) {
+            $query->where('pt.user_id', $validated['user_id']);
+        }
+        if (! empty($validated['status'])) {
+            $query->where('pt.status', $validated['status']);
+        }
+
+        $total = (clone $query)->count();
+        $items = $query->forPage($page, $perPage)->get()->map(function ($row): array {
+            $rawPayload = json_decode((string) ($row->raw_payload ?? '{}'), true);
+            $paymentMethod = $rawPayload['payment_method'] ?? null;
+            $type = in_array($row->status, ['refunded']) ? 'refund' : 'payment';
+
+            return [
+                'id' => (int) $row->id,
+                'user_id' => (int) $row->user_id,
+                'user_name' => $row->user_name,
+                'user_email' => $row->user_email,
+                'subscription_id' => (int) $row->subscription_id,
+                'subscription_no' => $row->subscription_no,
+                'plan_code' => $row->plan_code,
+                'provider' => $row->provider,
+                'provider_session_id' => $row->provider_session_id,
+                'provider_payment_intent_id' => $row->provider_payment_intent_id,
+                'amount_minor' => (int) $row->amount_minor,
+                'currency' => $row->currency,
+                'status' => $row->status,
+                'type' => $type,
+                'payment_method' => $paymentMethod,
+                'failure_code' => $row->failure_code,
+                'failure_message' => $row->failure_message,
+                'created_at' => $row->created_at,
+                'updated_at' => $row->updated_at,
+            ];
+        })->all();
+
+        return response()->json([
+            'data' => $items,
+            'meta' => [
+                'total' => $total,
+                'page' => $page,
+                'per_page' => $perPage,
+            ],
+        ]);
+    }
+
+    /** GET /admin/finance/payment-flows/export */
+    public function paymentFlowExport(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'user_id' => 'nullable|string',
@@ -208,48 +244,43 @@ final class AdminFinanceController
             'limit' => 'nullable|integer|min:1|max:1000',
         ]);
 
-        $query = DB::table('wallet_transactions as wt')
-            ->leftJoin('users as u', 'u.uid', '=', 'wt.user_id')
-            ->where('wt.type', $type)
-            ->orderByDesc('wt.created_at')
+        $query = DB::table('payment_transactions as pt')
+            ->leftJoin('users as u', 'u.uid', '=', 'pt.user_id')
+            ->leftJoin('subscriptions as s', 's.id', '=', 'pt.subscription_id')
+            ->orderByDesc('pt.created_at')
             ->select([
-                'wt.*',
+                'pt.*',
                 'u.username as user_name',
                 'u.email as user_email',
+                's.subscription_no',
+                's.plan_code',
             ]);
-        if ($source !== null) {
-            if (is_array($source)) {
-                $query->whereIn('wt.source', $source);
-            } else {
-                $query->where('wt.source', $source);
-            }
-        }
+
         if (! empty($validated['user_id'])) {
-            $query->where('wt.user_id', $validated['user_id']);
+            $query->where('pt.user_id', $validated['user_id']);
         }
         if (! empty($validated['status'])) {
-            $query->where('wt.status', $validated['status']);
+            $query->where('pt.status', $validated['status']);
         }
 
-        return $query->limit((int) ($validated['limit'] ?? 1000))->get()->map(fn ($row): array => [
-            'id' => (string) $row->id,
-            'user_id' => $row->user_id,
-            'username' => $row->user_name,
-            'user_name' => $row->user_name,
-            'user_email' => $row->user_email,
-            'type' => $row->type,
-            'amount_minor' => (int) $row->amount_minor,
-            'currency' => $row->currency,
-            'description' => $row->description,
-            'status' => $row->status,
-            'source' => $row->source,
-            'payment_method' => $row->source === 'manual' ? 'admin' : $row->source,
-            'billing_id' => $row->billing_id,
-            'transaction_no' => $row->transaction_no,
-            'transaction_id' => $row->transaction_no ?: (string) $row->id,
-            'balance_after_minor' => (int) $row->balance_after_minor,
-            'created_at' => $row->created_at,
-            'updated_at' => $row->updated_at,
-        ])->all();
+        $items = $query->limit((int) ($validated['limit'] ?? 1000))->get()->map(function ($row): array {
+            $type = in_array($row->status, ['refunded']) ? 'refund' : 'payment';
+            return [
+                'id' => (int) $row->id,
+                'user_id' => (int) $row->user_id,
+                'user_name' => $row->user_name,
+                'user_email' => $row->user_email,
+                'subscription_no' => $row->subscription_no,
+                'plan_code' => $row->plan_code,
+                'provider' => $row->provider,
+                'amount_minor' => (int) $row->amount_minor,
+                'currency' => $row->currency,
+                'status' => $row->status,
+                'type' => $type,
+                'created_at' => $row->created_at,
+            ];
+        })->all();
+
+        return response()->json(['data' => $items]);
     }
 }

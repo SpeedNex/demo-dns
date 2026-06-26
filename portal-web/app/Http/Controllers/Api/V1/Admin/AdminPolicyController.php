@@ -60,7 +60,7 @@ final class AdminPolicyController
     }
 
     /**
-     * 方案列表 — 前台展示的 Plan（含订阅该方案的用户清单）。
+     * 方案列表 — Plan 及其订阅用户数（不含嵌套用户详情，避免大 JSON）。
      */
     public function indexPlans(Request $request): JsonResponse
     {
@@ -85,15 +85,15 @@ final class AdminPolicyController
             ->orderBy('id')
             ->get();
 
-        // 收集所有 plan.code，一次性查出对应用户
+        // 仅用 COUNT 统计每个 plan 的订阅用户数，不加载用户详情
         $codes = $plans->pluck('code')->unique()->values()->all();
-        $usersByCode = User::query()
+        $userCounts = User::query()
             ->whereIn('plan_code', $codes)
-            ->get(['uid', 'username', 'email', 'plan_code', 'status', 'created_at'])
-            ->groupBy('plan_code');
+            ->select('plan_code', \Illuminate\Support\Facades\DB::raw('COUNT(*) as cnt'))
+            ->groupBy('plan_code')
+            ->pluck('cnt', 'plan_code');
 
-        $rows = $plans->map(function (Plan $plan) use ($usersByCode) {
-            $subscribers = $usersByCode->get($plan->code, collect());
+        $rows = $plans->map(function (Plan $plan) use ($userCounts) {
             $prices = $plan->prices->map(fn ($p) => [
                 'id' => $p->id,
                 'billing_cycle' => $p->billing_cycle,
@@ -115,14 +115,7 @@ final class AdminPolicyController
                 'features' => $plan->features ?? [],
                 'limits' => $plan->limits ?? [],
                 'prices' => $prices,
-                'user_count' => $subscribers->count(),
-                'users' => $subscribers->map(fn (User $u) => [
-                    'uid' => $u->uid,
-                    'username' => $u->username,
-                    'email' => $u->email,
-                    'status' => $u->status,
-                    'subscribed_at' => optional($u->created_at)?->toIso8601String(),
-                ])->values()->all(),
+                'user_count' => (int) ($userCounts[$plan->code] ?? 0),
             ];
         })->all();
 
@@ -130,7 +123,7 @@ final class AdminPolicyController
             'data' => $rows,
             'meta' => [
                 'total' => count($rows),
-                'user_total' => $usersByCode->flatten(1)->count(),
+                'user_total' => (int) $userCounts->sum(),
             ],
         ]);
     }

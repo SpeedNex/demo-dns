@@ -136,7 +136,7 @@ const showBillDetail = ref(false)
 const selectedBill = ref(null)
 
 const currencySymbol = (currency) => {
-    if ((currency || 'USD').toUpperCase() === 'USD') return 'US$'
+    if ((currency || 'USD').toUpperCase() === 'USD') return 'USD'
     const map = { CNY: '¥', EUR: '€', GBP: '£', JPY: '¥', KRW: '₩' }
     return map[(currency || '').toUpperCase()] || ((currency || 'USD') + ' ')
 }

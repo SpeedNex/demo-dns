@@ -30,20 +30,6 @@
 
                 <div class="card">
                     <div class="card-header">
-                        <el-icon class="card-icon"><Wallet /></el-icon>
-                        <h3>{{ $t('account.balance.title') }}</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="balance-item">
-                            <span class="balance-label">{{ $t('account.balance.available') }}</span>
-                            <span class="balance-value">{{ walletBalanceLabel }}</span>
-                        </div>
-                        <p class="balance-note">{{ $t('account.balance.note') }}</p>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
                         <el-icon class="card-icon"><Lock /></el-icon>
                         <h3>{{ $t('account.password.title') }}</h3>
                     </div>
@@ -85,7 +71,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
-import { Coin, Wallet, Lock } from '@element-plus/icons-vue'
+import { Coin, Lock } from '@element-plus/icons-vue'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
 
@@ -97,11 +83,10 @@ const usageData = ref({
     queries_used: 0,
     queries_total: 300000,
     is_unlimited: false,
-    upgrade_price: 'US$3.99',
+    upgrade_price: 'USD3.99',
     quota_status: 'normal',
     plan_code: 'free',
 })
-const walletBalance = ref({ balance_minor: 0, currency: 'USD' })
 const currentSubscription = ref(null)
 const currentPlanCode = ref('free')
 
@@ -109,21 +94,6 @@ const showPasswordDialog = ref(false)
 const updatingPassword = ref(false)
 const passwordForm = ref({ currentPassword: '', newPassword: '', confirmPassword: '' })
 
-const money = (minor, currency = 'USD') => {
-    const code = String(currency || 'USD').toUpperCase()
-    const amount = Number(minor || 0) / 100
-    if (code === 'USD') {
-        return `US$${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-    }
-    return new Intl.NumberFormat(undefined, {
-        style: 'currency',
-        currency: code,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    }).format(amount)
-}
-
-const walletBalanceLabel = computed(() => money(walletBalance.value.balance_minor, walletBalance.value.currency || 'USD'))
 const quotaPercentage = computed(() => {
     if (usageData.value.is_unlimited) return 0
     const total = Number(usageData.value.queries_total || 0)
@@ -148,7 +118,6 @@ const loadAccountData = async () => {
 
         const requests = [
             client.get('/user/usage').then(({ data }) => { if (data.data) usageData.value = data.data }).catch(() => {}),
-            client.get('/user/wallet').then(({ data }) => { if (data.data) walletBalance.value = data.data }).catch(() => {}),
             client.get('/user/subscription').then(({ data }) => { currentSubscription.value = data.data || null }).catch(() => {}),
         ]
         await Promise.all(requests)
@@ -207,10 +176,6 @@ onMounted(loadAccountData)
 .quota-footer { display: flex; align-items: center; gap: 16px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #f1f5f9; }
 .current-plan { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #64748b; }
 .current-plan strong { color: #0f172a; font-size: 16px; }
-.balance-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
-.balance-label { color: #64748b; }
-.balance-value { font-size: 20px; font-weight: 700; color: #0f172a; }
-.balance-note { margin: 12px 0 0; font-size: 12px; color: #94a3b8; }
 .setting-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
 .setting-info { flex: 1; min-width: 0; }
 .setting-desc { margin: 0 0 4px; font-size: 14px; }

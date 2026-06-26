@@ -126,7 +126,7 @@ final class PermissionService
             ['code' => 'teams.manage', 'name' => 'Manage Teams', 'description' => 'View and manage all teams', 'group_name' => 'admin'],
             ['code' => 'audit.view', 'name' => 'View Audit Logs', 'description' => 'View audit logs', 'group_name' => 'admin'],
             ['code' => 'plans.manage', 'name' => 'Manage Plans', 'description' => 'CRUD plans and prices', 'group_name' => 'admin'],
-            ['code' => 'orders.view', 'name' => 'View Orders', 'description' => 'View orders and bills', 'group_name' => 'admin'],
+            ['code' => 'subscriptions.view', 'name' => 'View Subscriptions', 'description' => 'View subscriptions and bills', 'group_name' => 'admin'],
         ];
 
         foreach ($permissions as $perm) {

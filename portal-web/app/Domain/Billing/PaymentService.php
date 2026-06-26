@@ -4,21 +4,19 @@ declare(strict_types=1);
 
 namespace App\Domain\Billing;
 
-use App\Models\Order;
 use App\Models\PaymentTransaction;
+use App\Models\Subscription;
 use App\Support\SystemConfigValue;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
- * UI.md #53 — 支付中心。
+ * 支付中心 — SaaS 订阅模式。
  *
  * V1: 仅支持 Stripe Checkout Session。
- * 支付金额来源: `Order.payable_amount_minor`，前端禁止直接支付金额。
- *
- * 流程: 支付先写 `payment_transactions` (pending) → Stripe 回调 →
- *       PaymentService.handleSuccess() → OrderService.markPaid()。
+ * 流程: 创建 Subscription(pending) → createCheckout → Stripe 回调 →
+ *       PaymentService.handleSuccess() → SubscriptionService.activate()。
  */
 final class PaymentService
 {
@@ -30,19 +28,14 @@ final class PaymentService
 
     /**
      * 创建一个支付会话 (Stripe Checkout Session)。
-     *
-     * 安全约束：
-     *  - 当 Stripe SDK + secret 都可用时，必须真的调用 Stripe API 拿到真实 session。
-     *    SDK 抛异常 → 抛回 RuntimeException，禁止 fallback 成占位 session。
-     *  - 没有 SDK / secret 时：仅允许 fake 模式（仅在非 production）使用占位 session。
      */
-    public function createCheckout(Order $order, ?string $paymentMethod = null): PaymentTransaction
+    public function createCheckout(Subscription $subscription, ?string $paymentMethod = null): PaymentTransaction
     {
         $paymentMethodTypes = $this->paymentMethodsForCheckout($paymentMethod);
         $secret = $this->stripeSecret();
         $appUrl = rtrim((string) config('app.url'), '/');
-        $successUrl = $appUrl . '/user/order?status=success&order_id=' . $order->id . '&session_id={CHECKOUT_SESSION_ID}';
-        $cancelUrl  = $appUrl . '/user/order?status=cancel&order_id=' . $order->id;
+        $successUrl = $appUrl . '/user/subscription?status=success&sub_id=' . $subscription->id . '&session_id={CHECKOUT_SESSION_ID}';
+        $cancelUrl  = $appUrl . '/user/subscription?status=cancel&sub_id=' . $subscription->id;
         $useFake = $this->useFakeCheckout();
 
         if (app()->environment('production') && $useFake) {
@@ -50,7 +43,7 @@ final class PaymentService
         }
 
         $existing = PaymentTransaction::query()
-            ->where('order_id', $order->id)
+            ->where('subscription_id', $subscription->id)
             ->where('provider', 'stripe')
             ->where('status', PaymentTransaction::STATUS_PENDING)
             ->latest('id')
@@ -64,7 +57,6 @@ final class PaymentService
 
         $hasStripe = $secret !== '' && class_exists(\Stripe\StripeClient::class) && ! $useFake;
         if (! $hasStripe && ! $useFake) {
-            // 没有 Stripe SDK 也未启用 fake：拒绝创建 pending 假流水
             throw new RuntimeException('Stripe is not configured. Set STRIPE_SECRET or enable STRIPE_FAKE for local dev.');
         }
 
@@ -76,21 +68,22 @@ final class PaymentService
                 /** @var \Stripe\StripeClient $stripe */
                 $stripe = new \Stripe\StripeClient($secret);
                 $payload = [
-                    'mode' => 'payment',
+                    'mode' => 'subscription',
                     'payment_method_types' => $paymentMethodTypes,
                     'line_items' => [[
                         'price_data' => [
-                            'currency' => strtolower((string) $order->currency),
-                            'unit_amount' => (int) $order->payable_amount_minor,
-                            'product_data' => ['name' => 'Order #' . $order->order_no],
+                            'currency' => strtolower((string) $subscription->currency),
+                            'unit_amount' => (int) $subscription->amount_minor,
+                            'product_data' => ['name' => 'Subscription #' . $subscription->subscription_no],
+                            'recurring' => ['interval' => $subscription->billing_cycle === 'yearly' ? 'year' : 'month'],
                         ],
                         'quantity' => 1,
                     ]],
                     'success_url' => $successUrl,
                     'cancel_url' => $cancelUrl,
                     'metadata' => [
-                        'order_id' => (string) $order->id,
-                        'user_id' => (string) $order->user_id,
+                        'subscription_id' => (string) $subscription->id,
+                        'user_id' => (string) $subscription->user_id,
                     ],
                 ];
 
@@ -104,129 +97,24 @@ final class PaymentService
                 $sessionId = $session->id;
                 $redirectUrl = (string) $session->url;
             } catch (\Throwable $e) {
-                // Stripe API 失败：直接抛回，不创建占位 pending 交易
                 throw new RuntimeException('Stripe checkout session creation failed: ' . $e->getMessage(), 0, $e);
             }
         }
 
         return PaymentTransaction::create([
-            'user_id' => $order->user_id,
-            'order_id' => $order->id,
+            'user_id' => $subscription->user_id,
+            'subscription_id' => $subscription->id,
             'provider' => 'stripe',
             'provider_session_id' => $sessionId,
             'status' => PaymentTransaction::STATUS_PENDING,
-            'amount_minor' => $order->payable_amount_minor,
-            'currency' => $order->currency,
+            'amount_minor' => $subscription->amount_minor,
+            'currency' => $subscription->currency,
             'raw_payload' => [
                 'redirect_url' => $redirectUrl,
                 'payment_method' => $paymentMethodTypes[0] ?? 'card',
                 'payment_method_types' => $paymentMethodTypes,
             ],
         ]);
-    }
-
-    /**
-     * @return array<int, array{value: string, label: string}>
-     */
-    public function paymentMethodOptions(): array
-    {
-        return array_map(
-            fn (string $method): array => [
-                'value' => $method,
-                'label' => self::PAYMENT_METHOD_LABELS[$method] ?? $method,
-            ],
-            $this->configuredPaymentMethods(),
-        );
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    public function configuredPaymentMethods(): array
-    {
-        return $this->normalizePaymentMethods(
-            SystemConfigValue::field('payment', 'payment_methods', ['card']),
-        );
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function paymentMethodsForCheckout(?string $selected): array
-    {
-        $configured = $this->configuredPaymentMethods();
-        $selected = is_string($selected) ? trim($selected) : '';
-
-        if ($selected === '') {
-            return $configured;
-        }
-
-        if (! in_array($selected, $configured, true)) {
-            throw new RuntimeException('Selected payment method is not enabled.');
-        }
-
-        return [$selected];
-    }
-
-    /**
-     * @param mixed $methods
-     * @return array<int, string>
-     */
-    private function normalizePaymentMethods(mixed $methods): array
-    {
-        if (is_string($methods)) {
-            $methods = array_map('trim', explode(',', $methods));
-        }
-
-        if (! is_array($methods)) {
-            return ['card'];
-        }
-
-        $allowed = array_keys(self::PAYMENT_METHOD_LABELS);
-        $normalized = [];
-        foreach ($methods as $method) {
-            $method = trim((string) $method);
-            if ($method !== '' && in_array($method, $allowed, true)) {
-                $normalized[] = $method;
-            }
-        }
-
-        return array_values(array_unique($normalized)) ?: ['card'];
-    }
-
-    private function stripeSecret(): string
-    {
-        $configured = (string) SystemConfigValue::field('payment', 'secret_key', '');
-        if ($configured !== '' && $configured !== '********') {
-            return $configured;
-        }
-
-        return (string) config('services.stripe.secret', '');
-    }
-
-    public function stripePublishableKey(): string
-    {
-        $configured = (string) SystemConfigValue::field('payment', 'publishable_key', '');
-        if ($configured !== '' && $configured !== '********') {
-            return $configured;
-        }
-
-        return (string) config('services.stripe.publishable', '');
-    }
-
-    public function isFakeMode(): bool
-    {
-        return $this->useFakeCheckout();
-    }
-
-    private function useFakeCheckout(): bool
-    {
-        $configured = SystemConfigValue::field('payment', 'fake', null);
-        if ($configured !== null && $configured !== '') {
-            return filter_var($configured, FILTER_VALIDATE_BOOLEAN);
-        }
-
-        return (bool) config('services.stripe.fake', false);
     }
 
     /**
@@ -243,8 +131,8 @@ final class PaymentService
             'provider_payment_intent_id' => $paymentIntentId,
             'updated_at' => Carbon::now(),
         ]);
-        if ($tx->order_id) {
-            (new OrderService())->markPaid((string) $tx->order_id, $paymentIntentId);
+        if ($tx->subscription_id) {
+            (new SubscriptionService())->activate((string) $tx->subscription_id, $paymentIntentId ?? '');
         }
         return $tx;
     }
@@ -264,36 +152,11 @@ final class PaymentService
     }
 
     /**
-     * 用于 payment_intent.* 事件，ID 形如 pi_xxx。
-     * 必须按 provider_payment_intent_id 查找，不能与 checkout session id (cs_xxx) 混用。
+     * 模拟支付成功（开发环境用）。
      */
-    public function handleFailureByPaymentIntent(string $paymentIntentId, ?string $reason = null): PaymentTransaction
+    public function mockPaymentSuccess(string $transactionId): PaymentTransaction
     {
-        $tx = PaymentTransaction::where('provider_payment_intent_id', $paymentIntentId)->first();
-        if (! $tx instanceof PaymentTransaction) {
-            // payment_intent 事件先于 webhook 落库的兜底：记录失败但不抛 500
-            throw new \RuntimeException("No payment transaction found for payment_intent [{$paymentIntentId}]");
-        }
-        if ($tx->status === PaymentTransaction::STATUS_SUCCESS) {
-            return $tx;
-        }
-        $tx->update([
-            'status' => PaymentTransaction::STATUS_FAILED,
-            'failure_message' => $reason,
-            'updated_at' => Carbon::now(),
-        ]);
-        return $tx;
-    }
-
-    /**
-     * payment_intent.succeeded 事件成功处理（用于 Elements/二维码支付）
-     */
-    public function handleSuccessByPaymentIntent(string $paymentIntentId): PaymentTransaction
-    {
-        $tx = PaymentTransaction::where('provider_payment_intent_id', $paymentIntentId)->first();
-        if (! $tx instanceof PaymentTransaction) {
-            throw new \RuntimeException("No payment transaction found for payment_intent [{$paymentIntentId}]");
-        }
+        $tx = PaymentTransaction::findOrFail($transactionId);
         if ($tx->status === PaymentTransaction::STATUS_SUCCESS) {
             return $tx;
         }
@@ -301,189 +164,103 @@ final class PaymentService
             'status' => PaymentTransaction::STATUS_SUCCESS,
             'updated_at' => Carbon::now(),
         ]);
-        if ($tx->order_id) {
-            (new OrderService())->markPaid((string) $tx->order_id, $paymentIntentId);
-        }
-        return $tx;
-    }
-
-    public function refund(PaymentTransaction $tx): PaymentTransaction
-    {
-        if ($tx->status !== PaymentTransaction::STATUS_SUCCESS) {
-            return $tx;
-        }
-        $tx->update(['status' => PaymentTransaction::STATUS_REFUNDED]);
-        if ($tx->order_id) {
-            (new OrderService())->markRefunded((string) $tx->order_id);
+        if ($tx->subscription_id) {
+            (new SubscriptionService())->activate((string) $tx->subscription_id, 'mock_' . $transactionId);
         }
         return $tx;
     }
 
     /**
-     * 创建 PaymentIntent（用于 Stripe Elements 信用卡支付）。
-     *
-     * @return array{client_secret: string, payment_intent_id: string}
+     * @return array<int, array{value: string, label: string}>
      */
-    public function createPaymentIntent(Order $order): array
+    public function paymentMethodOptions(): array
     {
-        $secret = $this->stripeSecret();
-        $useFake = $this->useFakeCheckout();
-
-        if (app()->environment('production') && $useFake) {
-            throw new RuntimeException('Fake Stripe is forbidden in production.');
-        }
-
-        $hasStripe = $secret !== '' && class_exists(\Stripe\StripeClient::class) && ! $useFake;
-        if (! $hasStripe && ! $useFake) {
-            throw new RuntimeException('Stripe is not configured.');
-        }
-
-        $paymentIntentId = 'pi_test_' . Str::random(24);
-        $clientSecret = $paymentIntentId . '_secret_' . Str::random(16);
-
-        if ($hasStripe) {
-            try {
-                $stripe = new \Stripe\StripeClient($secret);
-                $intent = $stripe->paymentIntents->create([
-                    'amount' => (int) $order->payable_amount_minor,
-                    'currency' => strtolower((string) $order->currency),
-                    'payment_method_types' => ['card'],
-                    'metadata' => [
-                        'order_id' => (string) $order->id,
-                        'user_id' => (string) $order->user_id,
-                    ],
-                ]);
-                $paymentIntentId = $intent->id;
-                $clientSecret = $intent->client_secret;
-            } catch (\Throwable $e) {
-                throw new RuntimeException('Stripe PaymentIntent creation failed: ' . $e->getMessage(), 0, $e);
-            }
-        }
-
-        $tx = PaymentTransaction::create([
-            'user_id' => $order->user_id,
-            'order_id' => $order->id,
-            'provider' => 'stripe',
-            'provider_session_id' => $paymentIntentId,
-            'provider_payment_intent_id' => $paymentIntentId,
-            'status' => PaymentTransaction::STATUS_PENDING,
-            'amount_minor' => $order->payable_amount_minor,
-            'currency' => $order->currency,
-            'raw_payload' => [
-                'payment_method' => 'card',
-                'payment_intent_id' => $paymentIntentId,
-                'client_secret' => $clientSecret,
+        return array_map(
+            fn (string $method): array => [
+                'value' => $method,
+                'label' => self::PAYMENT_METHOD_LABELS[$method] ?? $method,
             ],
-        ]);
-
-        return [
-            'client_secret' => $clientSecret,
-            'payment_intent_id' => $paymentIntentId,
-            'payment_transaction_id' => (string) $tx->id,
-        ];
+            $this->configuredPaymentMethods(),
+        );
     }
 
-    /**
-     * 创建微信/支付宝支付（返回二维码 URL 等信息）。
-     *
-     * @return array{qr_code_url: string, payment_intent_id: string, client_secret: string}
-     */
-    public function createQrPayment(Order $order, string $paymentMethod): array
+    public function configuredPaymentMethods(): array
     {
-        $secret = $this->stripeSecret();
-        $useFake = $this->useFakeCheckout();
-
-        if (! in_array($paymentMethod, ['wechat_pay', 'alipay'], true)) {
-            throw new RuntimeException('Invalid payment method for QR payment.');
-        }
-
-        if (app()->environment('production') && $useFake) {
-            throw new RuntimeException('Fake Stripe is forbidden in production.');
-        }
-
-        $hasStripe = $secret !== '' && class_exists(\Stripe\StripeClient::class) && ! $useFake;
-        if (! $hasStripe && ! $useFake) {
-            throw new RuntimeException('Stripe is not configured.');
-        }
-
-        $paymentIntentId = 'pi_test_' . Str::random(24);
-        $clientSecret = $paymentIntentId . '_secret_' . Str::random(16);
-        $qrCodeUrl = '';
-
-        if ($hasStripe) {
-            try {
-                $stripe = new \Stripe\StripeClient($secret);
-
-                $paymentIntentData = [
-                    'amount' => (int) $order->payable_amount_minor,
-                    'currency' => strtolower((string) $order->currency),
-                    'payment_method_types' => [$paymentMethod],
-                    'metadata' => [
-                        'order_id' => (string) $order->id,
-                        'user_id' => (string) $order->user_id,
-                    ],
-                ];
-
-                if ($paymentMethod === 'wechat_pay') {
-                    $paymentIntentData['payment_method_options'] = [
-                        'wechat_pay' => ['client' => 'web'],
-                    ];
-                }
-
-                $intent = $stripe->paymentIntents->create($paymentIntentData);
-                $paymentIntentId = $intent->id;
-                $clientSecret = $intent->client_secret;
-
-                $qrCodeUrl = $intent->next_action?->wechat_pay_handle_qr_code?->qr_code_url
-                    ?? $intent->next_action?->alipay_handle_redirect?->url
-                    ?? '';
-            } catch (\Throwable $e) {
-                throw new RuntimeException('Stripe QR payment creation failed: ' . $e->getMessage(), 0, $e);
-            }
-        } else {
-            $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=fake_' . $paymentMethod . '_' . $order->order_no;
-        }
-
-        $tx = PaymentTransaction::create([
-            'user_id' => $order->user_id,
-            'order_id' => $order->id,
-            'provider' => 'stripe',
-            'provider_session_id' => $paymentIntentId,
-            'provider_payment_intent_id' => $paymentIntentId,
-            'status' => PaymentTransaction::STATUS_PENDING,
-            'amount_minor' => $order->payable_amount_minor,
-            'currency' => $order->currency,
-            'raw_payload' => [
-                'payment_method' => $paymentMethod,
-                'payment_intent_id' => $paymentIntentId,
-                'client_secret' => $clientSecret,
-                'qr_code_url' => $qrCodeUrl,
-            ],
-        ]);
-
-        return [
-            'qr_code_url' => $qrCodeUrl,
-            'payment_intent_id' => $paymentIntentId,
-            'client_secret' => $clientSecret,
-            'payment_transaction_id' => (string) $tx->id,
-        ];
+        return $this->normalizePaymentMethods(
+            SystemConfigValue::field('payment', 'payment_methods', ['card']),
+        );
     }
 
-    /**
-     * 查询支付交易状态。
-     */
+    public function stripePublishableKey(): string
+    {
+        $configured = (string) SystemConfigValue::field('payment', 'publishable_key', '');
+        if ($configured !== '' && $configured !== '********') {
+            return $configured;
+        }
+        return (string) config('services.stripe.publishable', '');
+    }
+
+    public function isFakeMode(): bool
+    {
+        return $this->useFakeCheckout();
+    }
+
     public function getTransactionStatus(string $transactionId): ?PaymentTransaction
     {
         return PaymentTransaction::find($transactionId);
     }
 
-    /**
-     * 使用钱包余额支付订单。
-     *
-     * @return array{status: string, balance_after_minor: int}
-     */
-    public function payWithWallet(Order $order): array
+    private function paymentMethodsForCheckout(?string $selected): array
     {
-        throw new \RuntimeException('Member orders must be paid through Stripe.');
+        $configured = $this->configuredPaymentMethods();
+        // Allow "mock" payment method when fake checkout is enabled (dev/test only)
+        if ($this->useFakeCheckout() && ! in_array('mock', $configured, true)) {
+            $configured[] = 'mock';
+        }
+        $selected = is_string($selected) ? trim($selected) : '';
+        if ($selected === '') {
+            return $configured;
+        }
+        if (! in_array($selected, $configured, true)) {
+            throw new RuntimeException('Selected payment method is not enabled.');
+        }
+        return [$selected];
+    }
+
+    private function normalizePaymentMethods(mixed $methods): array
+    {
+        if (is_string($methods)) {
+            $methods = array_map('trim', explode(',', $methods));
+        }
+        if (! is_array($methods)) {
+            return ['card'];
+        }
+        $allowed = array_keys(self::PAYMENT_METHOD_LABELS);
+        $normalized = [];
+        foreach ($methods as $method) {
+            $method = trim((string) $method);
+            if ($method !== '' && in_array($method, $allowed, true)) {
+                $normalized[] = $method;
+            }
+        }
+        return array_values(array_unique($normalized)) ?: ['card'];
+    }
+
+    private function stripeSecret(): string
+    {
+        $configured = (string) SystemConfigValue::field('payment', 'secret_key', '');
+        if ($configured !== '' && $configured !== '********') {
+            return $configured;
+        }
+        return (string) config('services.stripe.secret', '');
+    }
+
+    private function useFakeCheckout(): bool
+    {
+        $configured = SystemConfigValue::field('payment', 'fake', null);
+        if ($configured !== null && $configured !== '') {
+            return filter_var($configured, FILTER_VALIDATE_BOOLEAN);
+        }
+        return (bool) config('services.stripe.fake', false);
     }
 }

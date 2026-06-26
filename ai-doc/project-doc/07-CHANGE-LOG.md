@@ -2,6 +2,30 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-06-26 — 财务栏目链路完善 + Model 表名前缀修复
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-06-26 | code | AdminFinanceController: orders()+orderDetail() 查询 dns_orders 表 | portal-web/app/Http/Controllers/Api/V1/Admin/AdminFinanceController.php | ok |
+| 2026-06-26 | code | AdminFinanceController: subscriptions()+subscriptionDetail() 查询 dns_subscriptions 表 | portal-web/app/Http/Controllers/Api/V1/Admin/AdminFinanceController.php | ok |
+| 2026-06-26 | code | admin.php: 新增 finance/orders, finance/orders/{id}, finance/subscriptions, finance/subscriptions/{id} 路由 | portal-web/routes/v1/admin.php | ok |
+| 2026-06-26 | code | 新建 Order.vue 订单列表页面（分页/筛选/导出/详情） | portal-web/web/src/views/admin/Order.vue | ok |
+| 2026-06-26 | code | 新建 Subscriptions.vue 订阅管理页面（分页/状态/配额/自动续费筛选） | portal-web/web/src/views/admin/Subscriptions.vue | ok |
+| 2026-06-26 | code | router/index.js: 导入 AdminOrder/AdminSubscriptions + 新增 /admin/order, /admin/subscriptions 路由 | portal-web/web/src/router/index.js | ok |
+| 2026-06-26 | code | i18n: 订单/订阅相关 36 个 key（zh-CN/en/ko） | portal-web/web/src/locales/{zh-CN,en,ko}.json | ok |
+| 2026-06-26 | code | billing.desc 修正：套餐用量→交易流水描述（Billing.vue 实际功能） | portal-web/web/src/locales/{zh-CN,en,ko}.json | ok |
+| 2026-06-26 | code | dns_admin_menu_rule: 重构菜单结构 — 统一 label 命名、调整 sort_order、配置文件发布归入系统设置、新增 wallet-flows/subscriptions 菜单项 | portal-web/database (runtime) | ok |
+| 2026-06-26 | code | admin.php: 新增 finance/wallet-flows 和 /wallet-flows/export 路由 | portal-web/routes/v1/admin.php | ok |
+| 2026-06-26 | code | router/index.js: 退款路由改回 refund-records（路径不变） | portal-web/web/src/router/index.js | ok |
+| 2026-06-26 | code | 新建 WalletFlows.vue 钱包流水页面 | portal-web/web/src/views/admin/WalletFlows.vue | ok |
+| 2026-06-26 | code | 新建 BaseModel.php，Eloquent Model 通过 DB::getTablePrefix() 动态获取表名前缀 | portal-web/app/Models/BaseModel.php | ok |
+| 2026-06-26 | code | Wallet/Order/Plan/PlanPrice/PlanFeature/BillingPeriod/BillingItem 改为继承 BaseModel | portal-web/app/Models/Wallet.php 等 7 个文件 | ok |
+| 2026-06-26 | code | AdminMemberCatalogController::rules(): list_type 值映射 deny→denylist/allow→allowlist | portal-web/app/Http/Controllers/Api/V1/Admin/AdminMemberCatalogController.php | ok |
+| 2026-06-26 | code | ProfileRule/Profile 改为继承 BaseModel，修复黑名单查询 dns_profile_rules 表名 | portal-web/app/Models/ProfileRule.php, Profile.php | ok |
+| 2026-06-26 | code | AdminPolicyController::indexPlans(): 去除嵌套 users 全量加载，改为 COUNT 统计 user_count | portal-web/app/Http/Controllers/Api/V1/Admin/AdminPolicyController.php | ok |
+| 2026-06-26 | code | UserPolicyServices.vue: 去掉表格嵌套（type=expand），改为独立「查看用户」按钮 | portal-web/web/src/views/admin/UserPolicyServices.vue | ok |
+| 2026-06-26 | docs | 同步本变更日志 | project-doc/07-CHANGE-LOG.md | ok |
+
 ## 2026-06-26 — 前台账户页面优化 + i18n 修复
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |

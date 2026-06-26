@@ -77,7 +77,13 @@ final class AdminMemberCatalogController
         $query = ProfileRule::query()->with('profile:id,profile_id,name,user_id');
 
         if (! empty($validated['list_type'])) {
-            $query->where('list_type', $validated['list_type']);
+            // 前端传 deny/allow，数据库存 denylist/allowlist，需映射
+            $mapped = match ($validated['list_type']) {
+                'deny' => 'denylist',
+                'allow' => 'allowlist',
+                default => $validated['list_type'],
+            };
+            $query->where('list_type', $mapped);
         }
         if (! empty($validated['domain'])) {
             $query->where('domain', 'like', '%' . $validated['domain'] . '%');

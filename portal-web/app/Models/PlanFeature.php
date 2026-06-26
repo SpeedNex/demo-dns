@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * UI.md #73 — 套餐功能矩阵。
  */
-class PlanFeature extends Model
+class PlanFeature extends BaseModel
 {
     protected $table = 'plan_features';
 
