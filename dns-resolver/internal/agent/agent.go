@@ -150,9 +150,15 @@ func (a *Agent) StartConfigSync(ctx context.Context, interval time.Duration) {
 	defer ticker.Stop()
 	defer checkTicker.Stop()
 
-	// 启动时：拉取 Global Config + 加载磁盘缓存
+	// 启动时：拉取 Global Config + 加载磁盘缓存到 Engine
 	a.pullGlobalConfig()
 	a.pCache.LoadFromDiskOnStartup()
+	// 将磁盘缓存的 Profile 加载到 Engine，填充 deviceIndex
+	for _, pid := range a.pCache.GetAllProfileIDs() {
+		if err := a.FetchProfile(pid); err != nil {
+			log.Printf("Startup: failed to load profile %s into engine: %v", pid, err)
+		}
+	}
 
 	// 启动 evictor（每 5 分钟）
 	go a.evictLoop()
@@ -222,14 +228,14 @@ func (a *Agent) FetchProfile(profileID string) error {
 	}
 
 	// 1. 检查内存缓存
-	if _, _, ok := a.pCache.GetFromMemory(profileID); ok {
-		return nil
+	if data, version, ok := a.pCache.GetFromMemory(profileID); ok {
+		return a.loadProfileIntoEngine(profileID, data, version)
 	}
 
 	// 2. 检查磁盘缓存
 	if data, version, ok := a.pCache.GetFromDisk(profileID); ok {
 		a.pCache.SetToMemory(profileID, data, version)
-		return nil
+		return a.loadProfileIntoEngine(profileID, data, version)
 	}
 
 	// 3. 回源 Portal（SingleFlight 防击穿）

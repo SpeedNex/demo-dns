@@ -16,6 +16,7 @@ type DynDNSResult struct {
 // 维持对受感染系统的访问。
 var knownDynDNSProviders = []string{
 	// 主流 DDNS 服务
+	"ddns.net",
 	"no-ip.com",
 	"noip.com",
 	"duckdns.org",

@@ -137,6 +137,17 @@ func (pc *ProfileCache) touch(profileID string) {
 	}
 }
 
+// GetAllProfileIDs 返回当前内存缓存中所有 Profile ID。
+func (pc *ProfileCache) GetAllProfileIDs() []string {
+	pc.mu.RLock()
+	defer pc.mu.RUnlock()
+	ids := make([]string, 0, len(pc.memory))
+	for id := range pc.memory {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
 // evictMemoryLRU 淘汰最久未使用的内存条目。
 func (pc *ProfileCache) evictMemoryLRU() {
 	if len(pc.mruList) == 0 {

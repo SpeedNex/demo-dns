@@ -88,6 +88,12 @@ func (prl *ProfileResolutionLayer) LoadSecurityConfig(profileID string, cfg map[
 	if brands, ok := cfg["brand_domains"]; ok {
 		if list, ok2 := brands.([]string); ok2 {
 			ps.BrandDomains = list
+		} else if list, ok2 := brands.([]any); ok2 {
+			for _, b := range list {
+				if s, ok3 := b.(string); ok3 {
+					ps.BrandDomains = append(ps.BrandDomains, s)
+				}
+			}
 		}
 	}
 

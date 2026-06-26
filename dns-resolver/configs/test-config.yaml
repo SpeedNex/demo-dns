@@ -13,7 +13,7 @@ node:
         - udp
         - doh
 listen:
-    doh: 18053
+    doh: 443
     dot: 853
     tcp: 15353
     udp: 15353

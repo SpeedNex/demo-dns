@@ -7,7 +7,7 @@ node:
     provider: local
     public_ipv4: 127.0.0.1
 listen:
-    doh: 8443
+    doh: 443
     dot: 853
     doq: 853
     udp: 53

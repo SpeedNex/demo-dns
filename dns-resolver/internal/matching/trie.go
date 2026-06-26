@@ -50,6 +50,12 @@ func (t *Trie) searchRecursive(node *TrieNode, parts []string, idx int) bool {
 		return false
 	}
 
+	// If this node is a terminal, the wildcard matches all remaining subdomains.
+	// Trie only stores wildcard entries (exact entries use Go maps).
+	if node.isEnd {
+		return true
+	}
+
 	// If we've matched all parts, check if this is a terminal node
 	if idx >= len(parts) {
 		return node.isEnd
