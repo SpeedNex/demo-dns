@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
+        if (Schema::hasTable('security_data_items')) {
+            return;
+        }
+
         Schema::create('security_data_items', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('group_code', 40)->index();

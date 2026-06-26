@@ -9,6 +9,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('rule_sources', 'homepage')) {
+            return;
+        }
+
         // category 从 enum 改为 varchar(60)
         DB::statement("ALTER TABLE dns_rule_sources MODIFY category VARCHAR(60) DEFAULT 'custom'");
 
