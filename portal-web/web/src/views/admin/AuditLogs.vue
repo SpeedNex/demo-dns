@@ -88,7 +88,11 @@
             <el-table-column prop="created_at" :label="$t('admin.auditLogs.time')" width="170">
                 <template #default="{ row }">{{ formatTime(row.created_at) }}</template>
             </el-table-column>
-            <el-table-column prop="actor_id" :label="$t('admin.auditLogs.actor')" width="220" show-overflow-tooltip />
+            <el-table-column :label="$t('admin.auditLogs.actor')" width="220" show-overflow-tooltip>
+                <template #default="{ row }">
+                    <span>{{ row.actor_username || row.actor_admin_id || '-' }}</span>
+                </template>
+            </el-table-column>
             <el-table-column prop="action" :label="$t('admin.auditLogs.action')" width="260">
                 <template #default="{ row }">
                     <el-tag size="small" :type="actionTagType(row.action)" effect="light">{{ actionLabel(row.action) }}</el-tag>
