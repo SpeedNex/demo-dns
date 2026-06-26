@@ -383,6 +383,9 @@ onMounted(async () => {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
     min-height: 76px;
     padding: 0 20px !important;
     background: rgba(255, 255, 255, 0.88) !important;

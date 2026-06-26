@@ -39,6 +39,27 @@ final class ProfilePublishApplicationService
         $devices = $profile->devices()->get()->toArray();
         $categoryRules = $this->categoryResolver->loadCategoryRules();
 
+        // 将 parental blocked_items 转换为规则（因为 resolver 只从 rules 列表加载域名规则）
+        $parentalSettings = is_array($profile->parental_settings) ? $profile->parental_settings : [];
+        $blockedItems = $parentalSettings['blocked_items'] ?? [];
+        if (! empty($blockedItems) && is_array($blockedItems)) {
+            foreach ($blockedItems as $item) {
+                if (empty($item['name'])) {
+                    continue;
+                }
+                $category = $item['category'] ?? 'default';
+                $rules[] = [
+                    'list_type' => 'category:parental:'.$category,
+                    'match_type' => 'exact',
+                    'domain' => $item['name'],
+                    'normalized_domain' => $item['name'],
+                    'action' => 'block',
+                    'category' => 'parental',
+                    'enabled' => true,
+                ];
+            }
+        }
+
         $security = array_merge([
             'enabled' => true,
             'block_malware' => true,

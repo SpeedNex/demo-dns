@@ -6,88 +6,59 @@
             :description="$t('dashboard.subtitle')"
         />
 
-        <!-- DNS Access Endpoints (Middle Row) -->
-        <section class="endpoint-row">
-            <!-- Left: Endpoints (ID / DoH) -->
-            <div class="card">
-                <div class="card-header">
-                    <h2>{{ $t('dashboard.endpointsTitle') }}</h2>
-                    <span class="badge-endpoint">{{ $t('dashboard.endpointsTag') }}</span>
-                </div>
-                <div class="card-body">
-                    <!-- ID -->
-                    <div class="endpoint-block">
-                        <div class="endpoint-label">{{ $t('dashboard.endpointId') }}</div>
-                        <div class="code-row">
-                            <div class="code">{{ endpoints.profile_id || '—' }}</div>
-                            <button class="copy-btn" @click="copyText(endpoints.profile_id)">{{ $t('dashboard.copy') }}</button>
-                        </div>
-                    </div>
-
-                    <!-- DoH -->
-                    <div class="endpoint-block">
-                        <div class="endpoint-label">{{ $t('dashboard.endpointDoh') }}</div>
-                        <div class="code-row">
-                            <div class="code">{{ endpoints.doh || '—' }}</div>
-                            <button class="copy-btn" @click="copyText(endpoints.doh)">{{ $t('dashboard.copy') }}</button>
-                        </div>
-                    </div>
-
-                    <!-- DoT / DoQ -->
-                    <div class="endpoint-block">
-                        <div class="endpoint-label">{{ $t('dashboard.endpointDotDoq') }}</div>
-                        <div class="code-row">
-                            <div class="code">{{ endpoints.dot || '—' }}</div>
-                            <button class="copy-btn" @click="copyText(endpoints.dot)">{{ $t('dashboard.copy') }}</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right: 已绑定的 IP → 设备访问记录 -->
-            <div class="card">
-                <div class="card-header">
-                    <h2>{{ $t('dashboard.boundIpTitle') }}</h2>
-                </div>
-                <div class="card-body">
-                    <!-- 设备列表 -->
-                    <div class="device-list" v-if="recentDevices.length">
-                        <div v-for="(d, i) in recentDevices" :key="i" class="device-card">
-                            <div class="device-icon-wrap">
-                                <svg v-if="d.device_type === 'desktop' || d.device_type === 'Windows' || d.device_type === 'macOS'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
-                                <svg v-else-if="d.device_type === 'mobile' || d.device_type === 'iOS' || d.device_type === 'Android'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
-                                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
-                            </div>
-                            <div class="device-info-wrap">
-                                <div class="device-name">{{ d.name || d.device_type || 'Unknown Device' }}</div>
-                                <div class="device-meta-row">
-                                    <span class="device-ip">{{ d.source_ip || '—' }}</span>
-                                    <span class="device-time" v-if="d.last_seen_at">{{ formatLastSeen(d.last_seen_at) }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-else class="empty-state">
-                        <span>—</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <!-- Main Content Grid -->
         <section class="content-grid">
-            <!-- Left Column -->
+            <!-- Left Column: DNS Endpoints -->
             <div class="left-col">
-                <!-- 7-Day Query Trend -->
-                <div class="card section-gap">
+                <div class="card">
                     <div class="card-header">
-                        <h2>{{ $t('dashboard.queryTrend') }}</h2>
-                        <button class="btn" @click="$router.push('/user/analytics')">{{ $t('dashboard.viewDetail') }}</button>
+                        <h2>{{ $t('dashboard.endpointsTitle') }}</h2>
+                        <span class="badge-endpoint">{{ $t('dashboard.endpointsTag') }}</span>
                     </div>
                     <div class="card-body">
-                        <div class="chart-box">
-                            <div v-for="(bar, i) in chartBars" :key="i" class="bar" :style="{ height: bar.height + '%' }">
-                                <span>{{ bar.label }}</span>
+                        <!-- ID -->
+                        <div class="endpoint-row-item">
+                            <div class="endpoint-label">{{ $t('dashboard.endpointId') }}</div>
+                            <div class="code-row">
+                                <div class="code">{{ endpoints.profile_id || '—' }}</div>
+                                <button class="copy-btn" @click="copyText(endpoints.profile_id)">{{ $t('dashboard.copy') }}</button>
+                            </div>
+                        </div>
+
+                        <!-- DoH -->
+                        <div class="endpoint-row-item">
+                            <div class="endpoint-label">{{ $t('dashboard.endpointDoh') }}</div>
+                            <div class="code-row">
+                                <div class="code">{{ endpoints.doh || '—' }}</div>
+                                <button class="copy-btn" @click="copyText(endpoints.doh)">{{ $t('dashboard.copy') }}</button>
+                            </div>
+                        </div>
+
+                        <!-- DoT / DoQ -->
+                        <div class="endpoint-row-item">
+                            <div class="endpoint-label">{{ $t('dashboard.endpointDotDoq') }}</div>
+                            <div class="code-row">
+                                <div class="code">{{ endpoints.dot || '—' }}</div>
+                                <button class="copy-btn" @click="copyText(endpoints.dot)">{{ $t('dashboard.copy') }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Domains in Left Column -->
+                <div class="card section-gap">
+                    <div class="card-header">
+                        <h2>{{ $t('dashboard.topVisited') }}</h2>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="domain-list">
+                            <div v-for="(d, i) in topVisited.slice(0, 5)" :key="i" class="domain-row">
+                                <strong>{{ d.domain }}</strong>
+                                <span>{{ formatNumber(d.count) }}</span>
+                            </div>
+                            <div v-if="!topVisited.length" class="domain-row">
+                                <strong>—</strong>
+                                <span>0</span>
                             </div>
                         </div>
                     </div>
@@ -96,21 +67,27 @@
 
             <!-- Right Column -->
             <aside class="right-col">
-                <!-- Top Visited Domains -->
-                <div class="card section-gap">
+                <!-- Devices Panel -->
+                <div class="card">
                     <div class="card-header">
-                        <h2>{{ $t('dashboard.topVisited') }}</h2>
+                        <h2>{{ $t('devices.title') || 'Devices' }}</h2>
+                        <span class="badge-device">{{ devices.length }}</span>
                     </div>
                     <div class="card-body p-0">
-                        <div class="domain-list">
-                            <div v-for="(d, i) in topVisited" :key="i" class="domain-row">
-                                <strong>{{ d.domain }}</strong>
-                                <span>{{ formatNumber(d.count) }}</span>
+                        <div class="device-list">
+                            <div v-for="device in devices.slice(0, 4)" :key="device.id" class="device-row">
+                                <div class="device-info">
+                                    <span class="device-status" :class="device.last_seen_at ? 'online' : 'offline'"></span>
+                                    <span class="device-name">{{ device.name || device.id }}</span>
+                                </div>
+                                <span class="device-status-text">{{ device.last_seen_at ? $t('devices.online') : $t('devices.offline') }}</span>
                             </div>
-                            <div v-if="!topVisited.length" class="domain-row">
-                                <strong>—</strong>
-                                <span>0</span>
+                            <div v-if="!devices.length" class="device-row empty">
+                                <span>No devices</span>
                             </div>
+                        </div>
+                        <div class="card-footer-link">
+                            <router-link :to="`/user/${route.params.profile_id}/devices`">{{ $t('dashboard.viewAllDevices') }} →</router-link>
                         </div>
                     </div>
                 </div>
@@ -122,7 +99,7 @@
                     </div>
                     <div class="card-body p-0">
                         <div class="domain-list">
-                            <div v-for="(d, i) in topBlocked" :key="i" class="domain-row">
+                            <div v-for="(d, i) in topBlocked.slice(0, 5)" :key="i" class="domain-row">
                                 <strong>{{ d.domain }}</strong>
                                 <span class="danger">{{ formatNumber(d.count) }}</span>
                             </div>
@@ -199,7 +176,8 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import client from '@/api/client'
@@ -208,57 +186,18 @@ import PageHeader from '@/components/PageHeader.vue'
 import { useCurrentProfile } from '@/composables/useCurrentProfile'
 
 const { t } = useI18n()
+const route = useRoute()
 const { currentProfileId } = useCurrentProfile()
 
 const endpoints = ref({ profile_id: '', doh: '', dot: '', doq: '', doq_url: '', ipv4: [], ipv6: [] })
 const topVisited = ref([])
 const topBlocked = ref([])
-const recentDevices = ref([])
-const boundIpv4 = computed(() => endpoints.value.server_ip || endpoints.value.ipv4?.[0] || '')
-
-const chartBars = ref([])
+const devices = ref([])
 
 function formatNumber(n) {
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M'
     if (n >= 1000) return (n / 1000).toFixed(1) + 'K'
     return String(n)
-}
-
-function formatLastSeen(isoString) {
-    if (!isoString) return ''
-    const date = new Date(isoString)
-    const now = new Date()
-    const diff = now - date
-    const minutes = Math.floor(diff / 60000)
-    const hours = Math.floor(diff / 3600000)
-    const days = Math.floor(diff / 86400000)
-    if (minutes < 1) return '刚刚'
-    if (minutes < 60) return `${minutes}m ago`
-    if (hours < 24) return `${hours}h ago`
-    if (days < 7) return `${days}d ago`
-    return date.toLocaleDateString()
-}
-
-function buildChartBars(data) {
-    // data: [{ date: '2024-01-01', queries: 1234 }, ...]
-    if (!data || !data.length) {
-        return [
-            { label: 'Mon', height: 10 },
-            { label: 'Tue', height: 10 },
-            { label: 'Wed', height: 10 },
-            { label: 'Thu', height: 10 },
-            { label: 'Fri', height: 10 },
-            { label: 'Sat', height: 10 },
-            { label: 'Sun', height: 10 },
-        ]
-    }
-    const maxQueries = Math.max(...data.map(d => d.queries || 1), 1)
-    const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    return data.map(d => ({
-        label: dayLabels[new Date(d.date).getDay()] || d.date,
-        height: Math.max(Math.round((d.queries / maxQueries) * 100), 5),
-        queries: d.queries,
-    }))
 }
 
 async function copyText(text) {
@@ -301,21 +240,13 @@ const fetchData = async () => {
     }
 
     try {
-        const { data } = await client.get('/user/devices', { params })
-        recentDevices.value = (data.data || []).slice(0, 3)
+        const { data } = await client.get('/user/devices')
+        devices.value = data.data ?? []
     } catch {
-        // Devices optional
+        devices.value = []
     }
 
-    // 获取最近7天查询趋势数据
-    try {
-        const { data } = await client.get('/user/query-trend', { params: { ...params, days: 7 } })
-        const trend = data.data || []
-        chartBars.value = buildChartBars(trend)
-    } catch {
-        // 如果API不可用，显示空图表
-        chartBars.value = buildChartBars([])
-    }
+    // 预留：未来可添加其他数据获取
 }
 
 onMounted(fetchData)
@@ -339,23 +270,26 @@ watch(currentProfileId, fetchData)
     margin: 0;
 }
 
-/* ========== Endpoint Row (Middle) ========== */
-.endpoint-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 22px;
-    margin-bottom: 26px;
-}
-.endpoint-row > .card {
-    height: 100%;
-}
-
 /* ========== Content Grid ========== */
 .content-grid {
     display: grid;
-    grid-template-columns: 1.55fr 0.95fr;
-    gap: 24px;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
     align-items: start;
+}
+
+/* ========== Left Column ========== */
+.left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+/* ========== Right Column ========== */
+.right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
 }
 
 /* ========== Cards ========== */
@@ -487,35 +421,6 @@ watch(currentProfileId, fetchData)
     background: #f1f5f9;
 }
 
-/* ========== Chart ========== */
-.chart-box {
-    height: 200px;
-    display: flex;
-    align-items: flex-end;
-    gap: 14px;
-    padding: 12px 4px 28px;
-}
-.bar {
-    flex: 1;
-    border-radius: 12px 12px 0 0;
-    background: linear-gradient(180deg, #60a5fa, var(--color-primary, #2563eb));
-    min-height: 40px;
-    position: relative;
-    transition: opacity 0.2s;
-}
-.bar:hover {
-    opacity: 0.85;
-}
-.bar span {
-    position: absolute;
-    bottom: -26px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: var(--color-text-muted, #64748b);
-    font-size: 12px;
-    white-space: nowrap;
-}
-
 /* ========== Device Grid ========== */
 .device-grid {
     display: grid;
@@ -545,20 +450,11 @@ watch(currentProfileId, fetchData)
     gap: 24px;
 }
 
-/* ========== Endpoints () ========== */
-.badge-endpoint {
-    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 999px;
-    letter-spacing: 0.3px;
+/* ========== Endpoint Row Item ========== */
+.endpoint-row-item {
+    margin-bottom: 14px;
 }
-.endpoint-block {
-    margin-bottom: 16px;
-}
-.endpoint-block:last-child {
+.endpoint-row-item:last-child {
     margin-bottom: 0;
 }
 .endpoint-label {
@@ -568,117 +464,20 @@ watch(currentProfileId, fetchData)
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-}
-.endpoint-hint {
-    color: #94a3b8;
-    font-weight: 500;
-    text-transform: none;
-    letter-spacing: 0;
-    font-size: 11px;
-    background: #f1f5f9;
-    padding: 1px 6px;
-    border-radius: 4px;
 }
 .mt-6 { margin-top: 6px; }
 
-/* ========== Device List ========== */
-.device-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-.device-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: var(--color-bg-secondary, #f8fafc);
-    transition: all 0.15s ease;
-}
-.device-row:hover {
-    background: #f1f5f9;
-}
-.device-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.device-icon {
-    color: var(--color-text-muted, #64748b);
-    display: flex;
-    align-items: center;
-}
-.device-name {
-    color: var(--color-text, #0f172a);
-    font-weight: 600;
-    font-size: 13px;
-}
-.device-meta {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-.device-ip {
-    color: var(--color-text-muted, #64748b);
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 12px;
-}
-.device-time {
-    color: #94a3b8;
+/* ========== Badge Endpoint ========== */
+.badge-endpoint {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    color: #fff;
     font-size: 11px;
-    white-space: nowrap;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.3px;
 }
 
-/* ========== Bound IP Device List (deprecated) ========== */
-.bound-ip-list {
-    display: grid;
-    gap: 0;
-}
-.bound-ip-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid #edf2f7;
-    font-size: 13px;
-}
-.bound-ip-row:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-}
-.bound-ip-device {
-    color: var(--color-text, #0f172a);
-    font-weight: 600;
-}
-.bound-ip-addr {
-    color: var(--color-text-muted, #64748b);
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 12px;
-}
-
-/* 保留 access-item 兼容老样式 */
-.access-item {
-    background: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-xl);
-    padding: 16px;
-    margin-bottom: 14px;
-}
-.access-item:last-child {
-    margin-bottom: 0;
-}
-.access-item label {
-    display: block;
-    color: var(--color-text-muted, #64748b);
-    font-size: 13px;
-    margin-bottom: 8px;
-    font-weight: 600;
-}
 .code-row {
     display: flex;
     gap: 10px;
@@ -739,6 +538,76 @@ watch(currentProfileId, fetchData)
 }
 .domain-row span.danger {
     color: var(--color-danger, #dc2626);
+}
+
+/* ========== Device List ========== */
+.badge-device {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.3px;
+}
+.device-list {
+    display: grid;
+    gap: 0;
+}
+.device-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    border-bottom: 1px solid #edf2f7;
+    font-size: 14px;
+}
+.device-row:last-child {
+    border-bottom: none;
+}
+.device-row.empty {
+    color: var(--color-text-muted, #64748b);
+    justify-content: center;
+}
+.device-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.device-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.device-status.online {
+    background: #16a34a;
+    box-shadow: 0 0 6px rgba(22, 163, 74, 0.4);
+}
+.device-status.offline {
+    background: #94a3b8;
+}
+.device-name {
+    color: var(--color-text, #0f172a);
+    font-weight: 500;
+}
+.device-status-text {
+    color: var(--color-text-muted, #64748b);
+    font-size: 12px;
+}
+.card-footer-link {
+    padding: 12px 24px;
+    border-top: 1px solid #edf2f7;
+    text-align: center;
+}
+.card-footer-link a {
+    color: var(--color-primary, #2563eb);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+.card-footer-link a:hover {
+    text-decoration: underline;
 }
 
 /* ========== Google Chrome Install Guide ========== */
@@ -876,8 +745,7 @@ watch(currentProfileId, fetchData)
 /* ========== Responsive ========== */
 @media (max-width: 1080px) {
     .content-grid,
-    .device-grid,
-    .endpoint-row {
+    .device-grid {
         grid-template-columns: 1fr;
     }
 }

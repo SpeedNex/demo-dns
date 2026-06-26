@@ -46,12 +46,11 @@
                         </div>
                     </template>
                     <div v-if="allowedDomains.length === 0" class="empty-chart">{{ $t('analytics.noAllowedDomains') }}</div>
-                    <div v-for="(item, idx) in allowedDomains.slice(0, 8)" :key="idx" class="rank-row">
+                    <div v-for="(item, idx) in allowedDomains.slice(0, 5)" :key="idx" class="rank-row">
                         <span class="rank-num success">{{ idx + 1 }}</span>
                         <span class="rank-domain">{{ item.domain }}</span>
                         <span class="rank-count">{{ item.count.toLocaleString() }}</span>
                     </div>
-                    <div v-if="allowedDomains.length > 8" class="more-hint">+{{ allowedDomains.length - 8 }} {{ $t('analytics.more') }}</div>
                 </el-card>
             </el-col>
             <el-col :span="6">
@@ -63,12 +62,11 @@
                         </div>
                     </template>
                     <div v-if="blockedDomains.length === 0" class="empty-chart">{{ $t('analytics.noBlockedDomains') }}</div>
-                    <div v-for="(item, idx) in blockedDomains.slice(0, 8)" :key="idx" class="rank-row">
+                    <div v-for="(item, idx) in blockedDomains.slice(0, 5)" :key="idx" class="rank-row">
                         <span class="rank-num danger">{{ idx + 1 }}</span>
                         <span class="rank-domain">{{ item.domain }}</span>
                         <span class="rank-count">{{ item.count.toLocaleString() }}</span>
                     </div>
-                    <div v-if="blockedDomains.length > 8" class="more-hint">+{{ blockedDomains.length - 8 }} {{ $t('analytics.more') }}</div>
                 </el-card>
             </el-col>
             <el-col :span="6">
@@ -79,7 +77,7 @@
                         </div>
                     </template>
                     <div v-if="blockReasons.length === 0" class="empty-chart">{{ $t('analytics.noBlockReasons') }}</div>
-                    <div v-for="(item, idx) in blockReasons.slice(0, 8)" :key="idx" class="rank-row">
+                    <div v-for="(item, idx) in blockReasons.slice(0, 5)" :key="idx" class="rank-row">
                         <span class="rank-num">{{ idx + 1 }}</span>
                         <span class="rank-domain">{{ item.reason }}</span>
                         <span class="rank-count">{{ item.count.toLocaleString() }}</span>
@@ -94,7 +92,7 @@
                         </div>
                     </template>
                     <div v-if="rootDomains.length === 0" class="empty-chart">{{ $t('analytics.noRootDomains') }}</div>
-                    <div v-for="(item, idx) in rootDomains.slice(0, 8)" :key="idx" class="rank-row">
+                    <div v-for="(item, idx) in rootDomains.slice(0, 5)" :key="idx" class="rank-row">
                         <span class="rank-num">{{ idx + 1 }}</span>
                         <span class="rank-domain">{{ item.domain }}</span>
                         <span class="rank-count">{{ item.count.toLocaleString() }}</span>
@@ -113,7 +111,7 @@
                         </div>
                     </template>
                     <div v-if="devices.length === 0" class="empty-chart">{{ $t('analytics.noDevices') }}</div>
-                    <div v-for="(item, idx) in devices.slice(0, 8)" :key="idx" class="rank-row">
+                    <div v-for="(item, idx) in devices.slice(0, 5)" :key="idx" class="rank-row">
                         <span class="rank-num">{{ idx + 1 }}</span>
                         <span class="rank-domain mono">{{ item.device_id }}</span>
                         <span class="rank-count">{{ item.count.toLocaleString() }}</span>
@@ -128,7 +126,7 @@
                         </div>
                     </template>
                     <div v-if="clientIps.length === 0" class="empty-chart">{{ $t('analytics.noClientIps') }}</div>
-                    <div v-for="(item, idx) in clientIps.slice(0, 8)" :key="idx" class="rank-row">
+                    <div v-for="(item, idx) in clientIps.slice(0, 5)" :key="idx" class="rank-row">
                         <span class="rank-num">{{ idx + 1 }}</span>
                         <span class="rank-domain mono">{{ item.client_ip }}</span>
                         <span class="rank-count">{{ item.count.toLocaleString() }}</span>
@@ -175,7 +173,7 @@
                         <span>{{ $t('analytics.topDomains') }}</span>
                     </template>
                     <div v-if="topDomains.length === 0" class="empty-chart">{{ $t('analytics.noData') }}</div>
-                    <div v-for="(item, idx) in topDomains.slice(0, 10)" :key="idx" class="rank-row">
+                    <div v-for="(item, idx) in topDomains.slice(0, 5)" :key="idx" class="rank-row">
                         <span class="rank-num">{{ idx + 1 }}</span>
                         <span class="rank-domain">{{ item.domain }}</span>
                         <span class="rank-count">{{ item.count.toLocaleString() }} {{ $t('analytics.queries') }}</span>
@@ -188,7 +186,7 @@
                         <span>{{ $t('analytics.topBlocked') }}</span>
                     </template>
                     <div v-if="topBlocked.length === 0" class="empty-chart">{{ $t('analytics.noData') }}</div>
-                    <div v-for="(item, idx) in topBlocked.slice(0, 10)" :key="idx" class="rank-row">
+                    <div v-for="(item, idx) in topBlocked.slice(0, 5)" :key="idx" class="rank-row">
                         <span class="rank-num danger">{{ idx + 1 }}</span>
                         <span class="rank-domain">{{ item.domain }}</span>
                         <span class="rank-count">{{ item.count.toLocaleString() }} {{ $t('analytics.blocked') }}</span>
@@ -289,6 +287,7 @@ watch(currentProfileId, fetchData)
 }
 .chart-card {
     border-radius: var(--radius-lg);
+    min-height: 280px;
 }
 .card-header {
     display: flex;
@@ -356,13 +355,6 @@ watch(currentProfileId, fetchData)
     color: var(--color-text-muted);
     padding: 32px 0;
     font-size: 13px;
-}
-.more-hint {
-    text-align: center;
-    color: var(--color-text-muted);
-    font-size: 12px;
-    padding: 6px 0;
-    border-top: 1px dashed var(--color-border);
 }
 .ratio-card {
     text-align: center;

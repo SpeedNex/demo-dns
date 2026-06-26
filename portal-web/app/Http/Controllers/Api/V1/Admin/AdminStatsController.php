@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Domain\System\HealthCheckService;
+use App\Domain\User\UserService;
 use App\Infrastructure\ClickHouse\ClickHouseClient;
 use App\Models\ProfileVersion;
 use App\Models\Node;
@@ -27,17 +28,27 @@ final class AdminStatsController
         $completedPublishes = PublishTask::where('status', 'succeeded')->count();
         $health = (new HealthCheckService())->probe();
 
-        // 从 ClickHouse dns_logs 获取查询量
+        // 从 ClickHouse dns_logs 获取查询量和拦截量
         $last24h = 0;
+        $blocked24h = 0;
         try {
             $client = new ClickHouseClient();
             $row = $client->jsonSelect(
                 "SELECT count() AS c FROM dns_logs WHERE event_time >= now() - INTERVAL 24 HOUR"
             );
             $last24h = (int) ($row[0]['c'] ?? 0);
+
+            $blockedRow = $client->jsonSelect(
+                "SELECT count() AS c FROM dns_logs WHERE event_time >= now() - INTERVAL 24 HOUR AND lower(action) IN ('block', 'blocked')"
+            );
+            $blocked24h = (int) ($blockedRow[0]['c'] ?? 0);
         } catch (\Throwable) {
             // ClickHouse 不可用时返回 0
         }
+
+        // 用户统计
+        $totalUsers = \App\Models\User::count();
+        $activeUsers = (int) \App\Models\User::where('last_login_at', '>=', now()->subDays(7))->count();
 
         return response()->json([
             'data' => [
@@ -59,10 +70,15 @@ final class AdminStatsController
                 ],
                 'queries' => [
                     'last_24h' => $last24h,
+                    'blocked_24h' => $blocked24h,
                     'gafam' => $this->countByCategory('gafam'),
                     'root' => $this->countByCategory('root'),
                     'encrypted_dns' => $this->countByCategory('encrypted_dns'),
                     'dnssec_valid' => $this->countByCategory('dnssec_valid'),
+                ],
+                'users' => [
+                    'total' => $totalUsers,
+                    'active' => $activeUsers,
                 ],
                 'system' => array_merge([
                     'uptime_hours' => 0,
