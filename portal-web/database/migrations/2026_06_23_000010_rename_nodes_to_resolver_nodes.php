@@ -69,7 +69,7 @@ return new class extends Migration
         if ($driver === 'mysql') {
             $fksToDrop = [
                 ["{$prefix}node_heartbeats", 'fk_node_heartbeats_node'],
-                ["{$prefix}config_versions", 'fk_config_versions_node'],
+                ["{$prefix}profile_versions", 'fk_profile_versions_node'],
                 ["{$prefix}node_tokens", 'fk_node_tokens_node'],
                 ["{$prefix}task_executions", 'fk_task_exec_node'],
             ];
@@ -99,7 +99,7 @@ return new class extends Migration
         if ($driver === 'mysql') {
             $fksToDrop = [
                 ["{$prefix}node_heartbeats", 'fk_node_heartbeats_node'],
-                ["{$prefix}config_versions", 'fk_config_versions_node'],
+                ["{$prefix}profile_versions", 'fk_profile_versions_node'],
                 ["{$prefix}node_tokens", 'fk_node_tokens_node'],
                 ["{$prefix}task_executions", 'fk_task_exec_node'],
             ];
@@ -122,7 +122,7 @@ return new class extends Migration
     private function rebuildForeignKeys(string $prefix): void
     {
         DB::statement("ALTER TABLE `{$prefix}node_heartbeats` ADD CONSTRAINT `fk_node_heartbeats_node` FOREIGN KEY (`node_id`) REFERENCES `{$prefix}resolver_nodes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE");
-        DB::statement("ALTER TABLE `{$prefix}config_versions` ADD CONSTRAINT `fk_config_versions_node` FOREIGN KEY (`target_node_id`) REFERENCES `{$prefix}resolver_nodes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE");
+        DB::statement("ALTER TABLE `{$prefix}profile_versions` ADD CONSTRAINT `fk_profile_versions_node` FOREIGN KEY (`target_node_id`) REFERENCES `{$prefix}resolver_nodes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE");
         DB::statement("ALTER TABLE `{$prefix}node_tokens` ADD CONSTRAINT `fk_node_tokens_node` FOREIGN KEY (`node_id`) REFERENCES `{$prefix}resolver_nodes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE");
         DB::statement("ALTER TABLE `{$prefix}task_executions` ADD CONSTRAINT `fk_task_exec_node` FOREIGN KEY (`node_id`) REFERENCES `{$prefix}resolver_nodes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE");
     }
@@ -130,7 +130,7 @@ return new class extends Migration
     private function rebuildOldForeignKeys(string $prefix): void
     {
         DB::statement("ALTER TABLE `{$prefix}node_heartbeats` ADD CONSTRAINT `fk_node_heartbeats_node` FOREIGN KEY (`node_id`) REFERENCES `{$prefix}nodes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE");
-        DB::statement("ALTER TABLE `{$prefix}config_versions` ADD CONSTRAINT `fk_config_versions_node` FOREIGN KEY (`target_node_id`) REFERENCES `{$prefix}nodes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE");
+        DB::statement("ALTER TABLE `{$prefix}profile_versions` ADD CONSTRAINT `fk_profile_versions_node` FOREIGN KEY (`target_node_id`) REFERENCES `{$prefix}nodes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE");
         DB::statement("ALTER TABLE `{$prefix}node_tokens` ADD CONSTRAINT `fk_node_tokens_node` FOREIGN KEY (`node_id`) REFERENCES `{$prefix}nodes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE");
         DB::statement("ALTER TABLE `{$prefix}task_executions` ADD CONSTRAINT `fk_task_exec_node` FOREIGN KEY (`node_id`) REFERENCES `{$prefix}nodes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE");
     }

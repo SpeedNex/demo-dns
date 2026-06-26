@@ -3,36 +3,36 @@
         <el-card shadow="never" style="background:#fff">
             <el-breadcrumb separator="/" style="margin-bottom:16px">
                 <el-breadcrumb-item :to="{ path: '/user' }">{{ $t('nav.dashboard') }}</el-breadcrumb-item>
-                <el-breadcrumb-item>{{ $t('denylist.title') }}</el-breadcrumb-item>
+                <el-breadcrumb-item>{{ $t('blocklist.title') }}</el-breadcrumb-item>
             </el-breadcrumb>
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-                <h2>{{ $t('denylist.title') }}</h2>
+                <h2>{{ $t('blocklist.title') }}</h2>
                 <div>
                     <el-button type="primary" @click="showDialog = true">
                         <el-icon><Plus /></el-icon>
-                        {{ $t('denylist.addDomain') }}
+                        {{ $t('blocklist.addDomain') }}
                     </el-button>
                 </div>
             </div>
 
         <el-table :data="rules" stripe style="margin-top:20px">
-            <el-table-column prop="domain" :label="$t('denylist.domain')" min-width="280" show-overflow-tooltip />
-            <el-table-column prop="action" :label="$t('denylist.action')" width="100" />
-            <el-table-column :label="$t('denylist.enabled')" width="110">
+            <el-table-column prop="domain" :label="$t('blocklist.domain')" min-width="280" show-overflow-tooltip />
+            <el-table-column prop="action" :label="$t('blocklist.action')" width="100" />
+            <el-table-column :label="$t('blocklist.enabled')" width="110">
                 <template #default="{ row }">
                     <el-switch :model-value="row.enabled" @change="(value) => handleToggle(row, value)" />
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('denylist.actions')" width="180">
+            <el-table-column :label="$t('blocklist.actions')" width="180">
                 <template #default="{ row }">
                     <div class="action-buttons">
                         <el-button size="small" @click="openEditDialog(row)">
                             <el-icon><Edit /></el-icon>
-                            {{ $t('denylist.edit') }}
+                            {{ $t('blocklist.edit') }}
                         </el-button>
                         <el-button size="small" type="danger" @click="handleDelete(row.id)">
                             <el-icon><Delete /></el-icon>
-                            {{ $t('denylist.delete') }}
+                            {{ $t('blocklist.delete') }}
                         </el-button>
                     </div>
                 </template>
@@ -40,13 +40,13 @@
         </el-table>
         </el-card>
 
-        <el-dialog v-model="showDialog" :title="$t('denylist.addDomain')" width="500">
+        <el-dialog v-model="showDialog" :title="$t('blocklist.addDomain')" width="500">
             <el-form ref="formRef" :model="form" label-position="top">
-                <el-form-item :label="$t('denylist.domain')" prop="domain" :rules="[{ required: true, message: $t('common.required') }]">
-                    <el-input v-model="form.domain" :placeholder="$t('denylist.placeholder')" />
+                <el-form-item :label="$t('blocklist.domain')" prop="domain" :rules="[{ required: true, message: $t('common.required') }]">
+                    <el-input v-model="form.domain" :placeholder="$t('blocklist.placeholder')" />
                 </el-form-item>
                 <el-alert type="info" :closable="false" style="margin-top:-4px">
-                    {{ $t('denylist.matchSubdomainHint') }}
+                    {{ $t('blocklist.matchSubdomainHint') }}
                 </el-alert>
             </el-form>
             <template #footer>
@@ -55,15 +55,15 @@
             </template>
         </el-dialog>
 
-        <el-dialog v-model="showEditDialog" :title="$t('denylist.editRule')" width="500">
+        <el-dialog v-model="showEditDialog" :title="$t('blocklist.editRule')" width="500">
             <el-form ref="editFormRef" :model="editForm" label-position="top">
-                <el-form-item :label="$t('denylist.domain')" prop="domain" :rules="[{ required: true, message: $t('common.required') }]">
+                <el-form-item :label="$t('blocklist.domain')" prop="domain" :rules="[{ required: true, message: $t('common.required') }]">
                     <el-input v-model="editForm.domain" />
                 </el-form-item>
                 <el-alert type="info" :closable="false" style="margin-top:-4px">
-                    {{ $t('denylist.matchSubdomainHint') }}
+                    {{ $t('blocklist.matchSubdomainHint') }}
                 </el-alert>
-                <el-form-item :label="$t('denylist.enabled')" style="margin-top:12px">
+                <el-form-item :label="$t('blocklist.enabled')" style="margin-top:12px">
                     <el-switch v-model="editForm.enabled" />
                 </el-form-item>
             </el-form>
@@ -99,7 +99,7 @@ const editForm = ref({ id: null, domain: '', enabled: true })
 
 const fetchRules = async () => {
     try {
-        const { data } = await client.get('/user/denylist', { params: { profile_id: currentProfileId.value } })
+        const { data } = await client.get('/user/blocklist', { params: { profile_id: currentProfileId.value } })
         rules.value = data.data
     } catch {
         ElMessage.error(t('common.loadFailed'))
@@ -112,12 +112,12 @@ const handleAdd = async () => {
     if (!valid) return
     saving.value = true
     try {
-        await client.post('/user/denylist', {
+        await client.post('/user/blocklist', {
             domain: form.value.domain,
             match_type: 'suffix',
             profile_id: currentProfileId.value,
         })
-        ElMessage.success(t('denylist.added'))
+        ElMessage.success(t('blocklist.added'))
         showDialog.value = false
         form.value = { domain: '' }
         await fetchRules()
@@ -130,9 +130,9 @@ const handleAdd = async () => {
 
 const handleDelete = async (id) => {
     try {
-        await ElMessageBox.confirm(t('denylist.deleteConfirm'), t('common.confirm'))
-        await client.delete(`/user/denylist/${id}`, { params: { profile_id: currentProfileId.value } })
-        ElMessage.success(t('denylist.deleted'))
+        await ElMessageBox.confirm(t('blocklist.deleteConfirm'), t('common.confirm'))
+        await client.delete(`/user/blocklist/${id}`, { params: { profile_id: currentProfileId.value } })
+        ElMessage.success(t('blocklist.deleted'))
         await fetchRules()
     } catch (e) {
         if (e !== 'cancel') {
@@ -152,7 +152,7 @@ const openEditDialog = (row) => {
 
 const handleToggle = async (row, value) => {
     try {
-        await client.put(`/user/denylist/${row.id}`, {
+        await client.put(`/user/blocklist/${row.id}`, {
             domain: row.domain,
             match_type: row.match_type,
             enabled: value,
@@ -169,7 +169,7 @@ const handleEditSave = async () => {
     if (!valid) return
     editSaving.value = true
     try {
-        await client.put(`/user/denylist/${editForm.value.id}`, {
+        await client.put(`/user/blocklist/${editForm.value.id}`, {
             domain: editForm.value.domain,
             match_type: 'suffix',
             enabled: editForm.value.enabled,

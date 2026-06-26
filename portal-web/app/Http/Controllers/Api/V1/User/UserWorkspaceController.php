@@ -90,8 +90,8 @@ final class UserWorkspaceController
             'blocklists' => 'sometimes|array',
             'blocklists.allowlist_ids' => 'sometimes|array',
             'blocklists.allowlist_ids.*' => 'integer',
-            'blocklists.denylist_ids' => 'sometimes|array',
-            'blocklists.denylist_ids.*' => 'integer',
+            'blocklists.blocklist_ids' => 'sometimes|array',
+            'blocklists.blocklist_ids.*' => 'integer',
             'blocklists.parental' => 'sometimes|boolean',
             'deep_tracking_devices' => 'sometimes|array',
             'deep_tracking_devices.*' => 'string',
@@ -100,7 +100,7 @@ final class UserWorkspaceController
         // 手动合并动态 blocklist 类别 (phishing/malware/ads_tracking/third_party_tracking/deep_tracking/...)
         // 因为 blocklists.* boolean 与 array 子键规则同时存在会冲突，故单独处理
         $rawBlocklists = $request->input('blocklists', []);
-        $knownKeys = ['allowlist_ids', 'denylist_ids', 'parental'];
+        $knownKeys = ['allowlist_ids', 'blocklist_ids', 'parental'];
         $dynamic = [];
         foreach ($rawBlocklists as $k => $v) {
             if (!in_array($k, $knownKeys, true)) {
@@ -111,7 +111,7 @@ final class UserWorkspaceController
             $dynamic,
             [
                 'allowlist_ids' => $request->input('blocklists.allowlist_ids', []),
-                'denylist_ids' => $request->input('blocklists.denylist_ids', []),
+                'blocklist_ids' => $request->input('blocklists.blocklist_ids', []),
                 'parental' => $request->boolean('blocklists.parental'),
             ]
         );
@@ -217,9 +217,9 @@ final class UserWorkspaceController
         return $this->listRules($request, 'allow');
     }
 
-    public function denylist(Request $request): JsonResponse
+    public function blocklist(Request $request): JsonResponse
     {
-        return $this->listRules($request, 'deny');
+        return $this->listRules($request, 'block');
     }
 
     public function createRule(Request $request, string $listType): JsonResponse
@@ -240,9 +240,9 @@ final class UserWorkspaceController
         return $this->createRule($request, 'allow');
     }
 
-    public function createDenylistRule(Request $request): JsonResponse
+    public function createBlocklistRule(Request $request): JsonResponse
     {
-        return $this->createRule($request, 'deny');
+        return $this->createRule($request, 'block');
     }
 
     public function deleteRule(Request $request, string $listType, string $ruleId): JsonResponse
@@ -257,9 +257,9 @@ final class UserWorkspaceController
         return $this->deleteRule($request, 'allow', $ruleId);
     }
 
-    public function deleteDenylistRule(Request $request, string $ruleId): JsonResponse
+    public function deleteBlocklistRule(Request $request, string $ruleId): JsonResponse
     {
-        return $this->deleteRule($request, 'deny', $ruleId);
+        return $this->deleteRule($request, 'block', $ruleId);
     }
 
     public function updateRule(Request $request, string $listType, string $ruleId): JsonResponse
@@ -280,9 +280,9 @@ final class UserWorkspaceController
         return $this->updateRule($request, 'allow', $ruleId);
     }
 
-    public function updateDenylistRule(Request $request, string $ruleId): JsonResponse
+    public function updateBlocklistRule(Request $request, string $ruleId): JsonResponse
     {
-        return $this->updateRule($request, 'deny', $ruleId);
+        return $this->updateRule($request, 'block', $ruleId);
     }
 
     public function batchDeleteRule(Request $request, string $listType): JsonResponse
@@ -302,9 +302,9 @@ final class UserWorkspaceController
         return $this->batchDeleteRule($request, 'allow');
     }
 
-    public function batchDeleteDenylist(Request $request): JsonResponse
+    public function batchDeleteBlocklist(Request $request): JsonResponse
     {
-        return $this->batchDeleteRule($request, 'deny');
+        return $this->batchDeleteRule($request, 'block');
     }
 
     public function analytics(Request $request): JsonResponse

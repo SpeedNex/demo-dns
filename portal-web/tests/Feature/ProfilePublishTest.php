@@ -47,7 +47,7 @@ final class ProfilePublishTest extends TestCase
         $ruleResponse = $this->withHeaders([
             'Authorization' => 'Bearer ' . $token,
         ])->postJson("/api/v1/user/profiles/{$profileId}/rules", [
-            'list_type' => 'deny',
+            'list_type' => 'block',
             'match_type' => 'exact',
             'domain' => 'ads.example.com',
             'action' => 'block',

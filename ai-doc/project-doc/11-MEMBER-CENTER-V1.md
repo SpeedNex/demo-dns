@@ -11,7 +11,7 @@
 | 安全 | Security | 阻断恶意、钓鱼、恶意软件、C2、Cryptojacking 等基础安全域名 |
 | 隐私 | Privacy | 阻断跟踪器、遥测、分析域名；控制日志模式和 IP 匿名化 |
 | 家长监护 | Parental Control | 儿童 Profile、成人内容拦截、安全搜索、YouTube 受限模式 |
-| 黑名单 | Denylist | 用户自定义阻断域名，支持 exact / suffix / wildcard |
+| 黑名单 | blocklist | 用户自定义阻断域名，支持 exact / suffix / wildcard |
 | 白名单 | Allowlist | 用户自定义放行域名，优先级高于安全/隐私/家长/黑名单阻断 |
 | 统计 | Analytics | 查询量、拦截量、Top 域名、Top 阻断、基础趋势 |
 | 日志 | Logs | DNS 查询日志、拦截日志、筛选、分页、按 Profile/Device 查看 |
@@ -40,7 +40,7 @@ security.block_cryptojacking
 portal-web 保存 Profile 安全设置
   -> 发布配置到 portal-web(原 console 域)
   -> portal-web(原 console 域) 生成 resolver config
-  -> dns-resolver 将安全规则作为 deny 规则执行
+  -> dns-resolver 将安全规则作为 block 规则执行
 ```
 
 V1 不要求接入商业威胁情报市场；可以先使用内置基础规则集、手工导入规则集或离线规则文件。
@@ -99,12 +99,12 @@ App 使用时长
 
 resolver 只执行 DNS 层规则：阻断、放行、重写安全搜索域名。
 
-### 2.4 黑名单 Denylist
+### 2.4 黑名单 blocklist
 
 黑名单是用户自定义阻断规则，保存到 `profile_rules`：
 
 ```text
-list_type = deny
+list_type = block
 action = block
 match_type = exact / suffix / wildcard
 ```
@@ -130,7 +130,7 @@ match_type = exact / suffix / wildcard
 优先级：
 
 ```text
-白名单 allowlist > 黑名单 denylist > 安全 security > 隐私 privacy > 家长 parental > 默认动作 default_action
+白名单 allowlist > 黑名单 blocklist > 安全 security > 隐私 privacy > 家长 parental > 默认动作 default_action
 ```
 
 因此，用户加入白名单的域名即使命中安全/隐私/家长分类，也必须优先放行。唯一例外是系统级保留域或 abuse 风控规则，这类规则必须单独标记为 `system_enforced=true`，并在 UI 中解释。

@@ -24,7 +24,7 @@ return new class extends Migration
         // 1. 收集并删除所有引用 nodes.node_id 的外键
         $fksToNodes = [
             ["{$prefix}node_heartbeats", "fk_node_heartbeats_node"],
-            ["{$prefix}config_versions", "fk_config_versions_node"],
+            ["{$prefix}profile_versions", "fk_profile_versions_node"],
             ["{$prefix}node_tokens",     "fk_node_tokens_node"],
             ["{$prefix}task_executions", "fk_task_exec_node"],
             ["{$prefix}geo_dns_mappings","fk_geo_node"],
@@ -48,7 +48,7 @@ return new class extends Migration
 
         // 4. 重建外键（nodes.id）
         DB::statement("ALTER TABLE `{$prefix}node_heartbeats` ADD CONSTRAINT `fk_node_heartbeats_node` FOREIGN KEY (`node_id`) REFERENCES `{$prefix}nodes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE");
-        DB::statement("ALTER TABLE `{$prefix}config_versions` ADD CONSTRAINT `fk_config_versions_node` FOREIGN KEY (`target_node_id`) REFERENCES `{$prefix}nodes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE");
+        DB::statement("ALTER TABLE `{$prefix}profile_versions` ADD CONSTRAINT `fk_profile_versions_node` FOREIGN KEY (`target_node_id`) REFERENCES `{$prefix}nodes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE");
         DB::statement("ALTER TABLE `{$prefix}node_tokens` ADD CONSTRAINT `fk_node_tokens_node` FOREIGN KEY (`node_id`) REFERENCES `{$prefix}nodes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE");
         DB::statement("ALTER TABLE `{$prefix}task_executions` ADD CONSTRAINT `fk_task_exec_node` FOREIGN KEY (`node_id`) REFERENCES `{$prefix}nodes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE");
         if (Schema::hasTable('geo_dns_mappings')) {
@@ -66,7 +66,7 @@ return new class extends Migration
         // 1. 收集并删除所有引用 nodes.id 的外键
         $fksToNodes = [
             ["{$prefix}node_heartbeats", "fk_node_heartbeats_node"],
-            ["{$prefix}config_versions", "fk_config_versions_node"],
+            ["{$prefix}profile_versions", "fk_profile_versions_node"],
             ["{$prefix}node_tokens",     "fk_node_tokens_node"],
             ["{$prefix}task_executions", "fk_task_exec_node"],
             ["{$prefix}geo_dns_mappings","fk_geo_node"],
@@ -90,7 +90,7 @@ return new class extends Migration
 
         // 4. 重建外键（nodes.node_id）
         DB::statement("ALTER TABLE `{$prefix}node_heartbeats` ADD CONSTRAINT `fk_node_heartbeats_node` FOREIGN KEY (`node_id`) REFERENCES `{$prefix}nodes` (`node_id`) ON DELETE CASCADE ON UPDATE CASCADE");
-        DB::statement("ALTER TABLE `{$prefix}config_versions` ADD CONSTRAINT `fk_config_versions_node` FOREIGN KEY (`target_node_id`) REFERENCES `{$prefix}nodes` (`node_id`) ON DELETE CASCADE ON UPDATE CASCADE");
+        DB::statement("ALTER TABLE `{$prefix}profile_versions` ADD CONSTRAINT `fk_profile_versions_node` FOREIGN KEY (`target_node_id`) REFERENCES `{$prefix}nodes` (`node_id`) ON DELETE CASCADE ON UPDATE CASCADE");
         DB::statement("ALTER TABLE `{$prefix}node_tokens` ADD CONSTRAINT `fk_node_tokens_node` FOREIGN KEY (`node_id`) REFERENCES `{$prefix}nodes` (`node_id`) ON DELETE CASCADE ON UPDATE CASCADE");
         DB::statement("ALTER TABLE `{$prefix}task_executions` ADD CONSTRAINT `fk_task_exec_node` FOREIGN KEY (`node_id`) REFERENCES `{$prefix}nodes` (`node_id`) ON DELETE CASCADE ON UPDATE CASCADE");
         if (Schema::hasTable('geo_dns_mappings')) {

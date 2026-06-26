@@ -170,7 +170,7 @@ MVP 可不强制实现，但配置中必须预留：
 ```text
 NormalizeDomain
 RuleEngine exact / suffix / wildcard
-Allow 优先 Deny
+Allow 优先 block
 DoH path 解析 profile_id
 UDP source IP 映射 profile_id
 Config checksum mismatch 不应用

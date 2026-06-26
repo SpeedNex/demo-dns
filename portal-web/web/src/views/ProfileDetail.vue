@@ -53,9 +53,9 @@
                     <div class="stat-label">{{ $t('profileDetail.allowed') }}</div>
                     <div class="stat-value">{{ stats.allow }}</div>
                 </div>
-                <div class="stat-card stat-deny">
+                <div class="stat-card stat-block">
                     <div class="stat-label">{{ $t('profileDetail.blocked') }}</div>
-                    <div class="stat-value">{{ stats.deny }}</div>
+                    <div class="stat-value">{{ stats.block }}</div>
                 </div>
                 <div class="stat-card stat-enabled">
                     <div class="stat-label">{{ $t('profileDetail.enabledRules') }}</div>
@@ -117,8 +117,8 @@
                     </el-table-column>
                     <el-table-column :label="$t('profileDetail.action')" width="100">
                         <template #default="{ row }">
-                            <el-tag :type="isDenyRule(row) ? 'danger' : 'success'" effect="light" round size="small">
-                                {{ isDenyRule(row) ? $t('profileDetail.blocked') : $t('profileDetail.allowed') }}
+                            <el-tag :type="isBlockRule(row) ? 'danger' : 'success'" effect="light" round size="small">
+                                {{ isBlockRule(row) ? $t('profileDetail.blocked') : $t('profileDetail.allowed') }}
                             </el-tag>
                         </template>
                     </el-table-column>
@@ -171,7 +171,7 @@
                 <el-form-item :label="$t('profileDetail.action')">
                     <el-radio-group v-model="ruleForm.list_type">
                         <el-radio-button value="allow">{{ $t('profileDetail.allowed') }}</el-radio-button>
-                        <el-radio-button value="deny">{{ $t('profileDetail.blocked') }}</el-radio-button>
+                        <el-radio-button value="block">{{ $t('profileDetail.blocked') }}</el-radio-button>
                     </el-radio-group>
                 </el-form-item>
             </el-form>
@@ -229,25 +229,24 @@ const editRuleSaving = ref(false)
 const selectedRules = ref([])
 const ruleFormRef = ref(null)
 const editRuleFormRef = ref(null)
-const ruleForm = ref({ domain: '', match_type: 'exact', list_type: 'deny' })
+const ruleForm = ref({ domain: '', match_type: 'exact', list_type: 'block' })
 const editRuleForm = ref({ id: null, profile_id: null, domain: '', match_type: 'exact', enabled: true })
 
 const normalizeListType = (rule) => {
     const value = String(rule?.list_type || rule?.action || '').toLowerCase()
-    if (['deny', 'denylist', 'block', 'blocked'].includes(value)) return 'deny'
-    if (['allow', 'allowlist', 'allowed'].includes(value)) return 'allow'
+    if (['block', 'blocklist'].includes(value)) return 'block'
+    if (['allow', 'allowlist'].includes(value)) return 'allow'
     return value
 }
-
-const isDenyRule = (rule) => normalizeListType(rule) === 'deny'
+const isBlockRule = (rule) => normalizeListType(rule) === 'block'
 const isAllowRule = (rule) => normalizeListType(rule) === 'allow'
 
 const stats = computed(() => {
     const total = profileRules.value.length
     const allow = profileRules.value.filter(isAllowRule).length
-    const deny = profileRules.value.filter(isDenyRule).length
+    const block = profileRules.value.filter(isBlockRule).length
     const enabled = profileRules.value.filter((r) => r.enabled).length
-    return { total, allow, deny, enabled }
+    return { total, allow, block, enabled }
 })
 
 const matchTypeLabel = (type) => {
@@ -292,7 +291,7 @@ const handleAddRule = async () => {
         await client.post(`/user/profiles/${route.params.id}/rules`, ruleForm.value)
         ElMessage.success(t('profileDetail.ruleAdded'))
         showAddRuleDialog.value = false
-        ruleForm.value = { domain: '', match_type: 'exact', list_type: 'deny' }
+        ruleForm.value = { domain: '', match_type: 'exact', list_type: 'block' }
         await fetchData()
     } catch {
         ElMessage.error(t('common.saveFailed'))
@@ -467,7 +466,7 @@ onMounted(fetchData)
     line-height: 1.1;
 }
 .stat-allow .stat-value { color: #10b981; }
-.stat-deny .stat-value { color: #ef4444; }
+.stat-block .stat-value { color: #ef4444; }
 .stat-enabled .stat-value { color: #409eff; }
 
 /* 通用卡片头部 */

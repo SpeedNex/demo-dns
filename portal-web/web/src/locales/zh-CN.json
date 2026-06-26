@@ -8,7 +8,7 @@
     "securitySettings": "安全设置",
     "privacy": "隐私保护",
     "parental": "家长控制",
-    "denylist": "黑名单",
+    "blocklist": "黑名单",
     "allowlist": "白名单",
     "analytics": "统计分析",
     "logs": "查询日志",
@@ -362,7 +362,7 @@
     "addWebsiteAppGameTitle": "添加网站、应用或游戏",
     "addCategoryTitle": "添加分类"
   },
-  "denylist": {
+  "blocklist": {
     "title": "黑名单",
     "desc": "自定义需要阻断的域名。加入黑名单的域名将被强制阻断。",
     "addDomain": "添加域名",
@@ -1245,7 +1245,7 @@
     "memberCatalogs": {
       "title": "会员策略目录",
       "desc": "设备型号、隐私拦截列表、家长控制预设与分类目录",
-      "tabDenyList": "黑名单",
+      "tabBlockList": "黑名单",
       "tabDeviceModels": "设备型号",
       "tabBlocklists": "隐私拦截列表",
       "tabParental": "家长控制",
@@ -1260,7 +1260,7 @@
       "navPlaceholder": "选择目录区块",
       "type": "类型",
       "allow": "允许",
-      "deny": "拒绝",
+      "block": "阻止",
       "searchDomain": "搜索域名",
       "searchName": "搜索名称",
       "domain": "域名",
@@ -1889,7 +1889,7 @@
       "enabled": "启用",
       "createdAt": "创建时间",
       "all": "全部",
-      "deny": "黑名单",
+      "block": "黑名单",
       "allow": "白名单",
       "noData": "暂无黑白名单规则",
       "searchPlaceholder": "搜索域名 / 会员"

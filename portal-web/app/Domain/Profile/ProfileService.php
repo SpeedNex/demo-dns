@@ -5,7 +5,7 @@ namespace App\Domain\Profile;
 use App\Models\Device;
 use App\Models\Profile;
 use App\Models\ProfileRule;
-use App\Models\ConfigVersion;
+use App\Models\ProfileVersion;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 
@@ -140,7 +140,7 @@ final class ProfileService
         // V2.4: 在事务内级联删除该 Profile 的所有关联数据，避免遗留白/黑名单、版本、设备
         DB::transaction(function () use ($profile, $profileUid): void {
             ProfileRule::where('profile_id', $profile->id)->delete();
-            ConfigVersion::where('target_profile_id', $profile->id)
+            ProfileVersion::where('target_profile_id', $profile->id)
                 ->where('target_scope', 'profile')
                 ->delete();
             Device::where('profile_id', $profile->id)->delete();
@@ -207,7 +207,7 @@ final class ProfileService
         foreach ($existing as $profile) {
             DB::transaction(function () use ($profile, &$deletedCount): void {
                 ProfileRule::where('profile_id', $profile->id)->delete();
-                ConfigVersion::where('target_profile_id', $profile->id)
+                ProfileVersion::where('target_profile_id', $profile->id)
                     ->where('target_scope', 'profile')
                     ->delete();
                 Device::where('profile_id', $profile->id)->delete();

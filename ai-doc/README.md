@@ -340,7 +340,7 @@ ocer-dns/
     │   │       │   ├── Home.vue / Login.vue / Register.vue
     │   │       │   ├── Dashboard.vue / ProfileList.vue / ProfileDetail.vue
     │   │       │   ├── Security.vue / Privacy.vue / ParentalControl.vue
-    │   │       │   ├── Denylist.vue / Allowlist.vue
+    │   │       │   ├── blocklist.vue / Allowlist.vue
     │   │       │   ├── Analytics.vue / Logs.vue
     │   │       │   ├── Devices.vue / APIKeys.vue / Settings.vue
     │   │       │   ├── Membership.vue

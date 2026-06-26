@@ -81,7 +81,7 @@ go build ./cmd/dns-resolver
 
 ## 5. 手动验收
 
-创建一条 deny rule：
+创建一条 block rule：
 
 ```text
 ads.example.com

@@ -5,7 +5,7 @@
     "securitySettings": "보안 설정",
     "privacy": "개인 정보 보호",
     "parental": "부모 제어",
-    "denylist": "차단 목록",
+    "blocklist": "차단 목록",
     "allowlist": "허용 목록",
     "analytics": "분석",
     "logs": "로그",
@@ -362,7 +362,7 @@
     "addWebsiteAppGameTitle": "웹사이트, 앱 또는 게임 추가",
     "addCategoryTitle": "카테고리 추가"
   },
-  "denylist": {
+  "blocklist": {
     "title": "차단 목록",
     "desc": "차단할 사용자 정의 도메인. 차단 목록에 추가된 도메인은 무시됩니다.",
     "addDomain": "도메인 추가",
@@ -1225,7 +1225,7 @@
     "memberCatalogs": {
       "title": "멤버 카탈로그",
       "desc": "디바이스 모델, 프라이버시 차단 목록, 자녀 보호 프리셋과 카테고리 카탈로그",
-      "tabDenyList": "차단 목록",
+      "tabBlockList": "차단 목록",
       "tabDeviceModels": "디바이스 모델",
       "tabBlocklists": "프라이버시 차단 목록",
       "tabParental": "자녀 보호",
@@ -1240,7 +1240,7 @@
       "navPlaceholder": "카탈로그 섹션 선택",
       "type": "유형",
       "allow": "허용",
-      "deny": "차단",
+      "block": "차단",
       "searchDomain": "도메인 검색",
       "searchName": "이름 검색",
       "domain": "도메인",
@@ -1814,7 +1814,7 @@
       "enabled": "활성화",
       "createdAt": "생성일",
       "all": "전체",
-      "deny": "거부",
+      "block": "거부",
       "allow": "허용",
       "noData": "블랙리스트 / 화이트리스트 규칙 없음",
       "searchPlaceholder": "도메인 / 회원 검색"

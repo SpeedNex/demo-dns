@@ -67,7 +67,7 @@ final class AdminMemberCatalogController
     public function rules(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'list_type' => ['nullable', Rule::in(['allow', 'deny'])],
+            'list_type' => ['nullable', Rule::in(['allow', 'block'])],
             'domain' => 'nullable|string|max:255',
             'profile_id' => 'nullable|string|max:40',
             'page' => 'nullable|integer|min:1',
@@ -77,9 +77,9 @@ final class AdminMemberCatalogController
         $query = ProfileRule::query()->with('profile:id,profile_id,name,user_id');
 
         if (! empty($validated['list_type'])) {
-            // 前端传 deny/allow，数据库存 denylist/allowlist，需映射
+            // 前端传 block/allow，数据库存 blocklist/allowlist，需映射
             $mapped = match ($validated['list_type']) {
-                'deny' => 'denylist',
+                'block' => 'blocklist',
                 'allow' => 'allowlist',
                 default => $validated['list_type'],
             };

@@ -12,7 +12,7 @@ class PublishTask extends Model
     protected $keyType = 'int';
 
     protected $fillable = [
-        'config_version_id',
+        'profile_version_id',
         'profile_id',
         'status',
         'target_scope',
@@ -38,9 +38,9 @@ class PublishTask extends Model
         ];
     }
 
-    public function configVersion(): BelongsTo
+    public function profileVersion(): BelongsTo
     {
-        return $this->belongsTo(ConfigVersion::class);
+        return $this->belongsTo(ProfileVersion::class);
     }
 
     public function executions(): HasMany

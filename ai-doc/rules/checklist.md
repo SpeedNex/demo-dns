@@ -30,7 +30,7 @@
 
 **规则模块**：
 - [ ] `allow_lists` — 白名单（profile_id, domain, match_type, enabled）
-- [ ] `deny_lists` — 黑名单
+- [ ] `block_lists` — 黑名单
 - [ ] `custom_rules` — 用户自定义规则
 - [ ] `rule_sources` — 规则订阅源（name, url, type, enabled, version）
 
@@ -78,8 +78,8 @@
 - [ ] `GET/PUT /api/v1/profiles/{id}/security` / `parental` / `adblock`
 
 **规则 API**（Member）：
-- [ ] `GET/POST /api/v1/profiles/{id}/allowlist` / `denylist`
-- [ ] `DELETE /api/v1/profiles/{id}/allowlist/{rule_id}` / `denylist/{rule_id}`
+- [ ] `GET/POST /api/v1/profiles/{id}/allowlist` / `blocklist`
+- [ ] `DELETE /api/v1/profiles/{id}/allowlist/{rule_id}` / `blocklist/{rule_id}`
 
 **设备/日志/统计 API**（Member）：
 - [ ] `GET/POST /api/v1/profiles/{id}/devices`

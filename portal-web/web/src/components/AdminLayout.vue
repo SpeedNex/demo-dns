@@ -59,7 +59,6 @@
                                     class="nav-item"
                                     :class="{ 'is-active': activeRoute === child.path }"
                                 >
-                                    <el-icon class="nav-item__icon"><component :is="child.icon" /></el-icon>
                                     <span class="nav-item__label">{{ child.label }}</span>
                                 </router-link>
                             </div>

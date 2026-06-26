@@ -507,7 +507,7 @@ portal-web/
 │               ├── 会员中心 (17):
 │               │   Dashboard.vue, ProfileList.vue, ProfileDetail.vue
 │               │   Security.vue, Privacy.vue, ParentalControl.vue
-│               │   Allowlist.vue, Denylist.vue, Analytics.vue, Logs.vue
+│               │   Allowlist.vue, blocklist.vue, Analytics.vue, Logs.vue
 │               │   Devices.vue, APIKeys.vue, Settings.vue, Membership.vue
 │               │   TeamList.vue, TeamCreate.vue, TeamDetail.vue, TeamInvitations.vue
 │               └── admin/ (20):

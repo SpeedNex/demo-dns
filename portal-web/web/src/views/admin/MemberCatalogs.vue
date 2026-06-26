@@ -283,7 +283,7 @@ const catalogs = reactive({
 const rules = ref([])
 const rulesMeta = ref(null)
 const selectedRules = ref([])
-const ruleFilter = reactive({ list_type: 'deny', domain: '' })
+const ruleFilter = reactive({ list_type: 'block', domain: '' })
 const rulesPage = ref(1)
 const rulesPerPage = ref(20)
 

@@ -245,7 +245,7 @@ class ApiTest extends TestCase
             'log_mode' => 'full',
             'blocklists' => [
                 'allowlist_ids' => [],
-                'denylist_ids' => [],
+                'blocklist_ids' => [],
                 'parental' => false,
             ],
             'deep_tracking_devices' => [],
@@ -434,60 +434,60 @@ class ApiTest extends TestCase
         $this->callMemberApi('DELETE', "/api/v1/user/allowlist/{$rule->id}", [], 200);
     }
 
-    // ==================== Denylist API Tests ====================
+    // ==================== blocklist API Tests ====================
 
-    public function test_40_member_denylist_list()
+    public function test_40_member_blocklist_list()
     {
-        $this->callMemberApi('GET', '/api/v1/user/denylist', [], 200);
+        $this->callMemberApi('GET', '/api/v1/user/blocklist', [], 200);
     }
 
-    public function test_41_member_denylist_create()
+    public function test_41_member_blocklist_create()
     {
-        $this->callMemberApi('POST', '/api/v1/user/denylist', [
+        $this->callMemberApi('POST', '/api/v1/user/blocklist', [
             'match_type' => 'exact',
             'domain' => 'block.example.com',
         ], 201);
     }
 
-    public function test_42_member_denylist_batch_delete()
+    public function test_42_member_blocklist_batch_delete()
     {
-        $this->callMemberApi('POST', '/api/v1/user/denylist/batch-delete', [
+        $this->callMemberApi('POST', '/api/v1/user/blocklist/batch-delete', [
             'ids' => ['fake-rule-1', 'fake-rule-2'],
         ], 200);
     }
 
-    public function test_43_member_denylist_update()
+    public function test_43_member_blocklist_update()
     {
         $rule = ProfileRule::create([
             'profile_id' => $this->profileId,
-            'list_type' => 'deny',
+            'list_type' => 'block',
             'match_type' => 'exact',
-            'domain' => 'deny-update.example.com',
-            'normalized_domain' => 'deny-update.example.com',
+            'domain' => 'block-update.example.com',
+            'normalized_domain' => 'block-update.example.com',
             'action' => 'block',
             'enabled' => true,
             'created_by' => $this->userId,
         ]);
-        $this->callMemberApi('PUT', "/api/v1/user/denylist/{$rule->id}", [
-            'domain' => 'deny-updated.example.com',
+        $this->callMemberApi('PUT', "/api/v1/user/blocklist/{$rule->id}", [
+            'domain' => 'block-updated.example.com',
             'match_type' => 'exact',
             'enabled' => true,
         ], 200);
     }
 
-    public function test_44_member_denylist_delete()
+    public function test_44_member_blocklist_delete()
     {
         $rule = ProfileRule::create([
             'profile_id' => $this->profileId,
-            'list_type' => 'deny',
+            'list_type' => 'block',
             'match_type' => 'exact',
-            'domain' => 'deny-del.example.com',
-            'normalized_domain' => 'deny-del.example.com',
+            'domain' => 'block-del.example.com',
+            'normalized_domain' => 'block-del.example.com',
             'action' => 'block',
             'enabled' => true,
             'created_by' => $this->userId,
         ]);
-        $this->callMemberApi('DELETE', "/api/v1/user/denylist/{$rule->id}", [], 200);
+        $this->callMemberApi('DELETE', "/api/v1/user/blocklist/{$rule->id}", [], 200);
     }
 
     // ==================== Profile API Tests ====================
@@ -551,7 +551,7 @@ class ApiTest extends TestCase
     public function test_61_member_profile_rules_create()
     {
         $this->callMemberApi('POST', "/api/v1/user/profiles/{$this->profileId}/rules", [
-            'list_type' => 'deny',
+            'list_type' => 'block',
             'match_type' => 'exact',
             'domain' => 'newrule.example.com',
             'action' => 'block',
@@ -569,7 +569,7 @@ class ApiTest extends TestCase
     {
         $rule = ProfileRule::create([
             'profile_id' => $this->profileId,
-            'list_type' => 'deny',
+            'list_type' => 'block',
             'match_type' => 'exact',
             'domain' => 'rule-update.example.com',
             'normalized_domain' => 'rule-update.example.com',
@@ -580,7 +580,7 @@ class ApiTest extends TestCase
         $this->callMemberApi('PUT', "/api/v1/user/profiles/{$this->profileId}/rules/{$rule->id}", [
             'domain' => 'rule-updated.example.com',
             'match_type' => 'exact',
-            'list_type' => 'deny',
+            'list_type' => 'block',
             'enabled' => true,
         ], 200);
     }
@@ -589,7 +589,7 @@ class ApiTest extends TestCase
     {
         $rule = ProfileRule::create([
             'profile_id' => $this->profileId,
-            'list_type' => 'deny',
+            'list_type' => 'block',
             'match_type' => 'exact',
             'domain' => 'rule-del.example.com',
             'normalized_domain' => 'rule-del.example.com',
@@ -1349,7 +1349,7 @@ class ApiTest extends TestCase
 
     public function test_321_admin_publishes_create()
     {
-        $configVersion = \App\Models\ConfigVersion::create([
+        $configVersion = \App\Models\ProfileVersion::create([
             'id' => 'cfg_test_' . time(),
             'version' => time(),
             'profile_id' => $this->profileId,
@@ -1361,14 +1361,14 @@ class ApiTest extends TestCase
         ]);
         $this->callAdminApi('POST', '/api/v1/admin/publishes', [
             'message' => 'Test publish ' . time(),
-            'config_version_id' => $configVersion->id,
+            'profile_version_id' => $configVersion->id,
             'profile_id' => $this->profileId,
         ], 201);
     }
 
     public function test_322_admin_publish_retry()
     {
-        $configVersion = \App\Models\ConfigVersion::create([
+        $configVersion = \App\Models\ProfileVersion::create([
             'id' => 'cfg_retry_' . time(),
             'version' => time(),
             'profile_id' => $this->profileId,
@@ -1379,7 +1379,7 @@ class ApiTest extends TestCase
             'generated_at' => now(),
         ]);
         $task = PublishTask::create([
-            'config_version_id' => $configVersion->id,
+            'profile_version_id' => $configVersion->id,
             'profile_id' => $this->profileId,
             'status' => 'failed',
             'target_scope' => 'all_nodes',
@@ -1391,7 +1391,7 @@ class ApiTest extends TestCase
 
     public function test_323_admin_publish_cancel()
     {
-        $configVersion = \App\Models\ConfigVersion::create([
+        $configVersion = \App\Models\ProfileVersion::create([
             'id' => 'cfg_cancel_' . time(),
             'version' => time(),
             'profile_id' => $this->profileId,
@@ -1402,7 +1402,7 @@ class ApiTest extends TestCase
             'generated_at' => now(),
         ]);
         $task = PublishTask::create([
-            'config_version_id' => $configVersion->id,
+            'profile_version_id' => $configVersion->id,
             'profile_id' => $this->profileId,
             'status' => 'queued',
             'target_scope' => 'all_nodes',
@@ -1414,7 +1414,7 @@ class ApiTest extends TestCase
 
     public function test_324_admin_publishes_batch_retry()
     {
-        $configVersion = \App\Models\ConfigVersion::create([
+        $configVersion = \App\Models\ProfileVersion::create([
             'id' => 'cfg_batch_retry_' . time(),
             'version' => time(),
             'profile_id' => $this->profileId,
@@ -1425,7 +1425,7 @@ class ApiTest extends TestCase
             'generated_at' => now(),
         ]);
         $task = PublishTask::create([
-            'config_version_id' => $configVersion->id,
+            'profile_version_id' => $configVersion->id,
             'profile_id' => $this->profileId,
             'status' => 'failed',
             'target_scope' => 'all_nodes',
@@ -1439,7 +1439,7 @@ class ApiTest extends TestCase
 
     public function test_325_admin_publishes_batch_cancel()
     {
-        $configVersion = \App\Models\ConfigVersion::create([
+        $configVersion = \App\Models\ProfileVersion::create([
             'id' => 'cfg_batch_cancel_' . time(),
             'version' => time(),
             'profile_id' => $this->profileId,
@@ -1450,7 +1450,7 @@ class ApiTest extends TestCase
             'generated_at' => now(),
         ]);
         $task = PublishTask::create([
-            'config_version_id' => $configVersion->id,
+            'profile_version_id' => $configVersion->id,
             'profile_id' => $this->profileId,
             'status' => 'queued',
             'target_scope' => 'all_nodes',

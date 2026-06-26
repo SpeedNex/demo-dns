@@ -136,7 +136,7 @@ Enterprise: manual contract, no public fixed price
   "privacy": true,
   "parental": true,
   "allowlist": true,
-  "denylist": true,
+  "blocklist": true,
   "analytics": true,
   "logs": true,
   "settings": true

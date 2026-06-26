@@ -1,0 +1,2 @@
+{"profile_id":"b669c1","device_id":"","query_name":"baidu.com","action":"ALLOW","reason":"default","category":"","client_ip":"127.0.0.1","query_type":"A","rcode":0,"latency_ms":17,"queried_at":1782467992,"protocol":"dot"}
+{"profile_id":"3bd577","device_id":"dev_local_3bd577","query_name":"google.com","action":"ALLOW","reason":"default","category":"","client_ip":"127.0.0.1","query_type":"A","rcode":0,"latency_ms":16,"queried_at":1782467992,"protocol":"dot"}

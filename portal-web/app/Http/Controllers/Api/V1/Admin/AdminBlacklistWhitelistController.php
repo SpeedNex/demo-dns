@@ -10,20 +10,20 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * 黑白名单汇总：跨 Profile 拉取所有 allow/deny 规则。
+ * 黑白名单汇总：跨 Profile 拉取所有 allow/block 规则。
  */
 final class AdminBlacklistWhitelistController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $type = $request->query('type', 'all'); // all|allow|deny
+        $type = $request->query('type', 'all'); // all|allow|block
         $keyword = trim((string) $request->query('keyword', ''));
 
         $query = ProfileRule::query()
             ->with(['profile:id,profile_id,name,user_id', 'profile.user:uid,email,username']);
 
-        if ($type === 'allow' || $type === 'deny') {
-            $mapped = $type === 'allow' ? 'allowlist' : 'denylist';
+        if ($type === 'allow' || $type === 'block') {
+            $mapped = $type === 'allow' ? 'allowlist' : 'blocklist';
             $query->where('list_type', $mapped);
         }
 

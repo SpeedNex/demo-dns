@@ -12,7 +12,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('profile_id');
             $table->unsignedBigInteger('rule_source_id')->nullable();
             $table->string('domain', 255);
-            $table->enum('list_type', ['allowlist','denylist']);
+            $table->enum('list_type', ['allowlist','blocklist']);
             $table->enum('action', ['block','allow','rewrite'])->default('block');
             $table->string('note', 255)->nullable();
             $table->timestamps();

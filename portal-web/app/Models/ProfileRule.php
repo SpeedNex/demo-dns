@@ -35,7 +35,7 @@ class ProfileRule extends BaseModel
     {
         $this->attributes['list_type'] = match ($value) {
             'allow' => 'allowlist',
-            'deny' => 'denylist',
+            'block' => 'blocklist',
             default => $value,
         };
     }

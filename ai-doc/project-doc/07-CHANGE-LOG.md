@@ -20,7 +20,7 @@
 | 2026-06-26 | code | 新建 WalletFlows.vue 钱包流水页面 | portal-web/web/src/views/admin/WalletFlows.vue | ok |
 | 2026-06-26 | code | 新建 BaseModel.php，Eloquent Model 通过 DB::getTablePrefix() 动态获取表名前缀 | portal-web/app/Models/BaseModel.php | ok |
 | 2026-06-26 | code | Wallet/Order/Plan/PlanPrice/PlanFeature/BillingPeriod/BillingItem 改为继承 BaseModel | portal-web/app/Models/Wallet.php 等 7 个文件 | ok |
-| 2026-06-26 | code | AdminMemberCatalogController::rules(): list_type 值映射 deny→denylist/allow→allowlist | portal-web/app/Http/Controllers/Api/V1/Admin/AdminMemberCatalogController.php | ok |
+| 2026-06-26 | code | AdminMemberCatalogController::rules(): list_type 值映射 block→blocklist/allow→allowlist | portal-web/app/Http/Controllers/Api/V1/Admin/AdminMemberCatalogController.php | ok |
 | 2026-06-26 | code | ProfileRule/Profile 改为继承 BaseModel，修复黑名单查询 dns_profile_rules 表名 | portal-web/app/Models/ProfileRule.php, Profile.php | ok |
 | 2026-06-26 | code | AdminPolicyController::indexPlans(): 去除嵌套 users 全量加载，改为 COUNT 统计 user_count | portal-web/app/Http/Controllers/Api/V1/Admin/AdminPolicyController.php | ok |
 | 2026-06-26 | code | UserPolicyServices.vue: 去掉表格嵌套（type=expand），改为独立「查看用户」按钮 | portal-web/web/src/views/admin/UserPolicyServices.vue | ok |
@@ -61,7 +61,7 @@
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |
 |---|---|---|---|---|
 | 2026-06-22 | code | 修复 GeoDNS.vue 缺少 3 个 icon 组件导入（`<Search>` / `<Plus>` / `<Aim>`） | portal-web/web/src/views/admin/GeoDNS.vue | ok |
-| 2026-06-22 | code | 三语补齐 `denylist.matchSubdomainHint`（Denylist.vue 引用） | portal-web/web/src/locales/{en,zh-CN,ko}.json | ok |
+| 2026-06-22 | code | 三语补齐 `blocklist.matchSubdomainHint`（blocklist.vue 引用） | portal-web/web/src/locales/{en,zh-CN,ko}.json | ok |
 | 2026-06-22 | code | 三语补齐 `admin.nodes.redeploy`（Nodes.vue 引用） | portal-web/web/src/locales/{en,zh-CN,ko}.json | ok |
 | 2026-06-22 | code | 修复 pre-existing Billing.vue `<style>` 块未闭合（缺 `}` 与 `</style>`），恢复 build 通过 | portal-web/web/src/views/admin/Billing.vue | ok |
 | 2026-06-22 | test | `npm run lint`：0 errors / 43 warnings（全部 pre-existing） | — | ok |
@@ -322,8 +322,8 @@ delivery_level
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |
 |---|---|---|---|---|
-| 2026-06-20 | code | `/admin/member-catalogs` 页面把滚动锚点 + 4 区块同屏改为 `el-tabs` 切换：黑名单（deny rules）、设备型号、隐私拦截列表、家长（预设+分类）4 个 tab；移除 IntersectionObserver 与滚动逻辑 | ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue | 已通过 |
-| 2026-06-20 | i18n | 新增 4 个 tab 标签的 i18n key：tabDenyList / tabDeviceModels / tabBlocklists / tabParental（zh-CN / en / ko） | ocer-dns/portal-web/web/src/locales/zh-CN.js, ocer-dns/portal-web/web/src/locales/en.js, ocer-dns/portal-web/web/src/locales/ko.js | 已通过 |
+| 2026-06-20 | code | `/admin/member-catalogs` 页面把滚动锚点 + 4 区块同屏改为 `el-tabs` 切换：黑名单（block rules）、设备型号、隐私拦截列表、家长（预设+分类）4 个 tab；移除 IntersectionObserver 与滚动逻辑 | ocer-dns/portal-web/web/src/views/admin/MemberCatalogs.vue | 已通过 |
+| 2026-06-20 | i18n | 新增 4 个 tab 标签的 i18n key：tabblockList / tabDeviceModels / tabBlocklists / tabParental（zh-CN / en / ko） | ocer-dns/portal-web/web/src/locales/zh-CN.js, ocer-dns/portal-web/web/src/locales/en.js, ocer-dns/portal-web/web/src/locales/ko.js | 已通过 |
 | 2026-06-20 | test | `npm run build` 通过，1766 modules transformed，dist gzip 121.96 kB | ocer-dns/portal-web/web | 已通过 |
 
 ## 2026-06-20 — Profile 详情页面美化
@@ -369,7 +369,7 @@ delivery_level
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |
 |---|---|---|---|---|
 | 2026-06-24 | code | 修复用户端安全防护/隐私保护/家长控制初始化误触发自动保存；家长控制补齐 `enabled` 总开关并兼容多语言目录项保存 | portal-web/web/src/views/Security.vue, portal-web/web/src/views/Privacy.vue, portal-web/web/src/views/ParentalControl.vue, portal-web/app/Http/Controllers/Api/V1/User/UserWorkspaceController.php | 已通过 |
-| 2026-06-24 | code | 修复 Profile 规则 allow/deny 与 allowlist/denylist 存储值不一致、允许规则默认 action 写成 block、配置发布未携带完整安全/隐私/家长设置的问题；配置方案列表和详情页补齐发布按钮 | portal-web/app/Domain/Rule/ProfileRuleService.php, portal-web/app/Application/Member/ProfilePublishApplicationService.php, portal-web/app/Domain/Profile/ProfileService.php, portal-web/web/src/views/ProfileList.vue, portal-web/web/src/views/ProfileDetail.vue | 已通过 |
+| 2026-06-24 | code | 修复 Profile 规则 allow/block 与 allowlist/blocklist 存储值不一致、允许规则默认 action 写成 block、配置发布未携带完整安全/隐私/家长设置的问题；配置方案列表和详情页补齐发布按钮 | portal-web/app/Domain/Rule/ProfileRuleService.php, portal-web/app/Application/Member/ProfilePublishApplicationService.php, portal-web/app/Domain/Profile/ProfileService.php, portal-web/web/src/views/ProfileList.vue, portal-web/web/src/views/ProfileDetail.vue | 已通过 |
 | 2026-06-24 | code | 补齐 `profile_versions` 表和模型；修复全数字 profile 短 ID 被误当作自增 id 导致 config_versions 外键失败；ClickHouse 统计服务改为可通过容器替换客户端，便于测试与运行时注入 | portal-web/database/migrations/2026_06_24_000001_create_profile_versions_table.php, portal-web/app/Models/ProfileVersion.php, portal-web/app/Domain/Publish/PublishService.php, portal-web/app/Domain/Ingest/QueryLogReadService.php, portal-web/app/Infrastructure/ClickHouse/UserAnalyticsService.php | 已通过 |
 | 2026-06-24 | code | 订单管理页补齐刷新、查看详情和 Stripe 支付动作；账户页普通订单/订阅续费统一走 Stripe Checkout，余额仅保留充值入口；Stripe secret/webhook secret 改读后台 System Config | portal-web/web/src/views/Membership.vue, portal-web/web/src/views/user/Account.vue, portal-web/app/Domain/Billing/PaymentService.php, portal-web/app/Http/Controllers/Api/V1/User/OrderController.php, portal-web/app/Http/Controllers/Api/V1/StripeWebhookController.php, portal-web/app/Http/Controllers/Api/V1/Admin/AdminSystemConfigController.php | 已通过 |
 | 2026-06-24 | code | 修复用户/管理端查询日志与统计的 ClickHouse 参数、action 值兼容、profile_id 筛选和 CSV 导出链路 | portal-web/app/Infrastructure/ClickHouse/ClickHouseClient.php, portal-web/app/Infrastructure/ClickHouse/UserAnalyticsService.php, portal-web/app/Domain/Ingest/QueryLogReadService.php, portal-web/app/Http/Controllers/Api/V1/Admin/AdminQueryLogController.php, portal-web/web/src/views/admin/QueryLogs.vue | 已通过 |

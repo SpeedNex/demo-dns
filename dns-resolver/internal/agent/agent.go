@@ -308,7 +308,7 @@ func (a *Agent) loadProfileIntoEngine(profileID string, data json.RawMessage, ve
 	// 加载到 engine：portal-web showProfile 直接返回单 profile 对象，按 list_type/match_type 分桶
 	var p config.ProfileConfig
 	if err := json.Unmarshal(data, &p); err == nil && p.ProfileID != "" {
-		var allowExact, allowWild, denyExact, denyWild []string
+		var allowExact, allowWild, blockExact, blockWild []string
 		var adblockExact, adblockWild []string
 		security := make(map[string][]string)
 		parental := make(map[string][]string)
@@ -320,7 +320,7 @@ func (a *Agent) loadProfileIntoEngine(profileID string, data json.RawMessage, ve
 			if d == "" {
 				d = r.Domain
 			}
-			// list_type 格式：allowlist / denylist / category:<top>:<sub>
+			// list_type 格式：allowlist / blocklist / category:<top>:<sub>
 			// category top: security → security[<sub>]; parental → parental[<sub>];
 			//              privacy → adblock[<sub>] (广告/跟踪器归入 adblock 桶)
 			//              无 sub 的扁平分类（如 category:privacy）也路由到对应桶
@@ -357,21 +357,21 @@ func (a *Agent) loadProfileIntoEngine(profileID string, data json.RawMessage, ve
 				} else {
 					allowExact = append(allowExact, d)
 				}
-			case "denylist":
+			case "blocklist":
 				if r.MatchType == "wildcard" || r.MatchType == "suffix" {
-					denyWild = append(denyWild, d)
+					blockWild = append(blockWild, d)
 				} else {
-					denyExact = append(denyExact, d)
+					blockExact = append(blockExact, d)
 				}
 			}
 		}
 		a.engine.LoadProfileRules(p.ProfileID,
 			allowExact, allowWild,
-			denyExact, denyWild,
+			blockExact, blockWild,
 			adblockExact, adblockWild,
 			security, parental)
-		log.Printf("Engine rules loaded: profile=%s allow=%d allow_wild=%d deny=%d deny_wild=%d adblock=%d security_cats=%d parental_cats=%d",
-			p.ProfileID, len(allowExact), len(allowWild), len(denyExact), len(denyWild), len(adblockExact), len(security), len(parental))
+		log.Printf("Engine rules loaded: profile=%s allow=%d allow_wild=%d block=%d block_wild=%d adblock=%d security_cats=%d parental_cats=%d",
+			p.ProfileID, len(allowExact), len(allowWild), len(blockExact), len(blockWild), len(adblockExact), len(security), len(parental))
 
 		// Load security algorithm config (IDN Homograph, DGA, Typosquatting, DNS Rebinding)
 		if p.Security != nil {

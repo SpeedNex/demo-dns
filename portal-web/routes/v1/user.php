@@ -48,11 +48,11 @@ Route::prefix('user')->middleware(['auth:api', 'user.only'])->group(function ():
     Route::delete('allowlist/{rule_id}', [UserWorkspaceController::class, 'deleteAllowlistRule']);
     Route::post('allowlist/batch-delete', [UserWorkspaceController::class, 'batchDeleteAllowlist']);
 
-    Route::get('denylist', [UserWorkspaceController::class, 'denylist']);
-    Route::post('denylist', [UserWorkspaceController::class, 'createDenylistRule']);
-    Route::put('denylist/{rule_id}', [UserWorkspaceController::class, 'updateDenylistRule']);
-    Route::delete('denylist/{rule_id}', [UserWorkspaceController::class, 'deleteDenylistRule']);
-    Route::post('denylist/batch-delete', [UserWorkspaceController::class, 'batchDeleteDenylist']);
+    Route::get('blocklist', [UserWorkspaceController::class, 'blocklist']);
+    Route::post('blocklist', [UserWorkspaceController::class, 'createBlocklistRule']);
+    Route::put('blocklist/{rule_id}', [UserWorkspaceController::class, 'updateBlocklistRule']);
+    Route::delete('blocklist/{rule_id}', [UserWorkspaceController::class, 'deleteBlocklistRule']);
+    Route::post('blocklist/batch-delete', [UserWorkspaceController::class, 'batchDeleteBlocklist']);
 
     Route::get('analytics', [UserWorkspaceController::class, 'analytics']);
     Route::get('logs', [UserWorkspaceController::class, 'logs']);

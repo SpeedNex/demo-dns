@@ -10,7 +10,7 @@
         <template #actions>
             <el-radio-group v-model="filter.type" @change="onTypeChange">
                 <el-radio-button value="all">{{ $t('admin.blacklistWhitelist.all') }}</el-radio-button>
-                <el-radio-button value="deny">{{ $t('admin.blacklistWhitelist.deny') }}</el-radio-button>
+                <el-radio-button value="block">{{ $t('admin.blacklistWhitelist.block') }}</el-radio-button>
                 <el-radio-button value="allow">{{ $t('admin.blacklistWhitelist.allow') }}</el-radio-button>
             </el-radio-group>
             <el-input
@@ -43,10 +43,10 @@
                 <template #default="{ row }">
                     <el-tag
                         size="small"
-                        :type="row.list_type === 'denylist' ? 'danger' : 'success'"
+                        :type="row.list_type === 'blocklist' ? 'danger' : 'success'"
                         effect="light"
                     >
-                        {{ row.list_type === 'denylist' ? $t('admin.blacklistWhitelist.deny') : $t('admin.blacklistWhitelist.allow') }}
+                        {{ row.list_type === 'blocklist' ? $t('admin.blacklistWhitelist.block') : $t('admin.blacklistWhitelist.allow') }}
                     </el-tag>
                 </template>
             </el-table-column>

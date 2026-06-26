@@ -8,7 +8,7 @@ import (
 
 func TestAllowRuleHasPriority(t *testing.T) {
 	engine := rules.New([]rules.Rule{
-		{Domain: "ads.example.com", NormalizedDomain: "ads.example.com", MatchType: "exact", ListType: "deny", Action: "block"},
+		{Domain: "ads.example.com", NormalizedDomain: "ads.example.com", MatchType: "exact", ListType: "block", Action: "block"},
 		{Domain: "ads.example.com", NormalizedDomain: "ads.example.com", MatchType: "exact", ListType: "allow", Action: "allow"},
 	})
 
@@ -19,7 +19,7 @@ func TestAllowRuleHasPriority(t *testing.T) {
 
 func TestSuffixRuleBlocksSubdomain(t *testing.T) {
 	engine := rules.New([]rules.Rule{
-		{Domain: "example.com", NormalizedDomain: "example.com", MatchType: "suffix", ListType: "deny", Action: "block"},
+		{Domain: "example.com", NormalizedDomain: "example.com", MatchType: "suffix", ListType: "block", Action: "block"},
 	})
 
 	if got := engine.Decide("ads.example.com"); got != rules.DecisionBlock {

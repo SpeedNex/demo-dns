@@ -1034,16 +1034,16 @@ paths:
       responses:
         '204':
           description: Deleted
-  /api/v1/member/profiles/{profile_id}/denylist:
+  /api/v1/member/profiles/{profile_id}/blocklist:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     get:
       tags:
       - portal-member
-      summary: List denylist
+      summary: List blocklist
       responses:
         '200':
-          description: denylist rules
+          description: blocklist rules
           content:
             application/json:
               schema:
@@ -1065,8 +1065,8 @@ paths:
     post:
       tags:
       - portal-member
-      summary: Create denylist rule
-      description: Alias of profile rules with list_type=deny and action=block.
+      summary: Create blocklist rule
+      description: Alias of profile rules with list_type=block and action=block.
       requestBody:
         required: true
         content:
@@ -1087,14 +1087,14 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationError'
-  /api/v1/member/profiles/{profile_id}/denylist/{rule_id}:
+  /api/v1/member/profiles/{profile_id}/blocklist/{rule_id}:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     - $ref: '#/components/parameters/RuleId'
     put:
       tags:
       - portal-member
-      summary: Update denylist rule
+      summary: Update blocklist rule
       requestBody:
         required: true
         content:
@@ -1114,7 +1114,7 @@ paths:
     delete:
       tags:
       - portal-member
-      summary: Delete denylist rule
+      summary: Delete blocklist rule
       responses:
         '204':
           description: Deleted
@@ -1139,7 +1139,7 @@ paths:
                   type: string
                   enum:
                   - allowlist
-                  - denylist
+                  - blocklist
                 duplicate_action:
                   type: string
                   enum:
@@ -1178,9 +1178,9 @@ paths:
           type: string
           enum:
           - allowlist
-          - denylist
+          - blocklist
           - all
-          default: all
+        default: all
       - name: format
         in: query
         schema:
@@ -3593,7 +3593,7 @@ components:
           type: string
           enum:
           - allow
-          - deny
+          - block
         match_type:
           type: string
           enum:
@@ -3625,7 +3625,7 @@ components:
           type: string
           enum:
           - allow
-          - deny
+          - block
         match_type:
           type: string
           enum:
@@ -4552,7 +4552,7 @@ components:
                 - security
                 - privacy
                 - parental
-                - denylist
+                - blocklist
                 - allowlist
                 - analytics
                 - logs

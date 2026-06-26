@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class ConfigVersion extends Model
+class ProfileVersion extends Model
 {
     public $incrementing = true;
 

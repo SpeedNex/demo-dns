@@ -95,7 +95,7 @@ CREATE UNIQUE INDEX uniq_profiles_user_name_active ON profiles (user_id, lower(n
 |---|---|---|---|
 | id | uuid | pk | 规则 ID |
 | profile_id | uuid | not null fk profiles.id | Profile |
-| list_type | varchar(20) | not null | `allow` / `deny` |
+| list_type | varchar(20) | not null | `allow` / `block` |
 | match_type | varchar(20) | not null | `exact` / `suffix` / `wildcard` |
 | domain | varchar(255) | not null | 用户输入域名 |
 | normalized_domain | varchar(255) | not null | 归一化域名 |
@@ -111,7 +111,7 @@ CREATE UNIQUE INDEX uniq_profiles_user_name_active ON profiles (user_id, lower(n
 约束与索引：
 
 ```sql
-ALTER TABLE profile_rules ADD CONSTRAINT chk_profile_rules_list_type CHECK (list_type IN ('allow','deny'));
+ALTER TABLE profile_rules ADD CONSTRAINT chk_profile_rules_list_type CHECK (list_type IN ('allow','block'));
 ALTER TABLE profile_rules ADD CONSTRAINT chk_profile_rules_match_type CHECK (match_type IN ('exact','suffix','wildcard'));
 CREATE INDEX idx_profile_rules_profile ON profile_rules (profile_id, list_type, enabled);
 CREATE UNIQUE INDEX uniq_profile_rule_active ON profile_rules (profile_id, list_type, match_type, normalized_domain) WHERE deleted_at IS NULL;

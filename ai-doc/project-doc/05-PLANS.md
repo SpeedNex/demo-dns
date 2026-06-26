@@ -49,7 +49,7 @@
 | 1.7 | portal-web(原 console 域)心跳 | 1.6 | P0 | online/offline 状态正确 | defined | not_started | not_run |
 | 1.8 | 配置拉取与 ACK | 1.5,1.6 | P0 | resolver 拉取到版本并 ACK(目标侧为 portal-web(原 console 域)) | defined | not_started | not_run |
 | 1.9 | dns-resolver DoH / UDP | 0.x | P0 | 查询可返回 upstream 结果 | defined | not_started | not_run |
-| 1.10 | 规则引擎 | 1.9 | P0 | deny 命中 BLOCK，allow 优先 ALLOW | defined | not_started | not_run |
+| 1.10 | 规则引擎 | 1.9 | P0 | block 命中 BLOCK，allow 优先 ALLOW | defined | not_started | not_run |
 | 1.11 | 日志批量上报 | 1.9 | P0 | portal 可查询日志 | defined | not_started | not_run |
 | 1.12 | 端到端验收脚本 | 1.1-1.11 | P0 | 12 步 MVP 验收通过 | defined | not_started | not_run |
 
@@ -89,7 +89,7 @@
 | # | 页面 | 后端包 | 前端包 | 当前实现说明 | doc_status | impl_status | test_status | delivery_level |
 |---|---|---|---|---|---|---|---|---|
 | 2.UI.1 | portal-web ProfileList | portal-web | portal-web/web | Profile CRUD、批量删除、复制、发布 | defined | built | not_run | L2 |
-| 2.UI.2 | portal-web Denylist / Allowlist | portal-web | portal-web/web | 行内编辑、批量删除、新增对话框 | defined | built | not_run | L2 |
+| 2.UI.2 | portal-web blocklist / Allowlist | portal-web | portal-web/web | 行内编辑、批量删除、新增对话框 | defined | built | not_run | L2 |
 | 2.UI.3 | portal-web ProfileDetail | portal-web | portal-web/web | Profile 编辑、规则 CRUD、批量删除、发布按钮 | defined | built | not_run | L2 |
 | 2.UI.4 | portal-web TeamList | portal-web | portal-web/web | 团队列表、退出团队（非 owner） | defined | built | not_run | L2 |
 | 2.UI.5 | portal-web TeamDetail | portal-web | portal-web/web | 团队编辑、成员管理、角色变更、批量取消邀请、转移所有权、退出团队 | defined | built | not_run | L2 |

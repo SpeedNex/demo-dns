@@ -13,7 +13,7 @@
       "query_name": "ads.example.com",
       "query_type": "A",
       "action": "blocked",
-      "reason": "denylist",
+      "reason": "blocklist",
       "category": "custom",
       "rule_id": "rule_01HAMPLE",
       "latency_ms": 3,

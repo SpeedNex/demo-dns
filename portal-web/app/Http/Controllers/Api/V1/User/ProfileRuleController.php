@@ -43,7 +43,7 @@ final class ProfileRuleController
         $validated = $request->validate([
             'domain' => 'string|max:255',
             'match_type' => 'string|in:exact,suffix,wildcard',
-            'list_type' => 'string|in:allow,deny',
+            'list_type' => 'string|in:allow,block',
             'enabled' => 'boolean',
             'note' => 'nullable|string|max:500',
         ]);

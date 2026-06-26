@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Publish;
 
-use App\Models\ConfigVersion;
+use App\Models\ProfileVersion;
 use App\Models\Node;
 use App\Models\PublishTask;
 use App\Models\TaskExecution;
@@ -31,7 +31,7 @@ final class PublishService
         string $checksum,
         array $configJson,
     ): array {
-        $globalVersion = (int) (ConfigVersion::max('version') ?? 0) + 1;
+        $globalVersion = (int) (ProfileVersion::max('version') ?? 0) + 1;
         $encoded = json_encode($configJson, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if ($encoded === false) {
             throw new \RuntimeException(
@@ -39,7 +39,7 @@ final class PublishService
             );
         }
 
-        $configVersion = ConfigVersion::create([
+        $configVersion = ProfileVersion::create([
             'version' => $globalVersion,
             'target_scope' => 'profile',
             'target_profile_id' => $this->resolveProfilePk((string) ($configJson['profile_id'] ?? $profileId)),
@@ -54,7 +54,7 @@ final class PublishService
         $targetNodes = Node::online()->get(['id']);
 
         $publishTask = PublishTask::create([
-            'config_version_id' => $configVersion->id,
+            'profile_version_id' => $configVersion->id,
             'profile_id' => $this->resolveProfilePk($profileId),
             'status' => 'queued',
             'target_scope' => 'all_nodes',

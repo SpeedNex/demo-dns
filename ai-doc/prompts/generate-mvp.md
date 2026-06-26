@@ -25,7 +25,7 @@
 会员中心展示安全、隐私、家长监护、黑名单、白名单、统计、日志、设置、会员中心
 开启安全防护和隐私保护
 开启家长监护 SafeSearch
-添加 deny rule: ads.example.com
+添加 block rule: ads.example.com
 添加 allow rule: school.example.com
 发布配置
 resolver 预创建 + install 写入凭据后心跳 online

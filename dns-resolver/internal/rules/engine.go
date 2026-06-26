@@ -21,14 +21,14 @@ type Rule struct {
 type Engine struct {
 	allowExact  map[string]struct{}
 	allowSuffix []string
-	denyExact   map[string]struct{}
-	denySuffix  []string
+	blockExact   map[string]struct{}
+	blockSuffix  []string
 }
 
 func New(ruleSet []Rule) *Engine {
 	engine := &Engine{
 		allowExact: map[string]struct{}{},
-		denyExact:  map[string]struct{}{},
+		blockExact: map[string]struct{}{},
 	}
 
 	for _, rule := range ruleSet {
@@ -40,7 +40,7 @@ func New(ruleSet []Rule) *Engine {
 			engine.addRule(normalized, rule.MatchType, true)
 			continue
 		}
-		if rule.ListType == "deny" {
+		if rule.ListType == "block" {
 			engine.addRule(normalized, rule.MatchType, false)
 		}
 	}
@@ -52,7 +52,7 @@ func (e *Engine) Decide(domain string) Decision {
 	if _, ok := e.allowExact[domain]; ok || suffixMatch(domain, e.allowSuffix) {
 		return DecisionAllow
 	}
-	if _, ok := e.denyExact[domain]; ok || suffixMatch(domain, e.denySuffix) {
+	if _, ok := e.blockExact[domain]; ok || suffixMatch(domain, e.blockSuffix) {
 		return DecisionBlock
 	}
 	return DecisionAllow
@@ -65,13 +65,13 @@ func (e *Engine) addRule(domain string, matchType string, allow bool) {
 			e.allowSuffix = append(e.allowSuffix, strings.TrimPrefix(domain, "*."))
 			return
 		}
-		e.denySuffix = append(e.denySuffix, strings.TrimPrefix(domain, "*."))
+		e.blockSuffix = append(e.blockSuffix, strings.TrimPrefix(domain, "*."))
 	default:
 		if allow {
 			e.allowExact[domain] = struct{}{}
 			return
 		}
-		e.denyExact[domain] = struct{}{}
+		e.blockExact[domain] = struct{}{}
 	}
 }
 

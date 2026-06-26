@@ -63,7 +63,7 @@
 | 心跳 | 周期上报，控制台显示 online |
 | 配置 | 拉取、checksum、原子替换、热加载、ACK |
 | 查询 | DoH / UDP 至少支持 A / AAAA |
-| 规则 | allow 优先 deny；deny 命中返回预期拦截响应 |
+| 规则 | allow 优先 block；block 命中返回预期拦截响应 |
 | 上游 | 多 upstream fallback；超时可配置 |
 | 日志 | 异步 batch，不阻塞查询 |
 | buffer | 上报失败写本地文件，恢复后重放 |
@@ -160,7 +160,7 @@ python -m json.tool contracts/resolver-metrics.schema.json
 1. 用户注册成功
 2. 用户登录成功
 3. 创建 Profile 成功
-4. 添加 deny rule: ads.example.com
+4. 添加 block rule: ads.example.com
 5. 发布配置版本成功
 6. 管理员预创建节点并签发 api_key / secret
 7. resolver 凭三元组启动后心跳 online

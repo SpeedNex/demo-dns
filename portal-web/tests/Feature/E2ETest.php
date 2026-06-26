@@ -8,7 +8,7 @@
  * 2. 创建 Profile
  * 3. 配置安全/隐私/家长监护规则
  * 4. 添加黑名单/白名单规则
- * 5. 验证自动发布后 ConfigVersion 是否正确创建
+ * 5. 验证自动发布后 ProfileVersion 是否正确创建
  * 6. 验证 Profile 版本号是否递增
  * 7. 模拟 Resolver 拉取配置
  * 8. 验证 DNS 查询规则生效
@@ -18,7 +18,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Models\ConfigVersion;
+use App\Models\ProfileVersion;
 use App\Models\Device;
 use App\Models\Profile;
 use App\Models\ProfileRule;
@@ -40,7 +40,7 @@ final class E2ETest extends TestCase
     private int $profileId;
     private string $authToken;
     private array $profileData = [];
-    private string $denylistDomain = '';
+    private string $blocklistDomain = '';
     private string $allowlistDomain = '';
 
     /**
@@ -85,15 +85,15 @@ final class E2ETest extends TestCase
         $this->step6_configure_parental();
 
         // 步骤 7: 添加黑名单规则
-        $this->step7_add_denylist_rule();
+        $this->step7_add_blocklist_rule();
 
         // 步骤 8: 添加白名单规则
         $this->step8_add_allowlist_rule();
 
         // 步骤 9: 批量删除黑名单规则
-        $this->step9_batch_delete_denylist();
+        $this->step9_batch_delete_blocklist();
 
-        // 步骤 10: 验证自动发布 - 检查 ConfigVersion
+        // 步骤 10: 验证自动发布 - 检查 ProfileVersion
         $this->step10_verify_config_version_created();
 
         // 步骤 11: 验证 Profile 版本号递增
@@ -316,8 +316,8 @@ final class E2ETest extends TestCase
             $profileAfter = Profile::find($this->profileId);
             $versionAfter = $profileAfter->version ?? 0;
 
-            // 验证 ConfigVersion 是否创建
-            $configVersions = ConfigVersion::where('target_profile_id', $this->profileId)
+            // 验证 ProfileVersion 是否创建
+            $configVersions = ProfileVersion::where('target_profile_id', $this->profileId)
                 ->orderByDesc('id')
                 ->first();
 
@@ -396,14 +396,14 @@ final class E2ETest extends TestCase
         }
     }
 
-    private function step7_add_denylist_rule(): void
+    private function step7_add_blocklist_rule(): void
     {
         $step = '步骤 7: 添加黑名单规则';
         try {
-            $this->denylistDomain = 'malware-test-' . time() . '.example.com';
+            $this->blocklistDomain = 'malware-test-' . time() . '.example.com';
 
-            $response = $this->postJson('/api/v1/user/denylist', [
-                'domain' => $this->denylistDomain,
+            $response = $this->postJson('/api/v1/user/blocklist', [
+                'domain' => $this->blocklistDomain,
                 'match_type' => 'suffix',
             ], $this->createAuthHeaders());
 
@@ -422,8 +422,8 @@ final class E2ETest extends TestCase
             // 等待 autoPublish 完成
             usleep(500000); // 500ms
 
-            // 验证 ConfigVersion 中是否包含新规则
-            $latestConfig = ConfigVersion::where('target_profile_id', $this->profileId)
+            // 验证 ProfileVersion 中是否包含新规则
+            $latestConfig = ProfileVersion::where('target_profile_id', $this->profileId)
                 ->orderByDesc('id')
                 ->first();
 
@@ -431,13 +431,13 @@ final class E2ETest extends TestCase
             $rulesInConfig = $configJson['rules'] ?? [];
             $domainFound = false;
             foreach ($rulesInConfig as $r) {
-                if ($r['domain'] === $this->denylistDomain) {
+                if ($r['domain'] === $this->blocklistDomain) {
                     $domainFound = true;
                     break;
                 }
             }
 
-            $this->pass($step, "黑名单规则添加成功: {$this->denylistDomain} (规则ID: {$data['id']}, 配置中包含: " . ($domainFound ? '是' : '否') . ")");
+            $this->pass($step, "黑名单规则添加成功: {$this->blocklistDomain} (规则ID: {$data['id']}, 配置中包含: " . ($domainFound ? '是' : '否') . ")");
         } catch (\Throwable $e) {
             $this->markStepFailed($step, '黑名单规则添加失败', $e);
             $this->generate_report();
@@ -477,14 +477,14 @@ final class E2ETest extends TestCase
         }
     }
 
-    private function step9_batch_delete_denylist(): void
+    private function step9_batch_delete_blocklist(): void
     {
         $step = '步骤 9: 批量删除黑名单规则';
         try {
             // 先添加一个新的黑名单规则用于删除测试，避免删除步骤 7 添加的规则
             $domainToDelete = 'delete-me-' . time() . '.example.com';
 
-            $addResponse = $this->postJson('/api/v1/user/denylist', [
+            $addResponse = $this->postJson('/api/v1/user/blocklist', [
                 'domain' => $domainToDelete,
                 'match_type' => 'suffix',
             ], $this->createAuthHeaders());
@@ -497,7 +497,7 @@ final class E2ETest extends TestCase
 
             // 获取当前黑名单规则
             $rules = ProfileRule::where('profile_id', $this->profileId)
-                ->where('list_type', 'denylist')
+                ->where('list_type', 'blocklist')
                 ->where('id', $ruleToDelete)
                 ->pluck('id')
                 ->map(fn ($id) => (string) $id)
@@ -508,7 +508,7 @@ final class E2ETest extends TestCase
                 return;
             }
 
-            $response = $this->postJson('/api/v1/user/denylist/batch-delete', [
+            $response = $this->postJson('/api/v1/user/blocklist/batch-delete', [
                 'ids' => $rules,
             ], $this->createAuthHeaders());
 
@@ -535,22 +535,22 @@ final class E2ETest extends TestCase
 
     private function step10_verify_config_version_created(): void
     {
-        $step = '步骤 10: 验证自动发布 - 检查 ConfigVersion';
+        $step = '步骤 10: 验证自动发布 - 检查 ProfileVersion';
         try {
-            $configVersions = ConfigVersion::where('target_profile_id', $this->profileId)
+            $configVersions = ProfileVersion::where('target_profile_id', $this->profileId)
                 ->orderByDesc('id')
                 ->take(5)
                 ->get(['id', 'version', 'published_at', 'checksum']);
 
             if ($configVersions->isEmpty()) {
-                throw new \Exception('未找到任何 ConfigVersion 记录');
+                throw new \Exception('未找到任何 ProfileVersion 记录');
             }
 
             $versionList = $configVersions->pluck('version')->toArray();
 
-            $this->pass($step, "ConfigVersion 验证成功: 共有 {$configVersions->count()} 个版本，最新版本: " . implode(', ', $versionList));
+            $this->pass($step, "ProfileVersion 验证成功: 共有 {$configVersions->count()} 个版本，最新版本: " . implode(', ', $versionList));
         } catch (\Throwable $e) {
-            $this->markStepFailed($step, 'ConfigVersion 验证失败', $e);
+            $this->markStepFailed($step, 'ProfileVersion 验证失败', $e);
             $this->generate_report();
             $this->print_report();
             throw $e;
@@ -573,12 +573,12 @@ final class E2ETest extends TestCase
                 throw new \Exception('Profile published_at 未设置');
             }
 
-            // 检查版本号是否与最新的 ConfigVersion 匹配
-            $latestConfigVersion = ConfigVersion::where('target_profile_id', $this->profileId)
+            // 检查版本号是否与最新的 ProfileVersion 匹配
+            $latestProfileVersion = ProfileVersion::where('target_profile_id', $this->profileId)
                 ->max('version');
 
-            if ($currentVersion != $latestConfigVersion) {
-                $this->info("注意: Profile.version ({$currentVersion}) 与 ConfigVersion.max ({$latestConfigVersion}) 不一致");
+            if ($currentVersion != $latestProfileVersion) {
+                $this->info("注意: Profile.version ({$currentVersion}) 与 ProfileVersion.max ({$latestProfileVersion}) 不一致");
             }
 
             $this->pass($step, "Profile 版本号验证成功: version={$currentVersion}, published_at={$publishedAt}");
@@ -594,13 +594,13 @@ final class E2ETest extends TestCase
     {
         $step = '步骤 12: 模拟 Resolver 拉取配置';
         try {
-            // 获取最新的 ConfigVersion
-            $latestConfig = ConfigVersion::where('target_profile_id', $this->profileId)
+            // 获取最新的 ProfileVersion
+            $latestConfig = ProfileVersion::where('target_profile_id', $this->profileId)
                 ->orderByDesc('id')
                 ->first();
 
             if (!$latestConfig) {
-                throw new \Exception('无 ConfigVersion 可供拉取');
+                throw new \Exception('无 ProfileVersion 可供拉取');
             }
 
             $configJson = $latestConfig->config_json ?? [];
@@ -645,7 +645,7 @@ final class E2ETest extends TestCase
         $step = '步骤 13: 验证 DNS 查询规则';
         try {
             // 获取最新配置
-            $latestConfig = ConfigVersion::where('target_profile_id', $this->profileId)
+            $latestConfig = ProfileVersion::where('target_profile_id', $this->profileId)
                 ->orderByDesc('id')
                 ->first();
 
@@ -655,7 +655,7 @@ final class E2ETest extends TestCase
             // 模拟 DNS 查询测试
             $testCases = [
                 // 黑名单域名应该被拦截 - 使用完整域名（suffix 匹配）
-                ['domain' => $this->denylistDomain, 'expected_action' => 'block', 'list_type' => 'denylist'],
+                ['domain' => $this->blocklistDomain, 'expected_action' => 'block', 'list_type' => 'blocklist'],
                 // 白名单域名应该被放行 - 使用完整域名（exact 匹配）
                 ['domain' => $this->allowlistDomain, 'expected_action' => 'allow', 'list_type' => 'allowlist'],
                 // 未知域名应该走默认动作

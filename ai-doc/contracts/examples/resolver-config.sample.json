@@ -32,7 +32,7 @@
       "rules": [
         {
           "rule_id": "rule_01HAMPLE",
-          "list_type": "deny",
+          "list_type": "block",
           "match_type": "exact",
           "domain": "ads.example.com",
           "normalized_domain": "ads.example.com",

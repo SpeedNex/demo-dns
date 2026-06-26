@@ -40,8 +40,8 @@
                         </el-menu-item>
                     </el-sub-menu>
 
-                    <el-menu-item index="/user/denylist" @click="navigateTo('/user/denylist')">
-                        <span>{{ $t('nav.denylist') }}</span>
+                    <el-menu-item index="/user/blocklist" @click="navigateTo('/user/blocklist')">
+                        <span>{{ $t('nav.blocklist') }}</span>
                     </el-menu-item>
                     <el-menu-item index="/user/allowlist" @click="navigateTo('/user/allowlist')">
                         <span>{{ $t('nav.allowlist') }}</span>

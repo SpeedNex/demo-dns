@@ -8,7 +8,7 @@ import (
 // Decision represents the result of a DNS query match.
 type Decision struct {
 	Action   string `json:"action"`   // ALLOW / BLOCK / REWRITE / DROP
-	Reason   string `json:"reason"`   // allowlist / denylist / security / parental / adblock
+	Reason   string `json:"reason"`   // allowlist / blocklist / security / parental / adblock
 	Category string `json:"category"` // malware / phishing / adult / gambling / ads / ...
 }
 
@@ -16,7 +16,7 @@ type Decision struct {
 //
 // Priority (highest → lowest):
 //  1. Allow List (user-defined)
-//  2. Deny List (user-defined)
+//  2. Block List (user-defined)
 //  3. Security - Malware
 //  4. Security - Phishing
 //  5. Security - Ransomware / Cryptojacking / Botnet C2
@@ -29,8 +29,8 @@ type Engine struct {
 	// Legacy single-profile fields (kept for backward compatibility).
 	allowExact         map[string]bool
 	allowTrie          *Trie
-	denyExact          map[string]bool
-	denyTrie           *Trie
+	blockExact         map[string]bool
+	blockTrie          *Trie
 	securityCategories map[string]map[string]bool // category -> domain set
 	parentalCategories map[string]map[string]bool // category -> domain set
 	adBlockDomains     map[string]bool
@@ -47,8 +47,8 @@ type profileEngine struct {
 	profileID          string
 	allowExact         map[string]bool
 	allowTrie          *Trie
-	denyExact          map[string]bool
-	denyTrie           *Trie
+	blockExact         map[string]bool
+	blockTrie          *Trie
 	securityCategories map[string]map[string]bool
 	parentalCategories map[string]map[string]bool
 	adBlockDomains     map[string]bool
@@ -59,9 +59,9 @@ type profileEngine struct {
 func NewEngine() *Engine {
 	return &Engine{
 		allowExact:         make(map[string]bool),
-		denyExact:          make(map[string]bool),
+		blockExact:        make(map[string]bool),
 		allowTrie:          NewTrie(),
-		denyTrie:           NewTrie(),
+		blockTrie:          NewTrie(),
 		securityCategories: make(map[string]map[string]bool),
 		parentalCategories: make(map[string]map[string]bool),
 		adBlockDomains:     make(map[string]bool),
@@ -86,19 +86,19 @@ func (e *Engine) LoadAllowRules(exact []string, wildcard []string) {
 	}
 }
 
-// LoadDenyRules replaces the deny rule set (Level 2).
-func (e *Engine) LoadDenyRules(exact []string, wildcard []string) {
+// LoadBlockRules replaces the block rule set (Level 2).
+func (e *Engine) LoadBlockRules(exact []string, wildcard []string) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	e.denyExact = make(map[string]bool)
-	e.denyTrie = NewTrie()
+	e.blockExact = make(map[string]bool)
+	e.blockTrie = NewTrie()
 
 	for _, domain := range exact {
-		e.denyExact[normalizeDomain(domain)] = true
+		e.blockExact[normalizeDomain(domain)] = true
 	}
 	for _, domain := range wildcard {
-		e.denyTrie.Insert(reverseDomain(normalizeDomain(domain)))
+		e.blockTrie.Insert(reverseDomain(normalizeDomain(domain)))
 	}
 }
 
@@ -154,9 +154,9 @@ func (e *Engine) Match(domain string) *Decision {
 		return &Decision{Action: "ALLOW", Reason: "allowlist"}
 	}
 
-	// Level 2: Deny list
-	if e.matchExactSet(e.denyExact, domain) || e.denyTrie.Search(reverseDomain(domain)) {
-		return &Decision{Action: "BLOCK", Reason: "denylist"}
+	// Level 2: Block list
+	if e.matchExactSet(e.blockExact, domain) || e.blockTrie.Search(reverseDomain(domain)) {
+		return &Decision{Action: "BLOCK", Reason: "blocklist"}
 	}
 
 	// Level 3-5: Security categories
@@ -206,7 +206,7 @@ func reverseDomain(domain string) string {
 
 // LoadProfileRules stores a per-profile rule set keyed by profileID (UI.md #38/#39).
 // This is additive; the legacy single-profile fields are unchanged.
-func (e *Engine) LoadProfileRules(profileID string, allowExact, allowWildcard, denyExact, denyWildcard, adblockExact, adblockWildcard []string, security, parental map[string][]string) {
+func (e *Engine) LoadProfileRules(profileID string, allowExact, allowWildcard, blockExact, blockWildcard, adblockExact, adblockWildcard []string, security, parental map[string][]string) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
@@ -214,8 +214,8 @@ func (e *Engine) LoadProfileRules(profileID string, allowExact, allowWildcard, d
 		profileID:          profileID,
 		allowExact:         make(map[string]bool, len(allowExact)),
 		allowTrie:          NewTrie(),
-		denyExact:          make(map[string]bool, len(denyExact)),
-		denyTrie:           NewTrie(),
+		blockExact:         make(map[string]bool, len(blockExact)),
+		blockTrie:          NewTrie(),
 		securityCategories: make(map[string]map[string]bool, len(security)),
 		parentalCategories: make(map[string]map[string]bool, len(parental)),
 		adBlockDomains:     make(map[string]bool, len(adblockExact)),
@@ -227,11 +227,11 @@ func (e *Engine) LoadProfileRules(profileID string, allowExact, allowWildcard, d
 	for _, d := range allowWildcard {
 		pe.allowTrie.Insert(reverseDomain(normalizeDomain(d)))
 	}
-	for _, d := range denyExact {
-		pe.denyExact[normalizeDomain(d)] = true
+	for _, d := range blockExact {
+		pe.blockExact[normalizeDomain(d)] = true
 	}
-	for _, d := range denyWildcard {
-		pe.denyTrie.Insert(reverseDomain(normalizeDomain(d)))
+	for _, d := range blockWildcard {
+		pe.blockTrie.Insert(reverseDomain(normalizeDomain(d)))
 	}
 	for k, v := range security {
 		set := make(map[string]bool, len(v))
@@ -294,8 +294,8 @@ func matchProfileEngine(pe *profileEngine, domain string) *Decision {
 	if pe.allowExact[domain] || pe.allowTrie.Search(rev) {
 		return &Decision{Action: "ALLOW", Reason: "allowlist"}
 	}
-	if pe.denyExact[domain] || pe.denyTrie.Search(rev) {
-		return &Decision{Action: "BLOCK", Reason: "denylist"}
+	if pe.blockExact[domain] || pe.blockTrie.Search(rev) {
+		return &Decision{Action: "BLOCK", Reason: "blocklist"}
 	}
 	for cat, set := range pe.securityCategories {
 		if set[domain] {

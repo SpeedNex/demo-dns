@@ -67,8 +67,8 @@ final class AdminPublishController
         $actorId = $request->user()?->admin_id;
         $validated = $request->validate([
             'message' => 'required|string|max:500',
-            'config_version_id' => 'required_without:profile_id|nullable',
-            'profile_id' => 'required_without:config_version_id|nullable',
+            'profile_version_id' => 'required_without:profile_id|nullable',
+            'profile_id' => 'required_without:profile_version_id|nullable',
             'target_scope' => 'sometimes|string|in:all_nodes,specific_nodes,all_profiles',
             'target_node_ids' => 'sometimes|array',
             'target_node_ids.*' => 'required',
@@ -103,7 +103,7 @@ final class AdminPublishController
         }
 
         $task = PublishTask::create([
-            'config_version_id' => $validated['config_version_id'] ?? null,
+            'profile_version_id' => $validated['profile_version_id'] ?? null,
             'profile_id' => $profileId !== null ? (int) $profileId : null,
             'status' => 'queued',
             'target_scope' => $targetScope,
@@ -264,8 +264,8 @@ final class AdminPublishController
         $search = $request->input('search', '');
 
         $query = \App\Models\Profile::with(['user:uid,username,email'])
-            ->leftJoin('config_versions', 'config_versions.target_profile_id', '=', 'profiles.id')
-            ->select('profiles.*', \Illuminate\Support\Facades\DB::raw('COUNT(dns_config_versions.id) as config_versions_count'))
+            ->leftJoin('profile_versions', 'profile_versions.target_profile_id', '=', 'profiles.id')
+            ->select('profiles.*', \Illuminate\Support\Facades\DB::raw('COUNT(dns_profile_versions.id) as profile_versions_count'))
             ->groupBy('profiles.id')
             ->orderByDesc('profiles.created_at');
 

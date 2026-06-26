@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Domain\System\HealthCheckService;
 use App\Infrastructure\ClickHouse\ClickHouseClient;
-use App\Models\ConfigVersion;
+use App\Models\ProfileVersion;
 use App\Models\Node;
 use App\Models\PublishTask;
 use Illuminate\Http\JsonResponse;
@@ -53,9 +53,9 @@ final class AdminStatsController
                     'last_24h' => PublishTask::where('queued_at', '>=', now()->subDay())->count(),
                 ],
                 'configs' => [
-                    'total_versions' => ConfigVersion::count(),
+                    'total_versions' => ProfileVersion::count(),
                     'active_nodes' => $onlineNodes,
-                    'latest_version' => (int) (ConfigVersion::max('version') ?? 0),
+                    'latest_version' => (int) (ProfileVersion::max('version') ?? 0),
                 ],
                 'queries' => [
                     'last_24h' => $last24h,

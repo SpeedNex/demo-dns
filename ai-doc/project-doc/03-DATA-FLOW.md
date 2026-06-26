@@ -50,7 +50,7 @@
 ```text
 1. profile disabled → 默认上游解析
 2. allow list → ALLOW
-3. deny list → BLOCK
+3. blocklist → BLOCK
 4. security malware / phishing / c2 → BLOCK
 5. privacy tracking / telemetry → BLOCK
 6. parental category / safe search rewrite → BLOCK or REWRITE

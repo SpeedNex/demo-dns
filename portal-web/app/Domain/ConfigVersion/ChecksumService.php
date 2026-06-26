@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\ConfigVersion;
+namespace App\Domain\ProfileVersion;
 
 final class ChecksumService
 {

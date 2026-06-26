@@ -248,7 +248,7 @@ X-Nonce: <16 random bytes hex>
       "query_name": "ads.example.com",
       "query_type": "A",
       "action": "blocked",
-      "reason": "denylist",
+      "reason": "blocklist",
       "category": "custom",
       "rule_id": "rule_01H...",
       "latency_ms": 7,
@@ -457,7 +457,7 @@ X-Internal-Signature: hmac-sha256(...)
     "quota_status": "normal",
     "log_retention_days": 90
   },
-  "message": "Update deny list"
+  "message": "Update blocklist"
 }
 ```
 

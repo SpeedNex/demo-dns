@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::create('publish_tasks', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('config_version_id');
+            $table->unsignedBigInteger('profile_version_id');
             $table->unsignedBigInteger('profile_id')->nullable();
             $table->enum('status', ['queued', 'running', 'succeeded', 'partial', 'failed'])->default('queued');
             $table->enum('target_scope', ['all_nodes', 'profile', 'tag', 'node'])->default('all_nodes');
@@ -25,8 +25,8 @@ return new class extends Migration {
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
             $table->index('status', 'idx_publish_tasks_status');
-            $table->index('config_version_id', 'idx_publish_tasks_cv');
-            $table->foreign('config_version_id', 'fk_publish_tasks_cv')->references('id')->on('config_versions')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->index('profile_version_id', 'idx_publish_tasks_pv');
+            $table->foreign('profile_version_id', 'fk_publish_tasks_pv')->references('id')->on('profile_versions')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreign('profile_id', 'fk_publish_tasks_profile')->references('id')->on('profiles')->nullOnDelete()->cascadeOnUpdate();
         });
     }

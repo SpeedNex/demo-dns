@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Node;
 
-use App\Models\ConfigVersion;
+use App\Models\ProfileVersion;
 use App\Models\Plan;
 use App\Models\Profile;
 use Illuminate\Http\JsonResponse;
@@ -37,7 +37,7 @@ final class ConfigPullController
         ]);
 
         return response()->json(['data' => [
-            'version'   => (int) (ConfigVersion::max('version') ?? 0),
+            'version'   => (int) (ProfileVersion::max('version') ?? 0),
             'upstreams' => [$this->defaultUpstream()],
             'plans'     => $plans,
             'rulesets'  => [],
@@ -62,7 +62,7 @@ final class ConfigPullController
         }
 
         // 2. 取该 Profile 的最新 ConfigVersion
-        $configVersion = ConfigVersion::where('target_profile_id', $profile->id)
+        $configVersion = ProfileVersion::where('target_profile_id', $profile->id)
             ->orderByDesc('version')
             ->first();
 
@@ -125,7 +125,7 @@ final class ConfigPullController
             if (! $profile) {
                 continue;
             }
-            $latestVersion = ConfigVersion::where('target_profile_id', $profile->id)
+            $latestVersion = ProfileVersion::where('target_profile_id', $profile->id)
                 ->max('version');
             if ($latestVersion !== null && (int) $latestVersion > (int) $localVersion) {
                 $updated[$profileId] = (int) $latestVersion;

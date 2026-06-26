@@ -159,7 +159,7 @@ type ProfileConfig struct {
 
 type RuleEntry struct {
     RuleID           string `json:"rule_id"`
-    ListType         string `json:"list_type"`  // allow / deny
+    ListType         string `json:"list_type"`  // allow / block
     MatchType        string `json:"match_type"` // exact / suffix / wildcard
     Domain           string `json:"domain"`
     NormalizedDomain string `json:"normalized_domain"`
@@ -207,8 +207,8 @@ WWW.Example.COM. → www.example.com
 type RuleEngine struct {
     AllowExact  map[string]RuleDecision
     AllowSuffix *DomainTrie
-    DenyExact   map[string]RuleDecision
-    DenySuffix  *DomainTrie
+    blockExact   map[string]RuleDecision
+    blockSuffix  *DomainTrie
     RewriteMap  map[string]RewriteTarget
 }
 ```
@@ -228,7 +228,7 @@ type RuleEngine struct {
 ```go
 type Decision struct {
     Action   string // allow / blocked / rewrite
-    Reason   string // allowlist / denylist / security / parental / adblock / default
+    Reason   string // allowlist / blocklist / security / parental / adblock / default
     Category string
     RuleID   string
     RCode    string // NOERROR / NXDOMAIN / REFUSED

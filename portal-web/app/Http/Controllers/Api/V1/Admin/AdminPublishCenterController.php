@@ -49,7 +49,7 @@ final class AdminPublishCenterController
         }
 
         $task = PublishTask::create([
-            'config_version_id' => $source->config_version_id,
+            'profile_version_id' => $source->profile_version_id,
             'profile_id' => $source->profile_id,
             'status' => 'queued',
             'target_scope' => $source->target_scope,

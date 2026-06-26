@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\ConfigVersion;
+use App\Models\ProfileVersion;
 use App\Models\Device;
 use App\Models\Node;
 use App\Models\User;
@@ -61,7 +61,7 @@ final class MemberWorkspaceTest extends TestCase
             ->assertJsonPath('data.profile_name', 'Family Profile');
     }
 
-    public function test_allowlist_and_denylist_endpoints_work_against_primary_profile(): void
+    public function test_allowlist_and_blocklist_endpoints_work_against_primary_profile(): void
     {
         $user = $this->createUser('workspace2@example.com');
         Sanctum::actingAs($user, [], 'api');
@@ -71,7 +71,7 @@ final class MemberWorkspaceTest extends TestCase
             'match_type' => 'exact',
         ])->assertCreated();
 
-        $deny = $this->postJson('/api/v1/user/denylist', [
+        $block = $this->postJson('/api/v1/user/blocklist', [
             'domain' => 'ads.example.com',
             'match_type' => 'suffix',
         ])->assertCreated();
@@ -80,7 +80,7 @@ final class MemberWorkspaceTest extends TestCase
             ->assertOk()
             ->assertJsonCount(1, 'data');
 
-        $this->getJson('/api/v1/user/denylist')
+        $this->getJson('/api/v1/user/blocklist')
             ->assertOk()
             ->assertJsonCount(1, 'data');
 
@@ -88,7 +88,7 @@ final class MemberWorkspaceTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.deleted', true);
 
-        $this->deleteJson('/api/v1/user/denylist/' . $deny->json('data.id'))
+        $this->deleteJson('/api/v1/user/blocklist/' . $block->json('data.id'))
             ->assertOk()
             ->assertJsonPath('data.deleted', true);
     }
@@ -114,7 +114,7 @@ final class MemberWorkspaceTest extends TestCase
             'block_cryptojacking' => true,
         ])->assertOk();
 
-        $ruleResponse = $this->postJson('/api/v1/user/denylist', [
+        $ruleResponse = $this->postJson('/api/v1/user/blocklist', [
             'domain' => 'tracker.example.com',
             'match_type' => 'exact',
         ])->assertCreated();
@@ -144,10 +144,10 @@ final class MemberWorkspaceTest extends TestCase
             ->assertJsonPath('data.payload.config_json.rules.0.domain', 'tracker.example.com')
             ->assertJsonPath('data.payload.config_json.devices.0.device_id', 'dev-ipad-01');
 
-        $this->assertDatabaseHas('config_versions', ['target_scope' => 'profile']);
+        $this->assertDatabaseHas('profile_versions', ['target_scope' => 'profile']);
 
-        /** @var ConfigVersion $version */
-        $version = ConfigVersion::where('target_scope', 'profile')->firstOrFail();
+        /** @var ProfileVersion $version */
+        $version = ProfileVersion::where('target_scope', 'profile')->firstOrFail();
         $this->assertSame('block', $version->config_json['default_action']);
         $this->assertSame('tracker.example.com', $version->config_json['rules'][0]['domain']);
         $this->assertNotSame('allow', $version->config_json['default_action']);
@@ -233,7 +233,7 @@ final class MemberWorkspaceTest extends TestCase
                 'domain' => 'tracker.example.com',
                 'query_type' => 'A',
                 'action' => 'BLOCK',
-                'reason' => 'denylist',
+                'reason' => 'blocklist',
                 'category' => 'custom',
                 'client_ip' => '',
                 'rcode' => '0',

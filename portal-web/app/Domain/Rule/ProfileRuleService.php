@@ -35,7 +35,7 @@ final class ProfileRuleService
 
         $domain = (string) ($payload['domain'] ?? '');
         $normalizedDomain = DomainNormalizer::normalize($domain);
-        $listType = $this->normalizeListType((string) ($payload['list_type'] ?? 'deny'));
+        $listType = $this->normalizeListType((string) ($payload['list_type'] ?? 'block'));
 
         $existing = ProfileRule::where('profile_id', $profile->id)
             ->where('list_type', $listType)
@@ -165,7 +165,7 @@ final class ProfileRuleService
     {
         return match ($listType) {
             'allow', 'allowlist' => 'allowlist',
-            'deny', 'denylist' => 'denylist',
+            'block', 'blocklist' => 'blocklist',
             default => $listType,
         };
     }

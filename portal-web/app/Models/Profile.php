@@ -111,7 +111,7 @@ class Profile extends BaseModel
 
     public function versions(): HasMany
     {
-        return $this->hasMany(ConfigVersion::class, 'target_profile_id')
+        return $this->hasMany(ProfileVersion::class, 'target_profile_id')
             ->where('target_scope', 'profile');
     }
 }

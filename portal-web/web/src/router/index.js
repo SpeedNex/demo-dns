@@ -8,7 +8,7 @@ import ProfileDetail from '@/views/ProfileDetail.vue'
 import Security from '@/views/Security.vue'
 import Privacy from '@/views/Privacy.vue'
 import ParentalControl from '@/views/ParentalControl.vue'
-import Denylist from '@/views/Denylist.vue'
+import Blocklist from '@/views/Blocklist.vue'
 import Allowlist from '@/views/Allowlist.vue'
 import Analytics from '@/views/Analytics.vue'
 import Logs from '@/views/Logs.vue'
@@ -87,7 +87,7 @@ const routes = [
     { path: '/user/:profile_id/security', name: 'Security', component: Security, meta: { auth: true } },
     { path: '/user/:profile_id/privacy', name: 'Privacy', component: Privacy, meta: { auth: true } },
     { path: '/user/:profile_id/parental', name: 'ParentalControl', component: ParentalControl, meta: { auth: true } },
-    { path: '/user/:profile_id/denylist', name: 'Denylist', component: Denylist, meta: { auth: true } },
+    { path: '/user/:profile_id/blocklist', name: 'Blocklist', component: Blocklist, meta: { auth: true } },
     { path: '/user/:profile_id/allowlist', name: 'Allowlist', component: Allowlist, meta: { auth: true } },
     { path: '/user/:profile_id/analytics', name: 'Analytics', component: Analytics, meta: { auth: true } },
     { path: '/user/:profile_id/logs', name: 'Logs', component: Logs, meta: { auth: true } },

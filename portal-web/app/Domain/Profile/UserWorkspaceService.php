@@ -48,7 +48,7 @@ final class UserWorkspaceService
         'allow_marketing_links' => false,
         'block_disguised_trackers' => true,
         'log_mode' => 'full',
-        'blocklists' => ['allowlist_ids' => [], 'denylist_ids' => [], 'parental' => false],
+        'blocklists' => ['allowlist_ids' => [], 'blocklist_ids' => [], 'parental' => false],
         'deep_tracking_devices' => [],
     ];
 
@@ -238,7 +238,7 @@ final class UserWorkspaceService
     public function listRules(string $userId, string $listType, ?string $profileId = null): array
     {
         $profile = $this->resolveProfile($userId, $profileId);
-        $normalizedListType = $listType === 'allow' ? 'allowlist' : 'denylist';
+        $normalizedListType = $listType === 'allow' ? 'allowlist' : 'blocklist';
 
         return ProfileRule::where('profile_id', $profile->id)
             ->where('list_type', $normalizedListType)
@@ -250,7 +250,7 @@ final class UserWorkspaceService
     public function createRule(string $userId, string $listType, array $payload, ?string $profileId = null): array
     {
         $profile = $this->resolveProfile($userId, $profileId);
-        $normalizedListType = $listType === 'allow' ? 'allowlist' : 'denylist';
+        $normalizedListType = $listType === 'allow' ? 'allowlist' : 'blocklist';
 
         // 2026-06-22: 系统默认按 suffix 匹配，自动覆盖该域名下所有子域名，前端不再展示 match_type 表单
         $matchType = (string) ($payload['match_type'] ?? 'suffix');
@@ -273,7 +273,7 @@ final class UserWorkspaceService
     public function deleteRule(string $userId, string $listType, string $ruleId, ?string $profileId = null): array
     {
         $profile = $this->resolveProfile($userId, $profileId);
-        $normalizedListType = $listType === 'allow' ? 'allowlist' : 'denylist';
+        $normalizedListType = $listType === 'allow' ? 'allowlist' : 'blocklist';
         $rule = ProfileRule::where('profile_id', $profile->id)
             ->where('list_type', $normalizedListType)
             ->where('id', $ruleId)
@@ -296,7 +296,7 @@ final class UserWorkspaceService
     public function batchDeleteRules(string $userId, string $listType, array $ruleIds, ?string $profileId = null): array
     {
         $profile = $this->resolveProfile($userId, $profileId);
-        $normalizedListType = $listType === 'allow' ? 'allowlist' : 'denylist';
+        $normalizedListType = $listType === 'allow' ? 'allowlist' : 'blocklist';
 
         $existingIds = ProfileRule::where('profile_id', $profile->id)
             ->where('list_type', $normalizedListType)
@@ -670,7 +670,7 @@ final class UserWorkspaceService
         $devices = Device::where('user_id', $userId)->get();
         $deviceName = $devices->first()?->name ?? 'Default Device';
         $blockedDomain = ProfileRule::where('profile_id', $profile->id)
-            ->whereIn('list_type', ['deny', 'denylist'])
+            ->whereIn('list_type', ['block', 'blocklist'])
             ->value('domain') ?? 'ads.example.com';
         $allowedDomain = ProfileRule::where('profile_id', $profile->id)
             ->whereIn('list_type', ['allow', 'allowlist'])
