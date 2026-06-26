@@ -15,6 +15,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('billing_periods')) {
+            return;
+        }
+
         Schema::create('billing_periods', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('user_id');
