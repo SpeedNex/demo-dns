@@ -230,15 +230,15 @@ const handleSave = async () => {
     try {
         if (editingId.value) {
             await client.put(`/admin/brands/${editingId.value}`, form)
-            ElMessage.success(t('common.updated') || 'Updated')
+            ElMessage.success(t('common.updated'))
         } else {
             await client.post('/admin/brands', form)
-            ElMessage.success(t('common.created') || 'Created')
+            ElMessage.success(t('common.created'))
         }
         showDialog.value = false
         await fetchBrands()
     } catch (err) {
-        ElMessage.error(err.response?.data?.error?.message || t('common.saveFailed') || 'Save failed')
+        ElMessage.error(err.response?.data?.error?.message || t('common.saveFailed'))
     } finally {
         saving.value = false
     }
@@ -247,19 +247,19 @@ const handleSave = async () => {
 const handleDelete = async (row) => {
     try {
         await client.delete(`/admin/brands/${row.id}`)
-        ElMessage.success(t('common.deleted') || 'Deleted')
+        ElMessage.success(t('common.deleted'))
         await fetchBrands()
     } catch (err) {
-        ElMessage.error(err.response?.data?.error?.message || t('common.deleteFailed') || 'Delete failed')
+        ElMessage.error(err.response?.data?.error?.message || t('common.deleteFailed'))
     }
 }
 
 const handleToggle = async (row, val) => {
     try {
         await client.put(`/admin/brands/${row.id}`, { enabled: val })
-        ElMessage.success(t('common.updated') || 'Updated')
+        ElMessage.success(t('common.updated'))
     } catch (err) {
-        ElMessage.error(err.response?.data?.error?.message || t('common.saveFailed') || 'Save failed')
+        ElMessage.error(err.response?.data?.error?.message || t('common.saveFailed'))
     }
 }
 
@@ -274,13 +274,13 @@ const handleExport = async () => {
         a.click()
         URL.revokeObjectURL(url)
     } catch {
-        ElMessage.error(t('common.exportFailed') || 'Export failed')
+        ElMessage.error(t('common.exportFailed'))
     }
 }
 
 const handleImport = async () => {
     if (!importText.value.trim()) {
-        ElMessage.warning(t('admin.brands.importEmpty') || 'Empty input')
+        ElMessage.warning(t('admin.brands.importEmpty'))
         return
     }
     const lines = importText.value.split(/[\n,]+/).map(s => s.trim()).filter(Boolean)
@@ -296,7 +296,7 @@ const handleImport = async () => {
         importText.value = ''
         await fetchBrands()
     } catch (err) {
-        ElMessage.error(err.response?.data?.error?.message || t('common.importFailed') || 'Import failed')
+        ElMessage.error(err.response?.data?.error?.message || t('common.importFailed'))
     } finally {
         importing.value = false
     }
