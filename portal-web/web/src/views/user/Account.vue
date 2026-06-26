@@ -7,65 +7,71 @@
             </div>
 
             <div class="account-grid">
-                <div class="card quota-card">
-                    <div class="card-header">
-                        <el-icon class="card-icon"><Coin /></el-icon>
-                        <h3>{{ $t('account.quota.title') }}</h3>
-                    </div>
-                    <div class="card-body">
-                        <p class="quota-desc">{{ quotaDesc }}</p>
-                        <el-progress v-if="!usageData.is_unlimited" :percentage="quotaPercentage" :stroke-width="12" :color="quotaColor" />
-                        <div class="quota-text">
-                            <span>{{ usageUsedLabel }} / {{ usageTotalLabel }}</span>
-                            <span v-if="usageData.is_unlimited" class="quota-unlimited">{{ $t('account.quota.unlimited') }}</span>
+                <!-- 左侧：订阅/配额面板 -->
+                <div class="account-left">
+                    <div class="card">
+                        <div class="card-header">
+                            <el-icon class="card-icon"><Coin /></el-icon>
+                            <h3>{{ $t('account.quota.title') }}</h3>
                         </div>
-                        <div class="quota-footer">
-                            <div class="current-plan">
-                                <span>{{ $t('account.subscription.plan') }}</span>
-                                <strong>{{ currentSubscription?.plan_name || 'Free' }}</strong>
+                        <div class="card-body">
+                            <p class="quota-desc">{{ quotaDesc }}</p>
+                            <el-progress v-if="!usageData.is_unlimited" :percentage="quotaPercentage" :stroke-width="12" :color="quotaColor" />
+                            <div class="quota-text">
+                                <span>{{ usageUsedLabel }} / {{ usageTotalLabel }}</span>
+                                <span v-if="usageData.is_unlimited" class="quota-unlimited">{{ $t('account.quota.unlimited') }}</span>
                             </div>
-                            <el-button type="primary" size="small" @click="openSubscriptionDialog">
-                                {{ $t('account.subscription.subscribe') }}
-                            </el-button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card profile-card">
-                    <div class="card-header">
-                        <el-icon class="card-icon"><User /></el-icon>
-                        <h3>{{ $t('account.profile.title') }}</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="profile-avatar">
-                            <el-avatar :size="64">
-                                {{ (userInfo.username || 'U').charAt(0).toUpperCase() }}
-                            </el-avatar>
-                        </div>
-                        <div class="profile-info">
-                            <div class="profile-row">
-                                <span class="profile-label">{{ $t('account.profile.username') }}</span>
-                                <span class="profile-value">{{ userInfo.username || '-' }}</span>
-                            </div>
-                            <div class="profile-row">
-                                <span class="profile-label">{{ $t('account.profile.email') }}</span>
-                                <span class="profile-value">{{ userInfo.email || '-' }}</span>
+                            <div class="quota-footer">
+                                <div class="current-plan">
+                                    <span>{{ $t('account.subscription.plan') }}</span>
+                                    <strong>{{ currentSubscription?.plan_name || 'Free' }}</strong>
+                                </div>
+                                <el-button type="primary" size="small" @click="openSubscriptionDialog">
+                                    {{ $t('account.subscription.subscribe') }}
+                                </el-button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <el-icon class="card-icon"><Lock /></el-icon>
-                        <h3>{{ $t('account.password.title') }}</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="setting-row">
-                            <div class="setting-info">
-                                <p class="setting-desc">{{ $t('account.password.desc') }}</p>
+                <!-- 右侧：用户信息面板 -->
+                <div class="account-right">
+                    <div class="card">
+                        <div class="card-header">
+                            <el-icon class="card-icon"><User /></el-icon>
+                            <h3>{{ $t('account.profile.title') }}</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="profile-avatar">
+                                <el-avatar :size="64">
+                                    {{ (userInfo.username || 'U').charAt(0).toUpperCase() }}
+                                </el-avatar>
                             </div>
-                            <el-button @click="showPasswordDialog = true">{{ $t('common.change') }}</el-button>
+                            <div class="profile-info">
+                                <div class="profile-row">
+                                    <span class="profile-label">{{ $t('account.profile.username') }}</span>
+                                    <span class="profile-value">{{ userInfo.username || '-' }}</span>
+                                </div>
+                                <div class="profile-row">
+                                    <span class="profile-label">{{ $t('account.profile.email') }}</span>
+                                    <span class="profile-value">{{ userInfo.email || '-' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <el-icon class="card-icon"><Lock /></el-icon>
+                            <h3>{{ $t('account.password.title') }}</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="setting-row">
+                                <div class="setting-info">
+                                    <p class="setting-desc">{{ $t('account.password.desc') }}</p>
+                                </div>
+                                <el-button @click="showPasswordDialog = true">{{ $t('common.change') }}</el-button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -472,13 +478,15 @@ onMounted(loadAccountData)
 .page-header { margin-bottom: 24px; }
 .page-title { font-size: 24px; font-weight: 700; color: #0f172a; margin: 0 0 8px; }
 .page-desc { color: #64748b; margin: 0; }
-.account-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.account-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.account-left { display: flex; flex-direction: column; }
+.account-left .card { flex: 1; display: flex; flex-direction: column; }
 .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06); border: 1px solid #eef2f7; }
-.quota-card { grid-column: 1 / -1; }
+.account-right { display: flex; flex-direction: column; gap: 20px; }
 .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
 .card-header h3 { font-size: 16px; font-weight: 600; color: #0f172a; margin: 0; }
 .card-icon { font-size: 20px; color: #2563eb; }
-.card-body { color: #475569; }
+.card-body { color: #475569; flex: 1; display: flex; flex-direction: column; }
 .quota-desc { margin: 0 0 16px; font-size: 14px; }
 .quota-text { display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px; color: #64748b; }
 .quota-unlimited { color: #22c55e; font-weight: 600; }
@@ -490,8 +498,7 @@ onMounted(loadAccountData)
 .setting-desc { margin: 0 0 4px; font-size: 14px; }
 
 /* 个人信息卡片 */
-.profile-card { grid-column: 1 / -1; }
-.profile-card .card-body { display: flex; align-items: center; gap: 24px; }
+.account-right .card-body { display: flex; align-items: center; gap: 24px; }
 .profile-avatar { flex-shrink: 0; }
 .profile-avatar .el-avatar { background: linear-gradient(135deg, #2563eb, #3b82f6); color: #fff; font-size: 24px; font-weight: 600; }
 .profile-info { flex: 1; min-width: 0; }
@@ -590,7 +597,7 @@ onMounted(loadAccountData)
 .pay-actions { margin-top: 16px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .pay-actions .el-button { min-width: 120px; }
 .active-section { margin-top: 16px; }
-@media (max-width: 900px) {
+@media (max-width: 768px) {
     .account-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 768px) {

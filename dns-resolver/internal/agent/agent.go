@@ -187,6 +187,8 @@ func (a *Agent) pullGlobalConfig() {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		log.Printf("Global config pull returned status %d: %s", resp.StatusCode, string(body))
 		return
 	}
 
@@ -438,6 +440,8 @@ func (a *Agent) checkProfiles() {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		payload, _ := io.ReadAll(resp.Body)
+		log.Printf("Profile version check returned status %d: %s", resp.StatusCode, string(payload))
 		return
 	}
 
@@ -451,7 +455,14 @@ func (a *Agent) checkProfiles() {
 	}
 
 	for profileID, newVersion := range result.Data.Updated {
-		log.Printf("Profile %s has new version: %d (local: %d), re-fetching", profileID, newVersion, a.localProfiles[profileID])
+		log.Printf("Profile %s has new version: %d, re-fetching", profileID, newVersion)
+		// 先清除缓存，确保 FetchProfile 会回源 portal 而不是返回旧缓存
+		a.pCache.RemoveFromMemory(profileID)
+		a.pCache.RemoveFromDisk(profileID)
+		a.engine.RemoveProfile(profileID)
+		a.mu.Lock()
+		delete(a.localProfiles, profileID)
+		a.mu.Unlock()
 		if err := a.FetchProfile(profileID); err != nil {
 			log.Printf("Re-fetch profile %s failed: %v", profileID, err)
 		}
