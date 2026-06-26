@@ -103,8 +103,6 @@
                         <template #dropdown>
                             <el-dropdown-menu>
                                 <el-dropdown-item command="account">{{ $t('nav.account') }}</el-dropdown-item>
-                                <el-dropdown-item command="order">{{ $t('nav.order') }}</el-dropdown-item>
-                                <el-dropdown-item command="plans">{{ $t('nav.upgrade') }}</el-dropdown-item>
                                 <el-dropdown-item command="profiles">{{ $t('nav.profiles') }}</el-dropdown-item>
                                 <el-dropdown-item command="teams">{{ $t('nav.teams') }}</el-dropdown-item>
                                 <el-dropdown-item command="logout" divided>{{ $t('nav.logout') }}</el-dropdown-item>
@@ -339,11 +337,6 @@ const handleCommand = async (command) => {
         return
     }
 
-    if (command === 'order') {
-        await router.push('/user/order')
-        return
-    }
-
     if (command === 'profiles') {
         await router.push('/user/profiles')
         return
@@ -356,11 +349,6 @@ const handleCommand = async (command) => {
 
     if (command === 'membership') {
         await router.push('/user/membership')
-        return
-    }
-
-    if (command === 'plans') {
-        await router.push('/user/plans')
         return
     }
 

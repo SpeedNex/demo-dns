@@ -13,17 +13,20 @@
                         <h3>{{ $t('account.quota.title') }}</h3>
                     </div>
                     <div class="card-body">
-                        <p class="quota-desc">{{ $t('account.quota.desc') }}</p>
-                        <el-progress :percentage="quotaPercentage" :stroke-width="12" :color="quotaColor" />
+                        <p class="quota-desc">{{ quotaDesc }}</p>
+                        <el-progress v-if="!usageData.is_unlimited" :percentage="quotaPercentage" :stroke-width="12" :color="quotaColor" />
                         <div class="quota-text">
-                            <span>{{ $t('account.quota.used', { used: usageUsedLabel, total: usageTotalLabel }) }}</span>
+                            <span>{{ usageUsedLabel }} / {{ usageTotalLabel }}</span>
                             <span v-if="usageData.is_unlimited" class="quota-unlimited">{{ $t('account.quota.unlimited') }}</span>
                         </div>
                         <div class="quota-footer">
                             <div class="current-plan">
                                 <span>{{ $t('account.subscription.plan') }}</span>
-                                <strong>{{ currentSubscription?.plan_name || currentPlanCode }}</strong>
+                                <strong>{{ currentSubscription?.plan_name || 'Free' }}</strong>
                             </div>
+                            <el-button type="primary" size="small" @click="openSubscriptionDialog">
+                                {{ $t('account.subscription.subscribe') }}
+                            </el-button>
                         </div>
                     </div>
                 </div>
@@ -43,6 +46,67 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 订阅对话框 -->
+            <el-dialog v-model="showSubscriptionDialog" :title="$t('subscription.selectPlan')" width="600px" destroy-on-close>
+                <div v-if="!sub || sub.status === 'pending'">
+                    <el-radio-group v-model="selectedPlan" class="plan-list">
+                        <el-radio v-for="p in plans" :key="p.code" :value="p.code" border class="plan-radio">
+                            <div class="plan-info">
+                                <strong>{{ p.name }}</strong>
+                                <p>{{ p.description }}</p>
+                                <div class="plan-prices">
+                                    <el-radio-group v-model="selectedCycle" size="small">
+                                        <el-radio-button
+                                            v-for="price in p.prices"
+                                            :key="price.billing_cycle"
+                                            :value="price.billing_cycle"
+                                        >
+                                            {{ price.billing_cycle === 'yearly' ? $t('subscription.yearly') : $t('subscription.monthly') }}
+                                            {{ formatMoney(price.amount_minor, price.currency) }}
+                                        </el-radio-button>
+                                    </el-radio-group>
+                                </div>
+                            </div>
+                        </el-radio>
+                    </el-radio-group>
+                    <div class="dialog-footer">
+                        <el-button @click="showSubscriptionDialog = false">{{ $t('common.cancel') }}</el-button>
+                        <el-button type="primary" :loading="creating" :disabled="!selectedPlan" @click="createSubscription">
+                            {{ $t('subscription.createSubscription') }}
+                        </el-button>
+                    </div>
+                </div>
+                <div v-if="sub && sub.status === 'pending'" class="pay-section">
+                    <el-descriptions :column="2" border>
+                        <el-descriptions-item :label="$t('subscription.subscriptionNo')">{{ sub.subscription_no }}</el-descriptions-item>
+                        <el-descriptions-item :label="$t('subscription.planCode')">{{ sub.plan_code }}</el-descriptions-item>
+                        <el-descriptions-item :label="$t('subscription.billingCycle')">{{ sub.billing_cycle }}</el-descriptions-item>
+                        <el-descriptions-item :label="$t('subscription.amount')">{{ formatMoney(sub.amount_minor, sub.currency) }}</el-descriptions-item>
+                    </el-descriptions>
+                    <div class="pay-actions">
+                        <el-button type="success" :loading="paying" @click="startPayment">
+                            {{ $t('subscription.payNow') }}
+                        </el-button>
+                        <el-button v-if="currentTx" type="warning" :loading="mocking" @click="mockPay">
+                            {{ $t('subscription.mockPaySuccess') }}
+                        </el-button>
+                    </div>
+                </div>
+                <div v-if="sub && sub.status === 'active'" class="active-section">
+                    <el-result icon="success" :title="$t('subscription.activeSuccess')" :sub-title="$t('subscription.activeSuccessDesc')">
+                        <template #extra>
+                            <el-descriptions :column="2" border style="margin-bottom:16px">
+                                <el-descriptions-item :label="$t('subscription.planCode')">{{ sub.plan_code }}</el-descriptions-item>
+                                <el-descriptions-item :label="$t('subscription.status')">
+                                    <el-tag type="success" size="small">{{ $t('subscription.activeTitle') }}</el-tag>
+                                </el-descriptions-item>
+                            </el-descriptions>
+                            <el-button type="primary" @click="showSubscriptionDialog = false">{{ $t('common.confirm') }}</el-button>
+                        </template>
+                    </el-result>
+                </div>
+            </el-dialog>
 
             <el-dialog v-model="showPasswordDialog" :title="$t('account.password.title')" width="400px">
                 <el-form :model="passwordForm" label-position="top">
@@ -94,6 +158,92 @@ const showPasswordDialog = ref(false)
 const updatingPassword = ref(false)
 const passwordForm = ref({ currentPassword: '', newPassword: '', confirmPassword: '' })
 
+// 订阅相关
+const showSubscriptionDialog = ref(false)
+const plans = ref([])
+const selectedPlan = ref('')
+const selectedCycle = ref('monthly')
+const sub = ref(null)
+const currentTx = ref(null)
+const creating = ref(false)
+const paying = ref(false)
+const mocking = ref(false)
+
+const formatMoney = (minor, currency = 'USD') => {
+    if (minor === null || minor === undefined || Number.isNaN(Number(minor))) return '-'
+    return `${currency} ${(Number(minor) / 100).toFixed(2)}`
+}
+
+const fetchPlans = async () => {
+    try {
+        const { data } = await client.get('/user/plans')
+        plans.value = data.data ?? []
+    } catch (e) {
+        console.error('Failed to fetch plans', e)
+    }
+}
+
+const openSubscriptionDialog = async () => {
+    selectedPlan.value = ''
+    sub.value = null
+    currentTx.value = null
+    await fetchPlans()
+    // 检查当前订阅状态
+    try {
+        const { data } = await client.get('/user/subscription')
+        if (data.data && (data.data.status === 'active' || data.data.status === 'pending')) {
+            sub.value = data.data
+        }
+    } catch {}
+    showSubscriptionDialog.value = true
+}
+
+const createSubscription = async () => {
+    creating.value = true
+    try {
+        const { data } = await client.post('/user/subscriptions', {
+            plan_code: selectedPlan.value,
+            billing_cycle: selectedCycle.value,
+        })
+        sub.value = data.data
+        await loadAccountData()
+    } catch (e) {
+        ElMessage.error(e.response?.data?.message || t('subscription.createFailed'))
+    } finally {
+        creating.value = false
+    }
+}
+
+const startPayment = async () => {
+    paying.value = true
+    try {
+        const { data } = await client.post(`/user/subscriptions/${sub.value.id}/checkout`)
+        currentTx.value = data.data
+        if (data.data.redirect_url) {
+            window.open(data.data.redirect_url, '_blank')
+        }
+    } catch (e) {
+        ElMessage.error(e.response?.data?.message || t('subscription.checkoutFailed'))
+    } finally {
+        paying.value = false
+    }
+}
+
+const mockPay = async () => {
+    mocking.value = true
+    try {
+        await client.post(`/user/payment-transactions/${currentTx.value.payment_transaction_id}/mock-success`)
+        const { data } = await client.get(`/user/subscriptions/${sub.value.id}`)
+        sub.value = data.data
+        await loadAccountData()
+        ElMessage.success(t('subscription.mockPaySuccess'))
+    } catch (e) {
+        ElMessage.error(e.response?.data?.message || t('subscription.mockPayFailed'))
+    } finally {
+        mocking.value = false
+    }
+}
+
 const quotaPercentage = computed(() => {
     if (usageData.value.is_unlimited) return 0
     const total = Number(usageData.value.queries_total || 0)
@@ -102,6 +252,12 @@ const quotaPercentage = computed(() => {
 })
 const usageUsedLabel = computed(() => formatCount(usageData.value.queries_used))
 const usageTotalLabel = computed(() => usageData.value.is_unlimited ? '∞' : formatCount(usageData.value.queries_total))
+const quotaDesc = computed(() => {
+    if (usageData.value.is_unlimited) {
+        return t('account.quota.unlimitedDesc')
+    }
+    return t('account.quota.desc')
+})
 const quotaColor = computed(() => {
     if (quotaPercentage.value >= 90) return '#ef4444'
     if (quotaPercentage.value >= 70) return '#f59e0b'
@@ -173,12 +329,20 @@ onMounted(loadAccountData)
 .quota-desc { margin: 0 0 16px; font-size: 14px; }
 .quota-text { display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px; color: #64748b; }
 .quota-unlimited { color: #22c55e; font-weight: 600; }
-.quota-footer { display: flex; align-items: center; gap: 16px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #f1f5f9; }
+.quota-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #f1f5f9; }
 .current-plan { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #64748b; }
 .current-plan strong { color: #0f172a; font-size: 16px; }
 .setting-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
 .setting-info { flex: 1; min-width: 0; }
 .setting-desc { margin: 0 0 4px; font-size: 14px; }
+.plan-list { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.plan-radio { width: 100%; padding: 12px; }
+.plan-info p { color: #64748b; margin: 4px 0; font-size: 14px; }
+.plan-prices { margin-top: 8px; }
+.dialog-footer { margin-top: 16px; display: flex; justify-content: flex-end; gap: 12px; }
+.pay-section { margin-top: 16px; }
+.pay-actions { margin-top: 16px; display: flex; gap: 12px; }
+.active-section { margin-top: 16px; }
 @media (max-width: 900px) {
     .account-grid { grid-template-columns: 1fr; }
 }

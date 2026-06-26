@@ -583,15 +583,17 @@
     "title": "账户",
     "desc": "管理您的账户设置、余额和订阅",
     "quota": {
-      "title": "免费额度",
+      "title": "套餐额度",
       "desc": "每月可免费查询 300,000 次。超过额度后，下个月前所有功能将被暂时禁用。",
+      "unlimitedDesc": "当前为无限套餐，无查询限制。",
       "used": "{used}/{total} 次查询",
       "unlimited": "无限查询",
       "upgrade": "仅需 {price}/月，即可获得不限量的查询。",
       "upgradeBtn": "升级套餐"
     },
     "subscription": {
-      "plan": "当前套餐"
+      "plan": "当前套餐",
+      "subscribe": "订阅"
     },
     "referral": {
       "title": "推广链接",

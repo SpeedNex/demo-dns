@@ -586,15 +586,17 @@
     "title": "Account",
     "desc": "Manage your account settings, balance and subscription",
     "quota": {
-      "title": "Free Quota",
+      "title": "Plan Quota",
       "desc": "NextDNS offers 300,000 free queries per month. After exceeding the quota, all features will be temporarily disabled until next month.",
+      "unlimitedDesc": "You are on an unlimited plan with no query limits.",
       "used": "{used}/{total} queries",
       "unlimited": "Unlimited queries",
       "upgrade": "Get unlimited queries for just {price}/month.",
       "upgradeBtn": "Upgrade Plan"
     },
     "subscription": {
-      "plan": "Current Plan"
+      "plan": "Current Plan",
+      "subscribe": "Subscribe"
     },
     "referral": {
       "title": "Referral Link",

@@ -587,15 +587,17 @@
     "title": "계정",
     "desc": "계정 설정, 잔액 및 구독 관리",
     "quota": {
-      "title": "무료 할당량",
+      "title": "플랜 할당량",
       "desc": "NextDNS는每月 300,000회의 무료 查询를 제공합니다. 할당량을 초과하면 다음 달까지 모든 기능이 일시적으로 비활성화됩니다.",
+      "unlimitedDesc": "현재 무제한 플랜으로 查询 제한이 없습니다.",
       "used": "{used}/{total}회 查询",
       "unlimited": "무제한 查询",
       "upgrade": "{price}/월만으로 무제한 查询를 이용하세요.",
       "upgradeBtn": "플랜 업그레이드"
     },
     "subscription": {
-      "plan": "현재 플랜"
+      "plan": "현재 플랜",
+      "subscribe": "구독"
     },
     "referral": {
       "title": "추천 링크",
