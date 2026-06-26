@@ -768,6 +768,32 @@ final class UserWorkspaceService
                 'parental' => $profile->parental_settings ?? self::DEFAULT_PARENTAL,
             ];
 
+            // 2026-06-27: 将 blocked_categories 从 parental_settings 转换为 category:parental 规则。
+            // 从 rule_items 表中查找对应分类的域名，加入到 $rules 中供 Resolver 引擎加载。
+            $parentalSettings = $featureSettings['parental'] ?? [];
+            $blockedCategories = $parentalSettings['blocked_categories'] ?? [];
+            if (!empty($blockedCategories) && is_array($blockedCategories)) {
+                $categoryKeys = array_map(fn ($c) => is_string($c) ? $c : ($c['key'] ?? ''), $blockedCategories);
+                $categoryKeys = array_filter($categoryKeys);
+                if (!empty($categoryKeys)) {
+                    $categoryRules = \App\Models\RuleItem::whereIn('category', $categoryKeys)
+                        ->where('action', 'block')
+                        ->get(['domain', 'category'])
+                        ->map(fn ($item) => [
+                            'list_type' => 'category:parental:' . $item->category,
+                            'match_type' => 'suffix',
+                            'domain' => $item->domain,
+                            'normalized_domain' => \App\Domain\Profile\DomainNormalizer::normalize($item->domain),
+                            'action' => 'block',
+                            'enabled' => true,
+                            'category' => $item->category,
+                            'rule_id' => 'cat_' . $item->category . '_' . md5($item->domain),
+                        ])
+                        ->toArray();
+                    $rules = array_merge($rules, $categoryRules);
+                }
+            }
+
             \Illuminate\Support\Facades\Log::info('AutoPublish triggered', [
                 'profile_id' => $profile->profile_id,
                 'rules_count' => count($rules),
