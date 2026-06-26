@@ -160,7 +160,8 @@ watch(locale, (val) => {
 const activeRoute = computed(() => {
     const p = route.params.profile_id
     if (p) {
-        return route.path.replace(`/${p}`, '/:profile_id')
+        // 将 /user/{profile_id}/xxx 转换为 /user/xxx 以匹配菜单 index
+        return `/user${route.path.replace(`/user/${p}`, '')}` || '/user'
     }
     return route.path
 })
