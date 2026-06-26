@@ -8,7 +8,7 @@
                 </div>
             </div>
             <!-- DNS Endpoints Card -->
-            <el-card shadow="never">
+            <el-card shadow="never" class="settings-card">
                 <template #header>
                     <span>{{ $t('settings.dnsEndpoints') }}</span>
                 </template>
@@ -201,6 +201,9 @@ onMounted(() => {
     font-size: 14px;
 }
 .page-body {
+}
+.settings-card {
+    min-height: 200px;
 }
 .endpoints-list {
     display: flex;
