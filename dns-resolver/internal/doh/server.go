@@ -163,7 +163,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 	if s.validator != nil && profileUID != "" {
 		userID := r.Header.Get("X-User-Id")
 		if err := s.validator.Validate(profileUID, userID); err != nil {
-			log.Printf("doh: profile validation failed: %v (profile=%s user=%s)", err, profileUID, userID)
+			log.Printf("[DoH] profile验证失败 err=%v profile=%s user=%s", err, profileUID, userID)
 			s.metrics.IncErrors()
 			http.Error(w, "profile not authorized", http.StatusForbidden)
 			return
@@ -229,7 +229,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 		seen, dedupErr := s.cache.MarkSeen(dedupCtx, dedupKey, s.dedupTTL)
 		dedupCancel()
 		if dedupErr != nil {
-			log.Printf("dedup: cache error for key %s: %v (treating as first-seen)", dedupKey, dedupErr)
+			log.Printf("[缓存] 去重错误 key=%s err=%v 视为首次", dedupKey, dedupErr)
 			firstSeen = true
 		} else {
 			firstSeen = seen
@@ -241,7 +241,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 		// P0: 按需加载 Profile（内存/磁盘 MISS 时从 Portal 拉取）
 		if profileUID != "" && s.profileLoader != nil && !s.engine.HasProfile(profileUID) {
 			if err := s.profileLoader(profileUID); err != nil {
-				log.Printf("doh: lazy load profile %s: %v", profileUID, err)
+				log.Printf("[DoH] 懒加载 profile=%s err=%v", profileUID, err)
 			}
 		}
 
@@ -251,7 +251,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 			var loadErr error
 			pc, loadErr = s.profileConfigLoader(profileUID)
 			if loadErr != nil {
-				log.Printf("doh: load profile config %s: %v", profileUID, loadErr)
+				log.Printf("[DoH] 加载profile配置 profile=%s err=%v", profileUID, loadErr)
 			}
 		}
 
@@ -259,7 +259,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 		if pc != nil && pc.Quota != nil {
 			if status, ok := pc.Quota["quota_status"]; ok {
 				if s, ok := status.(string); ok && s == "exceeded" {
-					log.Printf("[QUOTA_EXCEEDED] profile=%s client=%s domain=%s", profileUID, clientAddr, domain)
+					log.Printf("[配额] profile=%s client=%s domain=%s 配额超限", profileUID, clientAddr, domain)
 					http.Error(w, "quota exceeded", http.StatusForbidden)
 					return
 				}
@@ -351,7 +351,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 				})
 			}
 
-			log.Printf("[BLOCK] %s reason=%s category=%s profile=%s device=%s",
+			log.Printf("[查询] 拦截 domain=%s 原因=%s 分类=%s profile=%s device=%s",
 				domain, decision.Reason, decision.Category, profileUID, deviceUID)
 			return
 		}

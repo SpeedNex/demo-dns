@@ -159,7 +159,7 @@ func (prl *ProfileResolutionLayer) Resolve(ctx *ResolutionContext) *matching.Dec
 		if ps.IDNHomograph {
 			idnRes := rules.CheckIDNHomograph(ctx.Domain, false)
 			if idnRes.Blocked {
-				log.Printf("[SECURITY] profile=%s domain=%s blocked=idn_homograph reason=%s",
+				log.Printf("[安全] profile=%s domain=%s 类型=idn_homograph 原因=%s",
 					ctx.ProfileUID, ctx.Domain, idnRes.Reason)
 				return &matching.Decision{Action: "BLOCK", Reason: "idn_homograph", Category: "security"}
 			}
@@ -169,7 +169,7 @@ func (prl *ProfileResolutionLayer) Resolve(ctx *ResolutionContext) *matching.Dec
 		if ps.DGAProtection {
 			dgaRes := rules.CheckDGA(ctx.Domain, ps.EntropyThreshold, ps.DigitRatio)
 			if dgaRes.Blocked {
-				log.Printf("[SECURITY] profile=%s domain=%s blocked=dga entropy=%.2f ratio=%.2f len=%d",
+				log.Printf("[安全] profile=%s domain=%s 类型=dga entropy=%.2f ratio=%.2f len=%d",
 					ctx.ProfileUID, ctx.Domain, dgaRes.Entropy, dgaRes.Ratio, dgaRes.Length)
 				return &matching.Decision{Action: "BLOCK", Reason: "dga", Category: "security"}
 			}
@@ -179,7 +179,7 @@ func (prl *ProfileResolutionLayer) Resolve(ctx *ResolutionContext) *matching.Dec
 		if ps.TypoSquatting && len(ps.BrandDomains) > 0 {
 			typoRes := rules.CheckTyposquatting(ctx.Domain, ps.BrandDomains, ps.TypoThreshold)
 			if typoRes.Blocked {
-				log.Printf("[SECURITY] profile=%s domain=%s blocked=typosquatting brand=%s dist=%d",
+				log.Printf("[安全] profile=%s domain=%s 类型=typosquatting brand=%s dist=%d",
 					ctx.ProfileUID, ctx.Domain, typoRes.Brand, typoRes.Distance)
 				return &matching.Decision{Action: "BLOCK", Reason: "typosquatting", Category: "security"}
 			}
@@ -189,7 +189,7 @@ func (prl *ProfileResolutionLayer) Resolve(ctx *ResolutionContext) *matching.Dec
 		if ps.BlockedTLD {
 			tldRes := rules.CheckBlockedTLD(ctx.Domain)
 			if tldRes.Blocked {
-				log.Printf("[SECURITY] profile=%s domain=%s blocked=blocked-tld tld=%s",
+				log.Printf("[安全] profile=%s domain=%s 类型=blocked-tld tld=%s",
 					ctx.ProfileUID, ctx.Domain, tldRes.TLD)
 				return &matching.Decision{Action: "BLOCK", Reason: "blocked_tld", Category: "security"}
 			}
@@ -199,7 +199,7 @@ func (prl *ProfileResolutionLayer) Resolve(ctx *ResolutionContext) *matching.Dec
 		if ps.BlockDynamicDNS {
 			dynRes := rules.CheckDynDNS(ctx.Domain)
 			if dynRes.Blocked {
-				log.Printf("[SECURITY] profile=%s domain=%s blocked=dynamic-dns provider=%s",
+				log.Printf("[安全] profile=%s domain=%s 类型=dynamic-dns provider=%s",
 					ctx.ProfileUID, ctx.Domain, dynRes.Provider)
 				return &matching.Decision{Action: "BLOCK", Reason: "dynamic_dns", Category: "security"}
 			}
@@ -220,7 +220,7 @@ func (prl *ProfileResolutionLayer) Resolve(ctx *ResolutionContext) *matching.Dec
 		}
 	}
 
-	log.Printf("[RESOLVER] profile=%s device=%s domain=%s action=%s reason=%s",
+	log.Printf("[查询] profile=%s device=%s domain=%s action=%s reason=%s",
 		ctx.ProfileUID, ctx.DeviceUID, ctx.Domain, decision.Action, decision.Reason)
 
 	return decision

@@ -79,7 +79,7 @@ func (s *Server) Run(ctx context.Context, tlsCfg *tls.Config) error {
 	s.listener = listener
 	s.mu.Unlock()
 
-	log.Printf("doq: listening on QUIC :%d (DNS over QUIC, RFC 9250)", addr)
+	log.Printf("[DoQ] 监听 QUIC port=%d (DNS over QUIC, RFC 9250)", addr)
 
 	for {
 		conn, err := listener.Accept(ctx)
@@ -87,7 +87,7 @@ func (s *Server) Run(ctx context.Context, tlsCfg *tls.Config) error {
 			if ctx.Err() != nil {
 				return nil
 			}
-			log.Printf("doq: accept error: %v", err)
+			log.Printf("[DoQ] 接受连接错误 err=%v", err)
 			return err
 		}
 		go s.handleConnection(ctx, conn)

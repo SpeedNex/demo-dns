@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -26,6 +27,22 @@ import (
 	"ocer-dns/dns-resolver/internal/metrics"
 	"ocer-dns/dns-resolver/internal/resolver"
 )
+
+// bracketLogWriter 包装 os.Stderr，将 Go 默认日志时间戳 "2006/01/02 15:04:05"
+// 改为 "[2006/01/02 15:04:05]" 格式，便于日志解析。
+type bracketLogWriter struct {
+	w io.Writer
+}
+
+func (w *bracketLogWriter) Write(p []byte) (int, error) {
+	s := string(p)
+	// LstdFlags 格式：前 19 个字符为 "2006/01/02 15:04:05"
+	if len(s) >= 20 && s[4] == '/' && s[7] == '/' && s[13] == ':' && s[16] == ':' {
+		s = "[" + s[:19] + "]" + s[19:]
+		return w.w.Write([]byte(s))
+	}
+	return w.w.Write(p)
+}
 
 // defaultConfigPath 是 resolver 启动时寻找 server.yaml 的兜底路径。
 // 部署在容器 / systemd 时通常会通过 --config 或 RESOLVER_CONFIG 改写。
@@ -76,7 +93,8 @@ type devNullWriter struct{}
 func (devNullWriter) Write(p []byte) (int, error) { return len(p), nil }
 
 func main() {
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	log.SetFlags(log.LstdFlags)
+	log.SetOutput(&bracketLogWriter{w: os.Stderr})
 
 	// 子命令分发：`resolver install ...` 用于把 console 预发凭据写入配置文件
 	// 没有子命令或显式 `resolver run` 时进入原 daemon 主流程

@@ -107,7 +107,7 @@ func (h *Handler) Handle(
 	firstSeen, dedupErr := h.dedupCache.MarkSeen(dedupCtx, dedupKey, h.dedupTTL)
 	dedupCancel()
 	if dedupErr != nil {
-		log.Printf("dedup: cache error for key %s: %v (treating as first-seen)", dedupKey, dedupErr)
+		log.Printf("[缓存] 去重错误 key=%s err=%v 视为首次", dedupKey, dedupErr)
 		firstSeen = true
 	}
 
@@ -197,7 +197,7 @@ func (h *Handler) Handle(
 					if firstSeen {
 						h.appendLog(profileID, deviceID, deviceType, domain, "BLOCK", "dns_rebind", "security", clientIP, queryType, protocol, reply.Rcode, startedAt)
 					}
-					log.Printf("[SECURITY] profile=%s domain=%s blocked=dns_rebind ip=%s reason=%s",
+					log.Printf("[安全] profile=%s domain=%s 类型=dns_rebind ip=%s 原因=%s",
 						profileID, domain, res.IP.String(), res.Reason)
 					return &Result{
 						Reply: reply, Action: "BLOCK", Reason: "dns_rebind", Category: "security",
@@ -213,7 +213,7 @@ func (h *Handler) Handle(
 					if firstSeen {
 						h.appendLog(profileID, deviceID, deviceType, domain, "BLOCK", "dns_rebind", "security", clientIP, queryType, protocol, reply.Rcode, startedAt)
 					}
-					log.Printf("[SECURITY] profile=%s domain=%s blocked=dns_rebind ip=%s reason=%s",
+					log.Printf("[安全] profile=%s domain=%s 类型=dns_rebind ip=%s 原因=%s",
 						profileID, domain, res.IP.String(), res.Reason)
 					return &Result{
 						Reply: reply, Action: "BLOCK", Reason: "dns_rebind", Category: "security",
@@ -237,7 +237,7 @@ func (h *Handler) Handle(
 					if firstSeen {
 						h.appendLog(profileID, deviceID, deviceType, domain, "BLOCK", "cname_tracker", "privacy", clientIP, queryType, protocol, reply.Rcode, startedAt)
 					}
-					log.Printf("[PRIVACY] profile=%s domain=%s blocked=cname_tracker cname=%s provider=%s",
+					log.Printf("[安全] profile=%s domain=%s 类型=cname_tracker cname=%s provider=%s",
 						profileID, domain, res.CNAME, res.Provider)
 					return &Result{
 						Reply: reply, Action: "BLOCK", Reason: "cname_tracker", Category: "privacy",

@@ -157,7 +157,7 @@ func (pc *ProfileCache) evictMemoryLRU() {
 	evict := pc.mruList[0]
 	pc.mruList = pc.mruList[1:]
 	delete(pc.memory, evict)
-	log.Printf("ProfileCache: evicted from memory (LRU): %s", evict)
+	log.Printf("[缓存] 内存淘汰(LRU) profile=%s", evict)
 }
 
 // ==================== Disk Cache ====================
@@ -188,7 +188,7 @@ func (pc *ProfileCache) GetFromDisk(profileID string) (json.RawMessage, int64, b
 	cachedAt, _ := time.Parse(time.RFC3339, envelope.CachedAt)
 	if time.Since(cachedAt) > pc.diskTTL {
 		os.Remove(path)
-		log.Printf("ProfileCache: evicted from disk (TTL): %s", profileID)
+		log.Printf("[缓存] 磁盘淘汰(TTL) profile=%s", profileID)
 		return nil, 0, false
 	}
 
@@ -253,7 +253,7 @@ func (pc *ProfileCache) evictDiskIfNeeded() {
 	for i := 0; i < deleteCount && i < len(files); i++ {
 		os.Remove(files[i])
 		name := filepath.Base(files[i])
-		log.Printf("ProfileCache: evicted from disk (LRU): %s", strings.TrimSuffix(name, ".json"))
+		log.Printf("[缓存] 磁盘淘汰(LRU) profile=%s", strings.TrimSuffix(name, ".json"))
 	}
 }
 
@@ -338,5 +338,5 @@ func (pc *ProfileCache) LoadFromDiskOnStartup() {
 		pc.mu.Unlock()
 		loaded++
 	}
-	log.Printf("ProfileCache: loaded %d profiles from disk on startup", loaded)
+	log.Printf("[缓存] 启动加载 profile数=%d", loaded)
 }

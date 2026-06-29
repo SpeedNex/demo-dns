@@ -33,11 +33,11 @@ type Cache struct {
 func New(cfg config.RedisConfig) *Cache {
 	cache := &Cache{timeout: 200 * time.Millisecond}
 	if !cfg.Enabled {
-		log.Printf("redis: disabled by config; running in-process only")
+		log.Printf("[缓存] Redis 已禁用 仅运行内存模式")
 		return cache
 	}
 	if cfg.Addr == "" {
-		log.Printf("redis: enabled but addr is empty; running in-process only")
+		log.Printf("[缓存] Redis 已启用但地址为空 仅运行内存模式")
 		return cache
 	}
 
@@ -55,13 +55,13 @@ func New(cfg config.RedisConfig) *Cache {
 	defer cancel()
 	if err := client.Ping(ctx).Err(); err != nil {
 		_ = client.Close()
-		log.Printf("redis: ping failed for %s: %v (continuing in-process only)", cfg.Addr, err)
+		log.Printf("[缓存] Ping 失败 addr=%s err=%v 仅运行内存模式", cfg.Addr, err)
 		return cache
 	}
 
 	cache.client = client
 	cache.enabled.Store(true)
-	log.Printf("redis: connected to %s db=%d", cfg.Addr, cfg.DB)
+	log.Printf("[缓存] 已连接 addr=%s db=%d", cfg.Addr, cfg.DB)
 	return cache
 }
 

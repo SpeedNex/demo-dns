@@ -27,16 +27,14 @@
                     <el-switch :model-value="row.enabled" @change="(value) => handleToggle(row, value)" />
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('allowlist.actions')" width="180">
+            <el-table-column :label="$t('allowlist.actions')" width="100">
                 <template #default="{ row }">
                     <div class="action-buttons">
                         <el-button size="small" @click="openEditDialog(row)">
                             <el-icon><Edit /></el-icon>
-                            {{ $t('allowlist.edit') }}
                         </el-button>
                         <el-button size="small" type="danger" @click="handleDelete(row.id)">
                             <el-icon><Delete /></el-icon>
-                            {{ $t('allowlist.delete') }}
                         </el-button>
                     </div>
                 </template>

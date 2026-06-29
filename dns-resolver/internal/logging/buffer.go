@@ -59,7 +59,7 @@ type Buffer struct {
 // 任何凭据字段为空都会返回 nil，调用方应直接拒绝启动。
 func NewBuffer(bufPath, cpURL string, maxSize int, flushInterval time.Duration, cred Credentials, onFlush func(time.Time)) *Buffer {
 	if cred.NodeID == "" || cred.APIKey == "" {
-		log.Printf("log buffer disabled: control plane credentials are missing")
+		log.Printf("[日志] 缓冲禁用 控制面凭据缺失")
 		return nil
 	}
 
@@ -83,14 +83,14 @@ func NewBuffer(bufPath, cpURL string, maxSize int, flushInterval time.Duration, 
 
 func (b *Buffer) Append(entry LogEntry) {
 	if b == nil {
-		log.Printf("log_buffer: Append called on nil buffer (domain=%s)", entry.Domain)
+		log.Printf("[日志] 追加调用在空缓冲上 domain=%s", entry.Domain)
 		return
 	}
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
 	b.entries = append(b.entries, entry)
-	log.Printf("log_buffer: Append domain=%s action=%s entries_len=%d", entry.Domain, entry.Action, len(b.entries))
+	log.Printf("[日志] 追加 domain=%s action=%s 队列=%d", entry.Domain, entry.Action, len(b.entries))
 	if len(b.entries) >= b.maxSize {
 		go b.Flush()
 	}
@@ -121,21 +121,21 @@ func (b *Buffer) Flush() {
 	b.mu.Lock()
 	if len(b.entries) == 0 {
 		b.mu.Unlock()
-		log.Printf("log_buffer: Flush skipped, no entries")
+		log.Printf("[日志] 刷新跳过 无条目")
 		return
 	}
 
 	batch := append([]LogEntry(nil), b.entries...)
 	b.entries = make([]LogEntry, 0, 1000)
 	b.mu.Unlock()
-	log.Printf("log_buffer: Flush sending batch size=%d", len(batch))
+	log.Printf("[日志] 刷新发送 批次大小=%d", len(batch))
 
 	if err := b.sendBatch(batch); err != nil {
-		log.Printf("Failed to send log batch: %v (writing to local buffer)", err)
+		log.Printf("[日志] 发送失败 err=%v 写入本地缓冲", err)
 		b.writeToDisk(batch)
 		return
 	}
-	log.Printf("log_buffer: Flush sent ok size=%d", len(batch))
+	log.Printf("[日志] 刷新发送成功 大小=%d", len(batch))
 
 	if b.onFlush != nil {
 		b.onFlush(time.Now().UTC())
@@ -155,7 +155,7 @@ func (b *Buffer) sendBatch(batch []LogEntry) error {
 		return fmt.Errorf("marshal log batch: %w", err)
 	}
 	// 只记录 batch_id 和数量，不打印查询明细以保护用户隐私
-	log.Printf("log_buffer: sendBatch batch_id=%s items_count=%d", payload["batch_id"], len(batch))
+	log.Printf("[日志] 发送批次 batch_id=%s 条目数=%d", payload["batch_id"], len(batch))
 
 	req, err := http.NewRequest(http.MethodPost, b.cpURL, bytes.NewReader(body))
 	if err != nil {
@@ -175,7 +175,7 @@ func (b *Buffer) sendBatch(batch []LogEntry) error {
 
 	respBody, _ := io.ReadAll(resp.Body)
 	// 只记录 URL、状态码和响应长度，不打印响应体以保护隐私
-	log.Printf("log_buffer: sendBatch url=%s status=%d resp_len=%d", b.cpURL, resp.StatusCode, len(respBody))
+	log.Printf("[日志] 发送批次 url=%s status=%d 响应长度=%d", b.cpURL, resp.StatusCode, len(respBody))
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("http status %d", resp.StatusCode)
 	}
@@ -185,14 +185,14 @@ func (b *Buffer) sendBatch(batch []LogEntry) error {
 
 func (b *Buffer) writeToDisk(batch []LogEntry) {
 	if err := os.MkdirAll(b.bufPath, 0o755); err != nil {
-		log.Printf("Failed to create log buffer dir: %v", err)
+		log.Printf("[日志] 创建缓冲目录失败 err=%v", err)
 		return
 	}
 
 	filename := filepath.Join(b.bufPath, fmt.Sprintf("query-log-%d.jsonl", time.Now().UnixNano()))
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
-		log.Printf("Failed to open log buffer file: %v", err)
+		log.Printf("[日志] 打开缓冲文件失败 err=%v", err)
 		return
 	}
 	defer file.Close()
@@ -200,7 +200,7 @@ func (b *Buffer) writeToDisk(batch []LogEntry) {
 	encoder := json.NewEncoder(file)
 	for _, entry := range batch {
 		if err := encoder.Encode(entry); err != nil {
-			log.Printf("Failed to write log entry to disk: %v", err)
+			log.Printf("[日志] 写入条目到磁盘失败 err=%v", err)
 		}
 	}
 }
@@ -214,7 +214,7 @@ func (b *Buffer) replayBuffer() {
 	for _, file := range files {
 		data, err := os.ReadFile(file)
 		if err != nil {
-			log.Printf("Failed to read buffer file %s: %v", file, err)
+			log.Printf("[日志] 读取缓冲文件失败 path=%s err=%v", file, err)
 			continue
 		}
 
@@ -236,7 +236,7 @@ func (b *Buffer) replayBuffer() {
 		}
 
 		if err := b.sendBatch(entries); err != nil {
-			log.Printf("Failed to replay buffer file %s: %v (will retry)", file, err)
+			log.Printf("[日志] 重放缓冲文件失败 path=%s err=%v 将重试", file, err)
 			return
 		}
 
@@ -360,6 +360,6 @@ func (b *Buffer) FlushUsage() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := b.direct.BatchInsertUsage(ctx, batch); err != nil {
-		log.Printf("usage flush failed: %v", err)
+		log.Printf("[日志] usage刷新失败 err=%v", err)
 	}
 }

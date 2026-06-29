@@ -61,7 +61,7 @@ func New(
 	if cfg.Listen.DoT > 0 {
 		baseTLS, err := LoadTLSConfig(cfg.Listen.TLSCertFile, cfg.Listen.TLSKeyFile, cfg.ControlPlane.DNSDomain)
 		if err != nil {
-			log.Printf("dot: failed to load TLS config: %v (DoT not started)", err)
+			log.Printf("[TLS] 加载失败 err=%v DoT 未启动", err)
 		} else {
 			tlsCfg := baseTLS.Clone()
 			tlsCfg.GetConfigForClient = func(info *tls.ClientHelloInfo) (*tls.Config, error) {
@@ -87,14 +87,14 @@ func (s *Server) Run(ctx context.Context) error {
 	errCh := make(chan error, 3)
 
 	go func() {
-		log.Printf("Starting UDP DNS server on %s", s.udpServer.Addr)
+		log.Printf("[启动] UDP DNS 服务器 addr=%s", s.udpServer.Addr)
 		if err := s.udpServer.ListenAndServe(); err != nil {
 			errCh <- err
 		}
 	}()
 
 	go func() {
-		log.Printf("Starting TCP DNS server on %s", s.tcpServer.Addr)
+		log.Printf("[启动] TCP DNS 服务器 addr=%s", s.tcpServer.Addr)
 		if err := s.tcpServer.ListenAndServe(); err != nil {
 			errCh <- err
 		}
@@ -102,7 +102,7 @@ func (s *Server) Run(ctx context.Context) error {
 
 	if s.dotServer != nil {
 		go func() {
-			log.Printf("Starting DoT (DNS over TLS) server on :%d", s.cfg.Listen.DoT)
+			log.Printf("[启动] DoT 服务器 port=%d", s.cfg.Listen.DoT)
 			if err := s.dotServer.ListenAndServe(); err != nil {
 				errCh <- err
 			}

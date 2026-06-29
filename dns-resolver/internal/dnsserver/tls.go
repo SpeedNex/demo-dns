@@ -27,7 +27,7 @@ import (
 func LoadTLSConfig(certFile, keyFile, dnsDomain string) (*tls.Config, error) {
 	// 优先级 1：固定路径（install 期 certbot 写入的 fullchain.pem/privkey.pem）
 	if certFile != "" && keyFile != "" {
-		log.Printf("tls: will load certificate from %s (hot-reload via GetCertificate)", certFile)
+		log.Printf("[TLS] 将从 %s 加载证书（通过 GetCertificate 热加载）", certFile)
 
 		var (
 			cachedCert  atomic.Value // stores *tls.Certificate
@@ -37,7 +37,7 @@ func LoadTLSConfig(certFile, keyFile, dnsDomain string) (*tls.Config, error) {
 		if initialCert, err := tls.LoadX509KeyPair(certFile, keyFile); err == nil {
 			cachedCert.Store(&initialCert)
 			hasRealCert.Store(true)
-			log.Printf("tls: preloaded certificate from %s", certFile)
+			log.Printf("[TLS] 预加载证书 path=%s", certFile)
 		}
 
 		return &tls.Config{
@@ -45,16 +45,16 @@ func LoadTLSConfig(certFile, keyFile, dnsDomain string) (*tls.Config, error) {
 				cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 				if err != nil {
 					if cached := cachedCert.Load(); cached != nil {
-						log.Printf("tls: reload failed (%v) — using cached cert", err)
+						log.Printf("[TLS] 重载失败 err=%v 使用缓存证书", err)
 						return cached.(*tls.Certificate), nil
 					}
-					log.Printf("tls: no cached cert available, falling back to self-signed: %v", err)
+					log.Printf("[TLS] 无缓存证书 err=%v 降级为自签名", err)
 					return generateSelfSignedCert()
 				}
 				cachedCert.Store(&cert)
 				if !hasRealCert.Load() {
 					hasRealCert.Store(true)
-					log.Printf("tls: first successful load of %s", certFile)
+					log.Printf("[TLS] 首次成功加载 path=%s", certFile)
 				}
 				return &cert, nil
 			},
@@ -63,7 +63,7 @@ func LoadTLSConfig(certFile, keyFile, dnsDomain string) (*tls.Config, error) {
 	}
 
 	// 优先级 2：无证书配置 → 自签名（开发测试）
-	log.Printf("tls: no certificate configured, generating self-signed (dev-only)")
+	log.Printf("[TLS] 未配置证书 生成自签名证书（仅开发测试用）")
 	c, err := generateSelfSignedCert()
 	if err != nil {
 		return nil, err
@@ -120,7 +120,7 @@ func generateSelfSignedCert() (*tls.Certificate, error) {
 	}
 	_ = os.WriteFile("/tmp/ocer-dns-dev.key", keyBytes, 0600)
 
-	log.Printf("tls: self-signed cert written to %s / %s (dev-only, do not use in production)", pemPath, certPath)
+	log.Printf("[TLS] 自签名证书已写入 pem=%s crt=%s（仅开发测试用，请勿用于生产）", pemPath, certPath)
 
 	// 将证书写入 PEM 格式，方便 kdig +tls-ca 使用
 	_ = os.WriteFile("/tmp/ocer-dns-ca.pem", pem.EncodeToMemory(pemBlock), 0644)

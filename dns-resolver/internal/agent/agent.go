@@ -127,7 +127,7 @@ func (a *Agent) StartHeartbeat(ctx context.Context) {
 		case <-ticker.C:
 			a.sendHeartbeat()
 		case <-ctx.Done():
-			log.Println("Heartbeat stopped")
+		log.Println("[心跳] 心跳已停止")
 			return
 		}
 	}
@@ -158,7 +158,7 @@ func (a *Agent) StartConfigSync(ctx context.Context, interval time.Duration) {
 	// 将磁盘缓存的 Profile 加载到 Engine，填充 deviceIndex
 	for _, pid := range a.pCache.GetAllProfileIDs() {
 		if err := a.FetchProfile(pid); err != nil {
-			log.Printf("Startup: failed to load profile %s into engine: %v", pid, err)
+			log.Printf("[配置] 启动加载 profile=%s err=%v", pid, err)
 		}
 	}
 	// 启动后立即检查一次 Profile 版本，避免 5 分钟空窗期
@@ -174,7 +174,7 @@ func (a *Agent) StartConfigSync(ctx context.Context, interval time.Duration) {
 		case <-checkTicker.C:
 			a.checkProfiles()
 		case <-ctx.Done():
-			log.Println("Config sync stopped")
+			log.Println("[配置] 配置同步已停止")
 			return
 		}
 	}
@@ -185,14 +185,14 @@ func (a *Agent) pullGlobalConfig() {
 	path := "/api/v1/node/dns-resolver/config"
 	resp, err := a.doNodeRequest(http.MethodGet, path, nil)
 	if err != nil {
-		log.Printf("Global config pull failed: %v", err)
+		log.Printf("[配置] 拉取失败 err=%v", err)
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		log.Printf("Global config pull returned status %d: %s", resp.StatusCode, string(body))
+		log.Printf("[配置] 返回状态码 status=%d body=%s", resp.StatusCode, string(body))
 		return
 	}
 
@@ -200,13 +200,13 @@ func (a *Agent) pullGlobalConfig() {
 		Data json.RawMessage `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&envelope); err != nil {
-		log.Printf("Decode global config failed: %v", err)
+		log.Printf("[配置] 解码失败 err=%v", err)
 		return
 	}
 
 	var gc config.GlobalConfig
 	if err := json.Unmarshal(envelope.Data, &gc); err != nil {
-		log.Printf("Parse global config failed: %v", err)
+		log.Printf("[配置] 解析失败 err=%v", err)
 		return
 	}
 
@@ -222,7 +222,7 @@ func (a *Agent) pullGlobalConfig() {
 	a.globalVersion = gc.Version
 	a.mu.Unlock()
 
-	log.Printf("Global config applied version=%d upstreams=%d", gc.Version, len(gc.Upstreams))
+	log.Printf("[配置] 已应用 version=%d upstreams=%d", gc.Version, len(gc.Upstreams))
 }
 
 // FetchProfile 按 Profile ID 拉取配置，经过 Memory → Disk → Portal 三级回源。
@@ -283,7 +283,7 @@ func (a *Agent) FetchProfile(profileID string) error {
 
 		// 写入磁盘缓存
 		if diskErr := a.pCache.SetToDisk(profileID, dataEnv.Data, profileMeta.Version); diskErr != nil {
-			log.Printf("Write profile %s to disk cache failed: %v", profileID, diskErr)
+			log.Printf("[缓存] 写入磁盘 profile=%s err=%v", profileID, diskErr)
 		}
 
 		rawData = dataEnv.Data
@@ -401,7 +401,7 @@ func (a *Agent) loadProfileIntoEngine(profileID string, data json.RawMessage, ve
 			blockExact, blockWild,
 			adblockExact, adblockWild,
 			security, parental)
-		log.Printf("Engine rules loaded: profile=%s allow=%d allow_wild=%d block=%d block_wild=%d adblock=%d security_cats=%d parental_cats=%d",
+		log.Printf("[引擎] profile=%s 放行=%d 放行通配=%d 拦截=%d 拦截通配=%d 广告拦截=%d 安全分类=%d 家长控制=%d",
 			p.ProfileID, len(allowExact), len(allowWild), len(blockExact), len(blockWild), len(adblockExact), len(security), len(parental))
 
 		// Load security algorithm config (IDN Homograph, DGA, Typosquatting, DNS Rebinding)
@@ -469,14 +469,14 @@ func (a *Agent) checkProfiles() {
 	body, _ := json.Marshal(payload)
 	resp, err := a.doNodeRequest(http.MethodPost, "/api/v1/node/dns-resolver/profiles/check", bytes.NewReader(body))
 	if err != nil {
-		log.Printf("Profile version check failed: %v", err)
+		log.Printf("[配置] 版本检查失败 err=%v", err)
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		payload, _ := io.ReadAll(resp.Body)
-		log.Printf("Profile version check returned status %d: %s", resp.StatusCode, string(payload))
+		log.Printf("[配置] 版本检查返回 status=%d body=%s", resp.StatusCode, string(payload))
 		return
 	}
 
@@ -490,7 +490,7 @@ func (a *Agent) checkProfiles() {
 	}
 
 	for profileID, newVersion := range result.Data.Updated {
-		log.Printf("Profile %s has new version: %d, re-fetching", profileID, newVersion)
+		log.Printf("[配置] profile=%s 新版本=%d 重新拉取", profileID, newVersion)
 		// 先清除缓存，确保 FetchProfile 会回源 portal 而不是返回旧缓存
 		a.pCache.RemoveFromMemory(profileID)
 		a.pCache.RemoveFromDisk(profileID)
@@ -499,7 +499,7 @@ func (a *Agent) checkProfiles() {
 		delete(a.localProfiles, profileID)
 		a.mu.Unlock()
 		if err := a.FetchProfile(profileID); err != nil {
-			log.Printf("Re-fetch profile %s failed: %v", profileID, err)
+			log.Printf("[配置] 重新拉取 profile=%s err=%v", profileID, err)
 		}
 	}
 }
@@ -536,33 +536,33 @@ func (a *Agent) sendHeartbeat() {
 
 	body, err := json.Marshal(reqBody)
 	if err != nil {
-		log.Printf("Failed to marshal heartbeat: %v", err)
+		log.Printf("[心跳] 序列化失败 err=%v", err)
 		return
 	}
 
 	resp, err := a.doNodeRequest(http.MethodPost, "/api/v1/node/heartbeat", bytes.NewReader(body))
 	if err != nil {
-		log.Printf("Heartbeat failed: %v", err)
+		log.Printf("[心跳] 发送失败 err=%v", err)
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		payload, _ := io.ReadAll(resp.Body)
-		log.Printf("Heartbeat returned status %d: %s", resp.StatusCode, string(payload))
+		log.Printf("[心跳] 返回状态码 status=%d body=%s", resp.StatusCode, string(payload))
 		return
 	}
 
 	var envelope heartbeatEnvelope
 	if err := json.NewDecoder(resp.Body).Decode(&envelope); err != nil {
-		log.Printf("Failed to decode heartbeat response: %v", err)
+		log.Printf("[心跳] 解码响应失败 err=%v", err)
 		return
 	}
 
 	// 2026-06-26: 收到心跳响应后，检查全局配置版本是否有更新
 	// 如果服务端返回的 latest_config_version > 本地缓存的 globalVersion，立即拉取
 	if envelope.Data.LatestConfigVersion > a.globalVersion {
-		log.Printf("Heartbeat: global config version changed %d -> %d, pulling immediately",
+		log.Printf("[配置] 心跳检测到全局配置版本变化 %d -> %d 立即拉取",
 			a.globalVersion, envelope.Data.LatestConfigVersion)
 		a.globalVersion = envelope.Data.LatestConfigVersion
 		go a.pullGlobalConfig() // 异步拉取，不阻塞心跳循环
@@ -578,7 +578,7 @@ func (a *Agent) sendHeartbeat() {
 
 func (a *Agent) doNodeRequest(method, path string, body io.Reader) (*http.Response, error) {
 	fullURL := a.controlPlaneURL(path)
-	log.Printf("DEBUG doNodeRequest: method=%s url=%s", method, fullURL)
+	log.Printf("[调试] doNodeRequest method=%s url=%s", method, fullURL)
 	req, err := http.NewRequest(method, fullURL, body)
 	if err != nil {
 		return nil, err
