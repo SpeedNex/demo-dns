@@ -1,6 +1,9 @@
 package config
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type GlobalConfig struct {
 	Version   int64              `json:"version"`
@@ -26,6 +29,26 @@ type ResolverConfig struct {
 	Upstreams   []Upstream      `json:"upstreams"`
 }
 
+// SecurityData 兼容 JSON 对象 {} 和空数组 []。
+// PHP json_encode 空对象可能输出 []，Go 标准 map 无法解析。
+type SecurityData map[string][]string
+
+func (sd *SecurityData) UnmarshalJSON(data []byte) error {
+	// 尝试解析为对象 map[string][]string
+	var m map[string][]string
+	if err := json.Unmarshal(data, &m); err == nil {
+		*sd = SecurityData(m)
+		return nil
+	}
+	// 兼容空数组 []（PHP json_encode 空对象可能输出数组）
+	var arr []any
+	if err := json.Unmarshal(data, &arr); err == nil {
+		*sd = make(SecurityData)
+		return nil
+	}
+	return fmt.Errorf("cannot unmarshal SecurityData: %s", string(data))
+}
+
 type ProfileConfig struct {
 	ProfileID      string              `json:"profile_id"`
 	UserID         string              `json:"user_id"`
@@ -34,7 +57,7 @@ type ProfileConfig struct {
 	DefaultAction  string              `json:"default_action"`
 	BlockResponse  string              `json:"block_response"`
 	Security       map[string]any      `json:"security"`
-	SecurityData   map[string][]string `json:"security_data"`
+	SecurityData   SecurityData        `json:"security_data"`
 	Adblock        map[string]any      `json:"adblock"`
 	Privacy        map[string]any      `json:"privacy"`
 	Parental       map[string]any      `json:"parental"`
