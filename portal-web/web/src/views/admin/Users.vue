@@ -14,6 +14,16 @@
     >
         <template #filters>
             <el-input
+                v-model="filter.username"
+                :placeholder="$t('admin.usersPage.name')"
+                style="width:180px"
+                size="small"
+                clearable
+                @keyup.enter="fetchUsers"
+            >
+                <template #prefix><el-icon><Search /></el-icon></template>
+            </el-input>
+            <el-input
                 v-model="filter.email"
                 :placeholder="$t('admin.usersPage.email')"
                 style="width:220px"
@@ -34,6 +44,25 @@
                 <el-option :label="$t('admin.usersPage.all')" value="" />
                 <el-option :label="$t('admin.usersPage.enabled')" value="active" />
                 <el-option :label="$t('admin.usersPage.disabled')" value="suspended" />
+            </el-select>
+            <el-select
+                v-model="filter.sort_by"
+                placeholder="Sort by"
+                style="width:140px"
+                size="small"
+                @change="fetchUsers"
+            >
+                <el-option label="ID" value="uid" />
+                <el-option :label="$t('admin.usersPage.created')" value="created_at" />
+            </el-select>
+            <el-select
+                v-model="filter.sort_order"
+                style="width:100px"
+                size="small"
+                @change="fetchUsers"
+            >
+                <el-option label="DESC" value="desc" />
+                <el-option label="ASC" value="asc" />
             </el-select>
             <el-button size="small" type="primary" @click="fetchUsers">
                 <el-icon class="el-icon--left"><Search /></el-icon>
@@ -151,7 +180,7 @@ const page = ref(1)
 const perPage = ref(20)
 const selected = ref([])
 const loading = ref(false)
-const filter = reactive({ email: '', status: '' })
+const filter = reactive({ email: '', status: '', username: '', sort_by: 'created_at', sort_order: 'desc' })
 
 const showDialog = ref(false)
 const editingId = ref(null)
@@ -201,6 +230,9 @@ const fetchUsers = async () => {
 const handleReset = () => {
     filter.email = ''
     filter.status = ''
+    filter.username = ''
+    filter.sort_by = 'created_at'
+    filter.sort_order = 'desc'
     page.value = 1
     fetchUsers()
 }

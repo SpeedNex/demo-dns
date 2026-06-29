@@ -1,11 +1,8 @@
 module ocer-dns/dns-resolver
 
-// 项目文档建议 go 1.22，但 indirect 依赖（x/sys v0.42、x/crypto v0.49、
-// x/net v0.51、x/sync v0.19、x/mod v0.31、x/tools v0.40）已经要求 Go 1.25+。
-// 离线/CI 不允许自动下载 toolchain 时，会直接编译失败。
-// 折中方案：把 Go 指令定在 1.24（与当前 runner / CI 镜像一致），同时
-// 把上述 x/* 间接依赖降到 0.30 之前（最后一个允许 go 1.22 的版本系列）。
-// 这样在 1.22 / 1.23 / 1.24 任一版本上都能编译，避免 toolchain 下载。
+// go 1.25.0：项目的真实依赖要求（quic-go、x/* 等）。
+// CI 环境必须安装 go 1.25.0 或设置 GOTOOLCHAIN=auto 自动下载。
+// 离线/CI 环境若不允许下载 toolchain，请使用 GOTOOLCHAIN=local 并提前安装 go 1.25.0。
 go 1.25.0
 
 require (

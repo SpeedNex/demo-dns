@@ -24,14 +24,18 @@ Route::get('dns-config', [PublicConfigController::class, 'dnsConfig']);
 Route::post('stripe/webhook', [StripeWebhookController::class, 'handle'])->middleware('throttle:120,1');
 
 // Build artifacts (installer binaries)
-// 联调发现 NEW P0#N2: base_path() 已经是 portal-web 项目根，
-// 旧版 '../public/build/' 多一层 .. 指向 ocer-dns/public/build (不存在)，
-// 修正为 'public/build/'。
 Route::get('build/{path}', function ($path) {
-    $filePath = base_path('public/build/' . $path);
-    if (!file_exists($filePath) || !is_file($filePath)) {
+    $baseDir = realpath(public_path('build'));
+    if ($baseDir === false) {
+        abort(404);
+    }
+    // 禁止 .. 路径穿越
+    $cleanPath = str_replace(['..', "\0"], '', $path);
+    $filePath = $baseDir . DIRECTORY_SEPARATOR . $cleanPath;
+    // 确保最终路径仍在 build 目录内
+    if (! is_file($filePath) || str_starts_with(realpath($filePath), $baseDir) === false) {
         abort(404);
     }
     $mime = mime_content_type($filePath);
     return response()->file($filePath, ['Content-Type' => $mime]);
-})->where('path', '.*');
+})->where('path', '[^/].*');

@@ -46,8 +46,15 @@ final class AdminUserController
             $query->where('u.status', $status);
         }
 
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortOrder = $request->input('sort_order', 'desc');
+        $allowedSorts = ['uid', 'created_at'];
+        if (!in_array($sortBy, $allowedSorts)) {
+            $sortBy = 'created_at';
+        }
+        $sortOrder = $sortOrder === 'asc' ? 'asc' : 'desc';
         $perPage = (int) $request->input('per_page', 20);
-        $paginator = $query->orderByDesc('u.created_at')->paginate(min($perPage, 100));
+        $paginator = $query->orderBy($sortBy, $sortOrder)->paginate(min($perPage, 100));
 
         $items = collect($paginator->items())->map(fn ($row): array => [
             'id' => (int) $row->uid,

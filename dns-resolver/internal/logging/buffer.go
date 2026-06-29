@@ -154,7 +154,8 @@ func (b *Buffer) sendBatch(batch []LogEntry) error {
 	if err != nil {
 		return fmt.Errorf("marshal log batch: %w", err)
 	}
-	log.Printf("log_buffer: sendBatch body=%s", string(body)[:min(500, len(body))])
+	// 只记录 batch_id 和数量，不打印查询明细以保护用户隐私
+	log.Printf("log_buffer: sendBatch batch_id=%s items_count=%d", payload["batch_id"], len(batch))
 
 	req, err := http.NewRequest(http.MethodPost, b.cpURL, bytes.NewReader(body))
 	if err != nil {
@@ -173,7 +174,8 @@ func (b *Buffer) sendBatch(batch []LogEntry) error {
 	defer resp.Body.Close()
 
 	respBody, _ := io.ReadAll(resp.Body)
-	log.Printf("log_buffer: sendBatch url=%s status=%d body=%s", b.cpURL, resp.StatusCode, string(respBody)[:min(500, len(respBody))])
+	// 只记录 URL、状态码和响应长度，不打印响应体以保护隐私
+	log.Printf("log_buffer: sendBatch url=%s status=%d resp_len=%d", b.cpURL, resp.StatusCode, len(respBody))
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("http status %d", resp.StatusCode)
 	}

@@ -21,9 +21,10 @@ use Illuminate\Support\Str;
  */
 final class QueryLogController
 {
+    private const BATCH_DEDUP_TTL = 3600; // 1小时内相同 batch_id 只处理一次
+
     public function batch(Request $request): JsonResponse
     {
-        $service = new QueryLogIngestService();
         $clickhouse = new ClickHouseClient();
 
         /** @var Node $node */
@@ -48,6 +49,26 @@ final class QueryLogController
             'items.*.protocol' => 'nullable|string|max:16',
         ]);
 
+        // 幂等检查：相同 batch_id 在 1 小时内只处理一次
+        $dedupKey = 'querylog:batch:' . $validated['batch_id'];
+        try {
+            $alreadyProcessed = \Illuminate\Support\Facades\Redis::exists($dedupKey);
+            if ($alreadyProcessed) {
+                return response()->json([
+                    'data' => ['deduped' => true, 'batch_id' => $validated['batch_id']],
+                ]);
+            }
+            // SETNX + TTL 实现幂等
+            \Illuminate\Support\Facades\Redis::setEx($dedupKey, self::BATCH_DEDUP_TTL, '1');
+        } catch (\Throwable $e) {
+            // Redis 不可用时跳过幂等检查，记录警告
+            \Illuminate\Support\Facades\Log::warning('QueryLog dedup check failed, proceeding anyway', [
+                'batch_id' => $validated['batch_id'],
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        $service = new QueryLogIngestService();
         $result = $service->accept($validated);
 
         $now = now();
@@ -250,6 +271,7 @@ final class QueryLogController
                     'source' => 'auto',
                     'protocol' => $protocol,
                     'device_type' => $deviceType !== '' ? $deviceType : null,
+                    'source_ip' => $clientIp !== '' ? $clientIp : null,
                     'ip_hash' => $clientIp !== ''
                         ? hash('sha256', $clientIp)
                         : null,

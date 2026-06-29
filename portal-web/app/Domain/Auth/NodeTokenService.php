@@ -75,9 +75,17 @@ final class NodeTokenService
         $token = NodeToken::with('node')
             ->where('token_hash', $hash)
             ->whereNull('revoked_at')
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
             ->first();
 
         if ($token === null) {
+            return null;
+        }
+
+        // 检查 node status
+        if ($token->node === null || $token->node->status !== 'active') {
             return null;
         }
 
