@@ -192,13 +192,13 @@ func runInstall(args []string) error {
 	if dnsDomain != "" {
 		certDir := fmt.Sprintf("/etc/letsencrypt/live/%s", dnsDomain)
 		if _, statErr := os.Stat(certDir + "/fullchain.pem"); statErr == nil {
+			// 证书存在，确保 DoH 端口为 443
 			cfg.Listen.DoH = 443
-			cfg.Listen.TLSCertFile = certDir + "/fullchain.pem"
-			cfg.Listen.TLSKeyFile = certDir + "/privkey.pem"
+			// 不写 tls_cert_file/tls_key_file，由 LoadTLSConfig 自动查找
 			if err := writeConfigAtomic(opts.ConfigPath, cfg); err != nil {
-				fmt.Printf("%s⚠ update tls cert paths failed: %v%s\n", redFg, err, resetSty)
+				fmt.Printf("%s⚠ update cert config failed: %v%s\n", redFg, err, resetSty)
 			} else {
-				fmt.Printf("✔ tls: certificate paths set to %s\n", certDir)
+				fmt.Printf("✔ tls: certificate found at %s (auto-discovery)\n", certDir)
 			}
 		} else {
 			fmt.Printf("⚠ cert files not found at %s, run certbot manually\n", certDir)
