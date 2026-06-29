@@ -20,6 +20,8 @@ final class AdminBillingStatsController
         $todayQueries = 0;
         $totalQueries = 0;
         $todayBatches = 0;
+        $todayBlocked = 0;
+        $totalBlocked = 0;
         try {
             $todayRow = $clickhouse->jsonSelect(
                 "SELECT count() AS c FROM dns_logs WHERE event_time >= toDate(now())"
@@ -33,6 +35,16 @@ final class AdminBillingStatsController
                 "SELECT uniqExact(node_id) AS n FROM dns_logs WHERE event_time >= toDate(now())"
             );
             $todayBatches = (int) ($todayBatchesRow[0]['n'] ?? 0);
+
+            $todayBlockedRow = $clickhouse->jsonSelect(
+                "SELECT count() AS c FROM dns_logs WHERE event_time >= toDate(now()) AND action = 'BLOCK'"
+            );
+            $todayBlocked = (int) ($todayBlockedRow[0]['c'] ?? 0);
+
+            $totalBlockedRow = $clickhouse->jsonSelect(
+                "SELECT count() AS c FROM dns_logs WHERE action = 'BLOCK'"
+            );
+            $totalBlocked = (int) ($totalBlockedRow[0]['c'] ?? 0);
         } catch (\Throwable) {
             // ClickHouse 不可用时静默返回 0
         }
@@ -51,9 +63,9 @@ final class AdminBillingStatsController
             'data' => [
                 'intercepts' => [
                     'today_queries' => $todayQueries,
-                    'today_blocked' => 0,
+                    'today_blocked' => $todayBlocked,
                     'total_queries' => $totalQueries,
-                    'total_blocked' => 0,
+                    'total_blocked' => $totalBlocked,
                     'today_batches' => $todayBatches,
                 ],
                 'usage' => [

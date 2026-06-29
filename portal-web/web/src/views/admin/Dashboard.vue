@@ -98,7 +98,7 @@ const fetchOverview = async () => {
             { value: d.queries?.gafam ?? 0, label: 'GAFAM (24h)', color: 'red' },
             { value: d.queries?.root ?? 0, label: '根域名 (24h)', color: 'blue' },
             { value: d.queries?.encrypted_dns ?? 0, label: '加密 DNS (24h)', color: 'green' },
-            { value: d.queries?.dnssec_valid ?? 0, label: 'DNSSEC 有效 (24h)', color: 'purple' },
+            { value: d.queries?.dnssec_valid ?? 'N/A', label: 'DNSSEC 有效 (24h)', color: 'purple' },
         ]
     } catch {
         // Keep defaults, show error state

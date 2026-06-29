@@ -92,7 +92,7 @@ final class AdminStatsController
                     'gafam' => $this->countByCategory('gafam'),
                     'root' => $this->countByCategory('root'),
                     'encrypted_dns' => $this->countByCategory('encrypted_dns'),
-                    'dnssec_valid' => $this->countByCategory('dnssec_valid'),
+                    'dnssec_valid' => null, // dns_logs 表无 DNSSEC 验证结果字段，暂不支持
                 ],
                 'users' => [
                     'total' => $totalUsers,
@@ -114,7 +114,6 @@ final class AdminStatsController
                 'gafam' => "SELECT count() AS c FROM dns_logs WHERE event_time >= now() - INTERVAL 24 HOUR AND domain IN ('google.com','www.google.com','youtube.com','www.youtube.com','facebook.com','www.facebook.com','instagram.com','www.instagram.com','whatsapp.com','www.whatsapp.com','x.com','twitter.com','www.x.com','www.twitter.com','apple.com','www.apple.com','amazon.com','www.amazon.com','microsoft.com','www.microsoft.com')",
                 'root' => "SELECT count() AS c FROM dns_logs WHERE event_time >= now() - INTERVAL 24 HOUR AND position(domain, '.') = 0",
                 'encrypted_dns' => "SELECT count() AS c FROM dns_logs WHERE event_time >= now() - INTERVAL 24 HOUR AND lower(protocol) IN ('doh','dot','doq')",
-                'dnssec_valid' => "SELECT 0 AS c",
                 default => null,
             };
             if ($query === null) {
