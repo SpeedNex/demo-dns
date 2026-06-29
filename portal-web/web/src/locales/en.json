@@ -1704,7 +1704,9 @@
         "monitor": "Monitoring",
         "user": "Users",
         "finance": "Finance",
-        "settings": "Settings"
+        "settings": "Settings",
+        "admin": "Admin",
+        "protection": "Protection"
       },
       "saveSuccess": "Configuration saved",
       "saveFailed": "Save failed",

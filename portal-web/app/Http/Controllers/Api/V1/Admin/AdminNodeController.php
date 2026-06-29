@@ -72,6 +72,9 @@ final class AdminNodeController
 
         $row = $node->toArray();
         $row['tokens'] = $tokens;
+        $row['is_online'] = $node->isOnline();
+        $row['runtime_status'] = $node->runtimeStatus();
+        $row['last_seen_ago'] = $node->lastSeenAgo();
 
         return response()->json(['data' => $row]);
     }

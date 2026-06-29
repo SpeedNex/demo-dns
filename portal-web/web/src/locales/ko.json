@@ -1664,7 +1664,9 @@
         "monitor": "모니터링",
         "user": "사용자",
         "finance": "재무",
-        "settings": "설정"
+        "settings": "설정",
+        "admin": "관리자",
+        "protection": "보호"
       },
       "saveSuccess": "설정 저장됨",
       "saveFailed": "저장 실패",

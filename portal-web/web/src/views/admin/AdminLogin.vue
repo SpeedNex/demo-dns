@@ -106,12 +106,8 @@ const handleLogin = async () => {
 
         ElMessage.success(t('admin.loginSuccess'))
         router.push('/admin')
-    } catch (err) {
-        errorMessage.value = err.response?.data?.errors?.email
-            ? t('admin.loginFailed')
-            : err.response?.data?.message
-            || err.message
-            || t('admin.loginFailed')
+    } catch {
+        errorMessage.value = t('admin.loginFailed')
     } finally {
         loading.value = false
     }

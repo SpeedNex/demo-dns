@@ -112,7 +112,21 @@ final class AdminUserController
     public function show(string $userId): JsonResponse
     {
         $user = User::query()->findOrFail($userId);
-        return response()->json(['data' => $user->toArray()]);
+        return response()->json(['data' => [
+            'id' => (int) $user->uid,
+            'uid' => (int) $user->uid,
+            'username' => (string) $user->username,
+            'email' => (string) $user->email,
+            'plan_code' => $user->plan_code,
+            'status' => $user->status,
+            'role' => 'member',
+            'current_team_id' => $user->current_team_id,
+            'locale' => $user->locale,
+            'email_verified_at' => $user->email_verified_at,
+            'last_login_at' => null,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+        ]]);
     }
 
     public function update(Request $request, string $userId): JsonResponse
