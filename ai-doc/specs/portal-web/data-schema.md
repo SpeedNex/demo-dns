@@ -4,7 +4,7 @@
 
 ## 1. 命名约定
 
-- 主键推荐 `uuid` 或 ULID 字符串，示例用 `uuid`（MySQL 中为 `char(36)`）。
+- 主键使用自增整数（`bigint unsigned auto_increment`）。
 - 时间字段统一 `timestamp`。
 - 可软删除业务表包含 `deleted_at timestamp null`。
 - JSON 使用 `json`。
@@ -18,26 +18,25 @@
 
 | 字段 | 类型 | 约束 | 说明 |
 |---|---|---|---|
-| id | uuid | pk | 用户 ID |
-| name | varchar(100) | not null | 显示名 |
-| email | varchar(255) | not null unique | 邮箱 |
+| uid | bigint unsigned | pk auto_increment | 用户 ID（自增整数） |
+| username | varchar(100) | not null | 用户名 |
+| email | varchar(190) | not null unique | 邮箱 |
 | email_verified_at | timestamp | null | 邮箱验证时间 |
-| password_hash | varchar(255) | not null | 密码 hash |
-| role | varchar(30) | not null default 'member' | `member` / `admin` |
-| status | varchar(30) | not null default 'active' | `active` / `disabled` / `deleted` |
-| timezone | varchar(64) | not null default 'UTC' | 时区 |
-| locale | varchar(20) | not null default 'en' | 语言 |
-| current_plan_id | uuid | null fk plans.id | 当前套餐 |
-| last_login_at | timestamp | null | 最后登录 |
+| password | varchar(255) | not null | 密码 hash |
+| plan_code | varchar(40) | null | 套餐 code（free/pro/business/education/enterprise） |
+| locale | varchar(10) | not null default 'zh-CN' | 语言 |
+| status | varchar(30) | not null default 'active' | active / suspended / closed |
+| current_team_id | bigint unsigned | null fk teams.id | 当前团队 ID |
+| last_login_at | timestamp | null | 最后登录时间 |
 | created_at | timestamp | not null | 创建时间 |
 | updated_at | timestamp | not null | 更新时间 |
-| deleted_at | timestamp | null | 软删除 |
 
 索引：
 
 ```sql
-CREATE UNIQUE INDEX uniq_users_email ON users (lower(email));
-CREATE INDEX idx_users_status ON users (status);
+CREATE UNIQUE INDEX uniq_users_username ON users (username);
+CREATE UNIQUE INDEX uniq_users_email ON users (email);
+CREATE INDEX idx_users_plan ON users (plan_code);
 ```
 
 ### 2.1A personal_access_tokens
@@ -60,33 +59,29 @@ CREATE INDEX idx_users_status ON users (status);
 
 | 字段 | 类型 | 约束 | 说明 |
 |---|---|---|---|
-| id | uuid | pk | Profile ID |
-| user_id | uuid | not null fk users.id | 所属用户 |
-| team_id | uuid | null | 所属团队（个人 Profile 为 null） |
-| name | varchar(100) | not null | 名称 |
-| description | text | null | 说明 |
-| status | varchar(30) | not null default 'active' | `active` / `disabled` / `deleted` |
-| default_action | varchar(20) | not null default 'allow' | 默认动作 |
-| block_response | varchar(30) | not null default 'nxdomain' | `nxdomain` / `zero_ip` / `refused` |
+| id | bigint unsigned | pk auto_increment | 自增 ID |
+| profile_id | char(6) | not null unique | 6 位 hex 路由标识，用于 DNS 识别 |
+| user_id | bigint unsigned | not null fk users.uid | 所属用户 |
+| name | varchar(120) | not null | 名称 |
+| description | varchar(500) | null | 说明 |
+| is_default | boolean | not null default false | 是否默认 Profiles |
+| status | varchar(30) | not null default 'active' | active / paused / closed |
 | security_enabled | boolean | not null default true | 安全防护 |
-| adblock_enabled | boolean | not null default false | 广告拦截 |
-| parental_enabled | boolean | not null default false | 家长控制 |
 | privacy_enabled | boolean | not null default true | 隐私保护 |
-| safe_search_enabled | boolean | not null default false | 安全搜索 |
-| log_mode | varchar(30) | not null default 'full' | `full` / `blocked_only` / `disabled` |
-| current_version | bigint | not null default 0 | 当前发布版本 |
-| draft_version | bigint | not null default 0 | 草案版本 |
-| last_published_at | timestamp | null | 最后发布时间 |
+| parental_enabled | boolean | not null default false | 家长控制 |
+| safesearch_enabled | boolean | not null default false | 安全搜索 |
+| log_retention_days | integer | not null default 24 | 日志保留天数 |
+| version | integer | not null default 1 | 当前版本 |
+| published_at | timestamp | null | 最后发布时间 |
 | created_at | timestamp | not null | 创建时间 |
 | updated_at | timestamp | not null | 更新时间 |
-| deleted_at | timestamp | null | 软删除 |
 
 索引：
 
 ```sql
-CREATE INDEX idx_profiles_user_id ON profiles (user_id);
-CREATE INDEX idx_profiles_status ON profiles (status);
-CREATE UNIQUE INDEX uniq_profiles_user_name_active ON profiles (user_id, lower(name)) WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX uniq_profiles_uid ON profiles (profile_id);
+CREATE UNIQUE INDEX uniq_profiles_user_name ON profiles (user_id, name);
+CREATE INDEX idx_profiles_user ON profiles (user_id);
 ```
 
 ### 2.3 profile_rules
@@ -224,7 +219,7 @@ CREATE INDEX idx_audit_logs_resource ON audit_logs (resource_type, resource_id);
 CREATE INDEX idx_audit_logs_action ON audit_logs (action);
 ```
 
-## 3. 套餐与计费表（财务主规格摘要）
+## 3. 套餐与订阅表
 
 ### 3.1 plans
 
@@ -251,24 +246,28 @@ CREATE INDEX idx_audit_logs_action ON audit_logs (action);
 
 | 字段 | 类型 | 约束 | 说明 |
 |---|---|---|---|
-| id | uuid | pk | 订阅 ID |
-| user_id | uuid | not null fk users.id | 用户 |
-| plan_id | uuid | not null fk plans.id | 套餐 |
-| status | varchar(30) | not null | `trialing` / `active` / `past_due` / `canceled` |
-| current_period_start | timestamp | not null | 当前周期开始 |
-| current_period_end | timestamp | not null | 当前周期结束 |
-| cancel_at | timestamp | null | 计划取消时间 |
-| canceled_at | timestamp | null | 已取消时间 |
+| id | bigint unsigned | pk auto_increment | 订阅 ID |
+| subscription_no | varchar(50) | not null unique | 订阅编号 |
+| user_id | bigint unsigned | not null fk users.uid | 用户 |
+| plan_id | bigint unsigned | not null fk plans.id | 套餐 |
+| plan_code | varchar(40) | not null | 套餐 code |
+| billing_cycle | varchar(20) | not null | month / year |
+| amount_minor | bigint | not null | 金额（最小货币单位） |
+| currency | char(3) | not null default 'USD' | 币种 |
 | provider | varchar(50) | null | 支付渠道 |
-| provider_subscription_id | varchar(255) | null | 渠道订阅 ID |
+| provider_session_id | varchar(255) | null | 渠道 session ID |
+| status | varchar(30) | not null default 'pending' | pending / active / past_due / cancelled / expired |
+| quota_status | varchar(30) | not null default 'normal' | normal / exceeded / unlimited |
+| auto_renew | boolean | not null default true | 自动续费 |
+| cancel_at_period_end | boolean | not null default false | 周期末取消 |
+| started_at | timestamp | null | 开始时间 |
+| current_period_start | timestamp | null | 当前周期开始 |
+| current_period_end | timestamp | null | 当前周期结束 |
+| cancelled_at | timestamp | null | 取消时间 |
+| expired_at | timestamp | null | 过期时间 |
+| meta | json | null | 额外元数据 |
 | created_at | timestamp | not null | 创建时间 |
 | updated_at | timestamp | not null | 更新时间 |
-
-### 3.3 orders / invoices / payments / refunds / ledger
-
-财务主规格以 `specs/portal-web/billing-finance.md` 和 `migrations/` 中 Laravel PHP 迁移为准。
-
-即使 MVP 暂时使用 sandbox/stub 支付，也必须先生成完整财务表结构、幂等键、金额约束、发票不可变 trigger、退款上限 trigger、webhook 事件表和对账表；不得只保留 `plans` 或 `users.current_plan_id` 作为正式计费模型。
 
 ## 4. 团队表（MVP）
 
@@ -356,9 +355,9 @@ CREATE INDEX idx_team_invitations_email ON team_invitations (email);
 | updated_at | timestamp | not null | 更新时间 |
 | deleted_at | timestamp | null | 软删除 |
 
-## 5. 不属于 portal-web 的表
+## 5. console 域管理表
 
-以下表不得放在 `portal-web` 主职责中：
+以下表与 portal-web 共用同一 MySQL 库，但数据所有权属于 `portal-web(原 console 域)` 子命名空间：
 
 ```text
 nodes
@@ -368,6 +367,6 @@ task_executions
 config_versions
 ```
 
-这些属于 `portal-web(原 console 域)`。
+portal-web 业务代码应只读引用这些表，数据变更由 console 域管理。
 
 DNS 高频查询日志长期不放 MySQL，进入 ClickHouse。

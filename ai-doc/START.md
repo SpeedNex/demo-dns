@@ -197,7 +197,7 @@ JSON Schema 校验样例
 节点心跳：resolver → portal-web(原 console 域)
 用于证明节点在线、健康、负载、配置版本是否一致。
 
-查询日志：resolver → portal-web(原 console 域) Node API（HTTP batch `/api/v1/node/query-logs/batch`，本地 buffer 持久化）；V2+ 规模化阶段可再切换为 NATS ingestion → portal-web(原 console 域) log worker → ClickHouse
+查询日志：resolver → portal-web(原 console 域) Node API（HTTP batch `/api/v1/node/dns-resolver/query-logs`，本地 buffer 持久化）；V2+ 规模化阶段可再切换为 NATS ingestion → portal-web(原 console 域) log worker → ClickHouse
 用于记录用户 DNS 查询、命中规则、拦截动作、延迟和用量；resolver 不得直接写 ClickHouse。
 ```
 
@@ -287,69 +287,92 @@ Token 格式：去除 ocnd_ 前缀后展示和复制
 
 ## 7. 数据库表命名规范
 
-所有数据表必须使用 `dns_` 前缀，确保命名统一：
+本项目采用混合命名策略：**核心业务表使用简练名称不加前缀**（如 `users`、`admins`、`profiles`），**resolver 相关表使用 `resolver_` 前缀**（如 `resolver_nodes`），其余功能表也使用简练描述性名称。迁移文件名中的 `dns_` 前缀仅作为文件命名约定，实际表名不使用 `dns_` 前缀。
 
 ```text
-正确：
-- dns_users              ← 用户主表（主键 uid）
-- dns_admins             ← 管理员主表（主键 admin_id）
-- dns_profiles           ← DNS 配置方案
-- dns_profile_versions   ← 配置方案版本
-- dns_devices            ← 设备注册
-- dns_teams              ← 团队
-- dns_team_members       ← 团队成员
-- dns_team_invitations   ← 团队邀请
-- dns_team_roles         ← 团队角色
-- dns_team_permissions   ← 团队权限
-- dns_team_role_permissions ← 团队角色权限关联
-- dns_team_user_roles    ← 团队用户角色关联
-- dns_admin_user_roles   ← 管理员角色关联
-- dns_resolver_nodes     ← resolver 节点（含 region 字段区分类型）
-- dns_resolver_node_tokens     ← 节点 Token（HMAC 签名凭据）
-- dns_resolver_node_heartbeats ← 节点心跳记录
-- dns_geodns             ← GeoDNS 调度映射
-- dns_geodns_tokens      ← GeoDNS 节点 Token
-- dns_config_versions    ← 配置版本
-- dns_publish_tasks      ← 发布任务
-- dns_task_executions    ← 任务执行记录
-- dns_rule_sources       ← 规则来源
-- dns_profile_rules      ← 配置文件规则
-- dns_rule_items         ← 规则条目
-- dns_regions            ← 区域管理
-- dns_subscriptions      ← 用户订阅
-- dns_orders             ← 订单
-- dns_wallets            ← 钱包
-- dns_wallet_transactions ← 钱包流水
-- dns_payment_transactions ← 支付交易
-- dns_billing_periods    ← 账期
-- dns_billings           ← 账单主表
-- dns_billing_items      ← 账单明细
-- dns_usage_records      ← 用量记录
-- dns_aggregation_offsets ← 聚合偏移量
-- dns_plans              ← 套餐
-- dns_plan_prices        ← 套餐价格
-- dns_plan_features      ← 套餐功能
-- dns_alerts             ← 告警
-- dns_admin_audit_logs   ← 审计日志
-- dns_stripe_webhook_logs ← Stripe Webhook 日志
-- dns_job_executions    ← 定时任务执行记录
-- dns_personal_access_tokens ← Sanctum Token
-- dns_admin_roles        ← 管理员角色
-- dns_admin_permissions  ← 管理员权限
-- dns_admin_role_permissions ← 角色权限关联
-- dns_admin_menu_rules   ← 后台菜单规则
-- dns_system_configs     ← 系统配置
-- dns_api_keys           ← API 密钥
-- dns_policy_snapshots   ← 策略快照
-- dns_policy_publish_logs ← 策略发布日志
-- dns_cache              ← 缓存
-- dns_cache_locks        ← 缓存锁
+用户与认证：
+- users                         ← 用户主表（主键 uid）
+- admins                        ← 管理员主表（主键 admin_id）
+- personal_access_tokens        ← Sanctum Token
+- password_reset_tokens         ← 密码重置令牌
+- sessions                      ← 会话
 
-错误（禁止）：
-- users          ← 缺少前缀
-- teams          ← 缺少前缀
-- team_members   ← 缺少前缀
-- node_tokens    ← 缺少前缀和命名空间
+DNS 配置：
+- profiles                      ← DNS 配置方案
+- profile_versions              ← 配置方案版本
+- profile_rules                 ← 配置文件规则
+- rule_sources                  ← 规则来源
+- rule_categories               ← 规则分类
+- rule_items                    ← 规则条目
+- security_data_items           ← 安全数据条目
+- brands                        ← 品牌
+
+设备：
+- devices                       ← 设备注册
+
+团队：
+- teams                         ← 团队
+- team_members                  ← 团队成员
+- team_invitations              ← 团队邀请
+- team_roles                    ← 团队角色
+- team_permissions              ← 团队权限
+- team_role_permissions         ← 团队角色权限关联
+- team_user_roles               ← 团队用户角色关联
+
+节点与调度：
+- resolver_nodes                ← resolver 节点（原 nodes，含 region 字段区分类型）
+- resolver_node_tokens          ← 节点 Token（HMAC 签名凭据，原 node_tokens）
+- resolver_node_heartbeats      ← 节点心跳记录（原 node_heartbeats）
+- geodns                        ← GeoDNS 调度映射
+- geodns_tokens                 ← GeoDNS 节点 Token
+- geo_dns_mappings              ← GeoDNS 映射关系
+
+后台管理：
+- navigation_catalogs           ← 导航目录
+- admin_roles                   ← 管理员角色
+- admin_permissions             ← 管理员权限
+- admin_role_permissions        ← 角色权限关联
+- admin_role_nav_rules          ← 角色导航规则
+- admin_user_roles              ← 管理员角色关联
+- admin_menu_groups             ← 菜单分组
+- admin_menu_rule               ← 后台菜单规则
+- admin_audit_logs              ← 审计日志
+
+发布与策略：
+- publish_tasks                 ← 发布任务
+- task_executions               ← 任务执行记录
+- policy_snapshots              ← 策略快照
+- policy_publish_logs           ← 策略发布日志
+
+计费与财务：
+- subscriptions                 ← 用户订阅
+- plans                         ← 套餐
+- plan_prices                   ← 套餐价格
+- plan_features                 ← 套餐功能
+- billing_periods               ← 账期
+- billings                      ← 账单主表
+- billing_items                 ← 账单明细
+- usage_records                 ← 用量记录
+- aggregation_offsets           ← 聚合偏移量
+- payment_transactions          ← 支付交易
+- stripe_webhook_logs           ← Stripe Webhook 日志
+- invoices                      ← 发票
+- wallets                       ← 钱包（已废弃）
+- wallet_transactions           ← 钱包流水（已废弃）
+- orders                        ← 订单（已废弃）
+
+告警与系统：
+- alerts                        ← 告警
+- system_configs                ← 系统配置
+- api_keys                      ← API 密钥
+- job_executions                ← 定时任务执行记录
+- jobs                          ← 队列任务
+- failed_jobs                   ← 失败队列任务
+- cache                         ← 缓存
+- cache_locks                   ← 缓存锁
+
+区域：
+- regions                       ← 区域管理
 ```
 
 ### 7.1 主键命名规范
@@ -364,7 +387,7 @@ Token 格式：去除 ocnd_ 前缀后展示和复制
 ```php
 class User extends Model
 {
-    protected $table = 'dns_users';
+    protected $table = 'users';
     protected $primaryKey = 'uid';
     public $incrementing = true;
     protected $keyType = 'int';
@@ -372,7 +395,7 @@ class User extends Model
 
 class Admin extends Model
 {
-    protected $table = 'dns_admins';
+    protected $table = 'admins';
     protected $primaryKey = 'admin_id';
     public $incrementing = true;
     protected $keyType = 'int';
@@ -394,8 +417,8 @@ return $this->belongsTo(User::class);
 
 | 日期 | 旧名称 | 新名称 | 说明 |
 |---|---|---|---|
-| 2026-06-23 | `dns_node_tokens` | `dns_resolver_node_tokens` | 统一 resolver 相关子表命名 |
-| 2026-06-23 | `dns_node_heartbeats` | `dns_resolver_node_heartbeats` | 统一 resolver 相关子表命名 |
+| 2026-06-23 | `node_tokens` | `resolver_node_tokens` | 统一 resolver 相关子表命名 |
+| 2026-06-23 | `node_heartbeats` | `resolver_node_heartbeats` | 统一 resolver 相关子表命名 |
 
 
 

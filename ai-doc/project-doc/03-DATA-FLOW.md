@@ -63,7 +63,7 @@
 
 ```text
 resolver 定时生成 Heartbeat (默认 30s 间隔)
-  → POST /api/v1/node/nodes/heartbeat  (合并后目标侧为 portal-web(原 console 域))
+  → POST /api/v1/node/heartbeat  (合并后目标侧为 portal-web(原 console 域))
   Authorization: Bearer <ocnd_xxxxx>
   X-Signature: hex(HMAC-SHA256(secret, canonical))
   X-Timestamp: <unix_seconds>
@@ -77,7 +77,7 @@ resolver 定时生成 Heartbeat (默认 30s 间隔)
       - ok, server_time, node_status
       - latest_config_version (desired_config_version)
       - should_pull_config (latest > current)
-      - config_endpoint: /api/v1/node/resolver/config
+      - config_endpoint: /api/v1/node/dns-resolver/config
       - next_heartbeat_after_seconds: 30
   → resolver 按 should_pull_config 决定是否拉配置
 ```
@@ -112,7 +112,7 @@ resolver 定时生成 Heartbeat (默认 30s 间隔)
 
 ```text
 resolver 判断需要拉取配置
-  → GET /api/v1/node/resolver/config?current_version=12  (合并后目标侧为 portal-web(原 console 域))
+  → GET /api/v1/node/dns-resolver/config?current_version=12  (合并后目标侧为 portal-web(原 console 域))
   Authorization: Bearer <ocnd_xxxxx>
   X-Signature: hex(HMAC-SHA256(canonical))
   X-Timestamp: <unix_seconds>
@@ -123,7 +123,7 @@ resolver 判断需要拉取配置
   → 写入 staging 文件
   → 原子 rename 为 active 文件
   → 热加载内存规则
-  → POST /api/v1/node/resolver/config/ack
+  → POST /api/v1/node/dns-resolver/config/ack
 ```
 
 ### 失败处理
@@ -141,7 +141,7 @@ resolver 判断需要拉取配置
 resolver 处理查询后生成 QueryLogItem
   → 写入内存 ring buffer
   → 达到 batch size 或 flush interval
-  → MVP:POST portal-web(原 console 域) /api/v1/node/query-logs/batch
+  → MVP:POST portal-web(原 console 域) /api/v1/node/dns-resolver/query-logs
   Authorization: Bearer <ocnd_xxxxx>
   X-Signature: hex(HMAC-SHA256(canonical))
   X-Timestamp: <unix_seconds>
@@ -188,7 +188,7 @@ geodns 周期拉取健康视图
 ## 7. 用量统计链路（V1 拉模型，不存在 push 用量端点）
 
 ```text
-resolver 批量上报 query-logs/batch 到 portal-web(原 console 域)
+resolver 批量上报 dns-resolver/query-logs 到 portal-web(原 console 域)
   → portal-web(原 console 域)写 query_log_ingest_batches (幂等 batch_id + content_sha256)
   → portal-web(原 console 域)log worker 异步写 ClickHouse dns_logs
   → portal-web Member 域主动 GET /api/v1/internal/query-logs?user_id=...&page=...  (内部走进程内服务)
@@ -230,7 +230,7 @@ V1 **不提供** `POST /api/v1/internal/usage/batches`（push）；V2+ 评估替
 
 ```text
 resolver query log
-  -> portal-web(原 console 域) /api/v1/node/query-logs/batch
+  -> portal-web(原 console 域) /api/v1/node/dns-resolver/query-logs
   -> query_log_ingest_batches (幂等 batch_id + content_sha256)
   -> ClickHouse dns_logs (log worker 异步写)
   -> portal-web Member 域主动 GET /api/v1/internal/query-logs?user_id=...  (进程内)

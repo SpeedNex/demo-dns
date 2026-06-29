@@ -34,7 +34,7 @@ final class MemberCatalogService
      * @param array<string, mixed> $payload
      * @return array<string, array<int, array<string, mixed>>>
      */
-    public function update(array $payload, ?string $actorId = null): array
+    public function update(array $payload, int|string|null $actorId = null): array
     {
         $merged = [
             'device_models' => $this->normalizeItems($payload['device_models'] ?? [], ['id', 'name', 'desc', 'icon', 'color']),

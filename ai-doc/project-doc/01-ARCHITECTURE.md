@@ -191,7 +191,7 @@ API 契约见 `contracts/openapi.yaml` 中 `/api/v1/admin/nodes*` 和 `/api/v1/n
 resolver 处理 DNS 查询
   → 生成 QueryLogItem
   → 写入内存队列
-  → MVP 批量发送到 portal-web(原 console 域)：POST /api/v1/node/query-logs/batch
+  → MVP 批量发送到 portal-web(原 console 域)：POST /api/v1/node/dns-resolver/query-logs
   → 规模化时可发送到 portal-web(原 console 域)管理的 NATS dns.logs 入口
   → 失败时写 resolver 本地 buffer
   → 恢复后重放到 portal-web(原 console 域)ingestion
@@ -398,7 +398,7 @@ portal-web/
 ├── phpunit.xml
 │
 ├── app/
-│   ├── Domain/                          ← 业务服务层（13 子域，26 个 final class Service）
+│   │   ├── Domain/                          ← 业务服务层（18 个子域）
 │   │   ├── ApiKey/         ApiKeyService.php
 │   │   ├── Audit/          AuditService.php
 │   │   ├── Auth/           AuthService.php, NodeTokenService.php, PermissionService.php
@@ -409,61 +409,94 @@ portal-web/
 │   │   ├── HealthView/     NodeHealthViewService.php
 │   │   ├── Heartbeat/      HeartbeatService.php
 │   │   ├── Ingest/         QueryLogIngestService.php, QueryLogReadService.php
-│   │   ├── Profile/        ProfileService.php, MemberCenterService.php,
-│   │   │                   MemberWorkspaceService.php(28 方法), ProfileConfigBuilder.php,
-│   │   │                   ProfilePublishService.php, DomainNormalizer.php
+│   │   ├── Profile/        ProfileService.php, MemberCatalogService.php,
+│   │   │                   DomainNormalizer.php, ProfileConfigBuilder.php,
+│   │   │                   ProfilePublishService.php, RuleCategoryResolver.php,
+│   │   │                   UserDashboardService.php, UserWorkspaceService.php
 │   │   ├── Publish/        PublishService.php
 │   │   ├── Rule/           ProfileRuleService.php, RuleService.php
 │   │   ├── System/         HealthCheckService.php
 │   │   └── Team/           TeamService.php             ← 18 方法，最大 CRUD
 │   │
+│   ├── Application/
+│   │   ├── Member/
+│   │   │   ├── MemberCenterOverviewService.php
+│   │   │   ├── ProfilePublishApplicationService.php
+│   │   │   └── WorkspaceRuleService.php
+│   │   └── Node/
+│   │       └── ConfigAcknowledgementService.php
+│   │
 │   ├── Http/
 │   │   ├── Controllers/
 │   │   │   ├── Controller.php
+│   │   │   ├── StripeWebhookController.php
 │   │   │   └── Api/V1/
-│   │   │       ├── Public/     AuthController.php      ← 注册/登录
-│   │   │       ├── Member/     7 控制器 (~60 方法)
-│   │   │       │   ├── ProfileController.php, ProfileRuleController.php
-│   │   │       │   ├── ProfilePublishController.php, MemberCenterController.php
-│   │   │       │   ├── MemberWorkspaceController.php, TeamController.php
-│   │   │       │   └── ApiKeyController.php
-│   │   │       ├── Admin/      17 控制器 (~85 方法)
-│   │   │       │   ├── AdminUserController.php, AdminNodeController.php
-│   │   │       │   ├── AdminRbacController.php, AdminDeviceController.php
-│   │   │       │   ├── AdminPublishController.php, AdminRuleController.php
-│   │   │       │   ├── AdminGeoDnsController.php, AdminBillingController.php
-│   │   │       │   ├── AdminFinanceController.php, AdminBillingStatsController.php
-│   │   │       │   ├── AdminStatsController.php, AdminAuditLogController.php
-│   │   │       │   ├── AdminConsoleAuditLogController.php, AdminQueryLogController.php
-│   │   │       │   ├── AdminSystemConfigController.php, AdminAlertController.php
-│   │   │       │   └── AdminTeamController.php
-│   │   │       ├── Agent/      4 控制器
-│   │   │       │   ├── HeartbeatController.php, ConfigPullController.php
-│   │   │       │   ├── ConfigAckController.php, QueryLogController.php
-│   │   │       │   └── Internal/
-│   │   │       └── Internal/   3 控制器
-│   │   │           ├── HealthViewController.php, ProfilePublishController.php
-│   │   │           └── QueryLogReadController.php
+│   │   │       ├── Admin/      30 个控制器
+│   │   │       │   ├── AdminAdminsController, AdminAlertController
+│   │   │       │   ├── AdminAuditLogController, AdminBillingStatsController
+│   │   │       │   ├── AdminBlacklistWhitelistController, AdminBrandController
+│   │   │       │   ├── AdminCategoryController, AdminConsoleAuditLogController
+│   │   │       │   ├── AdminDeviceController, AdminFinanceController
+│   │   │       │   ├── AdminGeoDnsController, AdminMemberCatalogController
+│   │   │       │   ├── AdminMemberPolicyController, AdminMenuConfigController
+│   │   │       │   ├── AdminNodeController, AdminPlanController
+│   │   │       │   ├── AdminPolicyController, AdminProtectionPolicyController
+│   │   │       │   ├── AdminPublishCenterController, AdminPublishController
+│   │   │       │   ├── AdminQueryLogController, AdminRbacController
+│   │   │       │   ├── AdminRegionController, AdminRuleController
+│   │   |       │   ├── AdminRuleItemController, AdminSecurityDataController
+│   │   │       │   ├── AdminStatsController, AdminSystemConfigController
+│   │   │       │   ├── AdminTeamController, AdminUserController
+│   │   │       ├── Internal/   3 个控制器
+│   │   │       │   ├── HealthViewController.php
+│   │   │       │   ├── ProfilePublishController.php
+│   │   │       │   └── QueryLogReadController.php
+│   │   │       ├── Node/       11 个控制器
+│   │   │       │   ├── BaseNodeRegisterController, ConfigAckController
+│   │   │       │   ├── ConfigPullController, DeviceSeenController
+│   │   │       │   ├── GeoDNSConfigController, GeoDnsHeartbeatController
+│   │   │       │   ├── GeoDnsRegisterController, HeartbeatController
+│   │   │       │   ├── NodeRegisterController, QueryLogController
+│   │   │       │   └── TokenVerifyController
+│   │   │       ├── Public/     2 个控制器
+│   │   │       │   ├── AuthController.php
+│   │   │       │   └── PublicConfigController.php
+│   │   │       └── User/       9 个控制器
+│   │   │           ├── ApiKeyController, ProfileController
+│   │   │           ├── ProfilePublishController, ProfileRuleController
+│   │   │           ├── QueryTrendController, SubscriptionController
+│   │   │           ├── TeamController, UserDashboardController
+│   │   │           └── UserWorkspaceController
 │   │   └── Middleware/
-│   │       ├── AuthenticateNodeToken.php        ← 节点 HMAC 认证
+│   │       ├── AdminOnly.php
+│   │       ├── ApiRequestLog.php
+│   │       ├── AuthenticateNodeApiKey.php       ← 中间件别名 node.api_key
+│   │       ├── AuthenticateNodeToken.php        ← 中间件别名 node.token
 │   │       ├── CheckPermission.php              ← 权限检查
 │   │       ├── RequireSharedToken.php           ← 内部服务认证
+│   │       ├── UserOnly.php
 │   │       └── VerifyRequestSignature.php
 │   │
 │   ├── Infrastructure/
 │   │   └── ClickHouse/     ClickHouseClient.php, MemberAnalyticsService.php
 │   │
-│   ├── Models/             29 个 Eloquent Model（19 种 UUID 前缀）
-│   │   ├── Admin.php, AdminAuditLog.php, AdminPermission.php
-│   │   ├── AdminRole.php, AdminRoleNavRule.php, ApiKey.php
-│   │   ├── AuditLog.php, ConfigVersion.php, Device.php
-│   │   ├── GeoDnsMapping.php, NavigationCatalog.php
-│   │   ├── Node.php, NodeHeartbeat.php, NodeToken.php
-│   │   ├── Permission.php, Profile.php, ProfileRule.php, ProfileVersion.php
-│   │   ├── PublishTask.php, QueryLogEntry.php, QueryLogIngestBatch.php
-│   │   ├── RolePermission.php, RuleSource.php, SystemConfig.php
-│   │   ├── TaskExecution.php, Team.php, TeamInvitation.php
-│   │   ├── TeamMember.php, User.php
+│   ├── Models/             43 个 Eloquent Model
+│   │   ├── Admin.php, AdminAuditLog.php, AdminMenuRule.php
+│   │   ├── AdminPermission.php, AdminRole.php
+│   │   ├── AggregationOffset.php, Alert.php, ApiKey.php
+│   │   ├── AuditLog.php, BaseModel.php, BillingItem.php
+│   │   ├── Brand.php, Device.php, DnsGeodns.php
+│   │   ├── JobExecution.php, Node.php, NodeHeartbeat.php
+│   │   ├── NodeToken.php, PaymentTransaction.php, Permission.php
+│   │   ├── Plan.php, PlanFeature.php, PlanPrice.php
+│   │   ├── PolicyPublishLog.php, PolicySnapshot.php
+│   │   ├── Profile.php, ProfileRule.php, ProfileVersion.php
+│   │   ├── PublishTask.php, Region.php, RolePermission.php
+│   │   ├── RuleCategory.php, RuleItem.php, RuleSource.php
+│   │   ├── StripeWebhookLog.php, Subscription.php
+│   │   ├── SystemConfig.php, TaskExecution.php, Team.php
+│   │   ├── TeamInvitation.php, TeamMember.php
+│   │   ├── UsageRecord.php, User.php
 │   │   └── Providers/         AppServiceProvider.php
 │   │
 │   ├── config/               ← Laravel 配置
@@ -479,11 +512,26 @@ portal-web/
 │   ├── routes/
 │   │   ├── api.php, web.php, console.php
 │   │   └── v1/
-│   │       ├── public.php    ← 3 路由
-│   │       ├── member.php    ← 70 路由
-│   │       ├── admin.php     ← 68 路由
-│   │       ├── agent.php     ← 4 路由
-│   │       └── internal.php  ← 4 路由
+│   │       ├── public.php              ← 4 路由
+│   │       ├── user.php                ← include 子目录
+│   │       │   ├── workspace.php
+│   │       │   ├── profiles.php
+│   │       │   ├── teams.php
+│   │       │   ├── api-keys.php
+│   │       │   ├── subscriptions.php
+│   │       │   └── query-trend.php
+│   │       ├── admin.php               ← include 子目录
+│   │       │   ├── stats.php
+│   │       │   ├── users.php
+│   │       │   ├── billing.php
+│   │       │   ├── nodes.php
+│   │       │   ├── rbac.php
+│   │       │   ├── publishes.php
+│   │       │   ├── rules.php
+│   │       │   ├── policy.php
+│   │       │   └── settings.php
+│   │       ├── node.php                ← ~14 路由
+│   │       └── internal.php            ← 3 路由
 │   │
 │   ├── tests/
 │   │   ├── Feature/          AgentHmacSignatureTest.php, ApiTest.php,
@@ -529,19 +577,24 @@ dns-resolver/
 ├── internal/
 │   ├── agent/                  agent.go, agent_test.go          ← 控制面通信
 │   ├── blockresponse/          blockresponse.go                 ← 拦截响应构造
-│   ├── cache/                  cache.go, cache_test.go          ← DNS 缓存
-│   ├── clickhouse/             client.go                        ← ClickHouse 客户端
+│   ├── cache/                  cache.go, cache_test.go,         ← DNS 缓存
+│   │                           profile_cache.go                 ← Profile 缓存
 │   ├── config/                 config.go, types.go              ← 配置加载
 │   ├── dnscache/               dnscache.go                      ← DNS 缓存层
-│   ├── dnsserver/              server.go                        ← UDP DNS 服务器
+│   ├── dnsserver/              server.go, tls.go                ← UDP DNS 服务器
 │   ├── doh/                    server.go                        ← DoH 服务器
+│   ├── doq/                    server.go                        ← DoQ 服务器
+│   ├── geodns/                 selector.go                      ← GeoDNS 选择器
 │   ├── logging/                buffer.go, buffer_test.go        ← 日志 buffer
 │   ├── matching/               engine.go, trie.go               ← 规则匹配引擎
 │   ├── metrics/                metrics.go                       ← 指标收集
 │   ├── profile/                resolver.go                      ← Profile 配置解析
-│   ├── resolver/               resolver.go                      ← 上游 DNS 解析
-│   ├── rules/                  engine.go, normalize.go          ← 规则引擎
-│   └── storage/                config_store.go                  ← 配置持久化
+│   ├── resolver/               resolver.go, handler.go          ← 上游 DNS 解析
+│   ├── rules/                  engine.go, normalize.go,         ← 规则引擎
+│   │                           dga.go, dyndns.go, idn.go,
+│   │                           rebind.go, tld.go, tracker.go,
+│   │                           typosquatting.go
+│   └── validation/             validator.go                     ← 校验器
 ├── tests/                      engine_test.go, normalize_test.go, profile_resolver_test.go
 └── bench/                      bench_100k.go, concurrent_bench.go, simple_bench.go
 ```
@@ -567,9 +620,9 @@ geodns/
 | 维度 | portal-web | dns-resolver | geodns |
 |---|---|---|---|
 | **语言** | PHP(Laravel) + Vue 3 | Go | Go |
-| **Model 数** | 29 | - | - |
-| **Domain Service** | 26 | - | - |
-| **Controller** | 24 (~145 方法) | - | - |
+| **Model 数** | 43 | - | - |
+| **Domain Service** | 18 sub-domains | - | - |
+| **Controller** | ~55 (~250 方法) | - | - |
 | **路由** | 151 条 | - | - |
 | **前端页面** | 41 (4 公共 + 17 会员 + 20 管理) | - | - |
 | **多语言** | 3 (en/zh-CN/ko) | - | - |

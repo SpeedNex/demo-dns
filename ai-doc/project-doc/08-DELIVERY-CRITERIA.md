@@ -46,12 +46,12 @@
 |---|---|
 | 节点预创建 | 管理员在 `portal-web` 总后台通过 `POST /api/v1/admin/nodes` 预创建节点,调用 `POST /api/v1/admin/nodes/{nodeCode}/tokens` 签发 `(token=ocnd_xxx, hmac_secret=hmk_xxx)`;明文仅返回一次,`portal-web` 仅存 `token_hash` 与 `hmac_key_hash` + `hmac_secret_encrypted` |
 | 节点安装 | `curl -fsSL <host>/build/install.sh \| sh -s -- --server=... --token=ocnd_xxx --node-id=xxx` → 下载二进制 → `geo-dns install` 调用 verify API 换取凭据 → 原子写入 `configs/server.yaml` |
-| 心跳 | `POST /api/v1/node/nodes/heartbeat` token 校验、状态计算、`last_heartbeat_at` 更新 |
+| 心跳 | `POST /api/v1/node/heartbeat` token 校验、状态计算、`last_heartbeat_at` 更新 |
 | 离线判断 | 超过阈值(默认 90s)标记 offline,健康视图不返回离线节点 |
 | 配置版本 | `version` 单调递增,`checksum` 可验证 |
-| 配置拉取 | `GET /api/v1/node/resolver/config` 无更新返回 204;有更新返回完整 bundle |
-| ACK | `POST /api/v1/node/resolver/config/ack` applied / failed 都记录;failed 保存 `error_message` |
-| 日志接收 | `POST /api/v1/node/query-logs/batch` batch 限制、幂等 `batch_id`、失败可重试 |
+| 配置拉取 | `GET /api/v1/node/dns-resolver/config` 无更新返回 204;有更新返回完整 bundle |
+| ACK | `POST /api/v1/node/dns-resolver/config/ack` applied / failed 都记录;failed 保存 `error_message` |
+| 日志接收 | `POST /api/v1/node/dns-resolver/query-logs` batch 限制、幂等 `batch_id`、失败可重试 |
 | 内部接口 | `shared.token:internal` 中间件校验 `Authorization: Internal <token>`;`shared.token:admin` 校验 `Authorization: Admin <token>`;`/api/v1/node/*` 使用 `node.hmac` (Bearer + HMAC-SHA256) |
 
 ## 5. dns-resolver 验收

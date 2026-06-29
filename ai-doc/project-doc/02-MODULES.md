@@ -38,7 +38,7 @@ app/Domain/Auth                 # AuthService / NodeTokenService / PermissionSer
 app/Domain/ClickHouse           # ClickHouseStatsService(统计分析)
 app/Domain/Heartbeat            # HeartbeatService(心跳接收)
 app/Domain/Ingest               # QueryLogIngestService / QueryLogReadService
-app/Domain/Profile              # MemberCenter / MemberWorkspace / DomainNormalizer / ProfileConfigBuilder / ProfilePublish / ProfileService
+app/Domain/Profile              # MemberCatalogService / UserDashboardService / UserWorkspaceService / DomainNormalizer / ProfileConfigBuilder / ProfilePublishService / ProfileService
 app/Domain/Rule                 # ProfileRuleService / RuleService
 app/Domain/System               # HealthCheckService
 app/Domain/Team                 # TeamService
@@ -59,18 +59,17 @@ app/Infrastructure/ClickHouse   # ClickHouseClient / MemberAnalyticsService
 | `ProfileService` | Profile CRUD、默认配置、版本草案 |
 | `RuleService` | 规则校验、归一化、冲突检测 |
 | `ProfilePublishService` | 生成配置版本并调用 portal-web(原 console 域) 发布 |
-| `UsageQueryService` | 查询 MySQL / ClickHouse 聚合结果 |
-| `BillingLedgerService` | 订单、发票、支付、退款、credit note 的 ledger 追加写 |
-| `BillingReconciliationService` | 支付渠道对账和差异处理 |
-| `BillingAdminService` | 账单查询、发票管理、Credit Note、交易流水 |
-| `ServiceTicketService` | 用户工单、退款审核、售后处理 |
+| `UsageBillingService` | 用量计费处理(按人数/block 计费) |
+| `MemberCatalogService` | 会员目录与分类管理 |
+| `UserDashboardService` | 用户仪表盘数据聚合 |
+| `UserWorkspaceService` | 用户工作区管理 |
 | `AuditService` | 管理员和用户关键操作审计 |
 | `TeamService` | 团队创建、成员管理、角色分配、团队切换 |
 | **原 console 域新增(合并后)** | |
 | `NodeTokenService` | 预签发 / 重新签发 / 吊销 (api_key, secret);portal-web 仅存 hash,plain 仅返回一次 |
 | `HeartbeatService` | 心跳校验、状态计算、健康快照写 Redis |
 | `ConfigBuildService` | 将 Profile 版本组织成 resolver config bundle |
-| `PublishTaskService` | 发布任务创建、重试、失败记录 |
+| `PublishService` | 发布任务创建、重试、失败记录 |
 | `ConfigAckService` | 处理 resolver 配置应用结果 |
 | `NodeHealthViewService` | 给 geodns 输出健康节点视图(进程内) |
 | `RuleLibraryService` | 规则源 CRUD、批量同步、立即同步 |
@@ -100,7 +99,7 @@ app/Infrastructure/ClickHouse   # ClickHouseClient / MemberAnalyticsService
 1. **`portal-web` Member 是 `profiles / profile_rules / profile_feature_settings` 的唯一主写方**。`portal-web(原 console 域)` 不得提供 Profile CRUD 端点，不得直接 INSERT/UPDATE/DELETE 这三张表;同样**不得**绕过 Member 域直接写 `users / teams / subscriptions / usage_records`。
 2. **`portal-web` Member 不得直接写 `config_versions / publish_tasks`**，只能通过 `portal-web(原 console 域)` 暴露的进程内服务(`PortalInternalPublishService` / 原 `ProfilePublishService`)发起发布，并仅依赖返回的 `publish_id / status` 展示状态。`POST /api/v1/internal/profile-publishes` 路径保留供跨进程调试使用,但**生产**调用走进程内服务。
 3. **双向同步禁止**:`profiles.*` 与 `config_versions.*` 必须通过"portal Member 写 → portal Member 调 portal(原 console 域)内部 publish → portal(原 console 域)写 config_versions" 单向链路,禁止任何反向同步或双写。
-4. **配置消费**:`dns-resolver` 只通过 `GET /api/v1/node/resolver/config` 读取 `config_versions` + `profile_versions` 编译产物,从不直接读 `portal-web` 数据库。
+4. **配置消费**:`dns-resolver` 只通过 `GET /api/v1/node/dns-resolver/config` 读取 `config_versions` + `profile_versions` 编译产物,从不直接读 `portal-web` 数据库。
 5. **审计日志分离**:`portal-web` Member 写 `audit_logs`(用户/计费/订阅审计);`portal-web(原 console 域)` 写 `admin_audit_logs`(节点/发布/配置审计);二者仍是**两张独立表**,不合并字段,不交叉写。
 
 违反上述任一条的代码，code-review 必须直接拒绝并要求重构。
@@ -143,7 +142,7 @@ app/Infrastructure/ClickHouse   # ClickHouseClient / MemberAnalyticsService
 app/Domain/Node
 app/Domain/Heartbeat
 app/Domain/ConfigVersion
-app/Domain/PublishTask
+app/Domain/Publish
 app/Domain/HealthView
 app/Domain/Ingest
 app/Domain/RuleLibrary
@@ -159,7 +158,7 @@ app/Infrastructure/ClickHouse
 | `NodeTokenService` | 预签发 / 重新签发 / 吊销 (api_key, secret);portal-web 仅存 hash,plain 仅返回一次 |
 | `HeartbeatService` | 心跳校验、状态计算、健康快照写 Redis |
 | `ConfigBuildService` | 将 Profile 版本组织成 resolver config bundle |
-| `PublishTaskService` | 发布任务创建、重试、失败记录 |
+| `PublishService` | 发布任务创建、重试、失败记录 |
 | `ConfigAckService` | 处理 resolver 配置应用结果 |
 | `NodeHealthViewService` | 给 geodns 输出健康节点视图(进程内) |
 | `RuleLibraryService` | 规则源 CRUD、批量同步、立即同步 |
