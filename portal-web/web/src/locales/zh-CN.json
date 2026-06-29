@@ -1926,6 +1926,24 @@
       "noData": "暂无黑白名单规则",
       "searchPlaceholder": "搜索域名 / 会员"
     },
+    "teams": {
+      "title": "团队管理",
+      "name": "团队名称",
+      "slug": "标识",
+      "owner": "所有者",
+      "memberCount": "成员数",
+      "status": "状态",
+      "created": "创建时间",
+      "actions": "操作",
+      "all": "全部",
+      "disable": "禁用",
+      "enable": "启用",
+      "disabled": "已禁用",
+      "enabled": "已启用",
+      "operationFailed": "操作失败",
+      "noData": "暂无团队",
+      "searchPlaceholder": "搜索团队名称/标识"
+    },
     "action": {
       "create": "添加",
       "update": "编辑",

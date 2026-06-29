@@ -1851,6 +1851,24 @@
       "noData": "블랙리스트 / 화이트리스트 규칙 없음",
       "searchPlaceholder": "도메인 / 회원 검색"
     },
+    "teams": {
+      "title": "팀 관리",
+      "name": "팀 이름",
+      "slug": "식별자",
+      "owner": "소유자",
+      "memberCount": "멤버 수",
+      "status": "상태",
+      "created": "생성일",
+      "actions": "작업",
+      "all": "전체",
+      "disable": "비활성화",
+      "enable": "활성화",
+      "disabled": "비활성화됨",
+      "enabled": "활성화됨",
+      "operationFailed": "작업 실패",
+      "noData": "팀이 없습니다",
+      "searchPlaceholder": "팀 이름/식별자 검색"
+    },
     "admin": "Admin",
     "basicConfig": {
       "title": "Basic Settings",

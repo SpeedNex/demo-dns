@@ -1894,6 +1894,24 @@
       "noData": "No blacklist / whitelist rules",
       "searchPlaceholder": "Search domain / member"
     },
+    "teams": {
+      "title": "Team Management",
+      "name": "Team Name",
+      "slug": "Slug",
+      "owner": "Owner",
+      "memberCount": "Members",
+      "status": "Status",
+      "created": "Created",
+      "actions": "Actions",
+      "all": "All",
+      "disable": "Disable",
+      "enable": "Enable",
+      "disabled": "Disabled",
+      "enabled": "Enabled",
+      "operationFailed": "Operation failed",
+      "noData": "No teams",
+      "searchPlaceholder": "Search team name / slug"
+    },
     "action": {
       "create": "Create",
       "update": "Update",
