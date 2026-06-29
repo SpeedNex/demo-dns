@@ -92,6 +92,11 @@ final class ConfigPullController
             $config['quota'] = (object) [];
         }
 
+        // 4b. 确保 security_data 对象格式正确（避免 json_decode true 后空对象变空数组）
+        if (array_key_exists('security_data', $config)) {
+            $config['security_data'] = (object) $config['security_data'];
+        }
+
         // 5. rule_id 转为字符串（resolver 期望 string 类型）
         if (isset($config['rules']) && is_array($config['rules'])) {
             foreach ($config['rules'] as $i => $r) {
