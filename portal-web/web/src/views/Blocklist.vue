@@ -26,12 +26,8 @@
             <el-table-column :label="$t('blocklist.actions')" width="100">
                 <template #default="{ row }">
                     <div class="action-buttons">
-                        <el-button size="small" @click="openEditDialog(row)">
-                            <el-icon><Edit /></el-icon>
-                        </el-button>
-                        <el-button size="small" type="danger" @click="handleDelete(row.id)">
-                            <el-icon><Delete /></el-icon>
-                        </el-button>
+                        <el-button size="small" text :icon="Edit" @click="openEditDialog(row)" />
+                        <el-button size="small" text type="danger" :icon="Delete" @click="handleDelete(row.id)" />
                     </div>
                 </template>
             </el-table-column>
