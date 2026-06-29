@@ -11,6 +11,7 @@ use App\Models\ProfileVersion;
 use App\Models\Node;
 use App\Models\PublishTask;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Redis;
 
 /**
  * 2026-06-22: query_log_ingest_batches 表已删除，查询统计改为从 ClickHouse dns_logs 取。
@@ -20,8 +21,25 @@ final class AdminStatsController
     public function overview(): JsonResponse
     {
         $totalNodes = Node::count();
-        $onlineNodes = (int) Node::online()->count();
         $notInstalledNodes = (int) Node::where('install_status', '!=', 'installed')->count();
+
+        // 节点在线计数使用 Redis（实时真相源，TTL 90s），
+        // 避免 Redis 正常时 MySQL 每 5 分钟才更新导致 stat 显示滞后。
+        // Redis 不可用时 fallback 到 MySQL scopeOffline()/scopeOnline()。
+        try {
+            $redisOnlineCount = (int) Redis::scard('nodes:online');
+        } catch (\Throwable) {
+            $redisOnlineCount = -1; // Redis 不可用，标记为 fallback
+        }
+
+        if ($redisOnlineCount >= 0) {
+            // Redis 正常：直接用 Redis SET 的大小作为在线节点数
+            $onlineNodes = $redisOnlineCount;
+        } else {
+            // Redis 不可用：fallback 到 MySQL（可能滞后 5 分钟，仅作保底）
+            $onlineNodes = (int) Node::online()->count();
+        }
+
         $offlineNodes = max($totalNodes - $onlineNodes - $notInstalledNodes, 0);
 
         $publishes = PublishTask::count();

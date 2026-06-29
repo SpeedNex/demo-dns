@@ -1,10 +1,6 @@
 <template>
     <div class="dashboard-content">
-        <PageHeader
-            eyebrow=""
-            :title="$t('nav.dashboard')"
-            description=""
-        />
+        <!-- 页面标题由 AdminLayout 顶栏 breadcrumb 统一渲染，无需重复 -->
         <el-row :gutter="16" style="margin-bottom:24px">
             <el-col v-for="s in stats" :key="s.label" :xs="12" :sm="12" :md="6">
                 <el-card shadow="never" class="stat-card" :class="s.color">
@@ -45,7 +41,6 @@ import { ref, onMounted, markRaw, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import client from '@/api/client'
 import { Monitor, Upload, MapLocation, Document, DataAnalysis, Setting } from '@element-plus/icons-vue'
-import PageHeader from '@/components/PageHeader.vue'
 
 const { t } = useI18n()
 
