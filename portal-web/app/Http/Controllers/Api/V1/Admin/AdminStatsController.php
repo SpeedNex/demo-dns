@@ -113,7 +113,7 @@ final class AdminStatsController
             $query = match ($bucket) {
                 'gafam' => "SELECT count() AS c FROM dns_logs WHERE event_time >= now() - INTERVAL 24 HOUR AND domain IN ('google.com','www.google.com','youtube.com','www.youtube.com','facebook.com','www.facebook.com','instagram.com','www.instagram.com','whatsapp.com','www.whatsapp.com','x.com','twitter.com','www.x.com','www.twitter.com','apple.com','www.apple.com','amazon.com','www.amazon.com','microsoft.com','www.microsoft.com')",
                 'root' => "SELECT count() AS c FROM dns_logs WHERE event_time >= now() - INTERVAL 24 HOUR AND position(domain, '.') = 0",
-                'encrypted_dns' => "SELECT 0 AS c",
+                'encrypted_dns' => "SELECT count() AS c FROM dns_logs WHERE event_time >= now() - INTERVAL 24 HOUR AND lower(protocol) IN ('doh','dot','doq')",
                 'dnssec_valid' => "SELECT 0 AS c",
                 default => null,
             };
