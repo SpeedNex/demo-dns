@@ -186,6 +186,25 @@ func runInstall(args []string) error {
 		fmt.Println("✔ console register: success (no dns_domain, skip certbot auto-setup)")
 	}
 
+	// 2026-06-29: 安装结束后，始终将证书路径指向 Let's Encrypt 标准位置。
+	// 即使本次 certbot 自动配置失败，只要之前签发过证书，仍能正确加载。
+	// 避免每次重装后 tls_cert_file/tls_key_file 被默认空值覆盖导致自签名证书。
+	if dnsDomain != "" {
+		certDir := fmt.Sprintf("/etc/letsencrypt/live/%s", dnsDomain)
+		if _, statErr := os.Stat(certDir + "/fullchain.pem"); statErr == nil {
+			cfg.Listen.DoH = 443
+			cfg.Listen.TLSCertFile = certDir + "/fullchain.pem"
+			cfg.Listen.TLSKeyFile = certDir + "/privkey.pem"
+			if err := writeConfigAtomic(opts.ConfigPath, cfg); err != nil {
+				fmt.Printf("%s⚠ update tls cert paths failed: %v%s\n", redFg, err, resetSty)
+			} else {
+				fmt.Printf("✔ tls: certificate paths set to %s\n", certDir)
+			}
+		} else {
+			fmt.Printf("⚠ cert files not found at %s, run certbot manually\n", certDir)
+		}
+	}
+
 	// 2026-06-22 NEW: --start 开启时自动拉起节点。
 	// 顺序:systemd(写 unit + daemon-reload + enable --now) → 失败降级 nohup 后台进程。
 	// 任一方式成功都打印 ✔;完全失败时打 ⚠ 保留手动启动指引。
