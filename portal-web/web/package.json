@@ -11,6 +11,8 @@
     "lint:fix": "eslint . --ext .vue,.js --fix"
   },
   "dependencies": {
+    "@stripe/stripe-js": "^9.8.0",
+    "axios": "^1.18.1",
     "element-plus": "^2.9.0",
     "vue": "^3.5.0",
     "vue-i18n": "^9.14.5",

@@ -2092,6 +2092,14 @@
     "cancelSuccess": "구독이 취소되었습니다",
     "cancelFailed": "구독 취소에 실패했습니다",
     "resumeSuccess": "구독이 재개되었습니다",
-    "resumeFailed": "구독 재개에 실패했습니다"
+    "resumeFailed": "구독 재개에 실패했습니다",
+    "fakeModeHint": "개발/테스트 환경 - 모의 결제를 사용합니다.",
+    "confirmPay": "결제 확인",
+    "paySuccess": "결제 성공",
+    "paySuccessDesc": "플랜이 활성화되었습니다. 변경 사항이 곧 적용됩니다.",
+    "payFailed": "결제에 실패했습니다. 다시 시도해 주세요.",
+    "payTimeout": "결제 상태 확인 시간이 초과되었습니다. 페이지를 새로고침하세요.",
+    "stripeLoadFailed": "결제 컴포넌트 로드에 실패했습니다. 페이지를 새로고침하세요.",
+    "stripeInitFailed": "결제 컴포넌트 초기화에 실패했습니다. 페이지를 새로고침하세요."
   }
 }

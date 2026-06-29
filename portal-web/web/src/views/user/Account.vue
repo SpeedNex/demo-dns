@@ -130,7 +130,7 @@
                             size="default"
                             :type="subscriptionState.disabled ? 'info' : 'primary'"
                             :disabled="subscriptionState.disabled"
-                            :loading="creating || paying"
+                            :loading="creating"
                             @click="handleSubscribe"
                         >
                             {{ subscriptionState.text }}
@@ -147,11 +147,8 @@
                     </el-descriptions>
                     <div class="pay-actions">
                         <el-button size="default" @click="resetDialog">{{ $t('common.cancel') }}</el-button>
-                        <el-button type="success" size="default" :loading="paying" @click="startPayment">
+                        <el-button type="primary" size="default" @click="paymentSubscription = sub; showPaymentModal = true">
                             {{ $t('subscription.payNow') }}
-                        </el-button>
-                        <el-button v-if="currentTx" type="warning" size="default" :loading="mocking" @click="mockPay">
-                            {{ $t('subscription.mockPaySuccess') }}
                         </el-button>
                     </div>
                 </div>
@@ -189,6 +186,18 @@
                     </el-button>
                 </template>
             </el-dialog>
+
+            <!-- 支付弹框 -->
+            <PaymentModal
+                v-if="paymentSubscription"
+                v-model="showPaymentModal"
+                :subscription="paymentSubscription"
+                :payment-methods="stripeConfig.payment_methods"
+                :publishable-key="stripeConfig.publishable_key"
+                :is-fake="stripeConfig.is_fake"
+                :mode="stripeConfig.mode"
+                @success="onPaymentSuccess"
+            />
         </div>
     </Layout>
 </template>
@@ -200,6 +209,7 @@ import { ElMessage } from 'element-plus'
 import { Coin, Lock, User } from '@element-plus/icons-vue'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
+import PaymentModal from '@/components/PaymentModal.vue'
 
 const { t } = useI18n()
 
@@ -225,23 +235,36 @@ const plans = ref([])
 const selectedPlan = ref('')
 const selectedCycle = ref('monthly')
 const sub = ref(null)
-const currentTx = ref(null)
 const creating = ref(false)
-const paying = ref(false)
-const mocking = ref(false)
+
+// 支付弹框
+const showPaymentModal = ref(false)
+const paymentSubscription = ref(null)
+const stripeConfig = ref({
+  publishable_key: '',
+  is_fake: false,
+  mode: 'test',
+  payment_methods: ['card'],
+})
 
 const formatMoney = (minor, currency = 'USD') => {
     if (minor === null || minor === undefined || Number.isNaN(Number(minor))) return '-'
     return `${currency} ${(Number(minor) / 100).toFixed(2)}`
 }
 
+const normalizePlans = (value) => {
+    if (Array.isArray(value)) return value
+    if (value && typeof value === 'object') return Object.values(value)
+    return []
+}
+
 const getPrice = (plan, cycle) => {
-    const price = plan.prices?.find(p => p.billing_cycle === cycle)
+    const price = normalizePlans(plan.prices).find(p => p.billing_cycle === cycle)
     return price || { amount_minor: 0, currency: 'USD' }
 }
 
 const getPlanSortOrder = (planCode) => {
-    const plan = plans.value.find(p => p.code === planCode)
+    const plan = normalizePlans(plans.value).find(p => p.code === planCode)
     return plan?.sort_order ?? 0
 }
 
@@ -255,7 +278,7 @@ const hasActivePaidSub = computed(() =>
 
 const disabledPlans = computed(() => {
     const currentSort = getPlanSortOrder(currentPlanCode.value)
-    return plans.value
+    return normalizePlans(plans.value)
         .filter(p => getPlanSortOrder(p.code) <= currentSort)
         .map(p => p.code)
 })
@@ -275,7 +298,6 @@ const dialogTitle = computed(() => {
 // 重置对话框，回到选择套餐
 const resetDialog = () => {
     sub.value = null
-    currentTx.value = null
     selectedPlan.value = ''
     showSubscriptionDialog.value = false
 }
@@ -313,59 +335,9 @@ const handleSubscribe = async () => {
         sub.value = data.data
         await loadAccountData()
 
-        // 2. 直接跳转支付
-        paying.value = true
-        const checkoutData = await client.post(`/user/subscriptions/${sub.value.id}/checkout`)
-        currentTx.value = checkoutData.data.data
-        if (checkoutData.data.data.redirect_url) {
-            window.open(checkoutData.data.data.redirect_url, '_blank')
-        }
-        ElMessage.info(t('subscription.checkoutSuccess'))
-    } catch (e) {
-        ElMessage.error(e.response?.data?.message || t('subscription.checkoutFailed'))
-    } finally {
-        creating.value = false
-        paying.value = false
-    }
-}
-
-const fetchPlans = async () => {
-    try {
-        const { data } = await client.get('/user/plans')
-        plans.value = data.data ?? []
-    } catch (e) {
-        console.error('Failed to fetch plans', e)
-    }
-}
-
-const openSubscriptionDialog = async () => {
-    selectedPlan.value = ''
-    sub.value = null
-    currentTx.value = null
-    await fetchPlans()
-    // 检查当前订阅状态
-    try {
-        const { data } = await client.get('/user/subscription')
-        // 只有非 free 套餐的 active/pending 订阅才显示升级成功界面
-        // free 套餐用户应显示套餐选择列表以便购买付费套餐
-        if (data.data && (data.data.status === 'active' || data.data.status === 'pending')) {
-            if (data.data.plan_code && data.data.plan_code !== 'free') {
-                sub.value = data.data
-            }
-        }
-    } catch {}
-    showSubscriptionDialog.value = true
-}
-
-const createSubscription = async () => {
-    creating.value = true
-    try {
-        const { data } = await client.post('/user/subscriptions', {
-            plan_code: selectedPlan.value,
-            billing_cycle: selectedCycle.value,
-        })
-        sub.value = data.data
-        await loadAccountData()
+        // 2. 打开支付弹框
+        paymentSubscription.value = data.data
+        showPaymentModal.value = true
     } catch (e) {
         ElMessage.error(e.response?.data?.message || t('subscription.createFailed'))
     } finally {
@@ -373,34 +345,56 @@ const createSubscription = async () => {
     }
 }
 
-const startPayment = async () => {
-    paying.value = true
+const fetchPlans = async () => {
     try {
-        const { data } = await client.post(`/user/subscriptions/${sub.value.id}/checkout`)
-        currentTx.value = data.data
-        if (data.data.redirect_url) {
-            window.open(data.data.redirect_url, '_blank')
-        }
+        const { data } = await client.get('/user/plans')
+        plans.value = normalizePlans(data.data)
     } catch (e) {
-        ElMessage.error(e.response?.data?.message || t('subscription.checkoutFailed'))
-    } finally {
-        paying.value = false
+        plans.value = []
+        console.error('Failed to fetch plans', e)
     }
 }
 
-const mockPay = async () => {
-    mocking.value = true
+const fetchStripeConfig = async () => {
     try {
-        await client.post(`/user/payment-transactions/${currentTx.value.payment_transaction_id}/mock-success`)
-        const { data } = await client.get(`/user/subscriptions/${sub.value.id}`)
-        sub.value = data.data
-        await loadAccountData()
-        ElMessage.success(t('subscription.mockPaySuccess'))
+        const { data } = await client.get('/user/stripe-config')
+        if (data.data) {
+            stripeConfig.value = {
+                publishable_key: data.data.publishable_key || '',
+                is_fake: data.data.is_fake || false,
+                mode: data.data.mode || 'test',
+                payment_methods: data.data.payment_methods || ['card'],
+            }
+        }
     } catch (e) {
-        ElMessage.error(e.response?.data?.message || t('subscription.mockPayFailed'))
-    } finally {
-        mocking.value = false
+        console.error('Failed to fetch stripe config', e)
     }
+}
+
+const onPaymentSuccess = async () => {
+    showPaymentModal.value = false
+    await loadAccountData()
+    showSubscriptionDialog.value = false
+    ElMessage.success(t('subscription.subscribeSuccess'))
+}
+
+const openSubscriptionDialog = async () => {
+    selectedPlan.value = ''
+    sub.value = null
+    try {
+        await Promise.all([fetchPlans(), fetchStripeConfig()])
+    } catch (e) {
+        console.error('Failed to fetch subscription data:', e)
+    }
+    try {
+        const { data } = await client.get('/user/subscription')
+        if (data.data && (data.data.status === 'active' || data.data.status === 'pending')) {
+            if (data.data.plan_code && data.data.plan_code !== 'free') {
+                sub.value = data.data
+            }
+        }
+    } catch {}
+    showSubscriptionDialog.value = true
 }
 
 const quotaPercentage = computed(() => {

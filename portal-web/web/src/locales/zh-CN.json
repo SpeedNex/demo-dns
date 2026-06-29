@@ -2161,6 +2161,14 @@
     "cancelSuccess": "已取消续费",
     "cancelFailed": "取消续费失败",
     "resumeSuccess": "已恢复自动续费",
-    "resumeFailed": "恢复自动续费失败"
+    "resumeFailed": "恢复自动续费失败",
+    "fakeModeHint": "当前为开发/测试环境，将使用模拟支付完成订阅。",
+    "confirmPay": "确认支付",
+    "paySuccess": "支付成功",
+    "paySuccessDesc": "您的套餐已激活，新配置将在片刻后生效。",
+    "payFailed": "支付失败，请重试。",
+    "payTimeout": "支付状态确认超时，请刷新页面查看订阅状态。",
+    "stripeLoadFailed": "支付组件加载失败，请刷新页面重试。",
+    "stripeInitFailed": "支付组件初始化失败，请刷新页面重试。"
   }
 }

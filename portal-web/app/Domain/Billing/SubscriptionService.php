@@ -44,6 +44,7 @@ final class SubscriptionService
 
         $amountMinor = $price ? (int) $price->amount_minor : 0;
         $subscriptionNo = 'SUB-' . now()->format('YmdHis') . '-' . strtoupper(Str::random(6));
+        $defaultCurrency = (new PaymentService())->getDefaultCurrency();
 
         $subscription = Subscription::create([
             'subscription_no' => $subscriptionNo,
@@ -52,7 +53,7 @@ final class SubscriptionService
             'plan_code' => $planCode,
             'billing_cycle' => $billingCycle,
             'amount_minor' => $amountMinor,
-            'currency' => $price->currency ?? 'USD',
+            'currency' => $price->currency ?? $defaultCurrency,
             'status' => self::STATUS_PENDING,
             'quota_status' => 'normal',
             'auto_renew' => true,

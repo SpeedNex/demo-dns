@@ -399,6 +399,7 @@ final class UserWorkspaceController
         return response()->json([
             'data' => [
                 'plan_name' => $plan ? $plan->name : 'Free',
+                'plan_code' => (string) ($subscription->plan_code ?? 'free'),
                 'status' => $subscription->status,
                 'expires_at' => $subscription->current_period_end,
                 'current_period_start' => $subscription->current_period_start,

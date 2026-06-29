@@ -39,7 +39,9 @@ final class SubscriptionController
                     'billing_cycle' => $p->billing_cycle,
                     'amount_minor' => (int) $p->amount_minor,
                     'currency' => $p->currency,
-                ]);
+                ])
+                ->values()
+                ->all();
 
             $features = collect($allFeatures->get($plan->id, []))
                 ->pluck('feature_key')
@@ -54,7 +56,7 @@ final class SubscriptionController
                 'prices' => $prices,
                 'features' => $features,
             ];
-        });
+        })->values()->all();
 
         return response()->json(['data' => $result]);
     }
@@ -146,7 +148,7 @@ final class SubscriptionController
         ]);
     }
 
-    /** POST /api/v1/user/subscriptions/{id}/checkout — 创建支付会话 */
+    /** POST /api/v1/user/subscriptions/{id}/checkout — 创建支付会话（PaymentIntent） */
     public function checkout(Request $request, string $id): JsonResponse
     {
         $sub = Subscription::findOrFail($id);
@@ -161,7 +163,10 @@ final class SubscriptionController
             'data' => [
                 'payment_transaction_id' => $tx->id,
                 'provider_session_id' => $tx->provider_session_id,
-                'redirect_url' => $tx->raw_payload['redirect_url'] ?? null,
+                'client_secret' => $tx->raw_payload['client_secret'] ?? null,
+                'is_fake' => $tx->raw_payload['is_fake'] ?? false,
+                'mode' => $tx->raw_payload['mode'] ?? $paymentService->getMode(),
+                'payment_method_types' => $tx->raw_payload['payment_method_types'] ?? [],
                 'status' => $tx->status,
             ],
         ]);
@@ -263,6 +268,7 @@ final class SubscriptionController
             'data' => [
                 'publishable_key' => $paymentService->stripePublishableKey(),
                 'is_fake' => $paymentService->isFakeMode(),
+                'mode' => $paymentService->getMode(),
                 'payment_methods' => $paymentService->configuredPaymentMethods(),
             ],
         ]);

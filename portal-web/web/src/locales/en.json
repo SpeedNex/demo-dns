@@ -2129,6 +2129,14 @@
     "cancelSuccess": "Subscription cancelled",
     "cancelFailed": "Failed to cancel subscription",
     "resumeSuccess": "Subscription resumed",
-    "resumeFailed": "Failed to resume subscription"
+    "resumeFailed": "Failed to resume subscription",
+    "fakeModeHint": "Development/test environment - using mock payment.",
+    "confirmPay": "Confirm Payment",
+    "paySuccess": "Payment Successful",
+    "paySuccessDesc": "Your plan has been activated. Changes will take effect shortly.",
+    "payFailed": "Payment failed. Please try again.",
+    "payTimeout": "Payment status confirmation timed out. Please refresh the page.",
+    "stripeLoadFailed": "Payment component failed to load. Please refresh the page.",
+    "stripeInitFailed": "Payment component initialization failed. Please refresh the page."
   }
 }
