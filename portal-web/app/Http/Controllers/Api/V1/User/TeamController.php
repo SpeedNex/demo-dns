@@ -45,6 +45,16 @@ final class TeamController
 
         // Auto-generate identifier from name if not provided
         $slug = $validated['identifier'] ?? \Illuminate\Support\Str::slug($validated['name']);
+        if (empty($slug)) {
+            $slug = 'team-' . \Illuminate\Support\Str::random(6);
+        }
+        // Ensure unique slug by appending suffix if taken
+        $baseSlug = $slug;
+        $counter = 0;
+        while (\App\Models\Team::where('slug', $slug)->exists()) {
+            $counter++;
+            $slug = $baseSlug . '-' . $counter;
+        }
         $validated['slug'] = $slug;
         unset($validated['identifier']);
 
