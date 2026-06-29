@@ -350,9 +350,14 @@ final class UserWorkspaceController
         $subscription = DB::table('subscriptions')
             ->where('user_id', $user->uid)
             ->whereIn('status', ['active', 'trialing', 'past_due'])
+            ->where(function ($query): void {
+                $query->where('plan_code', 'free')
+                    ->orWhere('current_period_end', '>', now());
+            })
+            ->orderByRaw("CASE WHEN plan_code = 'free' THEN 0 ELSE 1 END DESC")
             ->orderByDesc('id')
             ->first();
-        $planCode = (string) ($subscription->plan_code ?? $user->plan_code ?? 'free');
+        $planCode = (string) ($subscription->plan_code ?? 'free');
         $plan = DB::table('plans')->where('code', $planCode)->first();
         $limits = is_string($plan?->limits ?? null) ? json_decode($plan->limits, true) : [];
         $limits = is_array($limits) ? $limits : [];
@@ -388,6 +393,13 @@ final class UserWorkspaceController
         $user = $request->user();
         $subscription = DB::table('subscriptions')
             ->where('user_id', $user->uid)
+            ->whereIn('status', ['active', 'trialing', 'past_due'])
+            ->where(function ($query): void {
+                $query->where('plan_code', 'free')
+                    ->orWhere('current_period_end', '>', now());
+            })
+            ->orderByRaw("CASE WHEN plan_code = 'free' THEN 0 ELSE 1 END DESC")
+            ->orderByDesc('id')
             ->first();
         
         if (!$subscription) {
@@ -401,8 +413,11 @@ final class UserWorkspaceController
                 'plan_name' => $plan ? $plan->name : 'Free',
                 'plan_code' => (string) ($subscription->plan_code ?? 'free'),
                 'status' => $subscription->status,
+                'billing_cycle' => $subscription->billing_cycle ?? null,
                 'expires_at' => $subscription->current_period_end,
                 'current_period_start' => $subscription->current_period_start,
+                'current_period_end' => $subscription->current_period_end,
+                'cancel_at_period_end' => (bool) ($subscription->cancel_at_period_end ?? false),
             ]
         ]);
     }

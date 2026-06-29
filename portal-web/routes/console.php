@@ -48,4 +48,10 @@ Schedule::command('quota:check')
     ->withoutOverlapping()
     ->runInBackground();
 
+// SaaS 订阅生命周期 — 到期降级 / 宽限期暂停
+Schedule::command('subs:grace-sweep')
+    ->hourly()
+    ->onOneServer()
+    ->withoutOverlapping()
+    ->runInBackground();
 

@@ -22,9 +22,15 @@
                                 <span v-if="usageData.is_unlimited" class="quota-unlimited">{{ $t('account.quota.unlimited') }}</span>
                             </div>
                             <div class="quota-footer">
-                                <div class="current-plan">
-                                    <span>{{ $t('account.subscription.plan') }}</span>
-                                    <strong>{{ currentSubscription?.plan_name || 'Free' }}</strong>
+                                <div class="quota-details">
+                                    <div class="current-plan">
+                                        <span>{{ $t('account.subscription.plan') }}</span>
+                                        <strong>{{ currentSubscription?.plan_name || 'Free' }}</strong>
+                                    </div>
+                                    <div v-if="showSubscriptionExpiry" class="current-plan subscription-expiry">
+                                        <span>{{ $t('subscription.expiresAt') }}</span>
+                                        <strong>{{ formatDateTime(subscriptionExpiresAt) }}</strong>
+                                    </div>
                                 </div>
                                 <el-button type="primary" size="small" @click="openSubscriptionDialog">
                                     {{ $t('account.subscription.subscribe') }}
@@ -160,6 +166,9 @@
                                 <el-descriptions-item :label="$t('subscription.status')">
                                     <el-tag type="success" size="small">{{ $t('subscription.activeTitle') }}</el-tag>
                                 </el-descriptions-item>
+                                <el-descriptions-item v-if="sub.current_period_end || sub.expires_at" :label="$t('subscription.expiresAt')">
+                                    {{ formatDateTime(sub.current_period_end || sub.expires_at) }}
+                                </el-descriptions-item>
                             </el-descriptions>
                             <el-button type="primary" @click="showSubscriptionDialog = false">{{ $t('common.confirm') }}</el-button>
                         </template>
@@ -282,6 +291,16 @@ const disabledPlans = computed(() => {
         .filter(p => getPlanSortOrder(p.code) <= currentSort)
         .map(p => p.code)
 })
+
+const subscriptionExpiresAt = computed(() =>
+    currentSubscription.value?.expires_at || currentSubscription.value?.current_period_end || null
+)
+
+const showSubscriptionExpiry = computed(() =>
+    Boolean(subscriptionExpiresAt.value)
+        && currentSubscription.value?.plan_code !== 'free'
+        && ['active', 'trialing', 'past_due'].includes(currentSubscription.value?.status)
+)
 
 const handlePlanClick = (code) => {
     if (disabledPlans.value.includes(code)) return
@@ -419,6 +438,20 @@ const quotaColor = computed(() => {
 
 const formatCount = (value) => new Intl.NumberFormat().format(Number(value || 0))
 
+const formatDateTime = (value) => {
+    if (!value) return '-'
+    const normalized = typeof value === 'string' ? value.replace(' ', 'T') : value
+    const date = new Date(normalized)
+    if (Number.isNaN(date.getTime())) return '-'
+    return new Intl.DateTimeFormat(undefined, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(date)
+}
+
 const loadAccountData = async () => {
     loading.value = true
     try {
@@ -485,8 +518,10 @@ onMounted(loadAccountData)
 .quota-text { display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px; color: #64748b; }
 .quota-unlimited { color: #22c55e; font-weight: 600; }
 .quota-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #f1f5f9; }
+.quota-details { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .current-plan { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #64748b; }
 .current-plan strong { color: #0f172a; font-size: 16px; }
+.subscription-expiry strong { font-size: 14px; color: #334155; }
 .setting-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
 .setting-info { flex: 1; min-width: 0; }
 .setting-desc { margin: 0 0 4px; font-size: 14px; }

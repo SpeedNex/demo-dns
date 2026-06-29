@@ -91,6 +91,17 @@ final class SubscriptionService
             'updated_at' => $now,
         ]);
 
+        DB::table('subscriptions')
+            ->where('user_id', $sub->user_id)
+            ->where('id', '<>', $sub->id)
+            ->where('plan_code', '<>', 'free')
+            ->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_TRIALING, self::STATUS_PAST_DUE])
+            ->update([
+                'status' => self::STATUS_EXPIRED,
+                'expired_at' => $now,
+                'updated_at' => $now,
+            ]);
+
         // 生成 Invoice
         $this->generateInvoice($sub, $paymentRef);
 
@@ -127,17 +138,34 @@ final class SubscriptionService
     /**
      * 到期后降级为 Free。
      */
-    public function markExpired(int $userId): void
+    public function markExpired(int $userId, ?int $subscriptionId = null): void
     {
         $now = now();
-        DB::table('subscriptions')->where('user_id', $userId)->update([
+        $query = DB::table('subscriptions')
+            ->where('user_id', $userId)
+            ->where('plan_code', '<>', 'free');
+
+        if ($subscriptionId !== null) {
+            $query->where('id', $subscriptionId);
+        } else {
+            $query->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_TRIALING, self::STATUS_PAST_DUE]);
+        }
+
+        $query->update([
             'status' => self::STATUS_EXPIRED,
             'expired_at' => $now,
             'updated_at' => $now,
         ]);
 
-        // 降级为 Free
-        $this->setPlan($userId, 'free');
+        $nextPlanCode = DB::table('subscriptions')
+            ->where('user_id', $userId)
+            ->where('plan_code', '<>', 'free')
+            ->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_TRIALING, self::STATUS_PAST_DUE])
+            ->where('current_period_end', '>', $now)
+            ->orderByDesc('id')
+            ->value('plan_code');
+
+        $this->setPlan($userId, (string) ($nextPlanCode ?? 'free'));
     }
 
     /**
@@ -147,13 +175,24 @@ final class SubscriptionService
     public function markPastDue(int $userId, int $graceDays = 7): void
     {
         $now = now();
-        $currentPlanCode = DB::table('subscriptions')->where('user_id', $userId)->value('plan_code') ?? 'free';
+        $currentPlanCode = DB::table('subscriptions')
+            ->where('user_id', $userId)
+            ->where('plan_code', '<>', 'free')
+            ->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_TRIALING])
+            ->orderByDesc('id')
+            ->value('plan_code') ?? 'free';
 
-        DB::table('subscriptions')->where('user_id', $userId)->update([
-            'status' => self::STATUS_PAST_DUE,
-            'grace_until' => $now->copy()->addDays($graceDays),
-            'updated_at' => $now,
-        ]);
+        if ($currentPlanCode !== 'free') {
+            DB::table('subscriptions')
+                ->where('user_id', $userId)
+                ->where('plan_code', '<>', 'free')
+                ->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_TRIALING])
+                ->update([
+                    'status' => self::STATUS_PAST_DUE,
+                    'grace_until' => $now->copy()->addDays($graceDays),
+                    'updated_at' => $now,
+                ]);
+        }
 
         // 同步 users.plan_code
         User::whereKey($userId)->update(['plan_code' => $currentPlanCode]);
@@ -166,11 +205,14 @@ final class SubscriptionService
     public function markSuspended(int $userId): void
     {
         $now = now();
-        DB::table('subscriptions')->where('user_id', $userId)->update([
-            'status' => self::STATUS_SUSPENDED,
-            'suspended_at' => $now,
-            'updated_at' => $now,
-        ]);
+        DB::table('subscriptions')
+            ->where('user_id', $userId)
+            ->where('status', self::STATUS_PAST_DUE)
+            ->update([
+                'status' => self::STATUS_SUSPENDED,
+                'suspended_at' => $now,
+                'updated_at' => $now,
+            ]);
 
         // 降级为 Free 并同步
         $this->setPlan($userId, 'free');
@@ -184,22 +226,54 @@ final class SubscriptionService
         if ($userId <= 0) {
             return null;
         }
-        $row = DB::table('subscriptions')->where('user_id', $userId)->first();
+        $now = now();
+        $row = DB::table('subscriptions')
+            ->where('user_id', $userId)
+            ->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_TRIALING, self::STATUS_PAST_DUE])
+            ->where(function ($query) use ($now): void {
+                $query->where('plan_code', 'free')
+                    ->orWhere('current_period_end', '>', $now);
+            })
+            ->orderByRaw("CASE WHEN plan_code = 'free' THEN 0 ELSE 1 END DESC")
+            ->orderByDesc('id')
+            ->first();
+
         if ($row === null) {
             if (! User::whereKey($userId)->exists()) {
                 return null;
             }
             $planId = $this->resolvePlanId('free');
-            DB::table('subscriptions')->insert([
-                'user_id' => $userId,
+            $freeId = DB::table('subscriptions')
+                ->where('user_id', $userId)
+                ->where('plan_code', 'free')
+                ->orderByDesc('id')
+                ->value('id');
+
+            $values = [
                 'plan_id' => $planId,
                 'plan_code' => 'free',
                 'status' => self::STATUS_ACTIVE,
-                'started_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            $row = DB::table('subscriptions')->where('user_id', $userId)->first();
+                'started_at' => $now,
+                'current_period_end' => null,
+                'quota_status' => 'normal',
+                'updated_at' => $now,
+            ];
+
+            if ($freeId !== null) {
+                DB::table('subscriptions')->where('id', $freeId)->update($values);
+            } else {
+                DB::table('subscriptions')->insert($values + [
+                    'user_id' => $userId,
+                    'created_at' => $now,
+                ]);
+            }
+
+            $row = DB::table('subscriptions')
+                ->where('user_id', $userId)
+                ->where('plan_code', 'free')
+                ->where('status', self::STATUS_ACTIVE)
+                ->orderByDesc('id')
+                ->first();
         }
         return [
             'plan_code' => (string) ($row->plan_code ?? 'free'),
@@ -214,6 +288,9 @@ final class SubscriptionService
     {
         $sub = $this->getActive($userId);
         if ($sub === null) {
+            return false;
+        }
+        if ($sub['current_period_end'] !== null && strtotime($sub['current_period_end']) <= time()) {
             return false;
         }
         if (in_array($sub['status'], [self::STATUS_ACTIVE, self::STATUS_TRIALING], true)) {
@@ -235,22 +312,44 @@ final class SubscriptionService
     {
         $now = now();
         $planId = $this->resolvePlanId($planCode);
-        $currentQuotaStatus = DB::table('subscriptions')->where('user_id', $userId)->value('quota_status');
+        $currentQuotaStatus = DB::table('subscriptions')
+            ->where('user_id', $userId)
+            ->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_TRIALING, self::STATUS_PAST_DUE])
+            ->orderByDesc('id')
+            ->value('quota_status');
 
-        DB::table('subscriptions')->updateOrInsert(
-            ['user_id' => $userId],
-            [
+        if ($planCode === 'free') {
+            $freeId = DB::table('subscriptions')
+                ->where('user_id', $userId)
+                ->where('plan_code', 'free')
+                ->orderByDesc('id')
+                ->value('id');
+
+            $values = [
                 'plan_id' => $planId,
-                'plan_code' => $planCode,
+                'plan_code' => 'free',
                 'status' => self::STATUS_ACTIVE,
                 'monthly_query_limit' => $monthlyLimit,
                 'quota_status' => 'normal',
                 'started_at' => $now,
+                'current_period_start' => $now,
+                'current_period_end' => null,
                 'grace_until' => null,
                 'updated_at' => $now,
-                'created_at' => $now,
-            ]
-        );
+            ];
+
+            if ($freeId !== null) {
+                DB::table('subscriptions')->where('id', $freeId)->update($values);
+            } else {
+                DB::table('subscriptions')->insert($values + [
+                    'user_id' => $userId,
+                    'billing_cycle' => 'monthly',
+                    'amount_minor' => 0,
+                    'currency' => (new PaymentService())->getDefaultCurrency(),
+                    'created_at' => $now,
+                ]);
+            }
+        }
 
         // Write-through cache
         User::whereKey($userId)->update(['plan_code' => $planCode]);

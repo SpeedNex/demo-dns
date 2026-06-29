@@ -40,6 +40,10 @@ class QuotaCheckCommand extends Command
         $subscriptions = DB::table('subscriptions')
             ->join('plans', 'subscriptions.plan_id', '=', 'plans.id')
             ->where('subscriptions.status', 'active')
+            ->where(function ($query): void {
+                $query->where('subscriptions.plan_code', 'free')
+                    ->orWhere('subscriptions.current_period_end', '>', now());
+            })
             ->whereNotNull('plans.monthly_query_limit')
             ->where('plans.monthly_query_limit', '>', 0)
             ->select([
