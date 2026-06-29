@@ -768,7 +768,7 @@ func tryResolverStartViaSystemd(opts *installOptions) error {
 
 	fmt.Printf("✔ systemd: dns-resolver.service installed and started\n")
 	fmt.Printf("    systemctl status dns-resolver    # check status\n")
-	fmt.Printf("    journalctl -u dns-resolver -n 50 -o cat    # tail logs (compact)\n")
+	fmt.Printf("    journalctl -u dns-resolver -f -o cat    # tail logs (compact)\n")
 	return nil
 }
 
