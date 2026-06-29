@@ -151,6 +151,15 @@ class Node extends Model
             });
     }
 
+    public function scopeDegraded(Builder $query): Builder
+    {
+        $threshold = $this->getHeartbeatStaleSeconds();
+        return $query->where('install_status', 'installed')
+            ->whereNotNull('last_heartbeat_at')
+            ->where('last_heartbeat_at', '>', now()->subSeconds($threshold * 2))
+            ->where('last_heartbeat_at', '<=', now()->subSeconds($threshold));
+    }
+
     /**
      * 生成 Resolver 节点别名，格式：node-{region_code}-{index}
      * regionCode 传入时应为小写地区码，如 "kr", "cn"
