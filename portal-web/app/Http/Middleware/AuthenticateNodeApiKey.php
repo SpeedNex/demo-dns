@@ -39,7 +39,7 @@ final class AuthenticateNodeApiKey
         }
 
         $key = (string) $request->bearerToken();
-        if ($key === '' || ! str_starts_with($key, 'ak_')) {
+        if ($key === '') {
             return new JsonResponse([
                 'error' => ['code' => 'UNAUTHORIZED', 'message' => 'invalid api_key format'],
             ], 401);
