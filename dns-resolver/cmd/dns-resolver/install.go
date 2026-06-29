@@ -574,17 +574,16 @@ func provisionCertbot(cfg *config.Config, configPath, domain string) error {
 		return fmt.Errorf("%scertbot 证书目录 %s 未找到%s: %w", redFg, certDir, resetSty, statErr)
 	}
 
-	// 5. 更新配置：doh → 443，设置 TLS 路径
+	// 5. 更新配置：doh → 443，不写 tls_cert_file，由 LoadTLSConfig 自动查找
 	cfg.Listen.DoH = 443
-	cfg.Listen.TLSCertFile = certDir + "/fullchain.pem"
-	cfg.Listen.TLSKeyFile = certDir + "/privkey.pem"
+	// 不写入 tls_cert_file/tls_key_file，自动查找逻辑会按 SNI 匹配证书路径
 
 	if err := writeConfigAtomic(configPath, cfg); err != nil {
 		return fmt.Errorf("%s更新配置失败%s: %w", redFg, resetSty, err)
 	}
 
 	fmt.Printf("  ✔ doh: 443 (direct TLS via dns-resolver)\n")
-	fmt.Printf("  ✔ tls: %s\n", cfg.Listen.TLSCertFile)
+	fmt.Printf("  ✔ tls: %s/fullchain.pem (auto-discovery)\n", certDir)
 	fmt.Println("  ✔ certbot: Let's Encrypt certificate obtained")
 	return nil
 }
