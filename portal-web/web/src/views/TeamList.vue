@@ -26,7 +26,7 @@
             <el-table-column prop="role" :label="$t('team.yourRole')" width="120" align="center">
                 <template #default="{ row }">
                     <el-tag :type="row.role === 'owner' ? 'danger' : row.role === 'admin' ? 'warning' : 'info'" size="small">
-                        {{ row.role }}
+                        {{ $t('team.role_' + row.role) }}
                     </el-tag>
                 </template>
             </el-table-column>

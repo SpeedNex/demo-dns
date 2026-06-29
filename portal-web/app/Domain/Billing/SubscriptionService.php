@@ -69,44 +69,58 @@ final class SubscriptionService
      * 1. 更新 subscription.status=active + current_period
      * 2. 生成 Invoice（dns_billings）
      * 3. 更新 Profile.plan_id + 触发 republish
+     *
+     * 使用 Redis 分布式锁防止并发激活导致重复扣费。
      */
     public function activate(string $subscriptionId, string $paymentRef): void
     {
-        $sub = Subscription::findOrFail($subscriptionId);
-        if ($sub->status === self::STATUS_ACTIVE) {
-            return; // 幂等
+        $lockKey = "subscription:activate:{$subscriptionId}";
+        $lock = \Illuminate\Support\Facades\Redis::set($lockKey, '1', 'NX', 'EX', 30);
+
+        if (!$lock) {
+            // 另一个进程正在激活，跳过
+            return;
         }
 
-        $now = Carbon::now();
-        $periodStart = $now;
-        $periodEnd = $sub->billing_cycle === 'yearly'
-            ? $now->copy()->addYear()
-            : $now->copy()->addMonth();
+        try {
+            $sub = Subscription::findOrFail($subscriptionId);
+            if ($sub->status === self::STATUS_ACTIVE) {
+                return; // 幂等
+            }
 
-        $sub->update([
-            'status' => self::STATUS_ACTIVE,
-            'started_at' => $periodStart,
-            'current_period_start' => $periodStart,
-            'current_period_end' => $periodEnd,
-            'updated_at' => $now,
-        ]);
+            $now = Carbon::now();
+            $periodStart = $now;
+            $periodEnd = $sub->billing_cycle === 'yearly'
+                ? $now->copy()->addYear()
+                : $now->copy()->addMonth();
 
-        DB::table('subscriptions')
-            ->where('user_id', $sub->user_id)
-            ->where('id', '<>', $sub->id)
-            ->where('plan_code', '<>', 'free')
-            ->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_TRIALING, self::STATUS_PAST_DUE])
-            ->update([
-                'status' => self::STATUS_EXPIRED,
-                'expired_at' => $now,
+            $sub->update([
+                'status' => self::STATUS_ACTIVE,
+                'started_at' => $periodStart,
+                'current_period_start' => $periodStart,
+                'current_period_end' => $periodEnd,
                 'updated_at' => $now,
             ]);
 
-        // 生成 Invoice
-        $this->generateInvoice($sub, $paymentRef);
+            DB::table('subscriptions')
+                ->where('user_id', $sub->user_id)
+                ->where('id', '<>', $sub->id)
+                ->where('plan_code', '<>', 'free')
+                ->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_TRIALING, self::STATUS_PAST_DUE])
+                ->update([
+                    'status' => self::STATUS_EXPIRED,
+                    'expired_at' => $now,
+                    'updated_at' => $now,
+                ]);
 
-        // 更新 Profile.plan_id + 触发 republish
-        $this->setPlan($sub->user_id, $sub->plan_code);
+            // 生成 Invoice
+            $this->generateInvoice($sub, (string) $paymentRef);
+
+            // 更新 Profile.plan_id + 触发 republish
+            $this->setPlan($sub->user_id, $sub->plan_code);
+        } finally {
+            \Illuminate\Support\Facades\Redis::del($lockKey);
+        }
     }
 
     /**

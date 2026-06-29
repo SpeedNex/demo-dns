@@ -14,6 +14,7 @@ Route::prefix('profiles')->group(function (): void {
     Route::put('{profile_id}', [ProfileController::class, 'update']);
     Route::delete('{profile_id}', [ProfileController::class, 'destroy']);
     Route::post('{profile_id}/copy', [ProfileController::class, 'copy']);
+    Route::get('{profile_id}/publish-status', [ProfileController::class, 'publishStatus']);
 
     // Profile 规则
     Route::get('{profile_id}/rules', [ProfileRuleController::class, 'index']);

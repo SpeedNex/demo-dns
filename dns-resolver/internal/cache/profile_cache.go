@@ -70,6 +70,7 @@ func NewProfileCache(diskRoot string, maxMemory, maxDisk int, memTTL, diskTTL ti
 
 // GetFromMemory 从内存缓存读取 Profile。
 // 返回 (data, version, ok)。
+// 注意：此方法只检查 TTL，不检查版本。版本检查由调用方负责。
 func (pc *ProfileCache) GetFromMemory(profileID string) (json.RawMessage, int64, bool) {
 	pc.mu.RLock()
 	entry, ok := pc.memory[profileID]
@@ -85,6 +86,21 @@ func (pc *ProfileCache) GetFromMemory(profileID string) (json.RawMessage, int64,
 	// 更新最后使用时间
 	pc.touch(profileID)
 	return entry.Data, entry.Version, true
+}
+
+// GetFromMemoryWithVersionCheck 从内存缓存读取 Profile，并在命中的同时检查版本是否过期。
+// 如果传入的 currentVersion >= 缓存版本，返回缓存数据；否则返回 false，强制回源拉取新版本。
+func (pc *ProfileCache) GetFromMemoryWithVersionCheck(profileID string, currentVersion int64) (json.RawMessage, int64, bool) {
+	data, version, ok := pc.GetFromMemory(profileID)
+	if !ok {
+		return nil, 0, false
+	}
+	// 版本检查：缓存版本小于等于当前版本，说明缓存已过期，需要回源
+	if version <= currentVersion {
+		pc.RemoveFromMemory(profileID)
+		return nil, 0, false
+	}
+	return data, version, true
 }
 
 // SetToMemory 写入 Profile 到内存缓存。
@@ -172,6 +188,7 @@ func (pc *ProfileCache) profileDiskPath(profileID string) string {
 
 // GetFromDisk 从磁盘缓存读取 Profile。
 // 返回 (data, version, ok)。
+// 注意：此方法只检查 TTL，不检查版本。版本检查由调用方负责。
 func (pc *ProfileCache) GetFromDisk(profileID string) (json.RawMessage, int64, bool) {
 	path := pc.profileDiskPath(profileID)
 	data, err := os.ReadFile(path)
@@ -193,6 +210,21 @@ func (pc *ProfileCache) GetFromDisk(profileID string) (json.RawMessage, int64, b
 	}
 
 	return envelope.Data, envelope.Version, true
+}
+
+// GetFromDiskWithVersionCheck 从磁盘缓存读取 Profile，并在命中的同时检查版本是否过期。
+// 如果传入的 currentVersion >= 缓存版本，返回缓存数据；否则返回 false，强制回源拉取新版本。
+func (pc *ProfileCache) GetFromDiskWithVersionCheck(profileID string, currentVersion int64) (json.RawMessage, int64, bool) {
+	data, version, ok := pc.GetFromDisk(profileID)
+	if !ok {
+		return nil, 0, false
+	}
+	// 版本检查：缓存版本小于等于当前版本，说明缓存已过期，需要回源
+	if version <= currentVersion {
+		pc.RemoveFromDisk(profileID)
+		return nil, 0, false
+	}
+	return data, version, true
 }
 
 // SetToDisk 写入 Profile 到磁盘缓存。

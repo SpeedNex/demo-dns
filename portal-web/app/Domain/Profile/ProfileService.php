@@ -181,6 +181,100 @@ final class ProfileService
     }
 
     /**
+     * 获取 Profile 的发布状态，包括配置版本和节点同步进度。
+     * 用于前端显示"配置已同步到 X/Y 个节点"。
+     */
+    public function publishStatus(string $userId, string $profileId): array
+    {
+        $profile = $this->resolveProfile($userId, $profileId);
+
+        // 获取最新的 ProfileVersion
+        $latestVersion = ProfileVersion::where('target_profile_id', $profile->id)
+            ->where('target_scope', 'profile')
+            ->orderByDesc('version')
+            ->first();
+
+        if (!$latestVersion) {
+            return [
+                'profile_id' => $profile->profile_id,
+                'current_version' => null,
+                'publish_status' => 'not_published',
+                'node_sync' => [
+                    'total' => 0,
+                    'synced' => 0,
+                    'pending' => 0,
+                    'failed' => 0,
+                ],
+            ];
+        }
+
+        // 获取该版本的发布任务
+        $publishTask = \App\Models\PublishTask::where('profile_version_id', $latestVersion->id)
+            ->orderByDesc('created_at')
+            ->first();
+
+        if (!$publishTask) {
+            return [
+                'profile_id' => $profile->profile_id,
+                'current_version' => (int) $latestVersion->version,
+                'publish_status' => 'queued',
+                'node_sync' => [
+                    'total' => 0,
+                    'synced' => 0,
+                    'pending' => 0,
+                    'failed' => 0,
+                ],
+            ];
+        }
+
+        // 统计节点同步状态
+        $taskExecutions = DB::table('task_executions')
+            ->where('publish_task_id', $publishTask->id)
+            ->select('status', DB::raw('COUNT(*) as count'))
+            ->groupBy('status')
+            ->get();
+
+        $nodeSync = [
+            'total' => (int) $publishTask->target_node_count,
+            'synced' => 0,
+            'pending' => 0,
+            'failed' => 0,
+        ];
+
+        foreach ($taskExecutions as $exec) {
+            switch ($exec->status) {
+                case 'completed':
+                    $nodeSync['synced'] += (int) $exec->count;
+                    break;
+                case 'pending':
+                case 'in_progress':
+                    $nodeSync['pending'] += (int) $exec->count;
+                    break;
+                case 'failed':
+                    $nodeSync['failed'] += (int) $exec->count;
+                    break;
+            }
+        }
+
+        // 判断整体状态
+        $publishStatus = 'synced';
+        if ($nodeSync['pending'] > 0) {
+            $publishStatus = 'syncing';
+        } elseif ($nodeSync['failed'] > 0) {
+            $publishStatus = 'partial_failed';
+        }
+
+        return [
+            'profile_id' => $profile->profile_id,
+            'current_version' => (int) $latestVersion->version,
+            'publish_id' => $publishTask->id,
+            'publish_status' => $publishStatus,
+            'published_at' => $latestVersion->published_at?->toIso8601String(),
+            'node_sync' => $nodeSync,
+        ];
+    }
+
+    /**
      * @param array<int, string> $profileIds
      * @return array<string, mixed>
      */

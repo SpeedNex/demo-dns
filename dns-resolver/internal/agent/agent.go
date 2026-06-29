@@ -227,19 +227,25 @@ func (a *Agent) pullGlobalConfig() {
 
 // FetchProfile 按 Profile ID 拉取配置，经过 Memory → Disk → Portal 三级回源。
 // 被三个协议 server 在查询未命中时调用。
+// 2026-06-29: 增强版本检查，内存/磁盘命中时同步检查版本是否过期。
 func (a *Agent) FetchProfile(profileID string) error {
 	profileID = strings.TrimSpace(profileID)
 	if len(profileID) < 4 {
 		return fmt.Errorf("invalid profile id: %s", profileID)
 	}
 
-	// 1. 检查内存缓存
-	if data, version, ok := a.pCache.GetFromMemory(profileID); ok {
+	// 获取当前本地缓存的版本号，用于版本比较
+	a.mu.RLock()
+	currentVersion := a.localProfiles[profileID]
+	a.mu.RUnlock()
+
+	// 1. 检查内存缓存（带版本检查）
+	if data, version, ok := a.pCache.GetFromMemoryWithVersionCheck(profileID, currentVersion); ok {
 		return a.loadProfileIntoEngine(profileID, data, version)
 	}
 
-	// 2. 检查磁盘缓存
-	if data, version, ok := a.pCache.GetFromDisk(profileID); ok {
+	// 2. 检查磁盘缓存（带版本检查）
+	if data, version, ok := a.pCache.GetFromDiskWithVersionCheck(profileID, currentVersion); ok {
 		a.pCache.SetToMemory(profileID, data, version)
 		return a.loadProfileIntoEngine(profileID, data, version)
 	}

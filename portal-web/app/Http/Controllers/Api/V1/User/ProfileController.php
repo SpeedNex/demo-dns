@@ -84,4 +84,15 @@ final class ProfileController
 
         return response()->json(['data' => $result]);
     }
+
+    /**
+     * 获取 Profile 的发布状态，包括配置版本和节点同步进度。
+     * GET /api/v1/user/profiles/{profile_id}/publish-status
+     */
+    public function publishStatus(Request $request, string $profileId): JsonResponse
+    {
+        $result = $this->service->publishStatus($request->user()->uid, $profileId);
+
+        return response()->json(['data' => $result]);
+    }
 }

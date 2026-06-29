@@ -154,12 +154,12 @@
                         <span>{{ $t('analytics.dnssec') }}</span>
                     </template>
                     <div class="ratio-card">
-                        <div class="ratio-value">{{ dnssec?.ratio_percent ?? 0 }}%</div>
+                        <div class="ratio-value">{{ dnssec?.total > 0 ? (dnssec?.ratio_percent ?? 0) + '%' : 'N/A' }}</div>
                         <div class="ratio-bar">
-                            <div class="ratio-fill primary" :style="{ width: (dnssec?.ratio_percent ?? 0) + '%' }" />
+                            <div class="ratio-fill primary" :style="{ width: (dnssec?.total > 0 ? dnssec?.ratio_percent ?? 0 : 0) + '%' }" />
                         </div>
                         <div class="ratio-desc">{{ $t('analytics.dnssecDesc') }}</div>
-                        <div class="ratio-sub">{{ dnssec?.validated?.toLocaleString() ?? 0 }} / {{ dnssec?.total?.toLocaleString() ?? 0 }} {{ $t('analytics.queries') }}</div>
+                        <div class="ratio-sub">{{ dnssec?.total > 0 ? `${dnssec?.validated?.toLocaleString() ?? 0} / ${dnssec?.total?.toLocaleString() ?? 0}` : '-' }} {{ dnssec?.total > 0 ? $t('analytics.queries') : '' }}</div>
                     </div>
                 </el-card>
             </el-col>

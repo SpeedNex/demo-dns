@@ -282,7 +282,7 @@ const currentPlanCode = computed(() => usageData.value.plan_code || 'free')
 
 const hasActivePaidSub = computed(() =>
     currentSubscription.value && ['active', 'trialing'].includes(currentSubscription.value.status)
-        && currentPlanCode.value !== 'free'
+        && currentSubscription.value.plan_code !== 'free'
 )
 
 const disabledPlans = computed(() => {
