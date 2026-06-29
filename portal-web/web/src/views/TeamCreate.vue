@@ -9,8 +9,8 @@
             <el-form-item :label="$t('team.teamName')" prop="name">
                 <el-input v-model="form.name" :placeholder="$t('team.namePlaceholder')" maxlength="100" />
             </el-form-item>
-            <el-form-item :label="$t('team.slug')" prop="slug">
-                <el-input v-model="form.slug" :placeholder="$t('team.slugPlaceholder')" maxlength="100">
+            <el-form-item :label="$t('team.identifier')" prop="identifier">
+                <el-input v-model="form.identifier" :placeholder="$t('team.identifierPlaceholder')" maxlength="100">
                     <template #prepend>ocer-dns.to/</template>
                 </el-input>
             </el-form-item>
@@ -43,15 +43,15 @@ const submitting = ref(false)
 const { t } = useI18n()
 const form = reactive({
     name: '',
-    slug: '',
+    identifier: '',
     description: '',
 })
 
 const rules = {
     name: [{ required: true, message: t('team.nameRequired') || 'Team name is required', trigger: 'blur' }],
-    slug: [
-        { required: true, message: t('team.slugRequired') || 'Slug is required', trigger: 'blur' },
-        { pattern: /^[a-z0-9-]+$/, message: t('team.slugPattern') || 'Only lowercase letters, numbers, and hyphens', trigger: 'blur' },
+    identifier: [
+        { required: true, message: t('team.identifierRequired') || 'Identifier is required', trigger: 'blur' },
+        { pattern: /^[a-z0-9-]+$/, message: t('team.identifierPattern') || 'Only lowercase letters, numbers, and hyphens', trigger: 'blur' },
     ],
 }
 

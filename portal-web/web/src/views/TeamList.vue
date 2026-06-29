@@ -17,9 +17,9 @@
                     <strong>{{ row.name }}</strong>
                 </template>
             </el-table-column>
-            <el-table-column prop="slug" :label="$t('team.slug')" width="180">
+            <el-table-column prop="identifier" :label="$t('team.identifier')" width="180">
                 <template #default="{ row }">
-                    <code>{{ row.slug }}</code>
+                    <code>{{ row.identifier }}</code>
                 </template>
             </el-table-column>
             <el-table-column prop="member_count" :label="$t('team.members')" width="100" align="center" />
@@ -55,7 +55,7 @@
                 <el-table-column prop="team_name" :label="$t('team.teamName')" />
                 <el-table-column prop="role" :label="$t('team.invitedAs')" width="120">
                     <template #default="{ row }">
-                        <el-tag size="small">{{ row.role }}</el-tag>
+                        <el-tag size="small">{{ $t('team.role_' + row.role) }}</el-tag>
                     </template>
                 </el-table-column>
                 <el-table-column :label="$t('team.actions')" width="160">

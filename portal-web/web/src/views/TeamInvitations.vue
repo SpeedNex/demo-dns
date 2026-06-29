@@ -9,7 +9,7 @@
             <el-table-column prop="team_name" :label="$t('team.teamName')" min-width="200" />
             <el-table-column prop="role" :label="$t('team.invitedAs')" width="120">
                 <template #default="{ row }">
-                    <el-tag size="small">{{ row.role }}</el-tag>
+                    <el-tag size="small">{{ $t('team.role_' + row.role) }}</el-tag>
                 </template>
             </el-table-column>
             <el-table-column prop="expires_at" :label="$t('team.expires')" width="180" />

@@ -22,7 +22,7 @@ final class TeamController
             'data' => $teams->map(fn ($team) => [
                 'id' => $team->id,
                 'name' => $team->name,
-                'slug' => $team->slug,
+                'identifier' => $team->slug,
                 'description' => $team->description,
                 'member_count' => $team->member_count,
                 'max_members' => $team->max_members,
@@ -38,10 +38,15 @@ final class TeamController
     {
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'slug' => 'required|string|max:100|regex:/^[a-z0-9\-]+$/',
+            'identifier' => 'nullable|string|max:100|regex:/^[a-z0-9\-]+$/',
             'description' => 'nullable|string|max:500',
             'max_members' => 'nullable|integer|min:1|max:1000',
         ]);
+
+        // Auto-generate identifier from name if not provided
+        $slug = $validated['identifier'] ?? \Illuminate\Support\Str::slug($validated['name']);
+        $validated['slug'] = $slug;
+        unset($validated['identifier']);
 
         $team = $this->teamService->create($validated, $request->user()->uid);
 
@@ -49,7 +54,7 @@ final class TeamController
             'data' => [
                 'id' => $team->id,
                 'name' => $team->name,
-                'slug' => $team->slug,
+                'identifier' => $team->slug,
                 'description' => $team->description,
                 'member_count' => $team->member_count,
                 'max_members' => $team->max_members,
@@ -66,7 +71,7 @@ final class TeamController
             'data' => [
                 'id' => $team->id,
                 'name' => $team->name,
-                'slug' => $team->slug,
+                'identifier' => $team->slug,
                 'description' => $team->description,
                 'owner_id' => $team->owner_id,
                 'member_count' => $team->member_count,
@@ -91,7 +96,7 @@ final class TeamController
             'data' => [
                 'id' => $team->id,
                 'name' => $team->name,
-                'slug' => $team->slug,
+                'identifier' => $team->slug,
                 'description' => $team->description,
                 'updated_at' => $team->updated_at,
             ],
