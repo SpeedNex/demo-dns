@@ -45,7 +45,7 @@ final class ProfileConfigBuilder
             'devices' => array_map([$this, 'mapDevice'], $profile['devices'] ?? []),
             'rules' => array_map([$this, 'mapRule'], $rules),
             'quota' => $quotaObject,
-            'security_data' => $this->loadSecurityData(),
+            'security_data' => $this->loadSecurityData() ?: new \stdClass(),
         ];
     }
 
