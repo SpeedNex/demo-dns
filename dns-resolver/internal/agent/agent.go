@@ -375,22 +375,27 @@ func (a *Agent) loadProfileIntoEngine(profileID string, data json.RawMessage, ve
 		//   allow-lists    → allowlist (exact)
 		//   block-lists    → blocklist (exact)
 		//   未知 group     → blocklist (exact) 兜底
-		if len(p.SecurityData) > 0 {
-			for group, domains := range p.SecurityData {
-				for _, domain := range domains {
-					switch group {
-					case "dynamic-dns":
-						security["dynamic_dns"] = append(security["dynamic_dns"], domain)
-					case "parked-domains":
-						security["parked"] = append(security["parked"], domain)
-					case "tld-blacklist":
-						security["blocked_tld"] = append(security["blocked_tld"], domain)
-					case "allow-lists":
-						allowExact = append(allowExact, domain)
-					case "block-lists":
-						blockExact = append(blockExact, domain)
-					default:
-						blockExact = append(blockExact, domain)
+		// 解析 security_data（兼容 [] 和 {} 两种 JSON 格式）
+		// 当 security_data_items 表为空时，数据库可能存储为 []（空数组）而非 {}（空对象）
+		if len(p.SecurityData) > 0 && len(p.SecurityData) > 2 && p.SecurityData[0] == '{' {
+			var sd map[string][]string
+			if err := json.Unmarshal(p.SecurityData, &sd); err == nil {
+				for group, domains := range sd {
+					for _, domain := range domains {
+						switch group {
+						case "dynamic-dns":
+							security["dynamic_dns"] = append(security["dynamic_dns"], domain)
+						case "parked-domains":
+							security["parked"] = append(security["parked"], domain)
+						case "tld-blacklist":
+							security["blocked_tld"] = append(security["blocked_tld"], domain)
+						case "allow-lists":
+							allowExact = append(allowExact, domain)
+						case "block-lists":
+							blockExact = append(blockExact, domain)
+						default:
+							blockExact = append(blockExact, domain)
+						}
 					}
 				}
 			}

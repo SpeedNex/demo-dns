@@ -34,7 +34,7 @@ type ProfileConfig struct {
 	DefaultAction  string              `json:"default_action"`
 	BlockResponse  string              `json:"block_response"`
 	Security       map[string]any      `json:"security"`
-	SecurityData   map[string][]string `json:"security_data"`
+	SecurityData   json.RawMessage `json:"security_data"`
 	Adblock        map[string]any      `json:"adblock"`
 	Privacy        map[string]any      `json:"privacy"`
 	Parental       map[string]any      `json:"parental"`

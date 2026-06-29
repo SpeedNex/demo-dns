@@ -121,7 +121,6 @@ func (b *Buffer) Flush() {
 	b.mu.Lock()
 	if len(b.entries) == 0 {
 		b.mu.Unlock()
-		log.Printf("[日志] 刷新跳过 无条目")
 		return
 	}
 
