@@ -97,6 +97,14 @@ func (h *Handler) Handle(
 
 	question := req.Question[0]
 	domain := strings.TrimSuffix(question.Name, ".")
+
+	// 2026-06-29: 跳过局域网本地域名后缀（.lan / .local / .home），
+	// 这些是客户端误加的多播 DNS 搜索后缀，不应进入规则引擎和日志。
+	if strings.HasSuffix(domain, ".lan") || strings.HasSuffix(domain, ".local") || strings.HasSuffix(domain, ".home") {
+		reply.Rcode = dns.RcodeNameError
+		return &Result{Reply: reply, Action: "SKIP", Reason: "local_domain", Rcode: dns.RcodeNameError}
+	}
+
 	queryType := dns.TypeToString[question.Qtype]
 	startedAt := time.Now()
 	clientIP := remoteHost(clientAddr)

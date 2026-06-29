@@ -221,6 +221,17 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 		domain = strings.TrimSuffix(msg.Question[0].Name, ".")
 		queryType = dns.TypeToString[msg.Question[0].Qtype]
 
+		// 2026-06-29: 跳过局域网本地域名后缀（.lan / .local / .home）
+		if strings.HasSuffix(domain, ".lan") || strings.HasSuffix(domain, ".local") || strings.HasSuffix(domain, ".home") {
+			reply := new(dns.Msg)
+			reply.SetReply(msg)
+			reply.Rcode = dns.RcodeNameError
+			packed, _ := reply.Pack()
+			w.Header().Set("Content-Type", "application/dns-message")
+			w.Write(packed)
+			return
+		}
+
 		// Dedup before the resolution pipeline so log buffer + control plane
 		// don't get flooded by repeated client retransmits. Disabled cache
 		// is a no-op, so this branch is free in non-Redis deployments.
