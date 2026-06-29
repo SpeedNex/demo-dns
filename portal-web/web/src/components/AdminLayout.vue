@@ -133,7 +133,7 @@ import koLocale from 'element-plus/dist/locale/ko.mjs'
 import client from '@/api/client'
 
 const route = useRoute()
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 
 // === 菜单配置状态：完全从后端 dns_admin_menu_rule 表加载，不使用任何静态兜底 ===
 const menuConfig = ref({ mainMenu: [], subMenu: [] })
@@ -197,7 +197,7 @@ onMounted(async () => {
             setMenuConfig({ mainMenu, subMenu })
         }
     } catch (err) {
-        console.warn('Failed to load menu config from API; sidebar will be empty until API responds.', err)
+        console.warn('Failed to load menu config from API; sidebar will be empty until API responds.', err) // eslint-disable-line no-console
     }
 })
 
@@ -251,14 +251,14 @@ const loadExpanded = () => {
         if (raw) {
             return JSON.parse(raw)
         }
-    } catch (_) { /* ignore */ }
+    } catch { /* ignore */ }
     return null
 }
 const expandedMenus = ref(loadExpanded() || {})
 const persistExpanded = () => {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(expandedMenus.value))
-    } catch (_) { /* ignore */ }
+    } catch { /* ignore */ }
 }
 const isExpanded = (id) => expandedMenus.value[id] === true
 const toggleMenu = (id) => {
@@ -356,7 +356,7 @@ const handleCommand = (cmd) => {
 
 const clearCache = async () => {
     try {
-        await client.post('/admin/clear-cache')
+        await client.post('/admin/publishes/clear-cache')
         ElMessage.success(t('admin.dashboard.cacheCleared'))
     } catch {
         ElMessage.error(t('admin.dashboard.cacheClearFailed'))

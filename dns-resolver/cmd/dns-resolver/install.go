@@ -544,9 +544,9 @@ func provisionCertbot(cfg *config.Config, configPath, domain string) error {
 	certCmd.Stdout = os.Stdout
 	certCmd.Stderr = os.Stderr
 	if err := certCmd.Run(); err != nil {
-		return fmt.Errorf("%scertbot 证书申请失败%s\n"+
+		return fmt.Errorf("%scertbot 证书申请失败: %v%s\n"+
 			"  ⚠ 请确认域名 %s 的 DNS A 记录已指向本机公网 IP\n"+
-			"  ⚠ 本机 :80 端口未被占用", redFg, resetSty, err, domain)
+			"  ⚠ 本机 :80 端口未被占用", redFg, err, resetSty, domain)
 	}
 
 	// 4. 获取证书路径

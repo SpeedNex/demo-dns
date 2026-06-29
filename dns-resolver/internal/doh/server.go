@@ -10,7 +10,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
@@ -28,10 +27,16 @@ import (
 
 // Server handles DNS over HTTPS requests with full Profile Resolution Layer.
 //
-// The HTTP listener is plain HTTP (ListenAndServe, no TLS) on purpose: DoH
-// production deployments front this listener with a TLS-terminating reverse
-// proxy (nginx, Caddy, Envoy) that owns the certificates. The resolver
-// itself only needs to speak RFC 8484 wire format.
+// The HTTP listener's Handler() returns a plain http.Handler, supporting
+// two deployment modes:
+//
+//  1. Direct TLS (default) – main.go wraps the handler with tls.NewListener,
+//     the resolver owns the certificates and serves HTTPS directly.
+//  2. Reverse proxy         – nginx / Caddy / Envoy terminates TLS and forwards
+//     plain HTTP to the resolver; X-Profile-UID header carries the profile
+//     identity (see handleDNSQuery / handleProfileDNSQuery).
+//
+// Either mode works with full Profile Resolution Layer.
 type Server struct {
 	cfg                 *config.Config
 	engine              *matching.Engine
@@ -94,10 +99,6 @@ func upstreamAddr(addr string) string {
 	return addr + ":53"
 }
 
-var profileUIDPattern = regexp.MustCompile(`^[0-9a-f]{6}$`)
-
-// isValidProfileUID checks if a string looks like a valid profile UID.
-
 // Handler returns the HTTP handler for DoH endpoints.
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
@@ -113,7 +114,7 @@ func (s *Server) Handler() http.Handler {
 // Also supports X-Profile-UID header for Nginx proxy mode.
 func (s *Server) handleDNSQuery(w http.ResponseWriter, r *http.Request) {
 	profileUID := r.Header.Get("X-Profile-UID")
-	if profileUID != "" && isValidProfileUID(profileUID) {
+	if profileUID != "" && resolver.IsValidProfileID(profileUID) {
 		s.resolveDNS(w, r, profileUID)
 		return
 	}
@@ -127,7 +128,7 @@ func (s *Server) handleDNSQuery(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleProfileDNSQuery(w http.ResponseWriter, r *http.Request) {
 	// Nginx 转发模式: 通过 X-Profile-UID header 传递 profile_id
 	profileUID := r.Header.Get("X-Profile-UID")
-	if profileUID != "" && isValidProfileUID(profileUID) {
+	if profileUID != "" && resolver.IsValidProfileID(profileUID) {
 		s.resolveDNS(w, r, profileUID)
 		return
 	}
@@ -143,17 +144,12 @@ func (s *Server) handleProfileDNSQuery(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate it looks like a profile UID
-	if isValidProfileUID(profileUID) {
+	if resolver.IsValidProfileID(profileUID) {
 		s.resolveDNS(w, r, profileUID)
 		return
 	}
 
 	http.NotFound(w, r)
-}
-
-// isValidProfileUID checks if a string looks like a valid profile UID.
-func isValidProfileUID(uid string) bool {
-	return profileUIDPattern.MatchString(uid)
 }
 
 // resolveDNS performs the full DNS resolution with Profile Resolution Layer.
@@ -194,6 +190,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 			return
 		}
 	} else {
+		r.Body = http.MaxBytesReader(w, r.Body, 4096)
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Failed to read body", http.StatusBadRequest)

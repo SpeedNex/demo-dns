@@ -10,7 +10,7 @@
     >
         <template #filters>
             <el-select
-                v-model="severityFilter"
+                v-model="levelFilter"
                 :placeholder="$t('admin.alertsPage.severity')"
                 style="width:160px"
                 size="default"
@@ -55,10 +55,10 @@
             <el-table-column type="selection" width="40" />
             <el-table-column :label="$t('admin.alertsPage.severity')" width="100">
                 <template #default="{ row }">
-                    <el-tag :type="row.severity === 'critical' ? 'danger' : row.severity === 'warning' ? 'warning' : 'info'" size="small" effect="light">{{ row.severity === 'critical' ? $t('admin.alertsPage.critical') : row.severity === 'warning' ? $t('admin.alertsPage.warning') : $t('admin.alertsPage.info') }}</el-tag>
+                    <el-tag :type="row.level === 'critical' ? 'danger' : row.level === 'warning' ? 'warning' : 'info'" size="small" effect="light">{{ row.level === 'critical' ? $t('admin.alertsPage.critical') : row.level === 'warning' ? $t('admin.alertsPage.warning') : $t('admin.alertsPage.info') }}</el-tag>
                 </template>
             </el-table-column>
-            <el-table-column prop="type" :label="$t('admin.alertsPage.type')" width="140" />
+            <el-table-column prop="code" :label="$t('admin.alertsPage.code')" width="180" />
             <el-table-column prop="message" :label="$t('admin.alertsPage.message')" min-width="300" />
             <el-table-column prop="status" :label="$t('admin.alertsPage.status')" width="100">
                 <template #default="{ row }">
@@ -68,9 +68,10 @@
             <el-table-column :label="$t('admin.alertsPage.time')" width="170">
                 <template #default="{ row }">{{ row.created_at ? new Date(row.created_at).toLocaleString() : '-' }}</template>
             </el-table-column>
-            <el-table-column :label="$t('admin.alertsPage.actions')" width="120">
+            <el-table-column :label="$t('admin.alertsPage.actions')" width="160">
                 <template #default="{ row }">
-                    <el-button size="small" text type="primary" @click="handleAcknowledge(row)">{{ $t('admin.alertsPage.acknowledge') }}</el-button>
+                    <el-button v-if="row.status !== 'acknowledged' && row.status !== 'resolved'" size="small" text type="primary" @click="handleAcknowledge(row)">{{ $t('admin.alertsPage.acknowledge') }}</el-button>
+                    <el-button size="small" text type="danger" @click="handleDelete(row)">{{ $t('common.delete') }}</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -88,7 +89,8 @@ import client from '@/api/client'
 const { t } = useI18n()
 
 const alerts = ref([])
-const severityFilter = ref('')
+const levelFilter = ref('')
+
 const selected = ref([])
 const summaries = ref([
     { value: '-', label: t('admin.alertsPage.critical'), color: '#f56c6c', tone: 'danger' },
@@ -100,7 +102,7 @@ const summaries = ref([
 const fetchAlerts = async () => {
     try {
         const params = {}
-        if (severityFilter.value) params.severity = severityFilter.value
+        if (levelFilter.value) params.level = levelFilter.value
         const { data } = await client.get('/admin/alerts', { params })
         alerts.value = data.data ?? []
         if (data.meta) {
@@ -123,6 +125,21 @@ const handleAcknowledge = async (row) => {
         await fetchAlerts()
     } catch {
         ElMessage.error(t('admin.alertsPage.acknowledgeFailed'))
+    }
+}
+
+const handleDelete = async (row) => {
+    try {
+        await ElMessageBox.confirm(
+            t('common.deleteConfirm'),
+            t('common.confirm'),
+            { type: 'warning' }
+        )
+        await client.post('/admin/alerts/batch-destroy', { ids: [row.id] })
+        ElMessage.success(t('admin.alertsPage.deleteSuccess') || t('common.deleteSuccess'))
+        fetchAlerts()
+    } catch (e) {
+        if (e !== 'cancel') ElMessage.error(t('admin.alertsPage.deleteFailed') || t('common.deleteFailed'))
     }
 }
 

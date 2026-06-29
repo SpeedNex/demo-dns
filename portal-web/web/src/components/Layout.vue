@@ -46,6 +46,9 @@
                     <el-menu-item index="/user/allowlist" @click="navigateTo('/user/allowlist')">
                         <span>{{ $t('nav.allowlist') }}</span>
                     </el-menu-item>
+                    <el-menu-item index="/user/api-keys" @click="navigateTo('/user/api-keys')">
+                        <span>{{ $t('nav.apiKeys') }}</span>
+                    </el-menu-item>
                     <el-menu-item index="/user/analytics" @click="navigateTo('/user/analytics')">
                         <span>{{ $t('nav.analytics') }}</span>
                     </el-menu-item>

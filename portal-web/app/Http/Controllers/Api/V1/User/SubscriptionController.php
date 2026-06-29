@@ -26,34 +26,37 @@ final class SubscriptionController
         $plans = DB::table('plans')
             ->orderBy('sort_order')
             ->get()
-            ->map(function ($plan) {
-                $prices = DB::table('plan_prices')
-                    ->where('plan_id', $plan->id)
-                    ->get()
-                    ->map(fn ($p) => [
-                        'id' => (int) $p->id,
-                        'billing_cycle' => $p->billing_cycle,
-                        'amount_minor' => (int) $p->amount_minor,
-                        'currency' => $p->currency,
-                    ]);
+            ->keyBy('id');
 
-                $features = DB::table('plan_features')
-                    ->where('plan_id', $plan->id)
-                    ->pluck('feature_key')
-                    ->all();
+        // 一次性加载所有 prices 和 features，按 plan_id 分组，消除 N+1
+        $allPrices = DB::table('plan_prices')->get()->groupBy('plan_id');
+        $allFeatures = DB::table('plan_features')->get()->groupBy('plan_id');
 
-                return [
-                    'id' => (int) $plan->id,
-                    'code' => $plan->code,
-                    'name' => $plan->name,
-                    'description' => $plan->description,
-                    'sort_order' => (int) ($plan->sort_order ?? 0),
-                    'prices' => $prices,
-                    'features' => $features,
-                ];
-            });
+        $result = $plans->map(function ($plan) use ($allPrices, $allFeatures) {
+            $prices = collect($allPrices->get($plan->id, []))
+                ->map(fn ($p) => [
+                    'id' => (int) $p->id,
+                    'billing_cycle' => $p->billing_cycle,
+                    'amount_minor' => (int) $p->amount_minor,
+                    'currency' => $p->currency,
+                ]);
 
-        return response()->json(['data' => $plans]);
+            $features = collect($allFeatures->get($plan->id, []))
+                ->pluck('feature_key')
+                ->all();
+
+            return [
+                'id' => (int) $plan->id,
+                'code' => $plan->code,
+                'name' => $plan->name,
+                'description' => $plan->description,
+                'sort_order' => (int) ($plan->sort_order ?? 0),
+                'prices' => $prices,
+                'features' => $features,
+            ];
+        });
+
+        return response()->json(['data' => $result]);
     }
 
     /** GET /api/v1/user/subscriptions — 用户订阅列表 */

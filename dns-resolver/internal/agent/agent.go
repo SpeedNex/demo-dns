@@ -365,6 +365,37 @@ func (a *Agent) loadProfileIntoEngine(profileID string, data json.RawMessage, ve
 				}
 			}
 		}
+		// 加载 security_data 域名列表（来自 portal-web 后台 security-data 页面）
+		// 这些域名由管理员在后台维护，通过发布包进入 resolver，无需硬编码。
+		//
+		// group → list_type 映射：
+		//   dynamic-dns    → category:security:dynamic_dns
+		//   parked-domains → category:security:parked
+		//   tld-blacklist  → category:security:blocked_tld
+		//   allow-lists    → allowlist (exact)
+		//   block-lists    → blocklist (exact)
+		//   未知 group     → blocklist (exact) 兜底
+		if len(p.SecurityData) > 0 {
+			for group, domains := range p.SecurityData {
+				for _, domain := range domains {
+					switch group {
+					case "dynamic-dns":
+						security["dynamic_dns"] = append(security["dynamic_dns"], domain)
+					case "parked-domains":
+						security["parked"] = append(security["parked"], domain)
+					case "tld-blacklist":
+						security["blocked_tld"] = append(security["blocked_tld"], domain)
+					case "allow-lists":
+						allowExact = append(allowExact, domain)
+					case "block-lists":
+						blockExact = append(blockExact, domain)
+					default:
+						blockExact = append(blockExact, domain)
+					}
+				}
+			}
+		}
+
 		a.engine.LoadProfileRules(p.ProfileID,
 			allowExact, allowWild,
 			blockExact, blockWild,

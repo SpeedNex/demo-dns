@@ -53,6 +53,8 @@ final class QueryLogController
         $now = now();
         $dnsLogs = [];
         $usageEvents = [];
+        // 记录每个 item 的上下文，供 Phase 2 设备更新使用
+        $deviceOps = [];
 
         $profiles = Profile::query()
             ->whereIn(
@@ -66,7 +68,8 @@ final class QueryLogController
             ->get(['id', 'profile_id', 'user_id'])
             ->keyBy('profile_id');
 
-        foreach ($validated['items'] as $item) {
+        // Phase 1：构建日志数据，不做 MySQL 写入
+        foreach ($validated['items'] as $i => $item) {
             $profileUid = $item['profile_id'] ?? null;
             $profile = $profileUid !== null ? $profiles->get($profileUid) : null;
 
@@ -82,8 +85,7 @@ final class QueryLogController
 
             $clientIp = trim((string) ($item['client_ip'] ?? ''));
 
-            // 防御性剥离 IPv4 端口号，例如 127.0.0.1:55309 -> 127.0.0.1。
-            // 注意：IPv6 会包含多个冒号，所以这里仅处理冒号数量等于 1 的情况。
+            // 防御性剥离 IPv4 端口号，例如 127.0.0.1:55309 -> 127.0.0.1
             if ($clientIp !== '' && substr_count($clientIp, ':') === 1) {
                 $parts = explode(':', $clientIp);
                 $clientIp = $parts[0];
@@ -94,12 +96,10 @@ final class QueryLogController
                 $protocol = 'doh';
             }
 
-            $devicePk = null;
             $deviceUid = trim((string) ($item['device_id'] ?? ''));
             $deviceType = strtolower(trim((string) ($item['device_type'] ?? '')));
 
-            // Fallback: profile not found via profile_id -> try resolving via device_id.
-            // 这里只解析 profile/user，不在这里累加 query_count，避免后续主流程再次累加导致重复计数。
+            // 通过 device 回查 profile（仅读，不做写入）
             if ($profilePk === null && $deviceUid !== '') {
                 $dev = Device::query()
                     ->where('device_uid', $deviceUid)
@@ -110,7 +110,6 @@ final class QueryLogController
                 if ($dev) {
                     $profilePk = $dev->profile_id;
                     $userPk = $dev->user_id;
-                    $devicePk = $dev->id;
                     $resolvedProfileUid = Profile::query()
                         ->whereKey($profilePk)
                         ->value('profile_id');
@@ -120,6 +119,7 @@ final class QueryLogController
                 }
             }
 
+            $newDeviceUid = $deviceUid;
             if ($userPk !== null && $profilePk !== null) {
                 $fingerprint = hash('sha256', implode('|', [
                     (string) $profilePk,
@@ -128,31 +128,49 @@ final class QueryLogController
                     $deviceUid,
                 ]));
 
-                $device = $this->resolveDevice(
-                    userPk: (int) $userPk,
-                    profilePk: (int) $profilePk,
-                    deviceUid: $deviceUid,
-                    deviceType: $deviceType,
-                    fingerprint: $fingerprint,
-                    clientIp: $clientIp,
-                    protocol: $protocol,
-                    queriedAt: $queriedAt,
-                    now: $now
-                );
+                // 先查出已有设备 ID，避免写入
+                $existing = Device::query()
+                    ->where('device_uid', $deviceUid)
+                    ->first(['id', 'device_uid']);
+                if ($existing) {
+                    $devicePk = $existing->id;
+                    $newDeviceUid = $existing->device_uid;
+                } else {
+                    $devicePk = null;
+                }
 
-                $devicePk = $device->id;
-                $deviceUid = $device->device_uid;
+                // 记录设备操作上下文，Phase 2 中执行
+                $deviceOps[] = [
+                    'index' => $i,
+                    'userPk' => (int) $userPk,
+                    'profilePk' => (int) $profilePk,
+                    'deviceUid' => $deviceUid,
+                    'deviceType' => $deviceType,
+                    'fingerprint' => $fingerprint,
+                    'clientIp' => $clientIp,
+                    'protocol' => $protocol,
+                    'queriedAt' => $queriedAt,
+                    'newDeviceUid' => $newDeviceUid,
+                    'devicePk' => $devicePk,
+                ];
+
+                $usageEvents[] = [
+                    'timestamp' => $queriedAt->copy()->setTimezone('Asia/Shanghai')->format('Y-m-d H:i:s'),
+                    'user_id' => (string) $userPk,
+                    'profile_id' => (int) $profilePk,
+                    'device_id' => $devicePk,
+                    'billing_category' => strtolower((string) ($item['category'] ?? 'query')),
+                ];
             }
 
             $dnsLogs[] = [
                 'event_id' => Str::uuid()->toString(),
-                // ClickHouse 服务器时区为 Asia/Shanghai，需按服务端时区格式化
                 'event_time' => $queriedAt->copy()->setTimezone('Asia/Shanghai')->format('Y-m-d H:i:s'),
                 'timestamp' => $queriedAt->copy()->setTimezone('Asia/Shanghai')->format('Y-m-d H:i:s'),
                 'node_id' => (string) $node->id,
                 'user_id' => $userPk !== null ? (string) $userPk : '',
                 'profile_id' => $profileUid ?? '',
-                'device_id' => $deviceUid,
+                'device_id' => $newDeviceUid,
                 'device_type' => $deviceType,
                 'domain' => $domain !== '' ? $domain : $queryName,
                 'query_type' => strtoupper((string) ($item['query_type'] ?? 'A')),
@@ -164,20 +182,9 @@ final class QueryLogController
                 'latency_ms' => (int) ($item['latency_ms'] ?? 0),
                 'protocol' => $protocol,
             ];
-
-            if ($userPk !== null && $profilePk !== null) {
-                $usageEvents[] = [
-                    'timestamp' => $queriedAt->copy()->setTimezone('Asia/Shanghai')->format('Y-m-d H:i:s'),
-                    'user_id' => (string) $userPk,
-                    'profile_id' => (int) $profilePk,
-                    'device_id' => $devicePk,
-                    'billing_category' => strtolower((string) ($item['category'] ?? 'query')),
-                ];
-            }
         }
 
-        // 直接写入 ClickHouse，不再经过 MySQL batch/error 表。
-        // dns-resolver 的本地 buffer 会在写入失败时自动重试。
+        // Phase 2：先写入 ClickHouse，失败则提前返回（无 MySQL 副作用）
         try {
             if ($dnsLogs !== []) {
                 $clickhouse->insertJsonEachRow('dns_logs', $dnsLogs);
@@ -191,6 +198,21 @@ final class QueryLogController
                 'data' => $result,
                 'error' => 'clickhouse insert failed: ' . $e->getMessage(),
             ], 500);
+        }
+
+        // Phase 3：ClickHouse 写入成功后再执行 MySQL 设备操作
+        foreach ($deviceOps as $op) {
+            $device = $this->resolveDevice(
+                userPk: $op['userPk'],
+                profilePk: $op['profilePk'],
+                deviceUid: $op['deviceUid'],
+                deviceType: $op['deviceType'],
+                fingerprint: $op['fingerprint'],
+                clientIp: $op['clientIp'],
+                protocol: $op['protocol'],
+                queriedAt: $op['queriedAt'],
+                now: $now
+            );
         }
 
         return response()->json([

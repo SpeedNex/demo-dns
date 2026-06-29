@@ -14,7 +14,7 @@ final class ProfileRuleService
     public function list(string $userId, int|string $profileId): array
     {
         $profile = Profile::where('user_id', $userId)
-            ->where('id', $profileId)
+            ->where('profile_id', $profileId)
             ->firstOrFail();
 
         return ProfileRule::where('profile_id', $profile->id)
@@ -30,16 +30,17 @@ final class ProfileRuleService
     public function create(string $userId, int|string $profileId, array $payload): array
     {
         $profile = Profile::where('user_id', $userId)
-            ->where('id', $profileId)
+            ->where('profile_id', $profileId)
             ->firstOrFail();
 
         $domain = (string) ($payload['domain'] ?? '');
         $normalizedDomain = DomainNormalizer::normalize($domain);
         $listType = $this->normalizeListType((string) ($payload['list_type'] ?? 'block'));
+        $matchType = (string) ($payload['match_type'] ?? 'suffix');
 
         $existing = ProfileRule::where('profile_id', $profile->id)
             ->where('list_type', $listType)
-            ->where('match_type', $payload['match_type'])
+            ->where('match_type', $matchType)
             ->where('normalized_domain', $normalizedDomain)
             ->first();
 
@@ -50,7 +51,7 @@ final class ProfileRuleService
         $rule = ProfileRule::create([
             'profile_id' => $profile->id,
             'list_type' => $listType,
-            'match_type' => $payload['match_type'],
+            'match_type' => $matchType,
             'domain' => $domain,
             'normalized_domain' => $normalizedDomain,
             'action' => $payload['action'] ?? ($listType === 'allowlist' ? 'allow' : 'block'),
@@ -69,7 +70,7 @@ final class ProfileRuleService
     public function delete(string $userId, string $profileId, string $ruleId): array
     {
         $profile = Profile::where('user_id', $userId)
-            ->where('id', $profileId)
+            ->where('profile_id', $profileId)
             ->firstOrFail();
 
         $rule = ProfileRule::where('profile_id', $profile->id)
@@ -91,7 +92,7 @@ final class ProfileRuleService
     public function update(string $userId, string $profileId, string $ruleId, array $payload): array
     {
         $profile = Profile::where('user_id', $userId)
-            ->where('id', $profileId)
+            ->where('profile_id', $profileId)
             ->firstOrFail();
 
         $rule = ProfileRule::where('profile_id', $profile->id)
@@ -133,7 +134,7 @@ final class ProfileRuleService
     public function batchDelete(string $userId, int|string $profileId, array $ruleIds): array
     {
         $profile = Profile::where('user_id', $userId)
-            ->where('id', $profileId)
+            ->where('profile_id', $profileId)
             ->firstOrFail();
 
         $existingIds = ProfileRule::where('profile_id', $profile->id)

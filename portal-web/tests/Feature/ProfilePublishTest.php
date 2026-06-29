@@ -33,7 +33,7 @@ final class ProfilePublishTest extends TestCase
         $profileResponse->assertStatus(201)
             ->assertJsonStructure(['data' => ['id', 'name']]);
 
-        $profileId = $profileResponse->json('data.id');
+        $profileId = $profileResponse->json('data.profile_id');
 
         // List profiles
         $listResponse = $this->withHeaders([

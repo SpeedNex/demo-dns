@@ -63,13 +63,20 @@ final class AdminRbacController
                 });
             })
             ->orderByDesc('created_at')
+            ->get();
+
+        // 一次性加载所有管理员的角色关联，按 admin_id 分组，消除 N+1
+        $adminIds = $admins->pluck('admin_id')->all();
+        $allRoles = DB::table('admin_user_roles as ur')
+            ->join('admin_roles as r', 'r.id', '=', 'ur.admin_role_id')
+            ->whereIn('ur.admin_id', $adminIds)
+            ->select(['ur.admin_id', 'r.id', 'r.code', 'r.name'])
             ->get()
-            ->map(function (Admin $admin): array {
-                $roleList = DB::table('admin_user_roles as ur')
-                    ->join('admin_roles as r', 'r.id', '=', 'ur.admin_role_id')
-                    ->where('ur.admin_id', $admin->admin_id)
-                    ->select(['r.id', 'r.code', 'r.name'])
-                    ->get()
+            ->groupBy('admin_id');
+
+        $admins = $admins
+            ->map(function (Admin $admin) use ($allRoles): array {
+                $roleList = collect($allRoles->get($admin->admin_id, []))
                     ->map(fn ($r): array => [
                         'id' => (int) $r->id,
                         'code' => (string) $r->code,

@@ -33,5 +33,5 @@ return [
     'password_file' => '',
     'timeout_seconds'        => 1.5,
     'connect_timeout_seconds' => 1.0,
-    'enabled'     => true,
+    'enabled'     => env('CLICKHOUSE_ENABLED', true),
 ];

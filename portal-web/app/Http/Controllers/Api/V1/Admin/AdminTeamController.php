@@ -66,9 +66,9 @@ final class AdminTeamController
     public function disable(string $teamId): JsonResponse
     {
         $team = \App\Models\Team::findOrFail($teamId);
-        $team->update(['status' => 'disabled']);
+        $team->update(['status' => 'archived']);
 
-        return response()->json(['data' => ['status' => 'disabled']]);
+        return response()->json(['data' => ['status' => 'archived']]);
     }
 
     public function enable(string $teamId): JsonResponse

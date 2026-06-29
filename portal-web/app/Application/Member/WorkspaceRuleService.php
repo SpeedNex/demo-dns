@@ -44,6 +44,8 @@ final class WorkspaceRuleService
 
         $rule->save();
 
+        $this->workspaceService->autoPublish($profile);
+
         return $rule->fresh()->toArray();
     }
 }

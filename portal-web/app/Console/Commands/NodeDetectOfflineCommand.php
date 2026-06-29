@@ -16,13 +16,13 @@ use Illuminate\Console\Command;
  *   php artisan node:detect-offline --dry-run        # 只统计，不写告警
  *   php artisan node:detect-offline --quiet          # 静默模式
  *
- * 触发条件（与 Node::scopeOnline/Degraded/Offline 保持一致，避免漂移）:
- *   - online  : last_heartbeat_at >  now - 90s
- *   - degraded: last_heartbeat_at ∈ (now-180s, now-90s]
- *   - offline : last_heartbeat_at <= now-180s 或 NULL
+ * 阈值（与 Node::isOnline() / scopeOffline() 完全一致，避免漂移）:
+ *   - online   : Redis key 存在 或 last_heartbeat_at > now - 90s
+ *   - degraded : last_heartbeat_at ∈ (now-180s, now-90s]
+ *   - offline  : last_heartbeat_at <= now-180s 或从未上报
  *
- * 告警去重：同 (code, subject_type, subject_id, status=open) 已存在则不重复创建。
- * 告警恢复：当节点恢复心跳后，调用 HeartbeatController 中已有的"超时后第一次恢复"逻辑闭环。
+ * 告警去重：同 (code, subject_type=node, subject_id, status=open) 已存在则不重复创建。
+ * 告警恢复：当节点恢复心跳后，自动将同类 open 告警标记为 resolved。
  */
 final class NodeDetectOfflineCommand extends Command
 {
@@ -37,7 +37,9 @@ final class NodeDetectOfflineCommand extends Command
         $dryRun = (bool) $this->option('dry-run');
         $silent = (bool) $this->option('silent');
 
+        // 与 Node::isOnline() 的阈值完全一致（90s）
         $threshold = (int) env('NODE_HEARTBEAT_STALE_SECONDS', 90);
+        $offlineThreshold = $threshold * 2;  // 180s 离线阈值
 
         $online = Node::query()->online()->count();
         $degraded = Node::query()->degraded()->count();
@@ -45,7 +47,7 @@ final class NodeDetectOfflineCommand extends Command
         $total = Node::query()->count();
 
         if (! $silent) {
-            $this->info("Scanning resolver nodes (stale threshold={$threshold}s)...");
+            $this->info("Scanning resolver nodes (online<{$threshold}s, degraded∈({$offlineThreshold}s,{$threshold}s], offline≥{$offlineThreshold}s)...");
             $this->table(
                 ['Status', 'Count'],
                 [
@@ -64,8 +66,9 @@ final class NodeDetectOfflineCommand extends Command
 
         $created = 0;
         $skipped = 0;
+        $recovered = 0;
 
-        // 处理 degraded 节点
+        // 处理 degraded 节点（90-180s 心跳延迟）
         $degradedNodes = Node::query()->degraded()->get();
         foreach ($degradedNodes as $node) {
             $result = $this->ensureAlert(
@@ -73,13 +76,13 @@ final class NodeDetectOfflineCommand extends Command
                 code: 'node_heartbeat_degraded',
                 level: 'warning',
                 title: '节点心跳降级',
-                message: "节点 {$node->node_alias} (id={$node->id}) 心跳已超过 {$threshold} 秒但未超过 " . ($threshold * 2) . " 秒",
+                message: "节点 {$node->node_alias} (id={$node->id}) 心跳延迟超过 {$threshold}s 但未超过 {$offlineThreshold}s",
                 silent: $silent
             );
             $result ? $created++ : $skipped++;
         }
 
-        // 处理 offline 节点
+        // 处理 offline 节点（≥180s 无心跳）
         $offlineNodes = Node::query()->offline()->get();
         foreach ($offlineNodes as $node) {
             $lastSeen = $node->last_heartbeat_at
@@ -89,7 +92,7 @@ final class NodeDetectOfflineCommand extends Command
             $result = $this->ensureAlert(
                 node: $node,
                 code: 'node_heartbeat_offline',
-                level: 'error',
+                level: 'critical',
                 title: '节点心跳离线',
                 message: "节点 {$node->node_alias} (id={$node->id}) 离线（最后心跳: {$lastSeen}）",
                 silent: $silent
@@ -97,7 +100,16 @@ final class NodeDetectOfflineCommand extends Command
             $result ? $created++ : $skipped++;
         }
 
-        $this->info("Done. created={$created}, skipped(dedup)={$skipped}");
+        // 恢复检测：已安装节点中，在线且有 open 离线/降级告警的 → 自动 resolved
+        $onlineNodes = Node::query()->online()->get();
+        foreach ($onlineNodes as $node) {
+            $resolved = $this->resolveAlertsForNode($node, $silent);
+            if ($resolved > 0) {
+                $recovered += $resolved;
+            }
+        }
+
+        $this->info("Done. created={$created}, skipped(dedup)={$skipped}, recovered={$recovered}");
 
         return 0;
     }
@@ -150,5 +162,29 @@ final class NodeDetectOfflineCommand extends Command
             $this->info("  ✓ alert created: node={$node->id} code={$code}");
         }
         return true;
+    }
+
+    /**
+     * 节点恢复后，自动将相关的 open 离线/降级告警标记为 resolved。
+     *
+     * @return int 关闭的告警数量
+     */
+    private function resolveAlertsForNode(Node $node, bool $silent): int
+    {
+        $updated = \App\Models\Alert::query()
+            ->where('subject_type', 'node')
+            ->where('subject_id', $node->id)
+            ->whereIn('code', ['node_heartbeat_offline', 'node_heartbeat_degraded'])
+            ->where('status', 'open')
+            ->update([
+                'status' => 'resolved',
+                'resolved_at' => now(),
+            ]);
+
+        if ($updated > 0 && ! $silent) {
+            $this->line("  · recovered: node={$node->id} resolved {$updated} alert(s)");
+        }
+
+        return $updated;
     }
 }

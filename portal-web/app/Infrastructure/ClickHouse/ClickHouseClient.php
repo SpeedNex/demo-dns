@@ -139,6 +139,9 @@ class ClickHouseClient
         if ($this->host === '') {
             throw new \RuntimeException('clickhouse host is not configured');
         }
+        if (! $this->enabled) {
+            return '';
+        }
 
         $url = sprintf('http://%s:%d/', $this->host, $this->port);
         if ($query !== '') {

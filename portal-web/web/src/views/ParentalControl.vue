@@ -266,11 +266,6 @@ const filteredPresets = computed(() => {
     return presets.value.filter((p) => getLocalizedValue(p.name).toLowerCase().includes(q))
 })
 
-const categoryItems = [
-    { key: 'block_adult_content', label: 'parental.categories.adult', desc: 'parental.categories.adultDesc' },
-    { key: 'block_gambling', label: 'parental.categories.gambling', desc: 'parental.categories.gamblingDesc' },
-]
-
 const safeSearchItems = [
     { key: 'safe_search', label: 'parental.safeSearch.safeSearch', desc: 'parental.safeSearch.safeSearchDesc' },
     { key: 'youtube_restricted_mode', label: 'parental.safeSearch.youtubeRestricted', desc: 'parental.safeSearch.youtubeRestrictedDesc' },

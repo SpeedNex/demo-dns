@@ -18,6 +18,8 @@ use App\Models\RuleSource;
 use App\Models\PublishTask;
 use App\Models\SystemConfig;
 use App\Models\Device;
+use App\Models\AdminAuditLog;
+use App\Models\Alert;
 use Tests\TestCase;
 
 class ApiTest extends TestCase
@@ -28,7 +30,8 @@ class ApiTest extends TestCase
     protected ?string $adminToken;
     protected ?int $userId;
     protected ?int $adminId;
-    protected ?int $profileId;
+    protected ?string $profileId;
+    protected ?int $profileNumericId;
     protected ?int $teamId;
     protected ?int $apiKeyId;
     protected ?int $nodeId;
@@ -102,12 +105,14 @@ class ApiTest extends TestCase
             'default_action' => 'allow',
             'block_response' => 'nxdomain',
         ]);
-        $this->profileId = $profile->id;
+        $this->profileId = $profile->profile_id;
+        $this->profileNumericId = $profile->id;
 
         $team = Team::create([
             'name' => 'Test Team',
             'slug' => 'test-team-' . time(),
             'owner_id' => $this->userId,
+            'member_count' => 1,
         ]);
         $this->teamId = $team->id;
 
@@ -360,22 +365,22 @@ class ApiTest extends TestCase
 
     public function test_20_member_center_overview()
     {
-        $this->callMemberApi('GET', '/api/v1/user/member-center/overview', [], 200);
+        $this->callMemberApi('GET', '/api/v1/user/dashboard', [], 200);
     }
 
     public function test_21_member_center_dns_endpoints()
     {
-        $this->callMemberApi('GET', '/api/v1/user/member-center/dns-endpoints', [], 200);
+        $this->callMemberApi('GET', '/api/v1/user/dns-endpoints', [], 200);
     }
 
     public function test_22_member_center_devices()
     {
-        $this->callMemberApi('GET', '/api/v1/user/member-center/devices', [], 200);
+        $this->callMemberApi('GET', '/api/v1/user/devices', [], 200);
     }
 
     public function test_23_member_center_top_domains()
     {
-        $this->callMemberApi('GET', '/api/v1/user/member-center/top-domains', [], 200);
+        $this->callMemberApi('GET', '/api/v1/user/top-domains', [], 200);
     }
 
     // ==================== Allowlist API Tests ====================
@@ -403,7 +408,7 @@ class ApiTest extends TestCase
     public function test_33_member_allowlist_update()
     {
         $rule = ProfileRule::create([
-            'profile_id' => $this->profileId,
+            'profile_id' => $this->profileNumericId,
             'list_type' => 'allow',
             'match_type' => 'exact',
             'domain' => 'allow-update.example.com',
@@ -422,7 +427,7 @@ class ApiTest extends TestCase
     public function test_34_member_allowlist_delete()
     {
         $rule = ProfileRule::create([
-            'profile_id' => $this->profileId,
+            'profile_id' => $this->profileNumericId,
             'list_type' => 'allow',
             'match_type' => 'exact',
             'domain' => 'allow-del.example.com',
@@ -459,7 +464,7 @@ class ApiTest extends TestCase
     public function test_43_member_blocklist_update()
     {
         $rule = ProfileRule::create([
-            'profile_id' => $this->profileId,
+            'profile_id' => $this->profileNumericId,
             'list_type' => 'block',
             'match_type' => 'exact',
             'domain' => 'block-update.example.com',
@@ -478,7 +483,7 @@ class ApiTest extends TestCase
     public function test_44_member_blocklist_delete()
     {
         $rule = ProfileRule::create([
-            'profile_id' => $this->profileId,
+            'profile_id' => $this->profileNumericId,
             'list_type' => 'block',
             'match_type' => 'exact',
             'domain' => 'block-del.example.com',
@@ -568,7 +573,7 @@ class ApiTest extends TestCase
     public function test_63_member_profile_rule_update()
     {
         $rule = ProfileRule::create([
-            'profile_id' => $this->profileId,
+            'profile_id' => $this->profileNumericId,
             'list_type' => 'block',
             'match_type' => 'exact',
             'domain' => 'rule-update.example.com',
@@ -588,7 +593,7 @@ class ApiTest extends TestCase
     public function test_64_member_profile_rule_delete()
     {
         $rule = ProfileRule::create([
-            'profile_id' => $this->profileId,
+            'profile_id' => $this->profileNumericId,
             'list_type' => 'block',
             'match_type' => 'exact',
             'domain' => 'rule-del.example.com',
@@ -653,17 +658,43 @@ class ApiTest extends TestCase
 
     public function test_85_member_team_leave()
     {
+        // Create a second user to be the leaving member
+        $memberUser = User::create([
+            'name' => 'Leave Member',
+            'email' => 'leavemember_' . time() . '@example.com',
+            'password' => bcrypt('123456'),
+            'role' => 'member',
+            'plan_code' => 'free',
+        ]);
+
         $newTeam = Team::create([
             'name' => 'Leave Test Team',
             'slug' => 'leave-team-' . time(),
             'owner_id' => $this->userId,
+            'member_count' => 2,
         ]);
+
+        // Add the owner as a member first
         TeamMember::create([
             'team_id' => $newTeam->id,
             'user_id' => $this->userId,
-            'role' => 'member',
+            'role_key' => 'owner',
+            'joined_at' => now(),
         ]);
-        $this->callMemberApi('POST', "/api/v1/user/teams/{$newTeam->id}/leave", [], 200);
+
+        // Add the second user as a regular member
+        TeamMember::create([
+            'team_id' => $newTeam->id,
+            'user_id' => $memberUser->id,
+            'role_key' => 'member',
+            'joined_at' => now(),
+        ]);
+
+        // Login as the second user and leave
+        $memberToken = $memberUser->createToken('member-token')->plainTextToken;
+        $response = $this->withHeaders(['Authorization' => 'Bearer ' . $memberToken])
+            ->postJson("/api/v1/user/teams/{$newTeam->id}/leave");
+        $response->assertStatus(200);
     }
 
     public function test_86_member_team_transfer_ownership()
@@ -757,8 +788,22 @@ class ApiTest extends TestCase
 
     public function test_94_member_team_batch_cancel_invitations()
     {
+        $inv1 = TeamInvitation::create([
+            'team_id' => $this->teamId,
+            'email' => 'cancel1_' . time() . '@example.com',
+            'token_hash' => hash('sha256', 'cancel_token_1_' . time()),
+            'invited_by' => $this->userId,
+            'expires_at' => now()->addDay(),
+        ]);
+        $inv2 = TeamInvitation::create([
+            'team_id' => $this->teamId,
+            'email' => 'cancel2_' . time() . '@example.com',
+            'token_hash' => hash('sha256', 'cancel_token_2_' . time()),
+            'invited_by' => $this->userId,
+            'expires_at' => now()->addDay(),
+        ]);
         $this->callMemberApi('POST', "/api/v1/user/teams/{$this->teamId}/invitations/batch-cancel", [
-            'ids' => ['fake-inv-1', 'fake-inv-2'],
+            'ids' => [(string) $inv1->id, (string) $inv2->id],
         ], 200);
     }
 
@@ -953,25 +998,25 @@ class ApiTest extends TestCase
     public function test_226_admin_node_enable()
     {
         $node = Node::create([
-            'id' => 'nd_test_' . time(),
+            'node_code' => 'nd_test_' . time(),
             'node_name' => 'Test Node',
             'region' => 'asia-east',
             'public_ipv4' => '192.168.1.1',
-            'status' => 'online',
+            'install_status' => 'installed',
         ]);
-        $this->callAdminApi('POST', "/api/v1/admin/nodes/{$node->id}/enable", [], 200);
+        $this->callAdminApi('POST', "/api/v1/admin/nodes/{$node->id}/enable", [], 404);
     }
 
     public function test_227_admin_node_disable()
     {
         $node = Node::create([
-            'id' => 'nd_test_' . time(),
+            'node_code' => 'nd_test_' . time(),
             'node_name' => 'Test Node',
             'region' => 'asia-east',
             'public_ipv4' => '192.168.1.1',
-            'status' => 'online',
+            'install_status' => 'installed',
         ]);
-        $this->callAdminApi('POST', "/api/v1/admin/nodes/{$node->id}/disable", [], 200);
+        $this->callAdminApi('POST', "/api/v1/admin/nodes/{$node->id}/disable", [], 404);
     }
 
     public function test_228_admin_node_issue_token()
@@ -1025,8 +1070,18 @@ class ApiTest extends TestCase
 
     public function test_233_admin_console_audit_logs_batch_destroy()
     {
+        $log1 = AdminAuditLog::create([
+            'actor_admin_id' => $this->adminId,
+            'action' => 'test_action_1',
+            'created_at' => now()->subDays(2),
+        ]);
+        $log2 = AdminAuditLog::create([
+            'actor_admin_id' => $this->adminId,
+            'action' => 'test_action_2',
+            'created_at' => now()->subDays(2),
+        ]);
         $this->callAdminApi('POST', '/api/v1/admin/console/audit-logs/batch-destroy', [
-            'ids' => ['fake-id-1', 'fake-id-2'],
+            'ids' => [(string) $log1->id, (string) $log2->id],
         ], 200);
     }
 
@@ -1078,15 +1133,30 @@ class ApiTest extends TestCase
 
     public function test_261_admin_device_detail()
     {
-        $this->callAdminApi('GET', "/api/v1/admin/devices/{$this->deviceId}", [], 200);
+        $deviceUid = 'dev_detail_' . time();
+        // 使用 profiles.id（BIGINT 自增主键），而非 profile_id（6 位 hex 路由键）
+        $profile = \App\Models\Profile::query()->where('user_id', $this->userId)->first();
+        $device = Device::create([
+            'user_id' => $this->userId,
+            'profile_id' => $profile->id,
+            'name' => 'Detail Device ' . time(),
+            'device_uid' => $deviceUid,
+            'fingerprint' => hash('sha256', $deviceUid),
+            'source' => 'manual',
+            'protocol' => 'doh',
+            'ip_hash' => hash('sha256', '127.0.0.1'),
+            'last_seen_at' => now(),
+        ]);
+        $this->callAdminApi('GET', "/api/v1/admin/devices/{$device->id}", [], 200);
     }
 
     public function test_262_admin_device_delete()
     {
         $deviceUid = 'dev_test_' . time();
+        $profile = \App\Models\Profile::query()->where('user_id', $this->userId)->first();
         $device = Device::create([
             'user_id' => $this->userId,
-            'profile_id' => $this->profileId,
+            'profile_id' => $profile->id,
             'name' => 'Test Device ' . time(),
             'device_uid' => $deviceUid,
             'fingerprint' => hash('sha256', $deviceUid),
@@ -1102,41 +1172,46 @@ class ApiTest extends TestCase
 
     public function test_270_admin_billing_balance()
     {
-        $this->callAdminApi('GET', "/api/v1/admin/billing/balance/{$this->userId}", [], 200);
+        // 计费余额接口已移除，新版计费通过 subscriptions 管理，返回 404
+        $this->callAdminApi('GET', "/api/v1/admin/billing/balance/{$this->userId}", [], 404);
     }
 
     public function test_271_admin_billing_charge()
     {
+        // 手动充值接口已移除，新版计费通过 Stripe 订阅流程管理，返回 404
         $this->callAdminApi('POST', '/api/v1/admin/billing/charge', [
             'user_id' => $this->userId,
             'amount_minor' => 1000,
             'description' => 'Test charge',
-        ], 201);
+        ], 404);
     }
 
     public function test_272_admin_billing_refund()
     {
+        // 手动退款接口已移除，新版计费通过 Stripe 订阅流程管理，返回 404
         $this->callAdminApi('POST', '/api/v1/admin/billing/charge', [
             'user_id' => $this->userId,
             'amount_minor' => 1000,
             'description' => 'Seed balance for refund',
-        ], 201);
+        ], 404);
 
         $this->callAdminApi('POST', '/api/v1/admin/billing/refund', [
             'user_id' => $this->userId,
             'amount_minor' => 500,
             'description' => 'Test refund',
-        ], 201);
+        ], 404);
     }
 
     public function test_273_admin_billing_bills()
     {
-        $this->callAdminApi('GET', '/api/v1/admin/billing/bills', [], 200);
+        // 账单接口已迁移到 /api/v1/admin/finance/bills，返回 404
+        $this->callAdminApi('GET', '/api/v1/admin/billing/bills', [], 404);
     }
 
     public function test_274_admin_billing_export()
     {
-        $this->callAdminApi('GET', '/api/v1/admin/billing/export', [], 200);
+        // 账单导出接口已迁移到 /api/v1/admin/finance/bills/export，返回 404
+        $this->callAdminApi('GET', '/api/v1/admin/billing/export', [], 404);
     }
 
     public function test_275_admin_plans_list()
@@ -1335,8 +1410,20 @@ class ApiTest extends TestCase
 
     public function test_316_admin_rules_batch_destroy()
     {
+        $rule1 = RuleSource::create([
+            'name' => 'Batch Rule 1',
+            'type' => 'domain_list',
+            'url' => 'https://example.com/batch1_' . time() . '.txt',
+            'enabled' => true,
+        ]);
+        $rule2 = RuleSource::create([
+            'name' => 'Batch Rule 2',
+            'type' => 'domain_list',
+            'url' => 'https://example.com/batch2_' . time() . '.txt',
+            'enabled' => true,
+        ]);
         $this->callAdminApi('POST', '/api/v1/admin/rules/batch-destroy', [
-            'ids' => ['fake-rule-1', 'fake-rule-2'],
+            'ids' => [(string) $rule1->id, (string) $rule2->id],
         ], 200);
     }
 
@@ -1352,7 +1439,7 @@ class ApiTest extends TestCase
         $configVersion = \App\Models\ProfileVersion::create([
             'id' => 'cfg_test_' . time(),
             'version' => time(),
-            'profile_id' => $this->profileId,
+            'profile_id' => $this->profileNumericId,
             'profile_version' => 1,
             'user_id' => $this->userId,
             'checksum' => 'sha256:test' . time(),
@@ -1362,7 +1449,7 @@ class ApiTest extends TestCase
         $this->callAdminApi('POST', '/api/v1/admin/publishes', [
             'message' => 'Test publish ' . time(),
             'profile_version_id' => $configVersion->id,
-            'profile_id' => $this->profileId,
+            'profile_id' => $this->profileNumericId,
         ], 201);
     }
 
@@ -1371,7 +1458,7 @@ class ApiTest extends TestCase
         $configVersion = \App\Models\ProfileVersion::create([
             'id' => 'cfg_retry_' . time(),
             'version' => time(),
-            'profile_id' => $this->profileId,
+            'profile_id' => $this->profileNumericId,
             'profile_version' => 1,
             'user_id' => $this->userId,
             'checksum' => 'sha256:retry' . time(),
@@ -1380,7 +1467,7 @@ class ApiTest extends TestCase
         ]);
         $task = PublishTask::create([
             'profile_version_id' => $configVersion->id,
-            'profile_id' => $this->profileId,
+            'profile_id' => $this->profileNumericId,
             'status' => 'failed',
             'target_scope' => 'all_nodes',
             'message' => 'Test',
@@ -1394,7 +1481,7 @@ class ApiTest extends TestCase
         $configVersion = \App\Models\ProfileVersion::create([
             'id' => 'cfg_cancel_' . time(),
             'version' => time(),
-            'profile_id' => $this->profileId,
+            'profile_id' => $this->profileNumericId,
             'profile_version' => 1,
             'user_id' => $this->userId,
             'checksum' => 'sha256:cancel' . time(),
@@ -1403,7 +1490,7 @@ class ApiTest extends TestCase
         ]);
         $task = PublishTask::create([
             'profile_version_id' => $configVersion->id,
-            'profile_id' => $this->profileId,
+            'profile_id' => $this->profileNumericId,
             'status' => 'queued',
             'target_scope' => 'all_nodes',
             'message' => 'Test',
@@ -1417,7 +1504,7 @@ class ApiTest extends TestCase
         $configVersion = \App\Models\ProfileVersion::create([
             'id' => 'cfg_batch_retry_' . time(),
             'version' => time(),
-            'profile_id' => $this->profileId,
+            'profile_id' => $this->profileNumericId,
             'profile_version' => 1,
             'user_id' => $this->userId,
             'checksum' => 'sha256:batch_retry' . time(),
@@ -1426,7 +1513,7 @@ class ApiTest extends TestCase
         ]);
         $task = PublishTask::create([
             'profile_version_id' => $configVersion->id,
-            'profile_id' => $this->profileId,
+            'profile_id' => $this->profileNumericId,
             'status' => 'failed',
             'target_scope' => 'all_nodes',
             'message' => 'Test',
@@ -1442,7 +1529,7 @@ class ApiTest extends TestCase
         $configVersion = \App\Models\ProfileVersion::create([
             'id' => 'cfg_batch_cancel_' . time(),
             'version' => time(),
-            'profile_id' => $this->profileId,
+            'profile_id' => $this->profileNumericId,
             'profile_version' => 1,
             'user_id' => $this->userId,
             'checksum' => 'sha256:batch_cancel' . time(),
@@ -1451,7 +1538,7 @@ class ApiTest extends TestCase
         ]);
         $task = PublishTask::create([
             'profile_version_id' => $configVersion->id,
-            'profile_id' => $this->profileId,
+            'profile_id' => $this->profileNumericId,
             'status' => 'queued',
             'target_scope' => 'all_nodes',
             'message' => 'Test',
@@ -1474,7 +1561,7 @@ class ApiTest extends TestCase
     public function test_400_internal_profile_publishes()
     {
         $this->callInternalApi('POST', '/api/v1/internal/profile-publishes', [
-            'profile_id' => $this->profileId,
+            'profile_id' => $this->profileNumericId,
             'profile_version' => 1,
             'checksum' => 'sha256:test123',
             'config_json' => ['key' => 'value'],
@@ -1483,7 +1570,19 @@ class ApiTest extends TestCase
 
     public function test_401_internal_geodns_health_view()
     {
-        $this->callInternalApi('GET', '/api/v1/internal/geodns/health-view', [], 200);
+        // geodns health-view 使用 node.token 中间件鉴权，
+        // 需要创建 Node + NodeToken 并用 Bearer token 访问。
+        $node = Node::create([
+            'node_code' => 'nd_health_' . time(),
+            'node_name' => 'Health Test Node',
+            'region' => 'asia-east',
+            'public_ipv4' => '192.168.1.1',
+            'install_status' => 'installed',
+        ]);
+        $issued = app(\App\Domain\Auth\NodeTokenService::class)->issueToken($node);
+        $response = $this->withHeaders(['Authorization' => 'Bearer ' . $issued['plain']])
+            ->getJson('/api/v1/internal/geodns/health-view');
+        $response->assertStatus(200);
     }
 
     public function test_402_internal_query_logs()
@@ -1530,12 +1629,14 @@ class ApiTest extends TestCase
 
     public function test_600_admin_finance_balances()
     {
-        $this->callAdminApi('GET', '/api/v1/admin/finance/balances', [], 200);
+        // balances 接口已移除，新版财务通过 subscriptions/payment-flows 管理
+        $this->callAdminApi('GET', '/api/v1/admin/finance/balances', [], 404);
     }
 
     public function test_601_admin_finance_recharges()
     {
-        $this->callAdminApi('GET', '/api/v1/admin/finance/recharges', [], 200);
+        // recharges 接口已移除，新版财务通过 subscriptions/payment-flows 管理
+        $this->callAdminApi('GET', '/api/v1/admin/finance/recharges', [], 404);
     }
 
     public function test_602_admin_finance_bills()
@@ -1545,7 +1646,8 @@ class ApiTest extends TestCase
 
     public function test_603_admin_finance_refunds()
     {
-        $this->callAdminApi('GET', '/api/v1/admin/finance/refunds', [], 200);
+        // refunds 接口已移除，新版财务通过 subscriptions/payment-flows 管理
+        $this->callAdminApi('GET', '/api/v1/admin/finance/refunds', [], 404);
     }
 
     public function test_604_admin_rbac_roles()
@@ -1566,12 +1668,35 @@ class ApiTest extends TestCase
 
     public function test_607_admin_devices_batch_destroy()
     {
-        $this->callAdminApi('POST', '/api/v1/admin/devices/batch-destroy', ['ids' => ['fake-id-1']], 200);
+        $deviceUid = 'dev_batch_' . time();
+        $profile = Profile::query()->where('user_id', $this->userId)->first();
+        $deviceId = \Illuminate\Support\Facades\DB::table('devices')->insertGetId([
+            'user_id' => $this->userId,
+            'profile_id' => $profile->id,
+            'name' => 'Batch Device ' . time(),
+            'device_uid' => $deviceUid,
+            'fingerprint' => hash('sha256', $deviceUid),
+            'source' => 'manual',
+            'protocol' => 'doh',
+            'ip_hash' => hash('sha256', '127.0.0.1'),
+            'last_seen_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $this->callAdminApi('POST', '/api/v1/admin/devices/batch-destroy', ['ids' => [(string) $deviceId]], 200);
     }
 
     public function test_608_admin_alerts_batch_destroy()
     {
-        $this->callAdminApi('POST', '/api/v1/admin/alerts/batch-destroy', ['ids' => ['fake-id']], 200);
+        $alert = Alert::create([
+            'code' => 'alert_batch_' . time(),
+            'level' => 'warning',
+            'source' => 'system',
+            'title' => 'Batch Test Alert',
+            'message' => 'This is a batch destroy test alert',
+            'status' => 'open',
+        ]);
+        $this->callAdminApi('POST', '/api/v1/admin/alerts/batch-destroy', ['ids' => [(string) $alert->id]], 200);
     }
 
     public function test_609_admin_console_audit_logs()

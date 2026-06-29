@@ -110,11 +110,6 @@ class User extends Authenticatable
         return $this->hasMany(Subscription::class, 'user_id');
     }
 
-    public function billings(): HasMany
-    {
-        return $this->hasMany(Billing::class, 'user_id');
-    }
-
     private static function buildUsernameFromEmail(?string $email): string
     {
         $localPart = strtolower((string) Str::before((string) $email, '@'));

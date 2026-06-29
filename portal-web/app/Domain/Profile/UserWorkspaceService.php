@@ -258,7 +258,7 @@ final class UserWorkspaceService
             $matchType = 'suffix';
         }
 
-        $result = $this->profileRuleService->create($userId, $profile->id, [
+        $result = $this->profileRuleService->create($userId, $profile->profile_id, [
             'list_type' => $normalizedListType,
             'match_type' => $matchType,
             'domain' => $payload['domain'] ?? '',
@@ -407,7 +407,8 @@ final class UserWorkspaceService
             'current_plan' => $currentPlan,
             'plans' => $plans,
             'stats' => $this->analytics($userId, null),
-            'orders' => $this->orders($userId),
+            // 订单表(dns_orders)已在计费重构中删除，改用 subscriptions 管理
+            'orders' => [],
         ];
     }
 
@@ -749,7 +750,7 @@ final class UserWorkspaceService
      * 自动发布 Profile 配置。
      * 当规则或设置变更后自动触发，无需用户手动发布。
      */
-    private function autoPublish(Profile $profile): void
+    public function autoPublish(Profile $profile): void
     {
         try {
             $publishService = new ProfilePublishService(

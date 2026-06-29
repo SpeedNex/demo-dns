@@ -135,40 +135,67 @@ final class HeartbeatController
             ]),
         ]);
 
-        // 告警场景 1: 节点自报 status=degraded / offline
+        // 告警场景 1: 节点自报 status=degraded / offline（与 NodeDetectOfflineCommand 的阈值对齐）
         $reportedStatus = (string) ($heartbeat['status'] ?? HeartbeatService::STATUS_ONLINE);
         if (in_array($reportedStatus, ['degraded', 'offline'], true)) {
-            Alert::create([
-                'code' => 'node_reported_' . $reportedStatus,
-                'level' => $reportedStatus === 'offline' ? 'error' : 'warning',
-                'source' => 'node',
-                'subject_type' => 'node',
-                'subject_id' => $nodeId,
-                'title' => '节点上报异常',
-                'message' => "节点 {$node->node_alias} (id={$nodeId}) 上报 status={$reportedStatus}",
-                'status' => 'open',
-            ]);
+            // 去重：同类 open 告警已存在则跳过
+            $exists = Alert::query()
+                ->where('code', 'node_reported_' . $reportedStatus)
+                ->where('subject_type', 'node')
+                ->where('subject_id', $nodeId)
+                ->where('status', 'open')
+                ->exists();
+            if (! $exists) {
+                Alert::create([
+                    'code' => 'node_reported_' . $reportedStatus,
+                    'level' => $reportedStatus === 'offline' ? 'critical' : 'warning',
+                    'source' => 'node',
+                    'subject_type' => 'node',
+                    'subject_id' => $nodeId,
+                    'title' => $reportedStatus === 'offline' ? '节点上报离线' : '节点上报降级',
+                    'message' => "节点 {$node->node_alias} (id={$nodeId}) 上报 status={$reportedStatus}",
+                    'status' => 'open',
+                ]);
+            }
         }
 
-        // 告警场景 2: 节点超时后第一次恢复心跳
-        $threshold = $now->copy()->subSeconds(300);
-        $wasOnlineBefore = $previousLastHeartbeatAt instanceof \Carbon\Carbon
-            && $previousLastHeartbeatAt->gt($now->copy()->subSeconds($node->getHeartbeatStaleSeconds()));
-        if (
-            $previousLastHeartbeatAt instanceof \Carbon\Carbon
-            && $previousLastHeartbeatAt->lt($threshold)
-            && ! $wasOnlineBefore
-        ) {
-            Alert::create([
-                'code' => 'node_heartbeat_timeout',
-                'level' => 'warning',
-                'source' => 'node',
-                'subject_type' => 'node',
-                'subject_id' => $nodeId,
-                'title' => '节点心跳超时',
-                'message' => "节点 {$node->node_alias} (id={$nodeId}) 距离上次心跳已超 5 分钟",
-                'status' => 'open',
-            ]);
+        // 告警场景 2: 节点超时后第一次恢复心跳（阈值与离线检测一致 = 180s）
+        $offlineThreshold = $node->getHeartbeatStaleSeconds() * 2;
+        $wasOfflineBefore = $previousLastHeartbeatAt instanceof \Carbon\Carbon
+            && $previousLastHeartbeatAt->lt($now->copy()->subSeconds($offlineThreshold));
+        if ($wasOfflineBefore) {
+            // 去重：同类 open 告警已存在则跳过
+            $exists = Alert::query()
+                ->where('code', 'node_heartbeat_offline')
+                ->where('subject_type', 'node')
+                ->where('subject_id', $nodeId)
+                ->where('status', 'open')
+                ->exists();
+            if (! $exists) {
+                Alert::create([
+                    'code' => 'node_heartbeat_offline',
+                    'level' => 'critical',
+                    'source' => 'node',
+                    'subject_type' => 'node',
+                    'subject_id' => $nodeId,
+                    'title' => '节点心跳超时离线',
+                    'message' => "节点 {$node->node_alias} (id={$nodeId}) 距离上次心跳已超过 {$offlineThreshold} 秒",
+                    'status' => 'open',
+                ]);
+            }
+        }
+
+        // 恢复检测：节点在线且有 open 离线/降级告警 → 自动 resolved
+        if ($node->isOnline()) {
+            Alert::query()
+                ->where('subject_type', 'node')
+                ->where('subject_id', $nodeId)
+                ->whereIn('code', ['node_heartbeat_offline', 'node_heartbeat_degraded', 'node_reported_degraded', 'node_reported_offline'])
+                ->where('status', 'open')
+                ->update([
+                    'status' => 'resolved',
+                    'resolved_at' => $now,
+                ]);
         }
 
         return $result;

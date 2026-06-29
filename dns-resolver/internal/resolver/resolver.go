@@ -49,6 +49,13 @@ type ProfileResolutionLayer struct {
 
 var profileUIDPattern = regexp.MustCompile(`^[a-f0-9]{6}$`)
 
+// IsValidProfileID reports whether id is a syntactically valid profile ID.
+// The current format is a 6-character lowercase hex string.
+// Keep in sync with portal-web's Profile ID generation logic.
+func IsValidProfileID(id string) bool {
+	return profileUIDPattern.MatchString(id)
+}
+
 // New creates a new ProfileResolutionLayer.
 func New(engine *matching.Engine) *ProfileResolutionLayer {
 	return &ProfileResolutionLayer{
@@ -271,7 +278,7 @@ func SafeSearchRedirect(domain string) (string, bool) {
 	case "www.google.com", "google.com":
 		return "forcesafesearch.google.com", true
 	case "www.bing.com", "bing.com":
-		return "www.bing.com?safeSearch=strict", true
+		return "strict.bing.com", true
 	case "www.youtube.com", "youtube.com", "m.youtube.com":
 		return "restrictmoderate.youtube.com", true
 	case "duckduckgo.com":

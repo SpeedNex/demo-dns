@@ -61,7 +61,7 @@ final class AdminAlertController
     {
         $validated = $request->validate([
             'ids' => 'required|array|min:1',
-            'ids.*' => 'string',
+            'ids.*' => 'integer',  // 前端传 integer id，后端 cast 后统一为 int
         ]);
 
         $deleted = Alert::whereIn('id', $validated['ids'])->delete();

@@ -119,10 +119,11 @@ final class MemberWorkspaceTest extends TestCase
             'match_type' => 'exact',
         ])->assertCreated();
 
-        $profileId = $this->getJson('/api/v1/user/profiles')->json('data.0.id');
+        $profileId = $this->getJson('/api/v1/user/profiles')->json('data.0.profile_id');
+        $numericProfileId = $this->getJson('/api/v1/user/profiles')->json('data.0.id');
         Device::create([
             'user_id' => $user->getKey(),
-            'profile_id' => $profileId,
+            'profile_id' => $numericProfileId,
             'name' => 'Family iPad',
             'device_uid' => 'dev-ipad-01',
             'fingerprint' => hash('sha256', 'dev-ipad-01'),
@@ -147,7 +148,7 @@ final class MemberWorkspaceTest extends TestCase
         $this->assertDatabaseHas('profile_versions', ['target_scope' => 'profile']);
 
         /** @var ProfileVersion $version */
-        $version = ProfileVersion::where('target_scope', 'profile')->firstOrFail();
+        $version = ProfileVersion::where('target_scope', 'profile')->orderByDesc('id')->firstOrFail();
         $this->assertSame('block', $version->config_json['default_action']);
         $this->assertSame('tracker.example.com', $version->config_json['rules'][0]['domain']);
         $this->assertNotSame('allow', $version->config_json['default_action']);

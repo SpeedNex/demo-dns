@@ -29,21 +29,13 @@ final class NodeTokenService
         $hash = hash('sha256', $plain);
         $hmacKeyHash = hash('sha256', $hmacKey);
 
-        NodeToken::updateOrCreate(
-            [
-                'node_id' => $node->id,
-                'name' => $name,
-            ],
-            [
-                'token_hash' => $hash,
-                'hmac_key_hash' => $hmacKeyHash,
-                'hmac_secret_encrypted' => Crypt::encryptString($hmacKey),
-                'revoked_at' => null,
-                'expires_at' => null,
-                'last_used_at' => null,
-                'created_at' => now(),
-            ],
-        );
+        NodeToken::create([
+            'node_id' => $node->id,
+            'token_prefix' => Str::substr($plain, 0, 20),
+            'token_hash' => $hash,
+            'hmac_key_hash' => $hmacKeyHash,
+            'hmac_secret_encrypted' => Crypt::encryptString($hmacKey),
+        ]);
 
         return [
             'plain' => $plain,
