@@ -269,7 +269,7 @@ FOR SELECT
     sum(if(category = 'privacy', 1, 0)) AS privacy_block_count,
     sum(if(category = 'parental', 1, 0)) AS parental_block_count,
     uniqExact(client_ip_hash) AS unique_client_ips,
-    uniqExact(query_name) AS unique_domains
+    uniqExact(domain) AS unique_domains
 FROM dns_logs
 GROUP BY day, profile_id, user_id, team_id;
 

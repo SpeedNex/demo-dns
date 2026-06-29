@@ -36,7 +36,6 @@ final class QueryLogController
             'items.*.profile_id' => 'nullable|string|max:40',
             'items.*.device_id' => 'nullable|string|max:80',
             'items.*.device_type' => 'nullable|string|max:30',
-            'items.*.query_name' => 'nullable|string|max:255',
             'items.*.domain' => 'nullable|string|max:255',
             'items.*.query_type' => 'nullable|string|max:20',
             'items.*.action' => 'required|string|max:20',
@@ -101,8 +100,7 @@ final class QueryLogController
                 ? now()->setTimestamp((int) $item['queried_at'])
                 : $now;
 
-            $queryName = strtolower((string) ($item['query_name'] ?? $item['domain'] ?? ''));
-            $domain = strtolower((string) ($item['domain'] ?? $item['query_name'] ?? ''));
+            $domain = strtolower((string) ($item['domain'] ?? ''));
 
             $clientIp = trim((string) ($item['client_ip'] ?? ''));
 
@@ -193,7 +191,7 @@ final class QueryLogController
                 'profile_id' => $profileUid ?? '',
                 'device_id' => $newDeviceUid,
                 'device_type' => $deviceType,
-                'domain' => $domain !== '' ? $domain : $queryName,
+                'domain' => $domain,
                 'query_type' => strtoupper((string) ($item['query_type'] ?? 'A')),
                 'action' => strtoupper((string) $item['action']),
                 'reason' => (string) ($item['reason'] ?? ''),

@@ -36,8 +36,8 @@ CREATE TABLE IF NOT EXISTS dns_logs (
     user_id             String,
     team_id             Nullable(String),
     device_id           Nullable(String),
-    query_name          String,
-    query_name_hash     String,
+    domain              String,
+    domain_hash         String,
     query_type          LowCardinality(String),
     action              LowCardinality(String),
     reason              LowCardinality(String),
@@ -74,7 +74,7 @@ SETTINGS index_granularity = 8192;
 ```text
 profile_id + time range
 profile_id + action + time range
-profile_id + query_name keyword/hash
+profile_id + domain keyword/hash
 device_id + time range
 node_id + time range
 ```
@@ -118,18 +118,17 @@ ORDER BY (profile_id, day, action, query_count)
 AS SELECT
     toDate(timestamp) AS day,
     profile_id,
-    query_name,
+    domain,
     action,
     count() AS query_count
 FROM dns_logs
-GROUP BY day, profile_id, query_name, action;
-```
+GROUP BY day, profile_id, domain, action;
 
 ## 6. 隐私要求
 
 - 默认不保存明文 client IP。
 - `client_ip_hash` 必须由 resolver 或 ingest 服务使用带 salt 的 hash 生成。
-- `query_name` 属于敏感上网数据，应限制后台访问权限。
+- `domain` 属于敏感上网数据，应限制后台访问权限。
 - 用户删除账户后，应通过异步任务删除或匿名化其日志。
 - 导出日志必须写审计记录。
 

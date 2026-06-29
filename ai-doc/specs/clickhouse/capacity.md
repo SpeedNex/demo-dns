@@ -66,8 +66,8 @@
 | `user_id` | `ZSTD(1)` | ZSTD | 高基数 |
 | `team_id` | `LowCardinality(Nullable)` + `ZSTD(1)` | ZSTD | 大多数为 NULL |
 | `device_id` | `LowCardinality(Nullable)` + `ZSTD(1)` | ZSTD | 设备级低基数 |
-| `query_name` | `Delta(4)` + `ZSTD(3)` | ZSTD | 重复域名多，差分+ZSTD 压缩比 ≈ 15× |
-| `query_name_hash` | `ZSTD(1)` | ZSTD | 高基数 |
+| `domain` | `Delta(4)` + `ZSTD(3)` | ZSTD | 重复域名多，差分+ZSTD 压缩比 ≈ 15× |
+| `domain_hash` | `ZSTD(1)` | ZSTD | 高基数 |
 | `query_type` | `LowCardinality(String)` + `ZSTD(1)` | ZSTD | A/AAAA/HTTPS 等数个值 |
 | `action` | `LowCardinality(String)` + `ZSTD(1)` | ZSTD | 4 个枚举 |
 | `reason` | `LowCardinality(String)` + `ZSTD(1)` | ZSTD | 数十枚举 |
@@ -169,8 +169,8 @@ V2+ 阶段如果单月分区超过 100 GB，再切到 `toYear(event_date) * 100 
 | `user_id` | String(24) | 24 | ULID |
 | `team_id` | Nullable(String(24)) | 12 | 大多数 NULL |
 | `device_id` | Nullable(String(24)) | 12 | |
-| `query_name` | String(60) | 35 | 平均域名长度 |
-| `query_name_hash` | String(64) | 64 | SHA-256 |
+| `domain` | String(60) | 35 | 平均域名长度 |
+| `domain_hash` | String(64) | 64 | SHA-256 |
 | `query_type` | LowCardinality(String) | 1 | |
 | `action` | LowCardinality(String) | 1 | |
 | `reason` | LowCardinality(String) | 4 | |
@@ -259,7 +259,7 @@ clickhouse_zookeeper_session
 ## 11. 容量规划禁止项
 
 - ❌ 禁止使用 `MergeTree` 替代 `ReplacingMergeTree(inserted_at)`（必须保留 `event_id` 去重语义）。
-- ❌ 禁止把 `query_name` 设为 `String(255)`，必须限定 ≤ 253（DNS 协议上限）。
+- ❌ 禁止把 `domain` 设为 `String(255)`，必须限定 ≤ 253（DNS 协议上限）。
 - ❌ 禁止在主表上做行级 UPDATE / DELETE（除 TTL 自动删除）。
 - ❌ 禁止使用 `Buffer` 表作为长期落盘方案。
 - ❌ 禁止不分区（`PARTITION BY tuple()` 等）。

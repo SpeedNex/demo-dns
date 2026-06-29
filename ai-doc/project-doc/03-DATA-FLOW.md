@@ -158,7 +158,7 @@ resolver 处理查询后生成 QueryLogItem
 
 - 默认不保存 client IP 明文。
 - `client_ip_hash` 使用服务端 salt 后哈希。
-- 每条日志必须包含 `profile_id`、`query_name`、`query_type`、`action`、`latency_ms`、`node_id`。
+- 每条日志必须包含 `profile_id`、`domain`、`query_type`、`action`、`latency_ms`、`node_id`。
 - 日志上报不能阻塞 DNS 响应。
 
 ## 6. GeoDNS 调度链路

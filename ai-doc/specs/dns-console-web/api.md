@@ -245,7 +245,7 @@ X-Nonce: <16 random bytes hex>
       "user_id": "usr_01H...",
       "team_id": null,
       "device_id": "dev_01H...",
-      "query_name": "ads.example.com",
+      "domain": "ads.example.com",
       "query_type": "A",
       "action": "blocked",
       "reason": "blocklist",

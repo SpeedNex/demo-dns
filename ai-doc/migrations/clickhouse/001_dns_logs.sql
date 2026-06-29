@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS dns_logs (
     user_id             String,
     team_id             Nullable(String),
     device_id           Nullable(String),
-    query_name          String,
-    query_name_hash     String,
+    domain              String,
+    domain_hash         String,
     query_type          LowCardinality(String),
     action              LowCardinality(String),
     reason              LowCardinality(String),
@@ -59,8 +59,8 @@ ORDER BY (profile_id, day, action, query_count)
 AS SELECT
     toDate(timestamp) AS day,
     profile_id,
-    query_name,
+    domain,
     action,
     count() AS query_count
 FROM dns_logs
-GROUP BY day, profile_id, query_name, action;
+GROUP BY day, profile_id, domain, action;

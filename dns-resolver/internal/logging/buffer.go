@@ -21,7 +21,7 @@ type LogEntry struct {
 	ProfileUID     string `json:"profile_id"`
 	DeviceUID      string `json:"device_id"`
 	DeviceType     string `json:"device_type,omitempty"`
-	Domain         string `json:"query_name"`
+	Domain         string `json:"domain"`
 	Action         string `json:"action"`
 	Reason         string `json:"reason"`
 	Category       string `json:"category"`

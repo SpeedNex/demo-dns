@@ -3881,7 +3881,7 @@ components:
       required:
       - timestamp
       - profile_id
-      - query_name
+      - domain
       - query_type
       - action
       - latency_ms
@@ -3903,7 +3903,7 @@ components:
         device_id:
           type: string
           nullable: true
-        query_name:
+        domain:
           type: string
         query_type:
           type: string
@@ -3937,7 +3937,7 @@ components:
           type: string
         event_id:
           type: string
-        query_name_hash:
+        domain_hash:
           type: string
           nullable: true
     QueryLogBatch:

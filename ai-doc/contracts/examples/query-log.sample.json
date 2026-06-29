@@ -10,7 +10,7 @@
       "user_id": "usr_01HAMPLE",
       "team_id": null,
       "device_id": null,
-      "query_name": "ads.example.com",
+      "domain": "ads.example.com",
       "query_type": "A",
       "action": "blocked",
       "reason": "blocklist",

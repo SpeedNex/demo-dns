@@ -149,7 +149,6 @@ final class AdminQueryLogController
             $entry['profile_id'] = $profile?->profile_id ?? ($pid !== '' ? $pid : null);
             $entry['profile_name'] = $profile?->name;
             $entry['timestamp'] = $entry['event_time'] ?? null;
-            $entry['query_name'] = $entry['domain'] ?? null;
             $entry['queried_at'] = $entry['event_time'] ?? null;
             $out[] = $entry;
         }

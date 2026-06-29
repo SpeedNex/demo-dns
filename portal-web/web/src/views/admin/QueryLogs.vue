@@ -97,8 +97,8 @@
             <el-table-column label="域名" min-width="220" show-overflow-tooltip>
                 <template #default="{ row }">
                     <div class="domain-cell">
-                        <span class="domain-name">{{ (row.query_name || '-').replace(/\.$/, '') }}</span>
-                        <el-icon class="copy-icon" @click="copyText((row.query_name || '').replace(/\.$/, ''))"><CopyDocument /></el-icon>
+                        <span class="domain-name">{{ (row.domain || '-').replace(/\.$/, '') }}</span>
+                        <el-icon class="copy-icon" @click="copyText((row.domain || '').replace(/\.$/, ''))"><CopyDocument /></el-icon>
                     </div>
                 </template>
             </el-table-column>

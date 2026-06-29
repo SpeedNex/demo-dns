@@ -144,7 +144,7 @@ MVP 可不强制实现，但配置中必须预留：
 
 | DNS 概念 | 日志字段 |
 |---|---|
-| QNAME | `query_name` |
+| QNAME | `domain` |
 | QTYPE | `query_type` |
 | RCODE | `rcode` |
 | 规则动作 | `action` |

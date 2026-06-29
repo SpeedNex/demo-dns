@@ -29,7 +29,7 @@
           "event_id",
           "timestamp",
           "profile_id",
-          "query_name",
+          "domain",
           "query_type",
           "action",
           "latency_ms",
@@ -65,7 +65,7 @@
               "null"
             ]
           },
-          "query_name": {
+          "domain": {
             "type": "string",
             "maxLength": 253
           },
@@ -148,7 +148,7 @@
               "doq"
             ]
           },
-          "query_name_hash": {
+          "domain_hash": {
             "type": [
               "string",
               "null"

@@ -581,7 +581,7 @@ GET /api/v1/user/profiles/{profile_id}/logs?from=2026-06-12T00:00:00Z&to=2026-06
   "timestamp": "2026-06-12T10:00:00Z",
   "profile_id": "prf_01H...",
   "device_id": "dev_01H...",
-  "query_name": "ads.example.com",
+  "domain": "ads.example.com",
   "query_type": "A",
   "action": "blocked",
   "reason": "blocklist",
