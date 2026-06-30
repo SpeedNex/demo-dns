@@ -322,6 +322,70 @@ final class AdminFinanceController
         ]);
     }
 
+    /** DELETE /admin/finance/subscriptions/{id} */
+    public function subscriptionDestroy(string $id): JsonResponse
+    {
+        $sub = \App\Models\Subscription::findOrFail($id);
+        $sub->delete();
+
+        return response()->json(['data' => ['id' => (int) $id, 'deleted' => true]]);
+    }
+
+    /** POST /admin/finance/subscriptions/batch-destroy */
+    public function subscriptionBatchDestroy(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        $count = \App\Models\Subscription::whereIn('id', $validated['ids'])->delete();
+
+        return response()->json(['data' => ['deleted' => $count]]);
+    }
+
+    /** DELETE /admin/finance/bills/{id} */
+    public function billDestroy(string $id): JsonResponse
+    {
+        $count = DB::table('billings')->where('id', $id)->delete();
+
+        return response()->json(['data' => ['id' => (int) $id, 'deleted' => $count > 0]]);
+    }
+
+    /** POST /admin/finance/bills/batch-destroy */
+    public function billBatchDestroy(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        $count = DB::table('billings')->whereIn('id', $validated['ids'])->delete();
+
+        return response()->json(['data' => ['deleted' => $count]]);
+    }
+
+    /** DELETE /admin/finance/payment-flows/{id} */
+    public function paymentFlowDestroy(string $id): JsonResponse
+    {
+        DB::table('payment_transactions')->where('id', $id)->delete();
+
+        return response()->json(['data' => ['id' => (int) $id, 'deleted' => true]]);
+    }
+
+    /** POST /admin/finance/payment-flows/batch-destroy */
+    public function paymentFlowBatchDestroy(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        $count = DB::table('payment_transactions')->whereIn('id', $validated['ids'])->delete();
+
+        return response()->json(['data' => ['deleted' => $count]]);
+    }
+
     /**
      * 2026-06-30: 支付流水汇总（变化列表数据源）
      * GET /admin/finance/payment-flows/summary

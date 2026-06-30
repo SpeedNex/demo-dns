@@ -113,6 +113,24 @@ final class AdminCategoryController
         return response()->json(['data' => ['id' => $id, 'deleted' => true]]);
     }
 
+    /** POST /admin/rule-categories/batch-destroy */
+    public function batchDestroy(Request $request): JsonResponse
+    {
+        $actorId = $request->user()?->admin_id;
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        // 排除系统分类
+        $query = RuleCategory::whereIn('id', $validated['ids'])->where('is_system', false);
+        $count = $query->delete();
+
+        AdminAuditLog::record('rule_category.batch_delete', 'rule_category', null, ['ids' => $validated['ids'], 'count' => $count], $actorId, null, $request->ip(), $request->userAgent());
+
+        return response()->json(['data' => ['deleted' => $count]]);
+    }
+
     private function present(RuleCategory $c): array
     {
         return $c->toArray();

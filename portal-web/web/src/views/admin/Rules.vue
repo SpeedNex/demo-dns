@@ -50,9 +50,9 @@
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column prop="type" :label="$t('admin.ruleLibrary.type')" width="120">
+            <el-table-column prop="type" :label="$t('admin.ruleLibrary.type')" width="130">
                 <template #default="{ row }">
-                    <el-tag size="small" effect="light">{{ row.type }}</el-tag>
+                    <el-tag size="small" effect="light">{{ $t(`admin.ruleLibrary.ruleType.${row.type}`) }}</el-tag>
                 </template>
             </el-table-column>
             <el-table-column prop="url" :label="$t('admin.ruleLibrary.url')" min-width="240" show-overflow-tooltip />
@@ -93,10 +93,10 @@
             </el-form-item>
             <el-form-item :label="$t('admin.ruleLibrary.type')" prop="type">
                 <el-select v-model="form.type" style="width:100%">
-                    <el-option label="domain_list" value="domain_list" />
-                    <el-option label="adblock" value="adblock" />
-                    <el-option label="hosts" value="hosts" />
-                    <el-option label="rpz" value="rpz" />
+                    <el-option :label="$t('admin.ruleLibrary.ruleType.domain_list')" value="domain_list" />
+                    <el-option :label="$t('admin.ruleLibrary.ruleType.adblock')" value="adblock" />
+                    <el-option :label="$t('admin.ruleLibrary.ruleType.hosts')" value="hosts" />
+                    <el-option :label="$t('admin.ruleLibrary.ruleType.rpz')" value="rpz" />
                 </el-select>
             </el-form-item>
             <el-form-item :label="$t('admin.ruleLibrary.url')" prop="url">

@@ -33,8 +33,9 @@ final class AdminStatsController
         }
 
         if ($redisOnlineCount >= 0) {
-            // Redis 正常：直接用 Redis SET 的大小作为在线节点数
-            $onlineNodes = $redisOnlineCount;
+            // Redis 正常：用 Redis SET 大小，但不超过 MySQL 实际节点数
+            // 防止 Redis 残留已删除节点的 ID 导致 online > total
+            $onlineNodes = min($redisOnlineCount, $totalNodes);
         } else {
             // Redis 不可用：fallback 到 MySQL（可能滞后 5 分钟，仅作保底）
             $onlineNodes = (int) Node::online()->count();

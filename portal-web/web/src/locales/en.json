@@ -1280,7 +1280,13 @@
       "confirmBatchDelete": "Delete {count} selected rule source(s)?",
       "batchDeleted": "Deleted {count} rule source(s)",
       "batchSynced": "Synced {count} rule source(s)",
-      "emptyDesc2": "Click \"Create Rule Source\" on the top right to add your first rule source."
+      "emptyDesc2": "Click \"Create Rule Source\" on the top right to add your first rule source.",
+      "ruleType": {
+        "domain_list": "Domain List",
+        "adblock": "AdBlock",
+        "hosts": "Hosts",
+        "rpz": "RPZ"
+      }
     },
     "memberCatalogs": {
       "title": "Member Catalogs",

@@ -28,13 +28,22 @@
         </template>
 
         <template #actions>
+            <el-button
+                type="danger"
+                plain
+                size="small"
+                :disabled="selected.length === 0"
+                @click="handleBatchDelete"
+            >
+                <span>{{ $t('common.batchDelete') }} ({{ selected.length }})</span>
+            </el-button>
             <el-button type="primary" size="small" @click="openCreateDialog">
                 <el-icon class="el-icon--left"><Plus /></el-icon>
                 <span>{{ $t('admin.ruleCategories.create') }}</span>
             </el-button>
         </template>
 
-        <el-table v-loading="loading" :data="categories" stripe>
+        <el-table v-loading="loading" :data="categories" stripe @selection-change="onSelectionChange">
             <template #empty>
                 <div class="empty-state">
                     <el-icon class="empty-icon"><Collection /></el-icon>
@@ -42,6 +51,7 @@
                     <p class="empty-desc">{{ $t('admin.ruleCategories.emptyDesc') }}</p>
                 </div>
             </template>
+            <el-table-column type="selection" width="48" />
             <el-table-column prop="code" :label="$t('admin.ruleCategories.code')" width="120" />
             <el-table-column prop="name" :label="$t('admin.ruleCategories.name')" min-width="140" />
             <el-table-column prop="name_en" :label="$t('admin.ruleCategories.nameEn')" min-width="140" />
@@ -153,7 +163,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Collection, Plus, Edit, Delete, Search, RefreshLeft } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
@@ -165,6 +175,9 @@ const meta = ref({})
 const loading = ref(false)
 const toggling = ref(null)
 const filter = reactive({ search: '' })
+const selected = ref([])
+
+const onSelectionChange = (rows) => { selected.value = rows }
 
 const showDialog = ref(false)
 const editingId = ref(null)
@@ -283,6 +296,28 @@ const handleDelete = async (row) => {
         await fetchCategories()
     } catch (err) {
         ElMessage.error(err.response?.data?.error?.message || t('common.deleteFailed') || 'Delete failed')
+    }
+}
+
+const handleBatchDelete = async () => {
+    if (selected.value.length === 0) return
+    try {
+        await ElMessageBox.confirm(
+            t('admin.ruleCategories.confirmBatchDelete') || `确定删除选中的 ${selected.value.length} 个分类？`,
+            t('common.confirm'),
+            { type: 'warning' },
+        )
+        const ids = selected.value.filter((r) => !r.is_system).map((r) => r.id)
+        if (ids.length === 0) {
+            ElMessage.warning(t('common.noData') || '没有可删除的项')
+            return
+        }
+        const { data } = await client.post('/admin/rule-categories/batch-destroy', { ids })
+        ElMessage.success(t('common.batchDeleted') || `已删除 ${data.data.deleted} 个分类`)
+        selected.value = []
+        await fetchCategories()
+    } catch (e) {
+        if (e !== 'cancel') ElMessage.error(t('common.batchDeleteFailed') || 'Batch delete failed')
     }
 }
 

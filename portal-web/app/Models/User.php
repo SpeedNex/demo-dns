@@ -32,6 +32,7 @@ class User extends Authenticatable
         'locale',
         'status',
         'current_team_id',
+        'last_login_at',
     ];
 
     protected static function boot(): void

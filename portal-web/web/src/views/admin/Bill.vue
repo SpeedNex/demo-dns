@@ -48,19 +48,29 @@
         </template>
 
         <template #actions>
+            <el-button
+                type="danger"
+                plain
+                size="small"
+                :disabled="selected.length === 0"
+                @click="handleBatchDelete"
+            >
+                <span>{{ $t('common.batchDelete') }} ({{ selected.length }})</span>
+            </el-button>
             <el-button size="small" type="success" :loading="exporting" @click="handleExport">
                 <el-icon class="el-icon--left"><Download /></el-icon>
                 <span>{{ $t('common.export') }}</span>
             </el-button>
         </template>
 
-        <el-table v-loading="loading" :data="bills" stripe style="width: 100%">
+        <el-table v-loading="loading" :data="bills" stripe style="width: 100%" @selection-change="onSelectionChange">
             <template #empty>
                 <div class="empty-state">
                     <el-icon class="empty-icon"><Tickets /></el-icon>
                     <p class="empty-title">{{ $t('common.noData') }}</p>
                 </div>
             </template>
+            <el-table-column type="selection" width="48" />
             <el-table-column prop="billing_no" :label="$t('admin.finance.invoiceNo')" width="180" show-overflow-tooltip />
             <el-table-column :label="$t('admin.finance.userName')" min-width="120" show-overflow-tooltip>
                 <template #default="{ row }">
@@ -82,9 +92,12 @@
             <el-table-column prop="issued_at" :label="$t('admin.finance.issuedAt')" width="160">
                 <template #default="{ row }">{{ row.issued_at ? new Date(row.issued_at).toLocaleString() : '-' }}</template>
             </el-table-column>
-            <el-table-column :label="$t('admin.finance.actions')" width="80">
+            <el-table-column :label="$t('admin.finance.actions')" width="130">
                 <template #default="{ row }">
                     <el-button size="small" text type="primary" @click="showDetail(row)">{{ $t('common.detail') }}</el-button>
+                    <el-button size="small" text type="danger" :loading="operatingId === row.id" @click="handleDelete(row.id)">
+                        <el-icon><Delete /></el-icon>
+                    </el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -116,9 +129,9 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { Tickets, Search, RefreshLeft, Download } from '@element-plus/icons-vue'
+import { Tickets, Search, RefreshLeft, Download, Delete } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
 
@@ -134,6 +147,10 @@ const filterStatus = ref('')
 const exporting = ref(false)
 const showBillDetail = ref(false)
 const selectedBill = ref(null)
+const selected = ref([])
+const operatingId = ref(null)
+
+const onSelectionChange = (rows) => { selected.value = rows }
 
 const currencySymbol = (currency) => {
     if ((currency || 'USD').toUpperCase() === 'USD') return 'USD'
@@ -189,6 +206,42 @@ const handleReset = () => {
 const showDetail = (row) => {
     selectedBill.value = row
     showBillDetail.value = true
+}
+
+const handleDelete = async (id) => {
+    try {
+        await ElMessageBox.confirm(
+            t('admin.finance.confirmDeleteBill') || '确定删除此账单？',
+            t('common.confirm'),
+            { type: 'warning' },
+        )
+        operatingId.value = id
+        await client.delete(`/admin/finance/bills/${id}`)
+        ElMessage.success(t('common.deleted') || 'Deleted')
+        await fetchBills()
+    } catch (e) {
+        if (e !== 'cancel') ElMessage.error(t('common.deleteFailed') || 'Delete failed')
+    } finally {
+        operatingId.value = null
+    }
+}
+
+const handleBatchDelete = async () => {
+    if (selected.value.length === 0) return
+    try {
+        await ElMessageBox.confirm(
+            t('admin.finance.confirmBatchDelete') || `确定删除选中的 ${selected.value.length} 个账单？`,
+            t('common.confirm'),
+            { type: 'warning' },
+        )
+        const ids = selected.value.map((r) => r.id)
+        const { data } = await client.post('/admin/finance/bills/batch-destroy', { ids })
+        ElMessage.success(t('common.batchDeleted') || `已删除 ${data.data.deleted} 个账单`)
+        selected.value = []
+        await fetchBills()
+    } catch (e) {
+        if (e !== 'cancel') ElMessage.error(t('common.batchDeleteFailed') || 'Batch delete failed')
+    }
 }
 
 const handleExport = async () => {

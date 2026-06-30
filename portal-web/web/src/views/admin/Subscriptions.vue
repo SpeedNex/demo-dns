@@ -11,6 +11,18 @@
         @page-change="(p) => { currentPage = p; fetchSubscriptions() }"
         @size-change="(s) => { pageSize = s; currentPage = 1; fetchSubscriptions() }"
     >
+        <template #actions>
+            <el-button
+                type="danger"
+                plain
+                size="small"
+                :disabled="selected.length === 0"
+                @click="handleBatchDelete"
+            >
+                <span>{{ $t('common.batchDelete') }} ({{ selected.length }})</span>
+            </el-button>
+        </template>
+
         <template #filters>
             <el-input
                 v-model="filterUserId"
@@ -69,13 +81,14 @@
             </el-button>
         </template>
 
-        <el-table v-loading="loading" :data="subscriptions" stripe style="width: 100%">
+        <el-table v-loading="loading" :data="subscriptions" stripe style="width: 100%" @selection-change="onSelectionChange">
             <template #empty>
                 <div class="empty-state">
                     <el-icon class="empty-icon"><Key /></el-icon>
                     <p class="empty-title">{{ $t('dashboard.noData') }}</p>
                 </div>
             </template>
+            <el-table-column type="selection" width="48" />
             <el-table-column prop="id" :label="$t('admin.finance.subscriptionId')" min-width="80" />
             <el-table-column prop="user_id" :label="$t('admin.finance.userId')" width="80" />
             <el-table-column prop="user_name" :label="$t('admin.finance.userName')" min-width="120" show-overflow-tooltip />
@@ -121,7 +134,7 @@
                     {{ row.created_at ? new Date(row.created_at).toLocaleString() : '-' }}
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.finance.actions')" width="220" fixed="right">
+            <el-table-column :label="$t('admin.finance.actions')" width="280" fixed="right">
                 <template #default="{ row }">
                     <el-button size="small" text type="primary" @click="showDetail(row)">{{ $t('common.detail') }}</el-button>
                     <el-button
@@ -140,6 +153,9 @@
                         :loading="operatingId === row.id"
                         @click="handleAdminResume(row)"
                     >{{ $t('admin.finance.resumeSubscription') }}</el-button>
+                    <el-button size="small" text type="danger" :loading="operatingId === row.id" @click="handleDelete(row.id)">
+                        <el-icon><Delete /></el-icon>
+                    </el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -191,7 +207,7 @@
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
-import { Key, Search, RefreshLeft } from '@element-plus/icons-vue'
+import { Key, Search, RefreshLeft, Delete } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
 
@@ -209,6 +225,9 @@ const filterQuotaStatus = ref('')
 const showSubDetail = ref(false)
 const selectedSub = ref(null)
 const operatingId = ref(null)
+const selected = ref([])
+
+const onSelectionChange = (rows) => { selected.value = rows }
 
 const getStatusType = (status) => {
     const map = {
@@ -282,6 +301,42 @@ const showDetail = async (row) => {
         showSubDetail.value = true
     } catch {
         // silent
+    }
+}
+
+const handleDelete = async (id) => {
+    try {
+        await ElMessageBox.confirm(
+            t('admin.finance.confirmDeleteSubscription') || '确定删除此订阅？',
+            t('common.confirm'),
+            { type: 'warning' },
+        )
+        operatingId.value = id
+        await client.delete(`/admin/finance/subscriptions/${id}`)
+        ElMessage.success(t('common.deleted') || 'Deleted')
+        await fetchSubscriptions()
+    } catch (e) {
+        if (e !== 'cancel') ElMessage.error(t('common.deleteFailed') || 'Delete failed')
+    } finally {
+        operatingId.value = null
+    }
+}
+
+const handleBatchDelete = async () => {
+    if (selected.value.length === 0) return
+    try {
+        await ElMessageBox.confirm(
+            t('admin.finance.confirmBatchDelete') || `确定删除选中的 ${selected.value.length} 个订阅？`,
+            t('common.confirm'),
+            { type: 'warning' },
+        )
+        const ids = selected.value.map((r) => r.id)
+        const { data } = await client.post('/admin/finance/subscriptions/batch-destroy', { ids })
+        ElMessage.success(t('common.batchDeleted') || `已删除 ${data.data.deleted} 个订阅`)
+        selected.value = []
+        await fetchSubscriptions()
+    } catch (e) {
+        if (e !== 'cancel') ElMessage.error(t('common.batchDeleteFailed') || 'Batch delete failed')
     }
 }
 

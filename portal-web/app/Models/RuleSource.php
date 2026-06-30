@@ -29,6 +29,11 @@ class RuleSource extends Model
         'last_sync_message',
     ];
 
+    /**
+     * 序列化时追加的访问器字段
+     */
+    protected $appends = ['synced'];
+
     protected function casts(): array
     {
         return [
@@ -97,6 +102,14 @@ class RuleSource extends Model
     public function getLastSyncedAtAttribute(): mixed
     {
         return $this->last_sync_at;
+    }
+
+    /**
+     * 是否已同步成功（用于前端状态标签）
+     */
+    public function getSyncedAttribute(): bool
+    {
+        return ($this->attributes['last_sync_status'] ?? null) === 'ok';
     }
 
     private function mapTypeToFormat(string $type): string

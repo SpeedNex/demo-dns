@@ -1276,7 +1276,13 @@
       "confirmBatchDelete": "确定删除选中的 {count} 个规则源？",
       "batchDeleted": "已删除 {count} 个规则源",
       "batchSynced": "已同步 {count} 个规则源",
-      "emptyDesc2": "点击右上角「创建规则源」添加第一个规则源。"
+      "emptyDesc2": "点击右上角「创建规则源」添加第一个规则源。",
+      "ruleType": {
+        "domain_list": "域名列表",
+        "adblock": "广告拦截",
+        "hosts": "Hosts 文件",
+        "rpz": "响应策略区"
+      }
     },
     "memberCatalogs": {
       "title": "会员策略目录",

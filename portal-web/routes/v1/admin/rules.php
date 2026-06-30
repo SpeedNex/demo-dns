@@ -29,6 +29,7 @@ Route::middleware('permission:admin.rules.write')->group(function (): void {
     Route::post('rule-categories', [AdminCategoryController::class, 'store']);
     Route::put('rule-categories/{id}', [AdminCategoryController::class, 'update']);
     Route::delete('rule-categories/{id}', [AdminCategoryController::class, 'destroy']);
+    Route::post('rule-categories/batch-destroy', [AdminCategoryController::class, 'batchDestroy']);
     Route::post('brands', [AdminBrandController::class, 'store']);
     Route::put('brands/{id}', [AdminBrandController::class, 'update']);
     Route::delete('brands/{id}', [AdminBrandController::class, 'destroy']);

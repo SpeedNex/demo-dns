@@ -1256,7 +1256,13 @@
       "confirmBatchDelete": "선택한 {count}개의 규칙 소스를 삭제하시겠습니까?",
       "batchDeleted": "{count}개의 규칙 소스가 삭제되었습니다",
       "batchSynced": "{count}개의 규칙 소스가 동기화되었습니다",
-      "emptyDesc2": "오른쪽 상단의 \"규칙 소스 만들기\"를 클릭하여 첫 번째 규칙 소스를 추가하세요."
+      "emptyDesc2": "오른쪽 상단의 \"규칙 소스 만들기\"를 클릭하여 첫 번째 규칙 소스를 추가하세요.",
+      "ruleType": {
+        "domain_list": "도메인 목록",
+        "adblock": "광고 차단",
+        "hosts": "호스트 파일",
+        "rpz": "RPZ"
+      }
     },
     "memberCatalogs": {
       "title": "멤버 카탈로그",
