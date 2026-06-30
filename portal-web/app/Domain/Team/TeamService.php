@@ -244,6 +244,25 @@ final class TeamService
     }
 
     /**
+     * 按 invitation_id 接受邀请（站内列表场景，无需 raw token 验证）.
+     */
+    public function acceptInviteById(int $invitationId, string $userId): void
+    {
+        $user = User::findOrFail($userId);
+        $invitation = TeamInvitation::where('id', $invitationId)
+            ->where('email', $user->email)
+            ->whereNull('accepted_at')
+            ->whereNull('declined_at')
+            ->where('expires_at', '>', now())
+            ->firstOrFail();
+
+        DB::transaction(function () use ($invitation, $userId): void {
+            $this->addMember($invitation->team_id, $userId, $invitation->role);
+            $invitation->update(['accepted_at' => now()]);
+        });
+    }
+
+    /**
      * List invitations for a team.
      *
      * @return Collection<int, TeamInvitation>

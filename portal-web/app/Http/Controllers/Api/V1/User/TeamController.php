@@ -245,13 +245,12 @@ final class TeamController
         ]);
 
         if (! empty($validated['invitation_id'])) {
-            $invitation = \App\Models\TeamInvitation::findOrFail($validated['invitation_id']);
-            $token = $invitation->token;
+            // 站内列表场景：直接按 invitation_id 接受，无需 raw token
+            $this->teamService->acceptInviteById($validated['invitation_id'], $request->user()->uid);
         } else {
-            $token = $validated['token'];
+            // 邮件链接场景：用 raw token 验证后接受
+            $this->teamService->acceptInvite($validated['token'], $request->user()->uid);
         }
-
-        $this->teamService->acceptInvite($token, $request->user()->uid);
 
         return response()->json(['data' => ['accepted' => true]]);
     }
