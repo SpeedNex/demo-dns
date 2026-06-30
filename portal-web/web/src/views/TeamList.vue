@@ -5,68 +5,70 @@
             <p>{{ $t('team.subtitle') }}</p>
         </div>
 
-        <div class="action-bar">
-            <el-button type="primary" @click="$router.push('/user/teams/create')">
-                {{ $t('team.createTeam') }}
-            </el-button>
-        </div>
+        <el-card shadow="never" class="list-card">
+            <div class="action-bar">
+                <el-button type="primary" @click="$router.push('/user/teams/create')">
+                    {{ $t('team.createTeam') }}
+                </el-button>
+            </div>
 
-        <el-table v-loading="loading" :data="teams" empty-text="—">
-            <el-table-column prop="name" :label="$t('team.teamName')" min-width="180">
-                <template #default="{ row }">
-                    <strong>{{ row.name }}</strong>
-                </template>
-            </el-table-column>
-            <el-table-column prop="identifier" :label="$t('team.identifier')" width="180">
-                <template #default="{ row }">
-                    <code>{{ row.identifier }}</code>
-                </template>
-            </el-table-column>
-            <el-table-column prop="member_count" :label="$t('team.members')" width="100" align="center" />
-            <el-table-column prop="role" :label="$t('team.yourRole')" width="120" align="center">
-                <template #default="{ row }">
-                    <el-tag :type="row.role === 'owner' ? 'danger' : row.role === 'admin' ? 'warning' : 'info'" size="small">
-                        {{ $t('team.role_' + row.role) }}
-                    </el-tag>
-                </template>
-            </el-table-column>
-            <el-table-column :label="$t('team.actions')" width="280">
-                <template #default="{ row }">
-                    <el-button size="small" @click="$router.push(`/user/teams/${row.id}`)">
-                        {{ $t('team.manage') }}
-                    </el-button>
-                    <el-button
-                        v-if="row.role !== 'owner'"
-                        size="small"
-                        type="warning"
-                        plain
-                        @click="handleLeave(row.id, row.name)"
-                    >
-                        {{ $t('team.leaveTeam') }}
-                    </el-button>
-                </template>
-            </el-table-column>
-        </el-table>
-
-        <!-- Pending Invitations -->
-        <div v-if="pendingInvitations.length" class="section-gap">
-            <h2 class="section-title">{{ $t('team.pendingInvitations') }}</h2>
-            <el-table :data="pendingInvitations" empty-text="—">
-                <el-table-column prop="team_name" :label="$t('team.teamName')" />
-                <el-table-column prop="role" :label="$t('team.invitedAs')" width="120">
+            <el-table v-loading="loading" :data="teams" empty-text="—">
+                <el-table-column prop="name" :label="$t('team.teamName')" min-width="180">
                     <template #default="{ row }">
-                        <el-tag size="small">{{ $t('team.role_' + row.role) }}</el-tag>
+                        <strong>{{ row.name }}</strong>
                     </template>
                 </el-table-column>
-                <el-table-column :label="$t('team.actions')" width="160">
+                <el-table-column prop="identifier" :label="$t('team.identifier')" width="180">
                     <template #default="{ row }">
-                        <el-button size="small" type="primary" @click="acceptInvitation(row.id)">
-                            {{ $t('team.accept') }}
+                        <code>{{ row.identifier }}</code>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="member_count" :label="$t('team.members')" width="100" align="center" />
+                <el-table-column prop="role" :label="$t('team.yourRole')" width="120" align="center">
+                    <template #default="{ row }">
+                        <el-tag :type="row.role === 'owner' ? 'danger' : row.role === 'admin' ? 'warning' : 'info'" size="small">
+                            {{ $t('team.role_' + row.role) }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column :label="$t('team.actions')" width="280">
+                    <template #default="{ row }">
+                        <el-button size="small" @click="$router.push(`/user/teams/${row.id}`)">
+                            {{ $t('team.manage') }}
+                        </el-button>
+                        <el-button
+                            v-if="row.role !== 'owner'"
+                            size="small"
+                            type="warning"
+                            plain
+                            @click="handleLeave(row.id, row.name)"
+                        >
+                            {{ $t('team.leaveTeam') }}
                         </el-button>
                     </template>
                 </el-table-column>
             </el-table>
-        </div>
+
+            <!-- Pending Invitations -->
+            <div v-if="pendingInvitations.length" class="section-gap">
+                <h2 class="section-title">{{ $t('team.pendingInvitations') }}</h2>
+                <el-table :data="pendingInvitations" empty-text="—">
+                    <el-table-column prop="team_name" :label="$t('team.teamName')" />
+                    <el-table-column prop="role" :label="$t('team.invitedAs')" width="120">
+                        <template #default="{ row }">
+                            <el-tag size="small">{{ $t('team.role_' + row.role) }}</el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column :label="$t('team.actions')" width="160">
+                        <template #default="{ row }">
+                            <el-button size="small" type="primary" @click="acceptInvitation(row.id)">
+                                {{ $t('team.accept') }}
+                            </el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+        </el-card>
     </Layout>
 </template>
 
@@ -146,6 +148,12 @@ onMounted(() => {
     color: var(--color-text-muted, #64748b);
     font-size: 15px;
     margin: 0;
+}
+.list-card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #eef2f7;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 .action-bar {
     margin-bottom: 20px;

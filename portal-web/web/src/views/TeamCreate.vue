@@ -5,27 +5,29 @@
             <p>{{ $t('team.createSubtitle') }}</p>
         </div>
 
-        <el-form ref="formRef" :model="form" :rules="rules" label-width="120px" class="create-form">
-            <el-form-item :label="$t('team.teamName')" prop="name">
-                <el-input v-model="form.name" :placeholder="$t('team.namePlaceholder')" maxlength="100" />
-            </el-form-item>
-            <el-form-item :label="$t('team.identifier')" prop="identifier">
-                <el-input v-model="form.identifier" :placeholder="$t('team.identifierPlaceholder')" maxlength="100">
-                    <template #prepend>ocer-dns.to/</template>
-                </el-input>
-            </el-form-item>
-            <el-form-item :label="$t('team.description')" prop="description">
-                <el-input v-model="form.description" type="textarea" :rows="3" maxlength="500" />
-            </el-form-item>
-            <el-form-item>
-                <el-button type="primary" :loading="submitting" @click="handleSubmit">
-                    {{ $t('team.create') }}
-                </el-button>
-                <el-button @click="$router.push('/user/teams')">
-                    {{ $t('team.cancel') }}
-                </el-button>
-            </el-form-item>
-        </el-form>
+        <el-card shadow="never" class="form-card">
+            <el-form ref="formRef" :model="form" :rules="rules" label-width="120px" class="create-form">
+                <el-form-item :label="$t('team.teamName')" prop="name">
+                    <el-input v-model="form.name" :placeholder="$t('team.namePlaceholder')" maxlength="100" />
+                </el-form-item>
+                <el-form-item :label="$t('team.identifier')" prop="identifier">
+                    <el-input v-model="form.identifier" :placeholder="$t('team.identifierPlaceholder')" maxlength="100">
+                        <template #prepend>ocer-dns.to/</template>
+                    </el-input>
+                </el-form-item>
+                <el-form-item :label="$t('team.description')" prop="description">
+                    <el-input v-model="form.description" type="textarea" :rows="3" maxlength="500" />
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" :loading="submitting" @click="handleSubmit">
+                        {{ $t('team.create') }}
+                    </el-button>
+                    <el-button @click="$router.push('/user/teams')">
+                        {{ $t('team.cancel') }}
+                    </el-button>
+                </el-form-item>
+            </el-form>
+        </el-card>
     </Layout>
 </template>
 
@@ -87,6 +89,12 @@ async function handleSubmit() {
     color: var(--color-text-muted, #64748b);
     font-size: 15px;
     margin: 0;
+}
+.form-card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #eef2f7;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 .create-form {
     max-width: 600px;

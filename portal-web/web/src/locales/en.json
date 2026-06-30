@@ -2124,7 +2124,7 @@
     "subtitle": "Manage teams, members, and roles",
     "createTeam": "Create Team",
     "teamName": "Team Name",
-    "identifier": "ID",
+    "identifier": "标识ID",
     "slug": "ID",
     "role_owner": "Owner",
     "role_admin": "Admin",

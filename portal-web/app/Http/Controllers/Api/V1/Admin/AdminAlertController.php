@@ -61,10 +61,13 @@ final class AdminAlertController
     {
         $validated = $request->validate([
             'ids' => 'required|array|min:1',
-            'ids.*' => 'integer',  // 前端传 integer id，后端 cast 后统一为 int
+            // 前端有时发整数数组,有时发字符串数组。
+            // Alert id 实际是 bigIncrements,统一转整数后做 whereIn,避免校验报错。
+            'ids.*' => ['required'],
         ]);
 
-        $deleted = Alert::whereIn('id', $validated['ids'])->delete();
+        $ids = array_map(static fn ($v): int => (int) $v, $validated['ids']);
+        $deleted = Alert::whereIn('id', $ids)->delete();
 
         return response()->json(['data' => ['deleted' => $deleted]]);
     }

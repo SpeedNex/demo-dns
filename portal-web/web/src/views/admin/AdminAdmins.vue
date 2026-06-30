@@ -95,7 +95,7 @@
                         <el-icon><Edit /></el-icon>
                         {{ $t('common.edit') }}
                     </el-button>
-                    <el-button size="small" text type="warning" @click="openAssignRoles(row)">
+                    <el-button size="small" text type="warning" :disabled="row.is_super_admin" @click="openAssignRoles(row)">
                         <el-icon><Key /></el-icon>
                         {{ $t('admin.rbac.assignRole') }}
                     </el-button>
