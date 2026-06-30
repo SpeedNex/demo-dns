@@ -142,6 +142,16 @@ echo "Installed to ${INSTALL_PATH}"
 INSTALLED_VER="$("$INSTALL_PATH" --version 2>/dev/null || echo 'unknown')"
 echo "Version: ${INSTALLED_VER}"
 
+# ---------- Clean stale api_key (2026-06-30) ----------
+# 重装前必须清除旧 api_key，确保 install 流程用新 token 重新获取凭据。
+# 与 install.go::buildInstalledConfig() (line 306) 的 writeAPIKeyFile 配合，
+# 让 Go binary 始终写入 fresh key，避免旧 key 残留导致 auth hash 不一致触发 401。
+API_KEY_PATH="/usr/local/etc/dns-resolver/api_key"
+if [[ -f "$API_KEY_PATH" ]]; then
+    echo "Removing stale api_key: $API_KEY_PATH"
+    $SUDO rm -f "$API_KEY_PATH"
+fi
+
 # ---------- Run Install Subcommand ----------
 # 2026-06-22: 默认带 --start,dns-resolver install 完成后会自动拉起服务
 # (systemd 优先,降级 nohup,见 dns-resolver/cmd/dns-resolver/install.go startService)。
