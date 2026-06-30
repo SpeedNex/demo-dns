@@ -57,8 +57,8 @@
             </el-table-column>
             <el-table-column :label="$t('admin.geoDns.installStatus')" :min-width="110">
                 <template #default="{ row }">
-                    <el-tag v-if="row.install_status === 'installed'" type="success" size="small" effect="light" style="white-space:nowrap">已安装</el-tag>
-                    <el-tag v-else type="info" size="small" effect="plain" style="white-space:nowrap">待安装</el-tag>
+                    <el-tag v-if="row.install_status === 'installed'" type="success" size="small" effect="light" style="white-space:nowrap">{{ $t('admin.geoDns.installed') }}</el-tag>
+                    <el-tag v-else type="info" size="small" effect="plain" style="white-space:nowrap">{{ $t('admin.geoDns.pending') }}</el-tag>
                 </template>
             </el-table-column>
             <el-table-column :label="$t('admin.geoDns.onlineStatus')" :min-width="100">
@@ -88,7 +88,7 @@
                 <template #default="{ row }">
                     <div style="display:flex;flex-direction:column;line-height:1.3">
                         <span :class="row.status === 'online' ? '' : 'hb-stale'">
-                            {{ row.node_last_seen_ago || (row.node_last_heartbeat_at ? formatTime(row.node_last_heartbeat_at) : '从未心跳') }}
+                            {{ row.node_last_seen_ago || (row.node_last_heartbeat_at ? formatTime(row.node_last_heartbeat_at) : $t('admin.geoDns.neverHeartbeat')) }}
                         </span>
                         <span v-if="row.node_last_heartbeat_at" class="hb-exact">{{ formatTime(row.node_last_heartbeat_at) }}</span>
                     </div>

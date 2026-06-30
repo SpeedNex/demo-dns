@@ -12,18 +12,17 @@ use Illuminate\Support\Facades\Hash;
  * admin:create — 创建或重置管理员账号。
  *
  * 用法:
- *   php artisan admin:create                  # 使用默认值创建
- *   php artisan admin:create --username=admin --email=admin@example.com --password=123456
- *   php artisan admin:create --reset-password  # 重置默认密码
+ *   php artisan admin:create --username=admin --email=admin@example.com --password=SecurePass123
+ *   php artisan admin:create --reset-password --password=NewSecurePass
  *
- * 主要用于生产环境初始化或密码恢复。
+ * 主要用于生产环境初始化或密码恢复。密码必填且至少8字符。
  */
 final class AdminCreateCommand extends Command
 {
     protected $signature = 'admin:create
         {--username=admin : 管理员用户名}
         {--email=admin@example.com : 管理员邮箱}
-        {--password=123456 : 管理员密码}
+        {--password= : 管理员密码（必填，至少8字符）}
         {--reset-password : 仅重置已有管理员密码}';
 
     protected $description = 'Create or reset the admin account';
@@ -34,6 +33,11 @@ final class AdminCreateCommand extends Command
         $email = (string) $this->option('email');
         $password = (string) $this->option('password');
         $resetOnly = (bool) $this->option('reset-password');
+
+        if ($password === '' || strlen($password) < 8) {
+            $this->error('Password must be at least 8 characters.');
+            return self::FAILURE;
+        }
 
         $existing = Admin::where('email', $email)->orWhere('username', $username)->first();
 

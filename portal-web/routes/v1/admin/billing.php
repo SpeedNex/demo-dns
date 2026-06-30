@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 // Plans (套餐管理)
 Route::middleware('permission:admin.billing.read')->group(function (): void {
     Route::get('plans', [AdminPlanController::class, 'index']);
+    Route::get('plans/{code}/users', [AdminPlanController::class, 'users']);
 });
 Route::middleware('permission:admin.billing.write')->group(function (): void {
     Route::post('plans', [AdminPlanController::class, 'store']);

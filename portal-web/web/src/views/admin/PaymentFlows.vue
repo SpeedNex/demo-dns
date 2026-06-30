@@ -57,30 +57,30 @@
     <el-row v-loading="summaryLoading" :gutter="12" class="kpi-row">
       <el-col :xs="12" :sm="6">
         <el-card shadow="never" class="kpi-card">
-          <div class="kpi-label">今日成功金额</div>
+          <div class="kpi-label">{{ $t('admin.finance.summary.todaySuccessAmount') }}</div>
           <div class="kpi-value">{{ formatMoney(summary.today.amount_minor, summary.currency) }}</div>
-          <div class="kpi-sub">共 {{ summary.today.total_count }} 笔 / 成功 {{ summary.today.succeeded_count }}</div>
+          <div class="kpi-sub">{{ $t('admin.finance.summary.count') }} {{ summary.today.total_count }} / {{ $t('admin.finance.summary.refundCount') }} {{ summary.today.succeeded_count }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="never" class="kpi-card">
-          <div class="kpi-label">今日成功率</div>
+          <div class="kpi-label">{{ $t('admin.finance.summary.todaySuccessRate') }}</div>
           <div class="kpi-value" :class="rateClass(summary.today.success_rate)">{{ percent(summary.today.success_rate) }}</div>
-          <div class="kpi-sub">退款 {{ summary.today.refund_count }} 笔</div>
+          <div class="kpi-sub">{{ $t('admin.finance.summary.refundCount') }} {{ summary.today.refund_count }} {{ $t('admin.finance.summary.count') }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="never" class="kpi-card">
-          <div class="kpi-label">本月成功金额</div>
+          <div class="kpi-label">{{ $t('admin.finance.summary.monthSuccessAmount') }}</div>
           <div class="kpi-value">{{ formatMoney(summary.this_month.amount_minor, summary.currency) }}</div>
-          <div class="kpi-sub">共 {{ summary.this_month.total_count }} 笔 / 成功 {{ summary.this_month.succeeded_count }}</div>
+          <div class="kpi-sub">{{ $t('admin.finance.summary.count') }} {{ summary.this_month.total_count }} / {{ $t('admin.finance.summary.refundCount') }} {{ summary.this_month.succeeded_count }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="never" class="kpi-card">
-          <div class="kpi-label">本月退款率</div>
+          <div class="kpi-label">{{ $t('admin.finance.summary.monthRefundRate') }}</div>
           <div class="kpi-value" :class="rateClass(1 - summary.this_month.refund_rate, true)">{{ percent(summary.this_month.refund_rate) }}</div>
-          <div class="kpi-sub">退款 {{ summary.this_month.refund_count }} 笔 / 成功率 {{ percent(summary.this_month.success_rate) }}</div>
+          <div class="kpi-sub">{{ $t('admin.finance.summary.refundCount') }} {{ summary.this_month.refund_count }} {{ $t('admin.finance.summary.count') }} / {{ percent(summary.this_month.success_rate) }}</div>
         </el-card>
       </el-col>
     </el-row>
@@ -89,7 +89,7 @@
     <el-card shadow="never" class="trend-card">
       <template #header>
         <div class="trend-header">
-          <span class="trend-title">最近 {{ summary.range }} 天变化趋势</span>
+          <span class="trend-title">{{ $t('admin.finance.summary.rangeTrend', { days: summary.range }) }}</span>
           <el-radio-group v-model="trendRange" size="small" @change="fetchSummary">
             <el-radio-button :value="7">7d</el-radio-button>
             <el-radio-button :value="30">30d</el-radio-button>
@@ -98,19 +98,19 @@
         </div>
       </template>
       <el-table :data="summary.trend" stripe size="small">
-        <el-table-column prop="date" label="日期" width="120" />
-        <el-table-column label="成功金额" align="right">
+        <el-table-column prop="date" :label="$t('admin.finance.trend.date')" width="120" />
+        <el-table-column :label="$t('admin.finance.trend.successAmount')" align="right">
           <template #default="{ row }">{{ formatMoney(row.succeeded_amount, summary.currency) }}</template>
         </el-table-column>
-        <el-table-column label="成功笔数" prop="succeeded_count" align="right" width="100" />
-        <el-table-column label="失败金额" align="right">
+        <el-table-column :label="$t('admin.finance.trend.successCount')" prop="succeeded_count" align="right" width="100" />
+        <el-table-column :label="$t('admin.finance.trend.failedAmount')" align="right">
           <template #default="{ row }">{{ formatMoney(row.failed_amount, summary.currency) }}</template>
         </el-table-column>
-        <el-table-column label="失败笔数" prop="failed_count" align="right" width="100" />
-        <el-table-column label="退款金额" align="right">
+        <el-table-column :label="$t('admin.finance.trend.failedCount')" prop="failed_count" align="right" width="100" />
+        <el-table-column :label="$t('admin.finance.trend.refundAmount')" align="right">
           <template #default="{ row }">{{ formatMoney(row.refunded_amount, summary.currency) }}</template>
         </el-table-column>
-        <el-table-column label="走势" min-width="200">
+        <el-table-column :label="$t('admin.finance.summary.trend')" min-width="200">
           <template #default="{ row }">
             <div class="trend-bar">
               <div class="trend-bar-success" :style="{ width: trendBarWidth(row.succeeded_amount) + '%' }" />
@@ -128,33 +128,37 @@
           <p class="empty-title">{{ $t('common.noData') }}</p>
         </div>
       </template>
-      <el-table-column prop="id" :label="$t('admin.finance.txId')" width="80" />
-      <el-table-column :label="$t('admin.finance.userName')" min-width="140" show-overflow-tooltip>
+      <el-table-column prop="id" :label="$t('admin.finance.txId')" min-width="70" />
+      <el-table-column :label="$t('admin.finance.userName')" min-width="120" show-overflow-tooltip>
         <template #default="{ row }">
           <span>{{ row.user_name || row.user_email || '-' }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="subscription_no" :label="$t('admin.finance.subscriptionNo')" width="180" show-overflow-tooltip />
-      <el-table-column prop="plan_code" :label="$t('admin.finance.planCode')" width="100" />
+      <el-table-column prop="subscription_no" :label="$t('admin.finance.subscriptionNo')" width="160" show-overflow-tooltip />
+      <el-table-column :label="$t('admin.finance.planCode')" min-width="100">
+        <template #default="{ row }">
+          <el-tag size="small" effect="plain">{{ getPlanName(row.plan_code) }}</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column prop="provider" :label="$t('admin.finance.provider')" width="80" />
-      <el-table-column :label="$t('admin.finance.type')" width="90">
+      <el-table-column :label="$t('admin.finance.type')" width="80">
         <template #default="{ row }">
           <el-tag :type="row.type === 'refund' ? 'warning' : 'success'" size="small" effect="light">
             {{ row.type === 'refund' ? $t('admin.finance.paymentTypeRefund') : $t('admin.finance.paymentTypePayment') }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('admin.finance.amount')" width="130">
+      <el-table-column :label="$t('admin.finance.amount')" width="120">
         <template #default="{ row }">
           <span class="amount-value">{{ formatMoney(row.amount_minor, row.currency) }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="status" :label="$t('admin.finance.status')" width="110">
+      <el-table-column :label="$t('admin.finance.status')" width="100">
         <template #default="{ row }">
           <el-tag :type="getStatusType(row.status)" size="small" effect="light">{{ statusLabel(row.status) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('admin.finance.time')" width="180">
+      <el-table-column :label="$t('admin.finance.time')" width="160">
         <template #default="{ row }">{{ row.created_at ? new Date(row.created_at).toLocaleString() : '-' }}</template>
       </el-table-column>
     </el-table>
@@ -206,6 +210,15 @@ const statusLabel = (status) => {
   if (!status) return '-'
   const key = `admin.finance.paymentStatus${status.charAt(0).toUpperCase() + status.slice(1)}`
   return t(key)
+}
+
+const getPlanName = (code) => {
+  const map = {
+    free: t('admin.plans.nameFree'),
+    pro: t('admin.plans.namePro'),
+    business: t('admin.plans.nameBusiness'),
+  }
+  return map[code] || code || '-'
 }
 
 const fetchData = async () => {

@@ -3,7 +3,7 @@
         logo="O"
         brand="OcerDNS"
         brand-tagline="Personal DNS privacy and control"
-        eyebrow="Member Access"
+        :eyebrow="$t('auth.eyebrowMember')"
         :title="$t('home.title2')"
         :description="$t('home.subtitle')"
         :panel-title="$t('auth.signIn')"
@@ -65,9 +65,9 @@ const rules = computed(() => ({
 }))
 
 const highlights = computed(() => ([
-    { value: 'DoH', label: 'HTTPS encrypted resolution' },
-    { value: '24x7', label: 'Managed profile availability' },
-    { value: 'Audit', label: 'Policy and device traceability' },
+    { value: 'DoH', label: t('auth.highlightDoh') },
+    { value: '24x7', label: t('auth.highlightAvailability') },
+    { value: 'Audit', label: t('auth.highlightAudit') },
 ]))
 
 const handleLogin = async () => {

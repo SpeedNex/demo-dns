@@ -54,27 +54,27 @@ const iconMap = {
 }
 
 const stats = ref([
-    { value: '-', label: t('admin.dashboard.nodesOnline') || 'Nodes Online', color: 'green' },
-    { value: '-', label: t('admin.dashboard.totalQueries') || 'Total Queries (24h)', color: 'blue' },
-    { value: '-', label: t('admin.dashboard.blocked') || 'Blocked (24h)', color: 'red' },
-    { value: '-', label: t('admin.dashboard.activeUsers') || 'Active Users', color: 'purple' },
+    { value: '-', label: t('admin.dashboard.nodesOnline'), color: 'green' },
+    { value: '-', label: t('admin.dashboard.totalQueries'), color: 'blue' },
+    { value: '-', label: t('admin.dashboard.blocked'), color: 'red' },
+    { value: '-', label: t('admin.dashboard.activeUsers'), color: 'purple' },
 ])
 
 // UI.md #32: 维度统计（GAFAM / 根域名 / 加密DNS / DNSSEC）
 const dimensionStats = ref([
-    { value: '-', label: 'GAFAM (24h)', color: 'red' },
-    { value: '-', label: '根域名 (24h)', color: 'blue' },
-    { value: '-', label: '加密 DNS (24h)', color: 'green' },
-    { value: '-', label: 'DNSSEC 有效 (24h)', color: 'purple' },
+    { value: '-', label: t('admin.dashboard.dimensionGafam'), color: 'red' },
+    { value: '-', label: t('admin.dashboard.dimensionRootDomain'), color: 'blue' },
+    { value: '-', label: t('admin.dashboard.dimensionEncryptedDns'), color: 'green' },
+    { value: '-', label: t('admin.dashboard.dimensionDnssecValid'), color: 'purple' },
 ])
 
 const quickLinks = computed(() => [
-    { icon: 'Monitor', to: '/admin/nodes', title: t('admin.dashboard.nodeManagement') || 'Node Management', desc: t('admin.dashboard.nodeManagementDesc') || 'View and manage DNS resolver nodes' },
-    { icon: 'Upload', to: '/admin/publishes', title: t('admin.dashboard.publishTasks') || 'Publish Tasks', desc: t('admin.dashboard.publishTasksDesc') || 'Configuration version deployment' },
-    { icon: 'Globe', to: '/admin/geo-dns', title: t('admin.dashboard.geoDns') || 'GeoDNS', desc: t('admin.dashboard.geoDnsDesc') || 'Regional traffic scheduling' },
-    { icon: 'Document', to: '/admin/query-logs', title: t('admin.dashboard.queryLogs') || 'Query Logs', desc: t('admin.dashboard.queryLogsDesc') || 'DNS query log search and export' },
-    { icon: 'DataAnalysis', to: '/admin/rules', title: t('admin.dashboard.ruleLibrary') || 'Rule Library', desc: t('admin.dashboard.ruleLibraryDesc') || 'Manage rule sources' },
-    { icon: 'Setting', to: '/admin/system-config', title: t('admin.dashboard.systemConfig') || 'System Config', desc: t('admin.dashboard.systemConfigDesc') || 'DNS and system parameters' },
+    { icon: 'Monitor', to: '/admin/nodes', title: t('admin.dashboard.nodeManagement'), desc: t('admin.dashboard.nodeManagementDesc') },
+    { icon: 'Upload', to: '/admin/publishes', title: t('admin.dashboard.publishTasks'), desc: t('admin.dashboard.publishTasksDesc') },
+    { icon: 'Globe', to: '/admin/geo-dns', title: t('admin.dashboard.geoDns'), desc: t('admin.dashboard.geoDnsDesc') },
+    { icon: 'Document', to: '/admin/query-logs', title: t('admin.dashboard.queryLogs'), desc: t('admin.dashboard.queryLogsDesc') },
+    { icon: 'DataAnalysis', to: '/admin/rules', title: t('admin.dashboard.ruleLibrary'), desc: t('admin.dashboard.ruleLibraryDesc') },
+    { icon: 'Setting', to: '/admin/system-config', title: t('admin.dashboard.systemConfig'), desc: t('admin.dashboard.systemConfigDesc') },
 ])
 
 const loading = ref(false)
@@ -88,25 +88,25 @@ const fetchOverview = async () => {
         // Backend returns: nodes.online, queries.last_24h, etc.
         // Frontend expects: nodes_online, today_queries, etc.
         stats.value = [
-            { value: d.nodes?.online ?? '-', label: t('admin.dashboard.nodesOnline') || 'Nodes Online', color: 'green' },
-            { value: d.queries?.last_24h ?? '-', label: t('admin.dashboard.totalQueries') || 'Total Queries (24h)', color: 'blue' },
-            { value: d.queries?.blocked_24h ?? '-', label: t('admin.dashboard.blocked') || 'Blocked (24h)', color: 'red' },
-            { value: d.users?.active ?? d.users?.total ?? '-', label: t('admin.dashboard.activeUsers') || 'Active Users', color: 'purple' },
+            { value: d.nodes?.online ?? '-', label: t('admin.dashboard.nodesOnline'), color: 'green' },
+            { value: d.queries?.last_24h ?? '-', label: t('admin.dashboard.totalQueries'), color: 'blue' },
+            { value: d.queries?.blocked_24h ?? '-', label: t('admin.dashboard.blocked'), color: 'red' },
+            { value: d.users?.active ?? d.users?.total ?? '-', label: t('admin.dashboard.activeUsers'), color: 'purple' },
         ]
         // UI.md #32
         dimensionStats.value = [
-            { value: d.queries?.gafam ?? 0, label: 'GAFAM (24h)', color: 'red' },
-            { value: d.queries?.root ?? 0, label: '根域名 (24h)', color: 'blue' },
-            { value: d.queries?.encrypted_dns ?? 0, label: '加密 DNS (24h)', color: 'green' },
-            { value: d.queries?.dnssec_valid ?? 'N/A', label: 'DNSSEC 有效 (24h)', color: 'purple' },
+            { value: d.queries?.gafam ?? 0, label: t('admin.dashboard.dimensionGafam'), color: 'red' },
+            { value: d.queries?.root ?? 0, label: t('admin.dashboard.dimensionRootDomain'), color: 'blue' },
+            { value: d.queries?.encrypted_dns ?? 0, label: t('admin.dashboard.dimensionEncryptedDns'), color: 'green' },
+            { value: d.queries?.dnssec_valid ?? 'N/A', label: t('admin.dashboard.dimensionDnssecValid'), color: 'purple' },
         ]
     } catch {
         // Keep defaults, show error state
         stats.value = [
-            { value: '-', label: t('admin.dashboard.nodesOnline') || 'Nodes Online', color: 'green' },
-            { value: '-', label: t('admin.dashboard.totalQueries') || 'Total Queries (24h)', color: 'blue' },
-            { value: '-', label: t('admin.dashboard.blocked') || 'Blocked (24h)', color: 'red' },
-            { value: '-', label: t('admin.dashboard.activeUsers') || 'Active Users', color: 'purple' },
+            { value: '-', label: t('admin.dashboard.nodesOnline'), color: 'green' },
+            { value: '-', label: t('admin.dashboard.totalQueries'), color: 'blue' },
+            { value: '-', label: t('admin.dashboard.blocked'), color: 'red' },
+            { value: '-', label: t('admin.dashboard.activeUsers'), color: 'purple' },
         ]
     } finally {
         loading.value = false

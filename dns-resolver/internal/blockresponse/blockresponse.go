@@ -7,12 +7,13 @@ package blockresponse
 import (
 	"net"
 	"strings"
+	"time"
 
 	"github.com/miekg/dns"
 )
 
-// 项目 SOA 域名常量（可配置化）
-const (
+// 项目 SOA 域名常量（可从 config 下发覆盖）
+var (
 	// DefaultSOANS 是权威 DNS 服务器名称
 	DefaultSOANS = "ns1.OCER-DNS.com."
 	// DefaultSOAMbox 是管理员邮箱（@ 替换为 .）
@@ -86,7 +87,7 @@ func addNegativeSOA(reply *dns.Msg, question dns.Question) {
 		Hdr:     dns.RR_Header{Name: question.Name, Rrtype: dns.TypeSOA, Class: dns.ClassINET, Ttl: 60},
 		Ns:      DefaultSOANS,
 		Mbox:    DefaultSOAMbox,
-		Serial:  1,
+		Serial:  uint32(time.Now().Unix()), // 2026-06-30: 使用时间戳，利于排查和缓存一致性
 		Refresh: 3600,
 		Retry:   600,
 		Expire:  86400,

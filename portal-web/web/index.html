@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- 2026-06-30: strict-origin-when-cross-origin 减少 js.stripe.com 跨域 referrer 泄露，降低 Safari ITP / Firefox ETP 对 stripe.com / m.stripe.network 的 Tracking Prevention 警告 -->
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <title>OcerDNS Security Platform</title>
 </head>
 <body>

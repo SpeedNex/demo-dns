@@ -50,13 +50,13 @@
                 <span>{{ meta?.online ?? 0 }} {{ t('admin.nodes.online') }}</span>
             </el-tag>
             <el-tag v-if="(meta?.degraded ?? 0) > 0" size="small" type="warning" effect="light">
-                <span>{{ meta?.degraded }} 降级</span>
+                <span>{{ meta?.degraded }} {{ t('admin.nodes.degraded') }}</span>
             </el-tag>
             <el-tag v-if="(meta?.offline ?? 0) > 0" size="small" type="danger" effect="light">
                 <span>{{ meta?.offline }} {{ t('admin.nodes.offline') }}</span>
             </el-tag>
             <el-tag v-if="(meta?.not_installed ?? 0) > 0" size="small" type="info" effect="plain">
-                <span>{{ meta?.not_installed }} 未安装</span>
+                <span>{{ meta?.not_installed }} {{ t('admin.nodes.notInstalled') }}</span>
             </el-tag>
         </div>
 
@@ -64,7 +64,7 @@
             <template #empty>
                 <div class="empty-state">
                     <p class="empty-title">{{ t('admin.nodes.noNodes') }}</p>
-                    <p class="empty-desc">点击右上角「{{ t('admin.nodes.create') }}」添加第一个 DNS 节点。</p>
+                    <p class="empty-desc">{{ t('admin.nodes.emptyDesc', { create: t('admin.nodes.create') }) }}</p>
                 </div>
             </template>
             <el-table-column type="selection" width="48" />
@@ -84,21 +84,21 @@
             <el-table-column :label="t('admin.nodes.status')" min-width="110">
                 <template #default="{ row }">
                     <!-- install_status 是 DB 原值：pending / installed / failed -->
-                    <el-tag v-if="row.install_status === 'installed'" type="success" size="small" effect="light" style="white-space:nowrap">已安装</el-tag>
-                    <el-tag v-else-if="row.install_status === 'failed'" type="danger" size="small" effect="light" style="white-space:nowrap">安装失败</el-tag>
-                    <el-tag v-else type="info" size="small" effect="plain" style="white-space:nowrap">待安装</el-tag>
+                    <el-tag v-if="row.install_status === 'installed'" type="success" size="small" effect="light" style="white-space:nowrap">{{ t('admin.nodes.installed') }}</el-tag>
+                    <el-tag v-else-if="row.install_status === 'failed'" type="danger" size="small" effect="light" style="white-space:nowrap">{{ t('admin.nodes.installFailed') }}</el-tag>
+                    <el-tag v-else type="info" size="small" effect="plain" style="white-space:nowrap">{{ t('admin.nodes.pending') }}</el-tag>
                 </template>
             </el-table-column>
-            <el-table-column label="在线状态" min-width="100">
+            <el-table-column :label="t('admin.nodes.runtimeStatus')" min-width="100">
                 <!-- 2026-06-22: 4 档: online / degraded / offline / not_installed -->
                 <template #default="{ row }">
                     <el-tag v-if="row.runtime_status === 'online'" type="success" size="small" effect="dark" style="white-space:nowrap">
                         <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;margin-right:4px" />
-                        在线
+                        {{ t('admin.nodes.online') }}
                     </el-tag>
-                    <el-tag v-else-if="row.runtime_status === 'degraded'" type="warning" size="small" effect="dark" style="white-space:nowrap">降级</el-tag>
+                    <el-tag v-else-if="row.runtime_status === 'degraded'" type="warning" size="small" effect="dark" style="white-space:nowrap">{{ t('admin.nodes.degraded') }}</el-tag>
                     <el-tag v-else-if="row.runtime_status === 'not_installed'" type="info" size="small" effect="plain" style="white-space:nowrap;border:none">--</el-tag>
-                    <el-tag v-else type="danger" size="small" effect="dark" style="white-space:nowrap">离线</el-tag>
+                    <el-tag v-else type="danger" size="small" effect="dark" style="white-space:nowrap">{{ t('admin.nodes.offline') }}</el-tag>
                 </template>
             </el-table-column>
             <el-table-column prop="region" :label="t('admin.nodes.region')" min-width="100" />
@@ -284,7 +284,7 @@ const fetchNodes = async () => {
         nodes.value = data.data ?? []
         meta.value = data.meta ?? {}
     } catch (err) {
-        const msg = err.response?.data?.message || err.message || 'Failed to load nodes'
+        const msg = err.response?.data?.message || err.message || t('admin.nodes.loadNodesFailed')
         ElMessage.error(msg)
     } finally {
         loading.value = false

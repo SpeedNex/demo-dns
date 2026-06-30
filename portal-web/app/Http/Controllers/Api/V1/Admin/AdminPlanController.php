@@ -46,6 +46,17 @@ final class AdminPlanController
     }
 
     /**
+     * 获取某个套餐下的用户列表（分页）
+     */
+    public function users(Request $request, string $code): JsonResponse
+    {
+        $page = (int) $request->query('page', 1);
+        $perPage = (int) $request->query('per_page', 20);
+
+        return response()->json($this->plans->getUsersByPlan($code, $page, $perPage));
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function validatePayload(Request $request, ?Plan $plan = null): array

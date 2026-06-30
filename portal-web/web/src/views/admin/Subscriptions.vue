@@ -76,31 +76,31 @@
                     <p class="empty-title">{{ $t('dashboard.noData') }}</p>
                 </div>
             </template>
-            <el-table-column prop="id" :label="$t('admin.finance.subscriptionId')" width="80" />
-            <el-table-column prop="user_id" :label="$t('admin.finance.userId')" width="100" />
-            <el-table-column prop="user_name" :label="$t('admin.finance.userName')" min-width="140" show-overflow-tooltip />
-            <el-table-column :label="$t('admin.finance.planCode')" width="120">
+            <el-table-column prop="id" :label="$t('admin.finance.subscriptionId')" min-width="80" />
+            <el-table-column prop="user_id" :label="$t('admin.finance.userId')" width="80" />
+            <el-table-column prop="user_name" :label="$t('admin.finance.userName')" min-width="120" show-overflow-tooltip />
+            <el-table-column :label="$t('admin.finance.planCode')" width="110">
                 <template #default="{ row }">
-                    <el-tag size="small" effect="plain">{{ row.plan_code || '-' }}</el-tag>
+                    <el-tag size="small" effect="plain">{{ getPlanName(row.plan_code) }}</el-tag>
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.finance.status')" width="110">
+            <el-table-column :label="$t('admin.finance.status')" width="100">
                 <template #default="{ row }">
-                    <el-tag :type="getStatusType(row.status)" size="small" effect="light">{{ row.status }}</el-tag>
+                    <el-tag :type="getStatusType(row.status)" size="small" effect="light">{{ getStatusLabel(row.status) }}</el-tag>
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.finance.quotaStatus')" width="120">
+            <el-table-column :label="$t('admin.finance.quotaStatus')" width="100">
                 <template #default="{ row }">
                     <el-tag
                         :type="row.quota_status === 'exceeded' ? 'danger' : 'success'"
                         size="small"
                         effect="light"
                     >
-                        {{ row.quota_status }}
+                        {{ getQuotaStatusLabel(row.quota_status) }}
                     </el-tag>
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.finance.autoRenew')" width="90" align="center">
+            <el-table-column :label="$t('admin.finance.autoRenew')" width="80" align="center">
                 <template #default="{ row }">
                     <el-tag v-if="row.auto_renew" type="success" size="small">{{ $t('common.yes') }}</el-tag>
                     <el-tag v-else type="info" size="small">{{ $t('common.no') }}</el-tag>
@@ -149,24 +149,21 @@
         <el-descriptions v-if="selectedSub" :column="2" border>
             <el-descriptions-item :label="$t('admin.finance.subscriptionId')">{{ selectedSub.id }}</el-descriptions-item>
             <el-descriptions-item :label="$t('admin.finance.status')">
-                <el-tag :type="getStatusType(selectedSub.status)" size="small">{{ selectedSub.status }}</el-tag>
+                <el-tag :type="getStatusType(selectedSub.status)" size="small">{{ getStatusLabel(selectedSub.status) }}</el-tag>
             </el-descriptions-item>
             <el-descriptions-item :label="$t('admin.finance.userId')">{{ selectedSub.user_id }}</el-descriptions-item>
             <el-descriptions-item :label="$t('admin.finance.userName')">{{ selectedSub.user_name || '-' }}</el-descriptions-item>
             <el-descriptions-item :label="$t('admin.finance.userEmail')">{{ selectedSub.user_email || '-' }}</el-descriptions-item>
-            <el-descriptions-item :label="$t('admin.finance.planCode')">{{ selectedSub.plan_code || '-' }}</el-descriptions-item>
+            <el-descriptions-item :label="$t('admin.finance.planCode')">{{ getPlanName(selectedSub.plan_code) || '-' }}</el-descriptions-item>
             <el-descriptions-item :label="$t('admin.finance.quotaStatus')">
                 <el-tag :type="selectedSub.quota_status === 'exceeded' ? 'danger' : 'success'" size="small">
-                    {{ selectedSub.quota_status }}
+                    {{ getQuotaStatusLabel(selectedSub.quota_status) }}
                 </el-tag>
             </el-descriptions-item>
             <el-descriptions-item :label="$t('admin.finance.autoRenew')">
                 <el-tag :type="selectedSub.auto_renew ? 'success' : 'info'" size="small">
                     {{ selectedSub.auto_renew ? $t('common.yes') : $t('common.no') }}
                 </el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item :label="$t('admin.finance.startedAt')">
-                {{ selectedSub.started_at ? new Date(selectedSub.started_at).toLocaleString() : '-' }}
             </el-descriptions-item>
             <el-descriptions-item :label="$t('admin.finance.currentPeriodStart')">
                 {{ selectedSub.current_period_start ? new Date(selectedSub.current_period_start).toLocaleString() : '-' }}
@@ -222,6 +219,32 @@ const getStatusType = (status) => {
         expired: 'info',
     }
     return map[status] || 'info'
+}
+
+const getStatusLabel = (status) => {
+    const map = {
+        pending: t('admin.finance.subscriptionStatusPending'),
+        active: t('admin.finance.subscriptionStatusActive'),
+        past_due: t('admin.finance.subscriptionStatusPastDue'),
+        cancelled: t('admin.finance.subscriptionStatusCancelled'),
+        expired: t('admin.finance.subscriptionStatusExpired'),
+    }
+    return map[status] || status
+}
+
+const getQuotaStatusLabel = (quotaStatus) => {
+    return quotaStatus === 'exceeded'
+        ? t('admin.finance.quotaStatusExceeded')
+        : t('admin.finance.quotaStatusNormal')
+}
+
+const getPlanName = (code) => {
+    const map = {
+        free: t('admin.plans.nameFree'),
+        pro: t('admin.plans.namePro'),
+        business: t('admin.plans.nameBusiness'),
+    }
+    return map[code] || code || '-'
 }
 
 const fetchSubscriptions = async () => {

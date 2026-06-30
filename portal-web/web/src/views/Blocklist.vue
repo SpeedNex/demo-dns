@@ -23,11 +23,15 @@
                     <el-switch :model-value="row.enabled" @change="(value) => handleToggle(row, value)" />
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('blocklist.actions')" width="100">
+            <el-table-column :label="$t('blocklist.actions')" width="120">
                 <template #default="{ row }">
                     <div class="action-buttons">
-                        <el-button size="small" text :icon="Edit" @click="openEditDialog(row)" />
-                        <el-button size="small" text type="danger" :icon="Delete" @click="handleDelete(row.id)" />
+                        <el-button size="small" text @click="openEditDialog(row)">
+                            <el-icon><Edit /></el-icon>
+                        </el-button>
+                        <el-button size="small" text type="danger" @click="handleDelete(row.id)">
+                            <el-icon><Delete /></el-icon>
+                        </el-button>
                     </div>
                 </template>
             </el-table-column>

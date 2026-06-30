@@ -9,6 +9,7 @@ use App\Models\Plan;
 use App\Models\Profile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Resolver 配置拉取控制器。
@@ -37,7 +38,8 @@ final class ConfigPullController
         ]);
 
         $data = [
-            'version'   => (int) (ProfileVersion::max('version') ?? 0),
+            // 2026-06-30: Global Config version 与 Profile 版本解耦，独立维护
+            'version' => (int) (DB::table('dns_global_config_versions')->max('version') ?? 1),
             'upstreams' => [$this->defaultUpstream()],
             'plans'     => $plans,
             'rulesets'  => [],

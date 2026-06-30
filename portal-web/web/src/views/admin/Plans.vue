@@ -1,7 +1,7 @@
 <template>
     <ListPage
-        title="套餐管理"
-        desc="管理会员中心展示的套餐与价格"
+        :title="t('admin.plans.title')"
+        :desc="t('admin.plans.desc')"
         icon-name="Tickets"
         :total="plans.length"
         :show-pagination="false"
@@ -10,28 +10,32 @@
         <template #actions>
             <el-button type="primary" @click="openCreate">
                 <el-icon class="el-icon--left"><Plus /></el-icon>
-                <span>新增套餐</span>
+                <span>{{ t('admin.plans.create') }}</span>
             </el-button>
         </template>
 
         <el-table :data="plans" stripe style="width:100%">
-            <el-table-column prop="sort_order" label="排序" width="90" />
-            <el-table-column prop="name" label="套餐名称" min-width="150" />
-            <el-table-column prop="code" label="编码" width="120">
+            <el-table-column prop="sort_order" :label="t('admin.plans.columns.sortOrder')" width="80" />
+            <el-table-column :label="t('admin.plans.columns.name')" min-width="120">
+                <template #default="{ row }">
+                    {{ getPlanName(row.code) }}
+                </template>
+            </el-table-column>
+            <el-table-column prop="code" :label="t('admin.plans.columns.code')" width="100">
                 <template #default="{ row }">
                     <el-tag size="small">{{ row.code }}</el-tag>
                 </template>
             </el-table-column>
-            <el-table-column label="价格" min-width="260">
+            <el-table-column :label="t('admin.plans.columns.price')" min-width="200">
                 <template #default="{ row }">
                     <div class="price-list">
                         <span v-for="price in row.prices" :key="`${price.billing_cycle}-${price.currency}`" class="price-pill">
-                            {{ price.billing_cycle }} · {{ money(price.amount_minor, price.currency) }}
+                            {{ cycleLabel(price.billing_cycle) }} · {{ money(price.amount_minor, price.currency) }}
                         </span>
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column label="用户数" width="110" align="center">
+            <el-table-column :label="t('admin.plans.columns.userCount')" width="100" align="center">
                 <template #default="{ row }">
                     <el-link
                         v-if="row.user_count > 0"
@@ -44,18 +48,22 @@
                     <span v-else class="muted">0</span>
                 </template>
             </el-table-column>
-            <el-table-column prop="status" label="状态" width="100" />
-            <el-table-column label="特色" width="90">
+            <el-table-column :label="t('admin.plans.columns.status')" width="90">
                 <template #default="{ row }">
-                    <el-tag v-if="row.is_featured" type="success" size="small">推荐</el-tag>
+                    {{ statusLabel(row.status) }}
+                </template>
+            </el-table-column>
+            <el-table-column :label="t('admin.plans.columns.featured')" width="80">
+                <template #default="{ row }">
+                    <el-tag v-if="row.is_featured" type="success" size="small">{{ t('admin.plans.featuredYes') }}</el-tag>
                     <span v-else>-</span>
                 </template>
             </el-table-column>
-            <el-table-column prop="description" label="描述" min-width="220" show-overflow-tooltip />
-            <el-table-column label="操作" width="160" fixed="right">
+            <el-table-column prop="description" :label="t('admin.plans.columns.description')" min-width="180" show-overflow-tooltip />
+            <el-table-column :label="t('admin.plans.columns.actions')" width="140" fixed="right">
                 <template #default="{ row }">
-                    <el-button text type="primary" @click="openEdit(row)">编辑</el-button>
-                    <el-button text type="danger" @click="handleDelete(row)">删除</el-button>
+                    <el-button text type="primary" @click="openEdit(row)">{{ t('common.edit') }}</el-button>
+                    <el-button text type="danger" @click="handleDelete(row)">{{ t('common.delete') }}</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -64,27 +72,25 @@
     <!-- 2026-06-30: 套餐下用户列表抽屉（合并自下线页面 user-policy-services） -->
     <el-drawer
         v-model="userDrawer.visible"
-        :title="`${userDrawer.planName} · 订阅用户`"
+        :title="`${userDrawer.planName} · ${t('admin.plans.drawer.title')}`"
         direction="rtl"
         size="640px"
         :destroy-on-close="true"
     >
         <div class="user-drawer">
-            <div class="drawer-summary">
-                共 <strong>{{ userDrawer.total }}</strong> 位用户订阅了此套餐
-            </div>
+            <div class="drawer-summary" v-html="t('admin.plans.drawer.summary', { count: userDrawer.total })" />
             <el-table v-loading="userDrawer.loading" :data="userDrawer.users" stripe size="small">
-                <el-table-column prop="uid" label="UID" width="90" />
-                <el-table-column prop="username" label="用户名" min-width="140" show-overflow-tooltip />
-                <el-table-column prop="email" label="邮箱" min-width="200" show-overflow-tooltip />
-                <el-table-column label="状态" width="90">
+                <el-table-column prop="uid" :label="t('admin.plans.drawer.columns.uid')" width="90" />
+                <el-table-column prop="username" :label="t('admin.plans.drawer.columns.username')" min-width="140" show-overflow-tooltip />
+                <el-table-column prop="email" :label="t('admin.plans.drawer.columns.email')" min-width="200" show-overflow-tooltip />
+                <el-table-column :label="t('admin.plans.drawer.columns.status')" width="90">
                     <template #default="{ row }">
                         <el-tag :type="row.status === 'active' ? 'success' : 'info'" size="small">
                             {{ row.status }}
                         </el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column label="注册时间" width="170">
+                <el-table-column :label="t('admin.plans.drawer.columns.registeredAt')" width="170">
                     <template #default="{ row }">{{ row.created_at ? new Date(row.created_at).toLocaleString() : '-' }}</template>
                 </el-table-column>
             </el-table>
@@ -104,51 +110,56 @@
         </div>
     </el-drawer>
 
-    <el-dialog v-model="dialogVisible" :title="editingPlan ? '编辑套餐' : '新增套餐'" width="780px" destroy-on-close>
+    <el-dialog v-model="dialogVisible" :title="editingPlan ? t('admin.plans.editPlan') : t('admin.plans.newPlan')" width="780px" destroy-on-close>
         <el-form :model="form" label-position="top" class="plan-form">
             <!-- 基本信息 -->
             <div class="form-section">
                 <div class="section-header">
                     <el-icon><InfoFilled /></el-icon>
-                    <span>基本信息</span>
+                    <span>{{ t('admin.plans.form.sectionBasic') }}</span>
                 </div>
                 <el-row :gutter="20">
                     <el-col :span="12">
-                        <el-form-item label="套餐编码">
-                            <el-input v-model="form.code" :disabled="Boolean(editingPlan)" placeholder="如 free, pro, business" />
+                        <el-form-item :label="t('admin.plans.form.codeLabel')">
+                            <el-input v-model="form.code" :disabled="Boolean(editingPlan)" :placeholder="t('admin.plans.form.codePh')" />
                         </el-form-item>
                     </el-col>
                     <el-col :span="12">
-                        <el-form-item label="套餐名称">
-                            <el-input v-model="form.name" placeholder="如 Free, Pro, Business" />
+                        <el-form-item :label="t('admin.plans.form.nameLabel')">
+                            <el-input v-model="form.name" :placeholder="t('admin.plans.form.namePh')" />
                         </el-form-item>
                     </el-col>
                 </el-row>
-                <el-form-item label="描述">
-                    <el-input v-model="form.description" placeholder="简要描述套餐特点" />
+                <el-form-item :label="t('admin.plans.form.descriptionLabel')">
+                    <el-input v-model="form.description" :placeholder="t('admin.plans.form.descriptionPh')" />
                 </el-form-item>
                 <el-row :gutter="20">
                     <el-col :span="8">
-                        <el-form-item label="状态">
+                        <el-form-item :label="t('admin.plans.form.statusLabel')">
                             <el-select v-model="form.status" style="width:100%">
-                                <el-option value="active" label="上架" />
-                                <el-option value="inactive" label="下架" />
+                                <el-option value="active" :label="t('admin.plans.form.statusActiveLabel')" />
+                                <el-option value="inactive" :label="t('admin.plans.form.statusInactiveLabel')" />
                             </el-select>
                         </el-form-item>
                     </el-col>
                     <el-col :span="8">
-                        <el-form-item label="排序">
+                        <el-form-item :label="t('admin.plans.form.sortOrderLabel')">
                             <el-input-number v-model="form.sort_order" :min="0" :max="9999" style="width:100%" />
                         </el-form-item>
                     </el-col>
                     <el-col :span="8">
-                        <el-form-item label="徽标">
-                            <el-input v-model="form.badge" placeholder="如 Recommended" />
+                        <el-form-item :label="t('admin.plans.form.badgeLabel')">
+                            <el-input v-model="form.badge" :placeholder="t('admin.plans.form.badgePh')" />
                         </el-form-item>
                     </el-col>
                 </el-row>
                 <el-form-item>
-                    <el-switch v-model="form.is_featured" inline-prompt active-text="推荐套餐" inactive-text="普通套餐" />
+                    <el-switch
+                        v-model="form.is_featured"
+                        inline-prompt
+                        :active-text="t('admin.plans.form.featuredActive')"
+                        :inactive-text="t('admin.plans.form.featuredInactive')"
+                    />
                 </el-form-item>
             </div>
 
@@ -156,10 +167,15 @@
             <div class="form-section">
                 <div class="section-header">
                     <el-icon><List /></el-icon>
-                    <span>功能列表</span>
+                    <span>{{ t('admin.plans.form.sectionFeatures') }}</span>
                 </div>
-                <el-form-item label="每行一个功能描述">
-                    <el-input v-model="featuresText" type="textarea" :rows="5" placeholder="无限制 DNS 查询&#10;支持自定义规则&#10;团队协作" />
+                <el-form-item :label="t('admin.plans.form.featuresLabel')">
+                    <el-input
+                        v-model="featuresText"
+                        type="textarea"
+                        :rows="5"
+                        :placeholder="t('admin.plans.form.featuresPh')"
+                    />
                 </el-form-item>
             </div>
 
@@ -167,31 +183,31 @@
             <div class="form-section">
                 <div class="section-header">
                     <el-icon><Odometer /></el-icon>
-                    <span>配额限制</span>
-                    <span class="section-hint">0 或留空表示无限制</span>
+                    <span>{{ t('admin.plans.form.sectionLimits') }}</span>
+                    <span class="section-hint">{{ t('admin.plans.form.limitsHint') }}</span>
                 </div>
                 <el-row :gutter="20">
                     <el-col :span="8">
                         <el-form-item>
                             <template #label>
                                 <span class="limit-label">
-                                    月查询上限
-                                    <el-tooltip content="免费套餐的月查询额度，超出后按量计费" placement="top">
+                                    {{ t('admin.plans.form.monthlyQueriesLabel') }}
+                                    <el-tooltip :content="t('admin.plans.form.monthlyQueriesTooltip')" placement="top">
                                         <el-icon class="help-icon"><QuestionFilled /></el-icon>
                                     </el-tooltip>
                                 </span>
                             </template>
-                            <el-input-number v-model="monthlyQueriesLimit" :min="0" :step="10000" style="width:100%" placeholder="如 300000" />
+                            <el-input-number v-model="monthlyQueriesLimit" :min="0" :step="10000" style="width:100%" :placeholder="t('admin.plans.form.monthlyQueriesPh')" />
                         </el-form-item>
                     </el-col>
                     <el-col :span="8">
-                        <el-form-item label="Profile 上限">
-                            <el-input-number v-model="profileLimit" :min="0" style="width:100%" placeholder="如 3" />
+                        <el-form-item :label="t('admin.plans.form.profilesLabel')">
+                            <el-input-number v-model="profileLimit" :min="0" style="width:100%" :placeholder="t('admin.plans.form.profilesPh')" />
                         </el-form-item>
                     </el-col>
                     <el-col :span="8">
-                        <el-form-item label="团队成员上限">
-                            <el-input-number v-model="teamLimit" :min="0" style="width:100%" placeholder="如 5" />
+                        <el-form-item :label="t('admin.plans.form.teamLabel')">
+                            <el-input-number v-model="teamLimit" :min="0" style="width:100%" :placeholder="t('admin.plans.form.teamPh')" />
                         </el-form-item>
                     </el-col>
                 </el-row>
@@ -201,28 +217,28 @@
             <div class="form-section">
                 <div class="section-header">
                     <el-icon><Money /></el-icon>
-                    <span>价格配置</span>
+                    <span>{{ t('admin.plans.form.sectionPricing') }}</span>
                 </div>
                 <div class="price-table">
                     <div class="price-header">
-                        <span class="price-col price-col-cycle">计费周期</span>
-                        <span class="price-col price-col-currency">货币</span>
-                        <span class="price-col price-col-amount">金额</span>
-                        <span class="price-col price-col-status">状态</span>
-                        <span class="price-col price-col-action">操作</span>
+                        <span class="price-col price-col-cycle">{{ t('admin.plans.form.pricingColumns.cycle') }}</span>
+                        <span class="price-col price-col-currency">{{ t('admin.plans.form.pricingColumns.currency') }}</span>
+                        <span class="price-col price-col-amount">{{ t('admin.plans.form.pricingColumns.amount') }}</span>
+                        <span class="price-col price-col-status">{{ t('admin.plans.form.pricingColumns.status') }}</span>
+                        <span class="price-col price-col-action">{{ t('admin.plans.form.pricingColumns.action') }}</span>
                     </div>
                     <div v-for="(price, index) in form.prices" :key="index" class="price-row">
                         <div class="price-col price-col-cycle">
                             <el-select v-model="price.billing_cycle" style="width:100%">
-                                <el-option value="monthly" label="月付" />
-                                <el-option value="yearly" label="年付" />
+                                <el-option value="monthly" :label="t('admin.plans.form.cycleMonthly')" />
+                                <el-option value="yearly" :label="t('admin.plans.form.cycleYearly')" />
                             </el-select>
                         </div>
                         <div class="price-col price-col-currency">
                             <el-select v-model="price.currency" style="width:100%">
-                                <el-option value="USD" label="USD" />
-                                <el-option value="EUR" label="EUR" />
-                                <el-option value="CNY" label="CNY" />
+                                <el-option value="USD" :label="currencyDisplayLabel('USD')" />
+                                <el-option value="EUR" :label="currencyDisplayLabel('EUR')" />
+                                <el-option value="CNY" :label="currencyDisplayLabel('CNY')" />
                             </el-select>
                         </div>
                         <div class="price-col price-col-amount">
@@ -230,8 +246,8 @@
                         </div>
                         <div class="price-col price-col-status">
                             <el-select v-model="price.status" style="width:100%">
-                                <el-option value="active" label="启用" />
-                                <el-option value="inactive" label="停用" />
+                                <el-option value="active" :label="t('admin.plans.form.priceStatusActive')" />
+                                <el-option value="inactive" :label="t('admin.plans.form.priceStatusInactive')" />
                             </el-select>
                         </div>
                         <div class="price-col price-col-action">
@@ -240,14 +256,14 @@
                     </div>
                 </div>
                 <el-button type="primary" plain :icon="Plus" class="add-price-btn" @click="addPrice">
-                    新增价格
+                    {{ t('admin.plans.form.addPrice') }}
                 </el-button>
             </div>
         </el-form>
         <template #footer>
             <div class="dialog-footer">
-                <el-button @click="dialogVisible = false">取消</el-button>
-                <el-button type="primary" :loading="saving" @click="handleSave">保存套餐</el-button>
+                <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
+                <el-button type="primary" :loading="saving" @click="handleSave">{{ t('admin.plans.form.save') }}</el-button>
             </div>
         </template>
     </el-dialog>
@@ -255,10 +271,13 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Delete, InfoFilled, List, Odometer, Money, QuestionFilled } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
+
+const { t } = useI18n()
 
 const plans = ref([])
 const dialogVisible = ref(false)
@@ -305,6 +324,32 @@ const money = (minor, currency = 'USD') => {
         currency: code,
         minimumFractionDigits: 2,
     }).format(amount)
+}
+
+const cycleLabel = (cycle) => {
+    if (cycle === 'yearly') return t('admin.plans.form.cycleYearly')
+    if (cycle === 'monthly') return t('admin.plans.form.cycleMonthly')
+    return cycle
+}
+
+const statusLabel = (status) => {
+    if (status === 'inactive') return t('admin.plans.statusInactive')
+    if (status === 'active') return t('admin.plans.statusActive')
+    return status
+}
+
+const getPlanName = (code) => {
+    const map = {
+        free: t('admin.plans.nameFree'),
+        pro: t('admin.plans.namePro'),
+        business: t('admin.plans.nameBusiness'),
+    }
+    return map[code] || code || '-'
+}
+
+const currencyDisplayLabel = (code) => {
+    // 货币 code 保留作为显示值（约定不译），用于 el-option label
+    return code
 }
 
 const resetForm = () => {
@@ -359,6 +404,30 @@ const openEdit = (plan) => {
     dialogVisible.value = true
 }
 
+const openUserDrawer = (plan) => {
+    userDrawer.planCode = plan.code
+    userDrawer.planName = plan.name || plan.code
+    userDrawer.page = 1
+    fetchDrawerUsers()
+    userDrawer.visible = true
+}
+
+const fetchDrawerUsers = async () => {
+    userDrawer.loading = true
+    try {
+        const { data } = await client.get(`/admin/plans/${userDrawer.planCode}/users`, {
+            params: { page: userDrawer.page, per_page: userDrawer.perPage },
+        })
+        userDrawer.users = data.data ?? []
+        userDrawer.total = data.total ?? 0
+    } catch {
+        userDrawer.users = []
+        userDrawer.total = 0
+    } finally {
+        userDrawer.loading = false
+    }
+}
+
 const addPrice = () => {
     form.prices.push(createEmptyPrice())
 }
@@ -400,11 +469,11 @@ const handleSave = async () => {
         } else {
             await client.post('/admin/plans', payload())
         }
-        ElMessage.success('保存成功')
+        ElMessage.success(t('admin.plans.saveSuccess'))
         dialogVisible.value = false
         await fetchPlans()
     } catch (error) {
-        ElMessage.error(error.response?.data?.message || '保存失败')
+        ElMessage.error(error.response?.data?.message || t('admin.plans.saveFailed'))
     } finally {
         saving.value = false
     }
@@ -412,13 +481,13 @@ const handleSave = async () => {
 
 const handleDelete = async (plan) => {
     try {
-        await ElMessageBox.confirm(`确认删除套餐 ${plan.name} 吗？`, '提示', { type: 'warning' })
+        await ElMessageBox.confirm(t('admin.plans.deleteConfirm', { name: plan.name }), t('admin.plans.tip'), { type: 'warning' })
         await client.delete(`/admin/plans/${plan.id}`)
-        ElMessage.success('删除成功')
+        ElMessage.success(t('admin.plans.deleteSuccess'))
         await fetchPlans()
     } catch (error) {
         if (error !== 'cancel') {
-            ElMessage.error('删除失败')
+            ElMessage.error(t('admin.plans.deleteFailed'))
         }
     }
 }

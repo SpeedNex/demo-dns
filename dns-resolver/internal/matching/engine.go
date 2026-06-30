@@ -259,34 +259,19 @@ func (e *Engine) LoadProfileRules(profileID string, allowExact, allowWildcard, b
 // MatchWithProfile routes a domain through the per-profile engine (UI.md #39).
 // Falls back to legacy Match when profileID is empty or unknown.
 //
-// 2026-06-30: 当 profileID 为空时（裸 UDP/TCP 53 路径，DNS 服务器无法从请求中
-// 识别 profile），聚合遍历所有已加载 profile 引擎的 blocklist（求并集），
-// 任一命中即视为 BLOCK。带 profileID 的查询完全不受影响（仍走 per-profile
-// engine，profile 隔离保留）。
+// 2026-06-30: 无 profileID 时返回 REFUSED，防止裸 UDP/TCP 53 路径串用其他用户规则。
 func (e *Engine) MatchWithProfile(profileID, domain string) *Decision {
-	if profileID != "" {
-		e.mu.RLock()
-		pe, ok := e.profileEngines[profileID]
-		e.mu.RUnlock()
-		if ok {
-			return matchProfileEngine(pe, domain)
-		}
+	if profileID == "" {
+		// 无 profile 拒绝服务，防止跨用户规则串用
+		return &Decision{Action: "REFUSED", Reason: "no_profile"}
 	}
-	// 无 profileID 时的 blocklist 聚合回退（最小风险修复，不影响带 profileID 的查询）
 	e.mu.RLock()
-	domainNorm := normalizeDomain(domain)
-	rev := reverseDomain(domainNorm)
-	for _, pe := range e.profileEngines {
-		if pe == nil {
-			continue
-		}
-		if pe.blockExact[domainNorm] || pe.blockTrie.Search(rev) {
-			e.mu.RUnlock()
-			return &Decision{Action: "BLOCK", Reason: "blocklist"}
-		}
-	}
+	pe, ok := e.profileEngines[profileID]
 	e.mu.RUnlock()
-	return e.Match(domain)
+	if !ok {
+		return &Decision{Action: "REFUSED", Reason: "profile_not_found"}
+	}
+	return matchProfileEngine(pe, domain)
 }
 
 // HasProfile returns true if the per-profile engine slot exists.

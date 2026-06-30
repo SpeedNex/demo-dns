@@ -80,6 +80,65 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- 2026-06-30: API Key 管理卡片（从原 /user/api-keys 迁移过来） -->
+                    <div class="card">
+                        <div class="card-header">
+                            <el-icon class="card-icon"><Key /></el-icon>
+                            <h3>{{ $t('apiKeys.title') }}</h3>
+                            <el-tag size="small" style="margin-left:auto">{{ apiKeys.length }}</el-tag>
+                        </div>
+                        <div class="card-body">
+                            <p class="setting-desc">{{ $t('apiKeys.desc') }}</p>
+
+                            <!-- 新创建的 Key 提示 -->
+                            <el-alert
+                                v-if="newApiKey"
+                                :title="$t('apiKeys.keyCreated')"
+                                type="success"
+                                show-icon
+                                :closable="true"
+                                style="margin: 12px 0"
+                                @close="newApiKey = null"
+                            >
+                                <template #default>
+                                    <p>{{ $t('apiKeys.keyCreatedDesc') }}</p>
+                                    <div class="code-row">
+                                        <code class="code">{{ newApiKey.plaintext_key }}</code>
+                                        <el-button size="small" type="primary" @click="copyNewKey">{{ $t('apiKeys.copy') }}</el-button>
+                                    </div>
+                                </template>
+                            </el-alert>
+
+                            <el-table v-if="apiKeys.length > 0" :data="apiKeys" size="small" style="margin-top:8px">
+                                <el-table-column prop="name" :label="$t('apiKeys.name')" min-width="120" show-overflow-tooltip />
+                                <el-table-column :label="$t('apiKeys.prefix')" width="110">
+                                    <template #default="{ row }">
+                                        <code>{{ row.key_prefix }}...</code>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column :label="$t('apiKeys.status')" width="80">
+                                    <template #default="{ row }">
+                                        <el-tag :type="row.status === 'active' ? 'success' : 'danger'" size="small">{{ row.status }}</el-tag>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column :label="$t('apiKeys.actions')" width="70">
+                                    <template #default="{ row }">
+                                        <el-button type="danger" size="small" text @click="handleRevokeApiKey(row)">
+                                            {{ $t('apiKeys.revoke') }}
+                                        </el-button>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                            <div v-else class="empty-mini">{{ $t('apiKeys.noKeys') }}</div>
+
+                            <div class="api-key-actions">
+                                <el-button size="small" type="primary" @click="showCreateApiKey = true">
+                                    {{ $t('apiKeys.create') }}
+                                </el-button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -207,6 +266,26 @@
                 :mode="stripeConfig.mode"
                 @success="onPaymentSuccess"
             />
+
+            <!-- 2026-06-30: API Key 创建弹窗（从 /user/api-keys 迁移） -->
+            <el-dialog v-model="showCreateApiKey" :title="$t('apiKeys.create')" width="480px" :close-on-click-modal="false">
+                <el-form ref="apiKeyFormRef" :model="apiKeyForm" :rules="apiKeyRules" label-position="top">
+                    <el-form-item :label="$t('apiKeys.name')" prop="name">
+                        <el-input v-model="apiKeyForm.name" :placeholder="$t('apiKeys.namePlaceholder')" />
+                    </el-form-item>
+                    <el-form-item :label="$t('apiKeys.scopes')">
+                        <el-checkbox-group v-model="apiKeyForm.scopes">
+                            <el-checkbox value="dns:query" :label="$t('apiKeys.scopesDnsQuery')" />
+                            <el-checkbox value="logs:read" :label="$t('apiKeys.scopesLogsRead')" />
+                            <el-checkbox value="stats:read" :label="$t('apiKeys.scopesStatsRead')" />
+                        </el-checkbox-group>
+                    </el-form-item>
+                </el-form>
+                <template #footer>
+                    <el-button @click="showCreateApiKey = false">{{ $t('apiKeys.cancel') }}</el-button>
+                    <el-button type="primary" :loading="creatingApiKey" @click="handleCreateApiKey">{{ $t('apiKeys.confirm') }}</el-button>
+                </template>
+            </el-dialog>
         </div>
     </Layout>
 </template>
@@ -214,8 +293,8 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ElMessage } from 'element-plus'
-import { Coin, Lock, User } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Coin, Key, Lock, User } from '@element-plus/icons-vue'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
 import PaymentModal from '@/components/PaymentModal.vue'
@@ -255,6 +334,20 @@ const stripeConfig = ref({
   mode: 'test',
   payment_methods: ['card'],
 })
+
+// 2026-06-30: API Key 管理（从原 /user/api-keys 合并）
+const apiKeys = ref([])
+const newApiKey = ref(null)
+const showCreateApiKey = ref(false)
+const creatingApiKey = ref(false)
+const apiKeyFormRef = ref(null)
+const apiKeyForm = ref({
+    name: '',
+    scopes: ['dns:query', 'logs:read', 'stats:read'],
+})
+const apiKeyRules = {
+    name: [{ required: true, message: t('apiKeys.nameRequired'), trigger: 'blur' }],
+}
 
 const formatMoney = (minor, currency = 'USD') => {
     if (minor === null || minor === undefined || Number.isNaN(Number(minor))) return '-'
@@ -497,6 +590,60 @@ const handleUpdatePassword = async () => {
     }
 }
 
+// 2026-06-30: API Key 管理逻辑（从 APIKeys.vue 合并）
+const fetchApiKeys = async () => {
+    try {
+        const { data } = await client.get('/user/api-keys')
+        apiKeys.value = data.data ?? []
+    } catch {
+        apiKeys.value = []
+    }
+}
+
+const handleCreateApiKey = async () => {
+    const valid = await apiKeyFormRef.value.validate().catch(() => false)
+    if (!valid) return
+
+    creatingApiKey.value = true
+    try {
+        const { data } = await client.post('/user/api-keys', {
+            name: apiKeyForm.value.name,
+            scopes: apiKeyForm.value.scopes,
+        })
+        newApiKey.value = data.data
+        showCreateApiKey.value = false
+        apiKeyForm.value.name = ''
+        apiKeyForm.value.scopes = ['dns:query', 'logs:read', 'stats:read']
+        await fetchApiKeys()
+    } catch (err) {
+        ElMessage.error(err.response?.data?.message || t('apiKeys.failedToCreate'))
+    } finally {
+        creatingApiKey.value = false
+    }
+}
+
+const copyNewKey = () => {
+    if (!newApiKey.value?.plaintext_key) return
+    navigator.clipboard.writeText(newApiKey.value.plaintext_key).then(() => {
+        ElMessage.success(t('apiKeys.copied'))
+    }).catch(() => {
+        ElMessage.warning(t('apiKeys.copyFailed'))
+    })
+}
+
+const handleRevokeApiKey = async (row) => {
+    try {
+        await ElMessageBox.confirm(
+            t('apiKeys.revokeConfirm').replace('{name}', row.name),
+            t('common.confirm'),
+            { confirmButtonText: t('apiKeys.revoke'), cancelButtonText: t('common.cancel'), type: 'warning' }
+        )
+        await client.delete(`/user/api-keys/${row.id}`)
+        ElMessage.success(t('apiKeys.apiKeyRevoked'))
+        await fetchApiKeys()
+    } catch { /* cancelled */ }
+}
+
 onMounted(loadAccountData)
 </script>
 
@@ -525,6 +672,40 @@ onMounted(loadAccountData)
 .setting-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
 .setting-info { flex: 1; min-width: 0; }
 .setting-desc { margin: 0 0 4px; font-size: 14px; }
+
+/* 2026-06-30: API Key 卡片样式 */
+.code-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+.code {
+    flex: 1;
+    padding: 6px 10px;
+    background: #f1f5f9;
+    border-radius: 6px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    color: #0f172a;
+    word-break: break-all;
+}
+.api-key-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+}
+.empty-mini {
+    color: #94a3b8;
+    font-size: 12px;
+    padding: 16px 0;
+    text-align: center;
+    background: #f8fafc;
+    border-radius: 6px;
+    margin-top: 8px;
+}
 
 /* 个人信息卡片 */
 .account-right .card-body { display: flex; align-items: center; gap: 24px; }

@@ -288,6 +288,13 @@ watch(currentProfileId, fetchData)
 .chart-card {
     border-radius: var(--radius-lg);
     min-height: 280px;
+    display: flex;
+    flex-direction: column;
+}
+.chart-card :deep(.el-card__body) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 .card-header {
     display: flex;

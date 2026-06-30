@@ -31,7 +31,9 @@ final class PublishService
         string $checksum,
         array $configJson,
     ): array {
-        $globalVersion = (int) (ProfileVersion::max('version') ?? 0) + 1;
+        // 2026-06-30: 使用 max(id)+1 代替 max(version)+1，避免并发发布时版本号冲突
+        $latestId = (int) (ProfileVersion::max('id') ?? 0);
+        $globalVersion = $latestId + 1;
         $encoded = json_encode($configJson, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if ($encoded === false) {
             throw new \RuntimeException(

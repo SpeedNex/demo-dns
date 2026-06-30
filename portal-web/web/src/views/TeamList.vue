@@ -60,7 +60,7 @@
                 </el-table-column>
                 <el-table-column :label="$t('team.actions')" width="160">
                     <template #default="{ row }">
-                        <el-button size="small" type="primary" @click="acceptInvitation(row.id, row.token)">
+                        <el-button size="small" type="primary" @click="acceptInvitation(row.id)">
                             {{ $t('team.accept') }}
                         </el-button>
                     </template>
@@ -96,10 +96,7 @@ async function loadTeams() {
 async function loadPendingInvitations() {
     try {
         const { data } = await client.get('/user/teams/invitations/pending')
-        pendingInvitations.value = (data.data || []).map(inv => ({
-            ...inv,
-            token: '' // token is handled differently
-        }))
+        pendingInvitations.value = data.data || []
     } catch {
         // Pending invitations optional
     }
@@ -116,6 +113,17 @@ async function handleLeave(teamId, teamName) {
         ElMessage.success(t('team.leftTeam'))
         await loadTeams()
     } catch {}
+}
+
+async function acceptInvitation(invitationId) {
+    try {
+        await client.post('/user/teams/accept-invitation', { invitation_id: invitationId })
+        ElMessage.success(t('team.accepted') || 'Invitation accepted')
+        await loadPendingInvitations()
+        await loadTeams()
+    } catch {
+        ElMessage.error(t('common.operationFailed'))
+    }
 }
 
 onMounted(() => {

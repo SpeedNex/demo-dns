@@ -235,7 +235,6 @@ const titleMap = {
     AdminRoleManagement: 'admin.rbac.title',
     AdminMenuConfig: 'admin.menuConfig.title',
     AdminAdmins: 'admin.adminUsers.title',
-    AdminUserPolicyServices: 'admin.userPolicyServices.title',
     AdminMemberPolicies: 'admin.memberPolicies.title',
     AdminBlacklistWhitelist: 'admin.blacklistWhitelist.title',
     AdminTeams: 'admin.teams.title',

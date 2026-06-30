@@ -25,7 +25,7 @@
             </el-input>
             <el-input
                 v-model="filters.actor_id"
-                placeholder="Actor ID"
+                :placeholder="$t('admin.auditLogs.actorId')"
                 style="width:220px"
                 clearable
                 @clear="fetchLogs"
@@ -44,8 +44,8 @@
                 type="daterange"
                 value-format="YYYY-MM-DD"
                 range-separator="~"
-                start-placeholder="Start"
-                end-placeholder="End"
+                :start-placeholder="$t('admin.auditLogs.start')"
+                :end-placeholder="$t('admin.auditLogs.end')"
                 style="width:280px"
             />
             <el-button type="primary" @click="fetchLogs">
@@ -100,8 +100,8 @@
             </el-table-column>
             <el-table-column prop="target_type" :label="$t('admin.auditLogs.resourceType')" width="140" />
             <el-table-column prop="target_id" :label="$t('admin.auditLogs.resourceId')" min-width="240" show-overflow-tooltip />
-            <el-table-column prop="ip" :label="$t('admin.auditLogs.ip') || 'IP'" width="160" show-overflow-tooltip />
-            <el-table-column prop="user_agent" label="User-Agent" min-width="260" show-overflow-tooltip />
+            <el-table-column prop="ip" :label="$t('admin.auditLogs.ip')" width="160" show-overflow-tooltip />
+            <el-table-column prop="user_agent" :label="$t('admin.auditLogs.userAgent')" min-width="260" show-overflow-tooltip />
             <el-table-column :label="$t('admin.auditLogs.actions')" width="88" fixed="right">
                 <template #default="{ row }">
                     <el-button text type="danger" @click="handleDelete(row)">{{ $t('common.delete') }}</el-button>
@@ -204,9 +204,9 @@ const handleExport = async () => {
         link.click()
         link.remove()
         window.URL.revokeObjectURL(url)
-        ElMessage.success(t('admin.auditLogs.exportSuccess') || 'Export started')
+        ElMessage.success(t('admin.auditLogs.exportStart'))
     } catch (err) {
-        ElMessage.error(t('admin.auditLogs.exportFailed') || 'Export failed')
+        ElMessage.error(t('admin.auditLogs.exportFailed'))
     } finally {
         exporting.value = false
     }

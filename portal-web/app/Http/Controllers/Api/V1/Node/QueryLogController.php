@@ -13,6 +13,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -196,7 +197,8 @@ final class QueryLogController
                 'action' => strtoupper((string) $item['action']),
                 'reason' => (string) ($item['reason'] ?? ''),
                 'category' => (string) ($item['category'] ?? ''),
-                'client_ip' => $clientIp,
+                // 2026-06-30: 默认哈希存储 client_ip，保留统计能力的同时脱敏原始 IP
+                'client_ip' => $clientIp !== '' ? hash('sha256', $clientIp) : '',
                 'rcode' => (int) ($item['rcode'] ?? 0),
                 'latency_ms' => (int) ($item['latency_ms'] ?? 0),
                 'protocol' => $protocol,
@@ -213,9 +215,13 @@ final class QueryLogController
                 $clickhouse->insertJsonEachRow('usage_events', $usageEvents);
             }
         } catch (\Throwable $e) {
+            \Log::error('ClickHouse insert failed', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json([
                 'data' => $result,
-                'error' => 'clickhouse insert failed: ' . $e->getMessage(),
+                'error' => 'Log storage temporarily unavailable.',
             ], 500);
         }
 

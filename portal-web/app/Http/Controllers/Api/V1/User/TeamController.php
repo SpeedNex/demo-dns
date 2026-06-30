@@ -238,11 +238,20 @@ final class TeamController
 
     public function acceptInvitation(Request $request): JsonResponse
     {
+        // 2026-06-30: 同时支持 token（邮件链接场景） 和 invitation_id（站内列表场景）
         $validated = $request->validate([
-            'token' => 'required|string',
+            'token' => 'required_without:invitation_id|string',
+            'invitation_id' => 'required_without:token|integer',
         ]);
 
-        $this->teamService->acceptInvite($validated['token'], $request->user()->uid);
+        if (! empty($validated['invitation_id'])) {
+            $invitation = \App\Models\TeamInvitation::findOrFail($validated['invitation_id']);
+            $token = $invitation->token;
+        } else {
+            $token = $validated['token'];
+        }
+
+        $this->teamService->acceptInvite($token, $request->user()->uid);
 
         return response()->json(['data' => ['accepted' => true]]);
     }

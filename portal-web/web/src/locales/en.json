@@ -131,7 +131,12 @@
     "highlightPrimary": "One account manages every DNS policy",
     "highlightApi": "Open API and automation ready",
     "highlightGlobal": "Global nodes with production-grade access",
-    "logoutSuccess": "Logged out successfully"
+    "logoutSuccess": "Logged out successfully",
+    "eyebrowMember": "Member Access",
+    "eyebrowAdmin": "Admin Access",
+    "highlightDoh": "HTTPS encrypted resolution",
+    "highlightAvailability": "Managed profile availability",
+    "highlightAudit": "Policy and device traceability"
   },
   "dashboard": {
     "title": "Member Center",
@@ -843,6 +848,10 @@
       "totalQueries": "Total Queries (24h)",
       "blocked": "Blocked (24h)",
       "activeUsers": "Active Users",
+      "dimensionGafam": "GAFAM (24h)",
+      "dimensionRootDomain": "Root Domains (24h)",
+      "dimensionEncryptedDns": "Encrypted DNS (24h)",
+      "dimensionDnssecValid": "DNSSEC Valid (24h)",
       "nodeManagement": "Node Management",
       "nodeManagementDesc": "View and manage DNS resolver nodes",
       "publishTasks": "Publish Tasks",
@@ -877,12 +886,17 @@
         "clientIp": "Client IP",
         "time": "Time",
         "latency": "Latency",
+        "type": "Type",
+        "protocol": "Protocol",
+        "node": "Node",
+        "client": "Client",
         "clearAll": "Clear All",
         "cleared": "Cleared",
         "clearAllConfirm": "Clear all query logs?",
         "batchDeleteConfirm": "Delete {count} selected item(s)?",
         "batchDeleted": "{count} item(s) deleted",
-        "batchDeleteFailed": "Batch delete failed"
+        "batchDeleteFailed": "Batch delete failed",
+        "oldDataWarning": "All selected logs are old data and cannot be deleted individually. Use Clear All instead."
       }
     },
     "profilePublish": {
@@ -938,12 +952,17 @@
       "clientIp": "Client IP",
       "time": "Time",
       "latency": "Latency (ms)",
+      "type": "Type",
+      "protocol": "Protocol",
+      "node": "Node",
+      "client": "Client",
       "clearAll": "Clear All",
       "clearAllConfirm": "Clear all query logs? This action cannot be undone.",
       "cleared": "Logs cleared",
       "batchDeleteConfirm": "Delete {count} selected log(s)?",
       "batchDeleted": "{count} deleted",
-      "batchDeleteFailed": "Batch delete failed"
+      "batchDeleteFailed": "Batch delete failed",
+      "oldDataWarning": "All selected logs are old data and cannot be deleted individually. Use Clear All instead."
     },
     "alerts": "Alerts",
     "users": "Users",
@@ -1049,6 +1068,7 @@
     "nodes": {
       "title": "DNS Nodes",
       "desc": "Manage and monitor DNS resolver nodes",
+      "portDesc": "Default ports: DNS 53 (UDP/TCP) · DoH 443 · DoT 853 · DoQ 853",
       "nodeName": "Node Name",
       "nodeId": "Node ID",
       "nodeAlias": "Node Alias",
@@ -1056,8 +1076,15 @@
       "nodeAliasPlaceholder": "Optional, auto-generate node-xxxxxx if empty",
       "searchPlaceholder": "Search node ID or alias",
       "status": "Status",
+      "runtimeStatus": "Runtime Status",
       "online": "Online",
+      "degraded": "Degraded",
       "offline": "Offline",
+      "notInstalled": "Not Installed",
+      "installed": "Installed",
+      "installFailed": "Install Failed",
+      "pending": "Pending",
+      "neverHeartbeat": "Never",
       "region": "Region",
       "regionPlaceholder": "Select region",
       "ip": "IP Address",
@@ -1074,9 +1101,18 @@
       "disable": "Disable",
       "batchDelete": "Batch Delete",
       "redeploy": "Redeploy",
+      "deploy": "Deploy",
+      "deployCopied": "Deploy command copied",
+      "copyFailed": "Copy failed",
+      "deployTitle": "One-Click Deploy",
+      "copyDeployCmd": "Copy Command",
+      "deployTip": "Run this command on the target host to install the DNS resolver",
+      "regenerate": "Regenerate",
+      "emptyDesc": "Click \"{create}\" in the top-right to add your first DNS node.",
       "noNodes": "No nodes found",
       "nodeNameRequired": "Node name is required",
       "regionRequired": "Region is required",
+      "loadNodesFailed": "Failed to load nodes",
       "token": "Token",
       "tokenTitle": "Node Token",
       "tokenName": "Token Name",
@@ -1210,7 +1246,10 @@
       "regionPlaceholder": "e.g. kr, us-west",
       "nodeNamePlaceholder": "e.g. kr-test",
       "ipPlaceholder": "e.g. 10.20.30.40",
-      "orphanTag": "No mapping"
+      "orphanTag": "No mapping",
+      "installed": "Installed",
+      "pending": "Pending",
+      "neverHeartbeat": "Never heartbeat"
     },
     "ruleLibrary": {
       "title": "Rule Library",
@@ -1333,6 +1372,9 @@
       "siteUrlPlaceholder": "Enter site URL",
       "siteDescription": "Site Description",
       "siteDescPlaceholder": "Enter site description",
+      "dnsDomain": "DNS Domain",
+      "dnsDomainPlaceholder": "dns.ocerdns.local",
+      "dnsDomainDesc": "DNS resolution node domain, e.g. dns.ocerdns.local",
       "saved": "Saved",
       "saveFailed": "Failed to save"
     },
@@ -1399,7 +1441,13 @@
       "actions": "Actions",
       "emptyDesc": "Administrator operation records will be displayed here.",
       "deleteConfirm": "Delete this log?",
-      "clearConfirm": "Clear all logs?"
+      "clearConfirm": "Clear all logs?",
+      "actorId": "Actor ID",
+      "start": "Start",
+      "end": "End",
+      "userAgent": "User-Agent",
+      "exportStart": "Export started",
+      "exportComplete": "Export completed"
     },
     "userPolicyServices": {
       "title": "Plan List",
@@ -1525,7 +1573,10 @@
     },
     "plans": {
       "title": "Plan Management",
-      "desc": "Manage membership plans, pricing and display order"
+      "desc": "Manage membership plans, pricing and display order",
+      "nameFree": "Free",
+      "namePro": "Pro",
+      "nameBusiness": "Business"
     },
     "finance": {
       "menu": "Finance",
@@ -1644,7 +1695,26 @@
       "type": "Type",
       "paymentTypeRefund": "Refund",
       "paymentTypePayment": "Payment",
-      "time": "Time"
+      "time": "Time",
+      "summary": {
+        "title": "Summary",
+        "todaySuccessAmount": "Today Success Amount",
+        "todaySuccessRate": "Today Success Rate",
+        "monthSuccessAmount": "Month Success Amount",
+        "monthRefundRate": "Month Refund Rate",
+        "refundCount": "Refunds",
+        "count": "txns",
+        "trend": "Trend",
+        "rangeTrend": "Trend in last {days} days"
+      },
+      "trend": {
+        "date": "Date",
+        "successAmount": "Success Amount",
+        "successCount": "Success Count",
+        "failedAmount": "Failed Amount",
+        "failedCount": "Failed Count",
+        "refundAmount": "Refund Amount"
+      }
     },
     "rbac": {
       "title": "Roles & Permissions",
@@ -1951,6 +2021,7 @@
     "subtitle": "Manage teams, members, and roles",
     "createTeam": "Create Team",
     "teamName": "Team Name",
+    "identifier": "Identifier",
     "slug": "Identifier",
     "role_owner": "Owner",
     "role_admin": "Admin",
@@ -1981,6 +2052,7 @@
     "invitedAs": "Invited As",
     "expires": "Expires",
     "accept": "Accept",
+    "accepted": "Invitation accepted",
     "cancel": "Cancel",
     "batchCancel": "Batch Cancel",
     "create": "Create",
@@ -2068,7 +2140,8 @@
     "batchDeleteConfirm": "Delete {count} selected?",
     "loading": "Loading...",
     "enable": "Enable",
-    "disable": "Disable"
+    "disable": "Disable",
+    "back": "Back"
   },
   "subscription": {
     "title": "Subscription",

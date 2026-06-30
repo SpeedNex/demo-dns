@@ -131,7 +131,12 @@
     "highlightPrimary": "하나의 계정으로 모든 DNS 정책 관리",
     "highlightApi": "오픈 API 및 자동화 지원",
     "highlightGlobal": "글로벌 노드와 프로덕션급 접속",
-    "logoutSuccess": "로그아웃 성공"
+    "logoutSuccess": "로그아웃 성공",
+    "eyebrowMember": "회원 접속",
+    "eyebrowAdmin": "관리자 접속",
+    "highlightDoh": "HTTPS 암호화 해석",
+    "highlightAvailability": "프로필 가용성 관리",
+    "highlightAudit": "정책 및 기기 추적 가능"
   },
   "dashboard": {
     "title": "회원 센터",
@@ -845,6 +850,10 @@
       "totalQueries": "총 쿼리(24h)",
       "blocked": "차단(24h)",
       "activeUsers": "활성 사용자",
+      "dimensionGafam": "GAFAM (24h)",
+      "dimensionRootDomain": "루트 도메인 (24h)",
+      "dimensionEncryptedDns": "암호화 DNS (24h)",
+      "dimensionDnssecValid": "DNSSEC 유효 (24h)",
       "nodeManagement": "노드 관리",
       "nodeManagementDesc": "DNS 리졸버 노드 보기 및 관리",
       "publishTasks": "게시 작업",
@@ -884,7 +893,8 @@
         "clearAllConfirm": "모든 쿼리 로그를 지우시겠습니까?",
         "batchDeleteConfirm": "선택한 {count}개 항목을 삭제하시겠습니까?",
         "batchDeleted": "{count}개 항목 삭제됨",
-        "batchDeleteFailed": "일괄 삭제 실패"
+        "batchDeleteFailed": "일괄 삭제 실패",
+        "oldDataWarning": "선택한 로그는 모두 이전 데이터로 개별 삭제할 수 없습니다. 전체 삭제를 사용하세요."
       }
     },
     "loginTitle": "OcerDNS",
@@ -920,12 +930,17 @@
       "clientIp": "클라이언트 IP",
       "time": "시간",
       "latency": "지연(ms)",
-      "clearAll": "전체 비우기",
+      "type": "유형",
+      "protocol": "프로토콜",
+      "node": "노드",
+      "client": "클라이언트",
+      "clearAll": "전체 삭제",
       "clearAllConfirm": "모든 쿼리 로그를 비우시겠습니까? 이 작업은 되돌릴 수 없습니다.",
       "cleared": "로그 비워짐",
       "batchDeleteConfirm": "선택한 {count}개 로그를 삭제하시겠습니까?",
       "batchDeleted": "{count}개 삭제됨",
-      "batchDeleteFailed": "일괄 삭제 실패"
+      "batchDeleteFailed": "일괄 삭제 실패",
+      "oldDataWarning": "선택한 로그는 모두 이전 데이터로 개별 삭제할 수 없습니다. 전체 삭제를 사용하세요."
     },
     "alerts": "경고",
     "users": "사용자",
@@ -1031,6 +1046,7 @@
     "nodes": {
       "title": "DNS 노드",
       "desc": "DNS 리졸버 노드 관리 및 모니터링",
+      "portDesc": "기본 포트: DNS 53 (UDP/TCP) · DoH 443 · DoT 853 · DoQ 853",
       "nodeName": "노드 이름",
       "nodeId": "노드 ID",
       "nodeAlias": "노드 별칭",
@@ -1038,8 +1054,15 @@
       "nodeAliasPlaceholder": "선택사항, 비워두면 node-xxxxxx 자동 생성",
       "searchPlaceholder": "노드 ID 또는 별칭 검색",
       "status": "상태",
+      "runtimeStatus": "런타임 상태",
       "online": "온라인",
+      "degraded": "성능 저하",
       "offline": "오프라인",
+      "notInstalled": "미설치",
+      "installed": "설치됨",
+      "installFailed": "설치 실패",
+      "pending": "설치 대기",
+      "neverHeartbeat": "하트비트 없음",
       "region": "지역",
       "regionPlaceholder": "지역 선택",
       "ip": "IP 주소",
@@ -1056,9 +1079,18 @@
       "disable": "비활성화",
       "batchDelete": "일괄 삭제",
       "redeploy": "재배포",
+      "deploy": "배포",
+      "deployCopied": "배포 명령이 복사되었습니다",
+      "copyFailed": "복사 실패",
+      "deployTitle": "원클릭 배포",
+      "copyDeployCmd": "명령 복사",
+      "deployTip": "대상 호스트에서 이 명령을 실행하여 DNS 리졸버를 설치하세요",
+      "regenerate": "재생성",
+      "emptyDesc": "우측 상단 \"{create}\"을 클릭하여 첫 번째 DNS 노드를 추가하세요.",
       "noNodes": "노드를 찾을 수 없습니다",
       "nodeNameRequired": "노드 이름은 필수입니다",
       "regionRequired": "지역은 필수입니다",
+      "loadNodesFailed": "노드 로드 실패",
       "token": "토큰",
       "tokenTitle": "노드 토큰",
       "tokenName": "토큰 이름",
@@ -1190,7 +1222,10 @@
       "regionPlaceholder": "예: kr, us-west",
       "nodeNamePlaceholder": "예: kr-test",
       "ipPlaceholder": "예: 10.20.30.40",
-      "orphanTag": "매핑 없음"
+      "orphanTag": "매핑 없음",
+      "installed": "설치됨",
+      "pending": "대기 중",
+      "neverHeartbeat": "하트비트 없음"
     },
     "ruleLibrary": {
       "title": "규칙 라이브러리",
@@ -1367,7 +1402,13 @@
       "actions": "작업",
       "emptyDesc": "관리자 작업 기록이 여기에 표시됩니다.",
       "deleteConfirm": "이 로그를 삭제하시겠습니까?",
-      "clearConfirm": "모든 로그를 비우시겠습니까?"
+      "clearConfirm": "모든 로그를 삭제하시겠습니까?",
+      "actorId": "작업자 ID",
+      "start": "시작",
+      "end": "종료",
+      "userAgent": "사용자 에이전트",
+      "exportStart": "내보내기 시작됨",
+      "exportComplete": "내보내기 완료"
     },
     "userPolicyServices": {
       "title": "요금제 목록",
@@ -1489,7 +1530,10 @@
     },
     "plans": {
       "title": "플랜 관리",
-      "desc": "멤버십 플랜, 가격 및 표시 순서를 관리합니다"
+      "desc": "멤버십 플랜, 가격 및 표시 순서를 관리합니다",
+      "nameFree": "무료",
+      "namePro": "프로",
+      "nameBusiness": "비즈니스"
     },
     "finance": {
       "menu": "재무",
@@ -1608,7 +1652,26 @@
       "type": "유형",
       "paymentTypeRefund": "환불",
       "paymentTypePayment": "결제",
-      "time": "시간"
+      "time": "시간",
+      "summary": {
+        "title": "요약",
+        "todaySuccessAmount": "오늘 성공 금액",
+        "todaySuccessRate": "오늘 성공률",
+        "monthSuccessAmount": "이번 달 성공 금액",
+        "monthRefundRate": "이번 달 환불률",
+        "refundCount": "환불",
+        "count": "건",
+        "trend": "추이",
+        "rangeTrend": "최근 {days}일 추이"
+      },
+      "trend": {
+        "date": "날짜",
+        "successAmount": "성공 금액",
+        "successCount": "성공 건수",
+        "failedAmount": "실패 금액",
+        "failedCount": "실패 건수",
+        "refundAmount": "환불 금액"
+      }
     },
     "rbac": {
       "title": "역할 및 권한",
@@ -1873,16 +1936,19 @@
     },
     "admin": "Admin",
     "basicConfig": {
-      "title": "Basic Settings",
-      "desc": "Configure basic website information",
-      "siteName": "Site Name",
-      "siteNamePlaceholder": "Enter site name",
-      "siteUrl": "Site URL",
-      "siteUrlPlaceholder": "Enter site URL",
-      "siteDescription": "Site Description",
-      "siteDescPlaceholder": "Enter site description",
-      "saved": "Saved",
-      "saveFailed": "Failed to save"
+      "title": "기본 설정",
+      "desc": "기본 웹사이트 정보 구성",
+      "siteName": "사이트 이름",
+      "siteNamePlaceholder": "사이트 이름 입력",
+      "siteUrl": "사이트 URL",
+      "siteUrlPlaceholder": "사이트 URL 입력",
+      "siteDescription": "사이트 설명",
+      "siteDescPlaceholder": "사이트 설명 입력",
+      "dnsDomain": "DNS 도메인",
+      "dnsDomainPlaceholder": "dns.ocerdns.local",
+      "dnsDomainDesc": "DNS 해석 노드 도메인, 예: dns.ocerdns.local",
+      "saved": "저장됨",
+      "saveFailed": "저장 실패"
     },
     "action": {
       "create": "생성",
@@ -2038,7 +2104,8 @@
     "batchDeleteConfirm": "선택한 {count}개를 삭제하시겠습니까?",
     "loading": "로딩 중...",
     "enable": "활성화",
-    "disable": "비활성화"
+    "disable": "비활성화",
+    "back": "뒤로"
   },
   "subscription": {
     "title": "구독",

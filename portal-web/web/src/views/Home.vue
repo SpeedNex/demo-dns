@@ -215,7 +215,7 @@ const handleLogout = async () => {
     sessionStorage.removeItem('user')
     isLoggedIn.value = false
     userName.value = 'User'
-    ElMessage.success(t('auth.logoutSuccess') || 'Logged out')
+    ElMessage.success(t('auth.logoutSuccess'))
 }
 
 const goConsole = async () => {

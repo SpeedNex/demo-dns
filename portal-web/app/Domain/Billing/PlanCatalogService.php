@@ -204,6 +204,37 @@ final class PlanCatalogService
         $plan->delete();
     }
 
+    /**
+     * 获取某个套餐下的用户列表（分页）
+     *
+     * @return array{data: array<int, mixed>, total: int, page: int, per_page: int}
+     */
+    public function getUsersByPlan(string $planCode, int $page = 1, int $perPage = 20): array
+    {
+        $query = \App\Models\User::query()
+            ->where('plan_code', $planCode)
+            ->orderByDesc('created_at');
+
+        $total = (int) $query->count();
+        $users = $query
+            ->offset(($page - 1) * $perPage)
+            ->limit($perPage)
+            ->get(['uid', 'username', 'email', 'status', 'created_at']);
+
+        return [
+            'data' => $users->map(fn ($user) => [
+                'uid' => $user->uid,
+                'username' => $user->username,
+                'email' => $user->email,
+                'status' => $user->status,
+                'created_at' => $user->created_at?->toIso8601String(),
+            ])->all(),
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+        ];
+    }
+
     private function syncPrices(Plan $plan, array $prices): void
     {
         $plan->prices()->delete();

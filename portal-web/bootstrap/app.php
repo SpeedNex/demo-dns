@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withCommands()
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
+        $middleware->append(\App\Http\Middleware\SetReferrerPolicy::class);
         $middleware->alias([
             'permission' => \App\Http\Middleware\CheckPermission::class,
             'node.token' => \App\Http\Middleware\AuthenticateNodeToken::class,

@@ -26,7 +26,7 @@
             </el-input>
             <el-input
                 v-model="filter.username"
-                :placeholder="$t('admin.queryLogsPage.username') || 'Username'"
+                :placeholder="$t('admin.queryLogsPage.username')"
                 style="width:140px"
                 size="small"
                 clearable
@@ -37,7 +37,7 @@
             </el-input>
             <el-select
                 v-model="filter.action"
-                :placeholder="$t('admin.queryLogsPage.action') || 'Action'"
+                :placeholder="$t('admin.queryLogsPage.action')"
                 style="width:130px"
                 size="small"
                 clearable
@@ -77,7 +77,7 @@
             </el-button>
             <el-button size="small" type="success" :loading="exporting" @click="handleExport">
                 <el-icon class="el-icon--left"><Download /></el-icon>
-                <span>{{ $t('common.export') || 'Export' }}</span>
+                <span>{{ $t('common.export') }}</span>
             </el-button>
             <el-button size="small" type="danger" :disabled="selected.length === 0" @click="handleBatchDelete">
                 <el-icon class="el-icon--left"><Delete /></el-icon>
@@ -94,7 +94,7 @@
             <el-table-column :label="$t('admin.queryLogsPage.time')" width="190" fixed>
                 <template #default="{ row }">{{ row.queried_at ? new Date(row.queried_at).toLocaleString() : '-' }}</template>
             </el-table-column>
-            <el-table-column label="域名" min-width="220" show-overflow-tooltip>
+            <el-table-column :label="$t('admin.queryLogsPage.domain')" min-width="220" show-overflow-tooltip>
                 <template #default="{ row }">
                     <div class="domain-cell">
                         <span class="domain-name">{{ (row.domain || '-').replace(/\.$/, '') }}</span>
@@ -143,10 +143,10 @@
                     <span v-else style="color:#94a3b8">-</span>
                 </template>
             </el-table-column>
-            <el-table-column label="节点" width="90" show-overflow-tooltip>
+            <el-table-column :label="$t('admin.queryLogsPage.node')" width="90" show-overflow-tooltip>
                 <template #default="{ row }">{{ row.node_id || '-' }}</template>
             </el-table-column>
-            <el-table-column label="客户端" width="140" show-overflow-tooltip>
+            <el-table-column :label="$t('admin.queryLogsPage.client')" width="140" show-overflow-tooltip>
                 <template #default="{ row }">{{ row.client_ip || '-' }}</template>
             </el-table-column>
             <el-table-column :label="$t('admin.queryLogsPage.latency')" width="100">
@@ -199,7 +199,7 @@ const handleBatchDelete = async () => {
         .filter((id) => id && id !== '')
 
     if (validIds.length === 0) {
-        ElMessage.warning('选中的日志均为旧数据，无法逐条删除（仅支持一键清空）')
+        ElMessage.warning(t('admin.queryLogsPage.oldDataWarning'))
         return
     }
 
@@ -266,9 +266,9 @@ const actionLabel = (a) => {
 const copyText = async (text) => {
     try {
         await navigator.clipboard.writeText(text)
-        ElMessage.success(t('common.copied') || 'Copied')
+        ElMessage.success(t('common.copied'))
     } catch {
-        ElMessage.error(t('common.copyFailed') || 'Copy failed')
+        ElMessage.error(t('common.copyFailed'))
     }
 }
 

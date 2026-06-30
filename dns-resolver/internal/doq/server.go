@@ -149,12 +149,12 @@ func (s *Server) handleStream(stream *quic.Stream, remoteAddr string, profileUID
 		return
 	}
 
-	// ① Profile 匹配 — 优先通过 TLS SNI(profileUID) 识别，回退到源 IP
-	profileID, blockResponse, deviceID, safeSearchEnabled, ok := profileUID, "nxdomain", "", false, profileUID != ""
-	if !ok {
+	// ① SNI profile_id 校验（6位），非法格式直接拒绝
+	profileID, blockResponse, deviceID, safeSearchEnabled := profileUID, "nxdomain", "", false
+	if profileID == "" || len(profileID) != 6 {
 		reply := new(dns.Msg)
 		reply.SetReply(req)
-		reply.Rcode = dns.RcodeNameError
+		reply.Rcode = dns.RcodeRefused
 		s.writeStream(stream, reply)
 		s.metrics.IncErrors()
 		return

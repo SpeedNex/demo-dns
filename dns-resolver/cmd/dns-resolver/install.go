@@ -687,11 +687,13 @@ Restart=on-failure
 RestartSec=5s
 LimitNOFILE=65536
 
-# sandbox: 禁止提权,只放开 configs 目录
+# sandbox: 禁止提权,只放开必要的写目录
+#   - {{.ConfigDir}}                 : server.yaml / api_key 文件所在
+#   - /var/lib/ocer-dns/log-buffer   : DNS 查询日志本地缓冲落盘点 (Hard Constraint 13)
 NoNewPrivileges=true
 ProtectSystem=strict
 PrivateTmp=true
-ReadWritePaths={{.ConfigDir}}
+ReadWritePaths={{.ConfigDir}} /var/lib/ocer-dns/log-buffer
 
 [Install]
 WantedBy=multi-user.target

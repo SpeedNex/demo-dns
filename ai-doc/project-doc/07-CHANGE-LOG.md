@@ -2,6 +2,30 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-06-30 — 前端 UI i18n 完善（frontend-ui.md P1 修复）
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-06-30 | code | P1-5: GeoDNS.vue 状态 tag（已安装/待安装/从未心跳）走 i18n | portal-web/web/src/views/admin/GeoDNS.vue | ok |
+| 2026-06-30 | code | P1-5: 新增 admin.geoDns.installed/pending/neverHeartbeat i18n key（zh-CN/en/ko） | portal-web/web/src/locales/{zh-CN,en,ko}.json | ok |
+| 2026-06-30 | code | P1-6: BasicConfig.vue DNS 域名 label 走 i18n | portal-web/web/src/views/admin/BasicConfig.vue | ok |
+| 2026-06-30 | code | P1-6: 新增 admin.basicConfig.dnsDomain/dnsDomainDesc i18n key（zh-CN/en/ko） | portal-web/web/src/locales/{zh-CN,en,ko}.json | ok |
+| 2026-06-30 | code | P1-7: Layout.vue 抹除 Profile name fallback 'Default' | portal-web/web/src/components/Layout.vue | ok |
+| 2026-06-30 | code | P1-7: Home.vue 抹除 logoutSuccess fallback 'Logged out' | portal-web/web/src/views/Home.vue | ok |
+| 2026-06-30 | code | P1-8: Login.vue eyebrow 硬编码改为 :eyebrow="$t('auth.eyebrowMember')" | portal-web/web/src/views/Login.vue | ok |
+| 2026-06-30 | code | P1-8: Login.vue highlights 硬编码改为 t() i18n 调用 | portal-web/web/src/views/Login.vue | ok |
+| 2026-06-30 | code | P1-8: 新增 auth.eyebrowMember/eyebrowAdmin/highlightDoh/highlightAvailability/highlightAudit i18n key（zh-CN/en/ko） | portal-web/web/src/locales/{zh-CN,en,ko}.json | ok |
+| 2026-06-30 | code | P1-8: Dashboard.vue dimensionStats 中文 label 和 fallback 移除，改用 t() | portal-web/web/src/views/admin/Dashboard.vue | ok |
+| 2026-06-30 | code | P1-8: 新增 admin.dashboard.dimensionGafam/RootDomain/EncryptedDns/DnssecValid i18n key（zh-CN/en/ko） | portal-web/web/src/locales/{zh-CN,en,ko}.json | ok |
+
+## 2026-06-30 — Resolver 2 日志缓冲 read-only 修复 + 401 鉴权修复
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-06-30 | code | install.go: systemd unit 模板 ReadWritePaths 追加 `/var/lib/ocer-dns/log-buffer`，修复 ProtectSystem=strict 沙箱下日志缓冲无法落盘 Bug | dns-resolver/cmd/dns-resolver/install.go | ok |
+| 2026-06-30 | code | 现场运维: 103.86.44.209 systemd unit daemon-reload + restart，验证 read-only 消失，日志正常落盘 | 服务器 /etc/systemd/system/dns-resolver.service | ok |
+| 2026-06-30 | ops | 现场运维: Resolver 2 (103.86.44.209) portal-web DB resolver_nodes.api_key 为 NULL → 导致所有 API 401；根因：node_code=ipsckxkyoo DB api_key 为空，读取 Resolver 侧 api_key 文件 hash 写入 DB 后 401 消失，所有接口恢复 200 | portal-web DB resolver_nodes(id=3) | ok |
+
 ## 2026-06-26 — 财务栏目链路完善 + Model 表名前缀修复
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |

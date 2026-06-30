@@ -21,9 +21,9 @@
                     <el-form-item :label="$t('admin.basicConfig.siteUrl')">
                         <el-input v-model="config.site_url" :placeholder="$t('admin.basicConfig.siteUrlPlaceholder')" />
                     </el-form-item>
-                    <el-form-item label="DNS 域名">
-                        <el-input v-model="config.dns_domain" placeholder="dns.ocerdns.local" />
-                        <div style="font-size:12px;color:#909399;margin-top:4px">DNS 解析节点域名，例如 dns.ocerdns.local</div>
+                    <el-form-item :label="$t('admin.basicConfig.dnsDomain')">
+                        <el-input v-model="config.dns_domain" :placeholder="$t('admin.basicConfig.dnsDomainPlaceholder')" />
+                        <div style="font-size:12px;color:#909399;margin-top:4px">{{ $t('admin.basicConfig.dnsDomainDesc') }}</div>
                     </el-form-item>
                     <el-form-item :label="$t('admin.basicConfig.siteDescription')">
                         <el-input v-model="config.site_description" type="textarea" :rows="3" :placeholder="$t('admin.basicConfig.siteDescPlaceholder')" />
