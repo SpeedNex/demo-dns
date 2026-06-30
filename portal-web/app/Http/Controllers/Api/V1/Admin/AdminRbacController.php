@@ -167,7 +167,7 @@ final class AdminRbacController
         }
 
         $validated = $request->validate([
-            'permission_ids' => 'required|array',
+            'permission_ids' => 'present|array',
             'permission_ids.*' => 'integer|exists:admin_permissions,id',
         ]);
 
