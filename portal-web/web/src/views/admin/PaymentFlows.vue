@@ -114,8 +114,8 @@
           <el-tag size="small" effect="plain">{{ getPlanName(row.plan_code) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="provider" :label="$t('admin.finance.provider')" min-width="110" />
-      <el-table-column :label="$t('admin.finance.type')" min-width="100">
+      <el-table-column prop="provider" :label="$t('admin.finance.provider')" min-width="140" />
+      <el-table-column :label="$t('admin.finance.type')" min-width="130">
         <template #default="{ row }">
           <el-tag :type="row.type === 'refund' ? 'warning' : 'success'" size="small" effect="light">
             {{ row.type === 'refund' ? $t('admin.finance.paymentTypeRefund') : $t('admin.finance.paymentTypePayment') }}
