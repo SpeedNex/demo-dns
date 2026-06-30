@@ -102,13 +102,25 @@ final class PlanCatalogService
     {
         $this->ensureDefaults();
 
-        return Plan::query()
+        $plans = Plan::query()
             ->with('prices')
             ->orderBy('sort_order')
             ->orderBy('id')
-            ->get()
-            ->map(fn (Plan $plan): array => $this->serializePlan($plan))
-            ->all();
+            ->get();
+
+        // 2026-06-30: 附加 user_count 字段（订阅了该 plan_code 的用户数）
+        // 用途：/admin/plans 页面"用户数"列 + 抽屉入口
+        $userCounts = DB::table('users')
+            ->whereIn('plan_code', $plans->pluck('code'))
+            ->select('plan_code', DB::raw('COUNT(*) as cnt'))
+            ->groupBy('plan_code')
+            ->pluck('cnt', 'plan_code');
+
+        return $plans->map(function (Plan $plan) use ($userCounts): array {
+            $data = $this->serializePlan($plan);
+            $data['user_count'] = (int) ($userCounts[$plan->code] ?? 0);
+            return $data;
+        })->all();
     }
 
     public function memberList(): array

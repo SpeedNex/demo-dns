@@ -449,6 +449,32 @@ func (a *Agent) loadProfileIntoEngine(profileID string, data json.RawMessage, ve
 	return nil
 }
 
+// PreloadAllProfiles 启动时遍历 pCache 中所有已加载到内存的 profile，
+// 主动调 FetchProfile 让 Engine 预加载规则。
+// 2026-06-30: 修复 UDP/TCP 53 路径下 Engine 为空的 Bug。
+// Engine 默认仅在带 profileID 的查询（DoH / DoT / DoQ）触发 FetchProfile 时
+// 才被填充，裸 UDP 53 路径无法识别 profile，导致 Engine 一直空，
+// MatchWithProfile 的 blocklist 聚合回退失效。
+// 启动时预加载可以确保 Engine 在第一笔 UDP 53 查询之前就包含所有 profile 规则。
+func (a *Agent) PreloadAllProfiles() {
+	ids := a.pCache.GetAllProfileIDs()
+	if len(ids) == 0 {
+		log.Printf("[启动] 预加载 Engine：磁盘缓存中无 profile，跳过")
+		return
+	}
+	loaded := 0
+	failed := 0
+	for _, id := range ids {
+		if err := a.FetchProfile(id); err != nil {
+			log.Printf("[启动] 预加载 profile=%s 失败 err=%v", id, err)
+			failed++
+			continue
+		}
+		loaded++
+	}
+	log.Printf("[启动] 预加载 Engine 完成 成功=%d 失败=%d", loaded, failed)
+}
+
 // checkProfiles 检查所有内存缓存的 Profile 是否有新版本。
 func (a *Agent) checkProfiles() {
 	a.mu.RLock()

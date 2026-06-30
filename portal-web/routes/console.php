@@ -35,6 +35,13 @@ Schedule::command('usage:aggregate')
     ->runInBackground();
 
 // UI.md #70 — 账单生成：每日 00:30
+// 前置：每日 00:00 关闭已结束账期 (billing:close-periods)
+Schedule::command('billing:close-periods')
+    ->dailyAt('00:00')
+    ->onOneServer()
+    ->withoutOverlapping()
+    ->runInBackground();
+
 Schedule::command('billing:generate')
     ->dailyAt('00:30')
     ->onOneServer()

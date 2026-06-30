@@ -22,6 +22,7 @@ Route::middleware('permission:admin.finance.read')->group(function (): void {
     Route::get('finance/subscriptions', [AdminFinanceController::class, 'subscriptions']);
     Route::get('finance/subscriptions/{id}', [AdminFinanceController::class, 'subscriptionDetail']);
     Route::get('finance/payment-flows', [AdminFinanceController::class, 'paymentFlows']);
+    Route::get('finance/payment-flows/summary', [AdminFinanceController::class, 'paymentFlowsSummary']);
     Route::get('finance/payment-flows/export', [AdminFinanceController::class, 'paymentFlowExport']);
 });
 Route::middleware('permission:admin.finance.write')->group(function (): void {

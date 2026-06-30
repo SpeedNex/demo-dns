@@ -204,6 +204,10 @@ func main() {
 	// Start agent heartbeat loop
 	go agt.StartHeartbeat(ctx)
 
+	// 2026-06-30: 启动时预加载所有磁盘缓存的 profile 到 Engine，
+	// 确保裸 UDP/TCP 53 路径（无 profileID）也能用上 Engine 的 blocklist 聚合回退。
+	agt.PreloadAllProfiles()
+
 	// Start config sync loop (every 60s)
 	go agt.StartConfigSync(ctx, time.Duration(cfg.ControlPlane.ConfigPollInterval)*time.Second)
 

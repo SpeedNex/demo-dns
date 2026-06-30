@@ -31,6 +31,19 @@
                     </div>
                 </template>
             </el-table-column>
+            <el-table-column label="用户数" width="110" align="center">
+                <template #default="{ row }">
+                    <el-link
+                        v-if="row.user_count > 0"
+                        type="primary"
+                        :underline="false"
+                        @click="openUserDrawer(row)"
+                    >
+{{ row.user_count }}
+</el-link>
+                    <span v-else class="muted">0</span>
+                </template>
+            </el-table-column>
             <el-table-column prop="status" label="状态" width="100" />
             <el-table-column label="特色" width="90">
                 <template #default="{ row }">
@@ -39,7 +52,7 @@
                 </template>
             </el-table-column>
             <el-table-column prop="description" label="描述" min-width="220" show-overflow-tooltip />
-            <el-table-column label="操作" width="140" fixed="right">
+            <el-table-column label="操作" width="160" fixed="right">
                 <template #default="{ row }">
                     <el-button text type="primary" @click="openEdit(row)">编辑</el-button>
                     <el-button text type="danger" @click="handleDelete(row)">删除</el-button>
@@ -47,6 +60,49 @@
             </el-table-column>
         </el-table>
     </ListPage>
+
+    <!-- 2026-06-30: 套餐下用户列表抽屉（合并自下线页面 user-policy-services） -->
+    <el-drawer
+        v-model="userDrawer.visible"
+        :title="`${userDrawer.planName} · 订阅用户`"
+        direction="rtl"
+        size="640px"
+        :destroy-on-close="true"
+    >
+        <div class="user-drawer">
+            <div class="drawer-summary">
+                共 <strong>{{ userDrawer.total }}</strong> 位用户订阅了此套餐
+            </div>
+            <el-table v-loading="userDrawer.loading" :data="userDrawer.users" stripe size="small">
+                <el-table-column prop="uid" label="UID" width="90" />
+                <el-table-column prop="username" label="用户名" min-width="140" show-overflow-tooltip />
+                <el-table-column prop="email" label="邮箱" min-width="200" show-overflow-tooltip />
+                <el-table-column label="状态" width="90">
+                    <template #default="{ row }">
+                        <el-tag :type="row.status === 'active' ? 'success' : 'info'" size="small">
+                            {{ row.status }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column label="注册时间" width="170">
+                    <template #default="{ row }">{{ row.created_at ? new Date(row.created_at).toLocaleString() : '-' }}</template>
+                </el-table-column>
+            </el-table>
+            <div class="drawer-pagination">
+                <el-pagination
+                    v-model:current-page="userDrawer.page"
+                    v-model:page-size="userDrawer.perPage"
+                    :page-sizes="[10, 20, 50]"
+                    :total="userDrawer.total"
+                    layout="sizes, prev, pager, next, total"
+                    background
+                    small
+                    @current-change="fetchDrawerUsers"
+                    @size-change="fetchDrawerUsers"
+                />
+            </div>
+        </div>
+    </el-drawer>
 
     <el-dialog v-model="dialogVisible" :title="editingPlan ? '编辑套餐' : '新增套餐'" width="780px" destroy-on-close>
         <el-form :model="form" label-position="top" class="plan-form">
@@ -212,6 +268,18 @@ const featuresText = ref('')
 const monthlyQueriesLimit = ref(0)
 const profileLimit = ref(0)
 const teamLimit = ref(0)
+
+// 2026-06-30: 套餐下用户列表抽屉
+const userDrawer = reactive({
+    visible: false,
+    planCode: '',
+    planName: '',
+    users: [],
+    total: 0,
+    page: 1,
+    perPage: 20,
+    loading: false,
+})
 
 const createEmptyPrice = () => ({ billing_cycle: 'monthly', currency: 'USD', amount_major: 0, status: 'active' })
 
@@ -507,6 +575,33 @@ fetchPlans()
     display: flex;
     justify-content: flex-end;
     gap: 12px;
+}
+
+/* 2026-06-30: 用户列表抽屉样式 */
+.user-drawer {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.drawer-summary {
+    font-size: 13px;
+    color: #64748b;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-radius: 6px;
+}
+.drawer-summary strong {
+    color: #2563eb;
+    font-weight: 600;
+    margin: 0 2px;
+}
+.drawer-pagination {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+.muted {
+    color: #94a3b8;
 }
 
 /* 滚动条 */

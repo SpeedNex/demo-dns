@@ -321,4 +321,99 @@ final class AdminFinanceController
             ],
         ]);
     }
+
+    /**
+     * 2026-06-30: 支付流水汇总（变化列表数据源）
+     * GET /admin/finance/payment-flows/summary
+     * 字段：
+     *   today / this_month: KPI（金额、笔数、成功率、退款率）
+     *   trend_7d: 最近 7 天每日成功/失败/退款金额
+     */
+    public function paymentFlowsSummary(Request $request): JsonResponse
+    {
+        $today = now()->startOfDay();
+        $monthStart = now()->startOfMonth();
+        $currency = strtoupper((string) $request->input('currency', 'USD'));
+        $range = (int) $request->input('range', 7);
+        $range = max(1, min(90, $range));
+
+        $base = function () use ($currency) {
+            $q = DB::table('payment_transactions');
+            if ($currency !== '') {
+                $q->where('currency', $currency);
+            }
+            return $q;
+        };
+
+        // 今日 KPI
+        $todayTotal = (clone $base())->where('created_at', '>=', $today)->count();
+        $todaySucceeded = (clone $base())->where('created_at', '>=', $today)->where('status', 'succeeded')->count();
+        $todaySucceededAmount = (int) (clone $base())->where('created_at', '>=', $today)->where('status', 'succeeded')->sum('amount_minor');
+        $todayRefunded = (clone $base())->where('created_at', '>=', $today)->where('status', 'refunded')->count();
+
+        // 本月 KPI
+        $monthTotal = (clone $base())->where('created_at', '>=', $monthStart)->count();
+        $monthSucceeded = (clone $base())->where('created_at', '>=', $monthStart)->where('status', 'succeeded')->count();
+        $monthSucceededAmount = (int) (clone $base())->where('created_at', '>=', $monthStart)->where('status', 'succeeded')->sum('amount_minor');
+        $monthRefunded = (clone $base())->where('created_at', '>=', $monthStart)->where('status', 'refunded')->count();
+
+        // 最近 N 天趋势
+        $trendStart = now()->startOfDay()->subDays($range - 1);
+        $rows = (clone $base())
+            ->where('created_at', '>=', $trendStart)
+            ->select([
+                DB::raw('DATE(created_at) as d'),
+                'status',
+                DB::raw('SUM(amount_minor) as amt'),
+                DB::raw('COUNT(*) as cnt'),
+            ])
+            ->groupBy('d', 'status')
+            ->get();
+
+        $buckets = [];
+        for ($i = 0; $i < $range; $i++) {
+            $key = now()->startOfDay()->subDays($range - 1 - $i)->toDateString();
+            $buckets[$key] = ['date' => $key, 'succeeded_amount' => 0, 'failed_amount' => 0, 'refunded_amount' => 0, 'succeeded_count' => 0, 'failed_count' => 0];
+        }
+        foreach ($rows as $r) {
+            $d = (string) $r->d;
+            if (! isset($buckets[$d])) {
+                continue;
+            }
+            $amt = (int) $r->amt;
+            $cnt = (int) $r->cnt;
+            if ($r->status === 'succeeded') {
+                $buckets[$d]['succeeded_amount'] += $amt;
+                $buckets[$d]['succeeded_count'] += $cnt;
+            } elseif ($r->status === 'refunded') {
+                $buckets[$d]['refunded_amount'] += $amt;
+            } elseif (in_array($r->status, ['failed'], true)) {
+                $buckets[$d]['failed_amount'] += $amt;
+                $buckets[$d]['failed_count'] += $cnt;
+            }
+        }
+
+        return response()->json([
+            'data' => [
+                'currency' => $currency,
+                'range' => $range,
+                'today' => [
+                    'amount_minor' => $todaySucceededAmount,
+                    'total_count' => $todayTotal,
+                    'succeeded_count' => $todaySucceeded,
+                    'success_rate' => $todayTotal > 0 ? round($todaySucceeded / $todayTotal, 4) : 0.0,
+                    'refund_count' => $todayRefunded,
+                ],
+                'this_month' => [
+                    'amount_minor' => $monthSucceededAmount,
+                    'total_count' => $monthTotal,
+                    'succeeded_count' => $monthSucceeded,
+                    'success_rate' => $monthTotal > 0 ? round($monthSucceeded / $monthTotal, 4) : 0.0,
+                    'refund_count' => $monthRefunded,
+                    'refund_rate' => $monthSucceeded > 0 ? round($monthRefunded / $monthSucceeded, 4) : 0.0,
+                ],
+                'trend' => array_values($buckets),
+            ],
+        ]);
+    }
 }
