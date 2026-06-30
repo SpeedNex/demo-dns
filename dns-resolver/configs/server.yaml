@@ -17,7 +17,8 @@ listen:
     # tls_key_file: /etc/ocer-dns/certs/server.key
 control_plane:
     endpoint: http://localhost:8081
-    api_key: ak_bDtNnuMzTOEqdZclRpC41VYyDedseQ0X6lInFFLH
+    api_key: ""  # 已废弃，凭据统一走 api_key_path 文件
+    api_key_path: "configs/api_key"  # 鉴权 token 文件路径（install 阶段写入）
     secret: hmk_ja0ixnpmnjzqura5cf7zmwfkgptipwmn
     node_id: 16
     heartbeat_interval: 30

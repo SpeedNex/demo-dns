@@ -117,10 +117,21 @@ final class HeartbeatController
             ]);
 
             // 更新 MySQL last_heartbeat_at，使 scopeOnline 等 SQL 查询仍可工作
-            $node->update([
+            $updateData = [
                 'current_config_version' => $heartbeat['current_config_version'],
                 'last_heartbeat_at' => $now,
-            ]);
+            ];
+
+            // 2026-06-30: 有些节点手动部署时绕过 register 接口，导致 install_status 永远停在 pending
+            // 心跳本身已通过 AuthenticateNodeApiKey 中间件鉴权（api_key 合法 = 节点物理可达），
+            // 如果当前仍是 pending，翻转为 installed，让 Admin UI 状态展示与运行时一致。
+            // failed 状态需人工介入，不在此自动翻转。
+            if ($node->install_status === 'pending') {
+                $updateData['install_status'] = 'installed';
+                $updateData['last_installed_at'] = $now;
+            }
+
+            $node->update($updateData);
             $node->refresh();
         }
 

@@ -1,0 +1,41 @@
+node:
+    node_uid: vydisdlb7k
+    name: resolver-local-16
+    version: 1.0.0
+    region: local-test
+    country: CN
+    provider: local
+    public_ipv4: 127.0.0.1
+listen:
+    doh: 443
+    dot: 853
+    doq: 853
+    udp: 53
+    tcp: 53
+    # TLS 证书路径；留空时自动生成自签名证书（仅开发测试用）
+    # tls_cert_file: /etc/ocer-dns/certs/server.crt
+    # tls_key_file: /etc/ocer-dns/certs/server.key
+control_plane:
+    endpoint: http://localhost:8081
+    api_key: ak_bDtNnuMzTOEqdZclRpC41VYyDedseQ0X6lInFFLH
+    secret: hmk_ja0ixnpmnjzqura5cf7zmwfkgptipwmn
+    node_id: 16
+    heartbeat_interval: 30
+    config_poll_interval: 5
+    profiles_path: ./configs
+upstream:
+    - 1.1.1.1
+    - 8.8.8.8
+logging:
+    level: debug
+    # 2026-06-22: 改用 /var/lib/ocer-dns/log-buffer 避免 systemd-tmpfiles 清理 /tmp
+    # macOS 开发机可改为 ~/Library/Application Support/ocer-dns/log-buffer
+    buffer_path: /var/lib/ocer-dns/log-buffer
+nats:
+    enabled: false
+redis:
+    enabled: false
+geodns:
+    enabled: true
+    endpoint: http://127.0.0.1:5354
+    request_timeout_seconds: 3

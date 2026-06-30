@@ -38,8 +38,10 @@ final class ConfigPullController
         ]);
 
         $data = [
-            // 2026-06-30: Global Config version 与 Profile 版本解耦，独立维护
-            'version' => (int) (DB::table('dns_global_config_versions')->max('version') ?? 1),
+            // 2026-06-30: Global Profile 版本单独维护，target_scope=global
+            'version' => (int) (DB::table('profile_versions')
+                ->where('target_scope', 'global')
+                ->max('version') ?? 1),
             'upstreams' => [$this->defaultUpstream()],
             'plans'     => $plans,
             'rulesets'  => [],

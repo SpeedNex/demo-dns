@@ -299,7 +299,7 @@ Token 格式：去除 ocnd_ 前缀后展示和复制
 
 DNS 配置：
 - profiles                      ← DNS 配置方案
-- profile_versions              ← 配置方案版本
+- profile_versions              ← **唯一**发布版本表（target_scope: 'profile'=profile 版本 / 'global'=全局配置版本，Resolver 拉取时只认 target_scope='global'）
 - profile_rules                 ← 配置文件规则
 - rule_sources                  ← 规则来源
 - rule_categories               ← 规则分类
@@ -455,7 +455,56 @@ return $this->belongsTo(User::class);
 28. dns-resolver 日志上报必须使用与 heartbeat/config 相同的 api_key
 29. dns-resolver 所有鉴权接口必须统一从 api_key_path 文件读取 token
 30. Profile 同名冲突检查：ProfileService::create() 需添加同名检查
+31. **Laravel DB::table() 调用必须使用不带 `dns_` 前缀的表名**，禁止手动拼接前缀双写（详见下方 Hard Rule）
+32. **`profile_versions` 是全局配置发布版本的唯一存储表**，以其 `target_scope='global'` 行记录全局版本号。严禁另立 `global_config_versions`、`config_releases` 等表来存储同一份数据（2026-06-30 事故见下方 Hard Rule #2）
 ```
+
+## 8.1 ⚠️ 表前缀 Hard Rule（违反必出 500 生产事故）
+
+本项目 `config/database.php` MySQL 连接配置包含：
+
+```php
+'prefix' => env('DB_TABLE_PREFIX', 'dns_'),
+```
+
+Laravel/Eloquent 在运行时会 **自动给 `DB::table()` 和 Model 的表名前面加上 `dns_` 前缀**。
+```text
+DB::table('global_config_versions')    →  SQL: SELECT ... FROM dns_global_config_versions   ✅ 正确
+DB::table('dns_global_config_versions') →  SQL: SELECT ... FROM dns_dns_global_config_versions ❌ 500 报错
+```
+
+### 2026-06-30 生产事故链（二次复发根因详见 `.trae/线上生产环境真实调试.md`）
+
+**事故 #1：Resolver 心跳 401 invalid_api_key**
+- 触发条件：重装 resolver 时未删除旧 `/usr/local/etc/dns-resolver/api_key`
+- 现象：`/config` `/heartbeat` `/profiles/check` 全部 401
+- 根因：DB `resolver_nodes.api_key` 字段未同步 sha256 hash（exchangeToken 后未落库）
+- 修复：READ api_key FILE → sha256 → UPDATE resolver_nodes.api_key WHERE id=3 → 等 30-40 秒心跳恢复
+- 预防：`install.sh` 已加装重装前 `rm -f /usr/local/etc/dns-resolver/api_key`
+  ```bash
+  API_KEY_PATH="/usr/local/etc/dns-resolver/api_key"
+  if [[ -f "$API_KEY_PATH" ]]; then
+      $SUDO rm -f "$API_KEY_PATH"
+  fi
+  ```
+
+**事故 #2：Resolver 配置拉取 500 (table not found)**
+- 触发条件：`ConfigPullController.php:42` 误用 `DB::table('dns_global_config_versions')` + 该表从未创建
+- 现象：auth 通过后，SQL 层面 table not found → 500 HTML 错误页
+- 根因：
+  1. 双前缀 Bug — Laravel 自动加 `dns_`，再手加就成 `dns_dns_global_config_versions`
+  2. 数据表缺失 — 项目开发期迁移脚本未完整运行，遗漏了版本表
+- 修复：**复用 `profile_versions` 表（`target_scope = 'global'`）**作为唯一的发布版本表；Controller 改为：
+  ```php
+  'version' => (int) (DB::table('profile_versions')
+      ->where('target_scope', 'global')
+      ->max('version') ?? 1),
+  ```
+- 验证：```php artisan tinker --execute "DB::table('profile_versions')->where('target_scope','global')->max('version')"``` 必须返回 1
+
+> 🔴 **铁律**：
+> 1. `DB::table()` / `Schema::create()` 永远只写裸表名，让框架自动加 `dns_` 前缀。手动加 `dns_` 必然双前缀 → 运行报错。
+> 2. **发布版本唯一表**：`profile_versions` 是全局配置发布版本的**唯一**存储表。全局版本号 = `target_scope = 'global'` 的 `version` 字段。**严禁**另立 `global_config_versions`、`config_releases`、`config_versions` 等表存储同一份数据。所有版本发布必须且只能通过 `ProfileVersion` 模型写入 `profile_versions` 表。
 
 ## 9. 已完成 P0 修复清单
 
