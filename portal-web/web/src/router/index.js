@@ -33,7 +33,7 @@ import AdminRuleCategories from '@/views/admin/RuleCategories.vue'
 import AdminBrands from '@/views/admin/Brands.vue'
 import AdminSecurityData from '@/views/admin/SecurityData.vue'
 import AdminSecurityDataItem from '@/views/admin/SecurityDataItem.vue'
-import AdminProtectionPolicies from '@/views/admin/ProtectionPolicies.vue'
+import AdminSecurityCatalogPage from '@/views/admin/SecurityCatalogPage.vue'
 import AdminPublishCenter from '@/views/admin/PublishCenter.vue'
 import AdminSystemConfig from '@/views/admin/SystemConfig.vue'
 import AdminAuditLogs from '@/views/admin/AuditLogs.vue'
@@ -42,7 +42,7 @@ import AdminAlerts from '@/views/admin/Alerts.vue'
 import AdminUsers from '@/views/admin/Users.vue'
 import AdminDevices from '@/views/admin/Devices.vue'
 import AdminPlans from '@/views/admin/Plans.vue'
-import AdminMemberCatalogs from '@/views/admin/MemberCatalogs.vue'
+// AdminMemberCatalogs merged into SecurityCatalogPage
 import AdminLogin from '@/views/admin/AdminLogin.vue'
 import AdminBill from '@/views/admin/Bill.vue'
 import AdminSubscriptions from '@/views/admin/Subscriptions.vue'
@@ -111,13 +111,13 @@ const routes = [
             { path: 'brands', name: 'AdminBrands', component: AdminBrands },
             { path: 'security-data', name: 'AdminSecurityData', component: AdminSecurityData },
             { path: 'security-data/:group', name: 'AdminSecurityDataItem', component: AdminSecurityDataItem },
-            { path: 'protection-policies', name: 'AdminProtectionPolicies', component: AdminProtectionPolicies },
+            { path: 'security-catalog', name: 'AdminProtectionPolicies', component: AdminSecurityCatalogPage },
             { path: 'publish-center', name: 'AdminPublishCenter', component: AdminPublishCenter },
             { path: 'query-logs', name: 'AdminQueryLogs', component: AdminQueryLogs },
             { path: 'alerts', name: 'AdminAlerts', component: AdminAlerts },
             { path: 'users', name: 'AdminUsers', component: AdminUsers },
             { path: 'devices', name: 'AdminDevices', component: AdminDevices },
-            { path: 'member-catalogs', name: 'AdminMemberCatalogs', component: AdminMemberCatalogs },
+            { path: 'member-catalogs', name: 'AdminMemberCatalogs', component: AdminSecurityCatalogPage },
             { path: 'plans', name: 'AdminPlans', component: AdminPlans },
             { path: 'bill', name: 'AdminBill', component: AdminBill },
             { path: 'subscriptions', name: 'AdminSubscriptions', component: AdminSubscriptions },
