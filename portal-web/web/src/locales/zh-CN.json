@@ -1906,6 +1906,7 @@
       "title": "防护策略",
       "export": "导出",
       "import": "导入",
+      "securityProtection": "安全防护",
       "dnsSecurity": "DNS 安全",
       "dnsRebind": "DNS 重新绑定防护",
       "dnsRebindWhitelist": "重新绑定白名单",

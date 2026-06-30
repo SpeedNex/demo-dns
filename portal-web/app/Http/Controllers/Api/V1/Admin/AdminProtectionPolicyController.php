@@ -41,11 +41,12 @@ final class AdminProtectionPolicyController
             'block_new_domains' => 'sometimes|boolean',
             'block_dynamic_dns' => 'sometimes|boolean',
             'block_parked_domains' => 'sometimes|boolean',
+            // 内容分类开关
+            'child_abuse' => 'sometimes|boolean',
             // 威胁情报开关
             'threat_intel' => 'sometimes|boolean',
             'ai_threat_detection' => 'sometimes|boolean',
             'google_safe_browsing' => 'sometimes|boolean',
-            'child_abuse' => 'sometimes|boolean',
             // 分类开关
             'block_malware' => 'sometimes|boolean',
             'block_phishing' => 'sometimes|boolean',

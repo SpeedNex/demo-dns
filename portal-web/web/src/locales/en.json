@@ -1878,6 +1878,7 @@
       "title": "Protection Policies",
       "export": "Export",
       "import": "Import",
+      "securityProtection": "Security Protection",
       "dnsSecurity": "DNS Security",
       "dnsRebind": "DNS Rebinding Protection",
       "dnsRebindWhitelist": "Rebind Whitelist",

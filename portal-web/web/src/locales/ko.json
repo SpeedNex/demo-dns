@@ -1828,6 +1828,7 @@
       "title": "보호 정책",
       "export": "내보내기",
       "import": "가져오기",
+      "securityProtection": "보안 보호",
       "dnsSecurity": "DNS 보안",
       "dnsRebind": "DNS 재바인딩 보호",
       "dnsRebindWhitelist": "재바인딩 화이트리스트",

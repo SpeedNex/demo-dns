@@ -22,15 +22,16 @@
         </template>
 
         <div v-loading="loading" class="policies-container">
-            <!-- 威胁情报源 -->
+            <!-- 安全防护 -->
             <el-card shadow="never" class="policy-card">
                 <template #header>
                     <div class="card-header">
-                        <el-icon><Connection /></el-icon>
-                        <span>{{ $t('security.threatIntel') }}</span>
+                        <el-icon><Lock /></el-icon>
+                        <span>{{ $t('admin.protectionPolicies.securityProtection') }}</span>
                     </div>
                 </template>
                 <el-form label-position="left" label-width="220px">
+                    <!-- 威胁情报 -->
                     <el-form-item>
                         <div class="setting-row">
                             <div class="setting-info">
@@ -58,18 +59,9 @@
                             <el-switch v-model="form.google_safe_browsing" />
                         </div>
                     </el-form-item>
-                </el-form>
-            </el-card>
 
-            <!-- DNS Security -->
-            <el-card shadow="never" class="policy-card">
-                <template #header>
-                    <div class="card-header">
-                        <el-icon><Connection /></el-icon>
-                        <span>{{ $t('admin.protectionPolicies.dnsSecurity') }}</span>
-                    </div>
-                </template>
-                <el-form label-position="left" label-width="220px">
+                    <!-- DNS 防护 -->
+                    <el-divider content-position="left">{{ $t('admin.protectionPolicies.dnsSecurity') }}</el-divider>
                     <el-form-item>
                         <div class="setting-row">
                             <div class="setting-info">
@@ -80,17 +72,16 @@
                         </div>
                     </el-form-item>
                     <el-form-item v-if="form.dns_rebind" class="sub-form-item">
-                        <el-form-item label="白名单">
+                        <el-form-item :label="$t('admin.protectionPolicies.dnsRebindWhitelist')">
                             <el-input
                                 v-model="whitelistText"
                                 type="textarea"
                                 :rows="3"
-                                placeholder="localhost&#10;*.local"
+                                :placeholder="$t('admin.protectionPolicies.dnsRebindWhitelistPlaceholder')"
                             />
                             <div class="form-hint">{{ $t('admin.protectionPolicies.rebindHint') }}</div>
                         </el-form-item>
                     </el-form-item>
-
                     <el-form-item>
                         <div class="setting-row">
                             <div class="setting-info">
@@ -110,9 +101,9 @@
                         </div>
                     </el-form-item>
                     <el-form-item v-if="form.typo_squatting" class="sub-form-item">
-                        <el-form-item label="Threshold">
+                        <el-form-item :label="$t('admin.protectionPolicies.typoThreshold')">
                             <el-input-number v-model="form.typo_threshold" :min="1" :max="2" />
-                            <span class="form-hint">编辑距离阈值 (1-2)</span>
+                            <span class="form-hint">{{ $t('admin.protectionPolicies.typoThresholdHint') }}</span>
                         </el-form-item>
                     </el-form-item>
                     <el-form-item>
@@ -125,25 +116,16 @@
                         </div>
                     </el-form-item>
                     <el-form-item v-if="form.dga_protection" class="sub-form-item">
-                        <el-form-item label="Entropy Threshold">
+                        <el-form-item :label="$t('admin.protectionPolicies.dgaEntropy')">
                             <el-input-number v-model="form.dga_entropy_threshold" :min="3.0" :max="5.5" :step="0.1" />
                         </el-form-item>
-                        <el-form-item label="Digit Ratio">
+                        <el-form-item :label="$t('admin.protectionPolicies.dgaDigitRatio')">
                             <el-input-number v-model="form.dga_digit_ratio" :min="0" :max="1" :step="0.1" />
                         </el-form-item>
                     </el-form-item>
-                </el-form>
-            </el-card>
 
-            <!-- Content Filtering -->
-            <el-card shadow="never" class="policy-card">
-                <template #header>
-                    <div class="card-header">
-                        <el-icon><Filter /></el-icon>
-                        <span>{{ $t('admin.protectionPolicies.contentFiltering') }}</span>
-                    </div>
-                </template>
-                <el-form label-position="left" label-width="220px">
+                    <!-- 分类屏蔽 -->
+                    <el-divider content-position="left">{{ $t('admin.protectionPolicies.contentFiltering') }}</el-divider>
                     <el-form-item>
                         <div class="setting-row">
                             <div class="setting-info">
@@ -180,27 +162,9 @@
                             <el-switch v-model="form.block_cryptojacking" />
                         </div>
                     </el-form-item>
-                    <el-form-item>
-                        <div class="setting-row">
-                            <div class="setting-info">
-                                <span class="setting-label">{{ $t('security.childAbuse') }}</span>
-                                <span class="setting-desc">{{ $t('security.childAbuseDesc') }}</span>
-                            </div>
-                            <el-switch v-model="form.child_abuse" />
-                        </div>
-                    </el-form-item>
-                </el-form>
-            </el-card>
 
-            <!-- Advanced -->
-            <el-card shadow="never" class="policy-card">
-                <template #header>
-                    <div class="card-header">
-                        <el-icon><Setting /></el-icon>
-                        <span>{{ $t('admin.protectionPolicies.advanced') }}</span>
-                    </div>
-                </template>
-                <el-form label-position="left" label-width="220px">
+                    <!-- 高级防护 -->
+                    <el-divider content-position="left">{{ $t('admin.protectionPolicies.advanced') }}</el-divider>
                     <el-form-item>
                         <div class="setting-row">
                             <div class="setting-info">
@@ -237,6 +201,18 @@
                             <el-switch v-model="form.block_parked_domains" />
                         </div>
                     </el-form-item>
+                </el-form>
+            </el-card>
+
+            <!-- 隐私防护 -->
+            <el-card shadow="never" class="policy-card">
+                <template #header>
+                    <div class="card-header">
+                        <el-icon><View /></el-icon>
+                        <span>{{ $t('admin.protectionPolicies.privacy') }}</span>
+                    </div>
+                </template>
+                <el-form label-position="left" label-width="220px">
                     <el-form-item>
                         <div class="setting-row">
                             <div class="setting-info">
@@ -244,6 +220,27 @@
                                 <span class="setting-desc">{{ $t('privacy.blocklists.thirdPartyTrackingDesc') }}</span>
                             </div>
                             <el-switch v-model="form.block_disguised_trackers" />
+                        </div>
+                    </el-form-item>
+                </el-form>
+            </el-card>
+
+            <!-- 家长控制 -->
+            <el-card shadow="never" class="policy-card">
+                <template #header>
+                    <div class="card-header">
+                        <el-icon><User /></el-icon>
+                        <span>{{ $t('admin.protectionPolicies.family') }}</span>
+                    </div>
+                </template>
+                <el-form label-position="left" label-width="220px">
+                    <el-form-item>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <span class="setting-label">{{ $t('security.childAbuse') }}</span>
+                                <span class="setting-desc">{{ $t('security.childAbuseDesc') }}</span>
+                            </div>
+                            <el-switch v-model="form.child_abuse" />
                         </div>
                     </el-form-item>
                 </el-form>
@@ -265,7 +262,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { Download, Upload, Check, Connection, Filter, Setting } from '@element-plus/icons-vue'
+import { Download, Upload, Check, Lock, View, User } from '@element-plus/icons-vue'
 import client from '@/api/client'
 import ListPage from '@/components/ListPage.vue'
 
