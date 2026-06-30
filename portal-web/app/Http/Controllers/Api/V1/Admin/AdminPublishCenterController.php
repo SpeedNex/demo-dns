@@ -76,7 +76,7 @@ final class AdminPublishCenterController
         $created = 0;
         foreach ($profiles as $profile) {
             PublishTask::create([
-                'config_version_id' => null,
+                'profile_version_id' => null,
                 'profile_id' => $profile->id,
                 'status' => 'queued',
                 'target_scope' => 'all_nodes',

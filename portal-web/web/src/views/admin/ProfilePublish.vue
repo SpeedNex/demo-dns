@@ -55,7 +55,7 @@
                         </el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="version" :label="$t('admin.profilePublish.version')" width="80" align="center" />
+                <el-table-column prop="version" :label="$t('admin.profilePublish.version')" width="120" align="center" />
                 <el-table-column prop="has_published_config" :label="$t('admin.profilePublish.published')" width="100" align="center">
                     <template #default="{ row }">
                         <el-tag :type="row.has_published_config ? 'success' : 'warning'" size="small">

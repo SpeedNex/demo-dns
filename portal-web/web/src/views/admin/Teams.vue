@@ -58,7 +58,13 @@
                     {{ row.owner?.username || row.owner_id || '-' }}
                 </template>
             </el-table-column>
-            <el-table-column prop="member_count" :label="$t('admin.teams.memberCount')" width="100" align="center" />
+            <el-table-column prop="member_count" :label="$t('admin.teams.memberCount')" width="100" align="center">
+                <template #default="{ row }">
+                    <el-link type="primary" :underline="false" @click="openMembersDrawer(row)">
+                        {{ row.member_count }}
+                    </el-link>
+                </template>
+            </el-table-column>
             <el-table-column prop="status" :label="$t('admin.teams.status')" width="100">
                 <template #default="{ row }">
                     <el-tag :type="row.status === 'active' ? 'success' : 'danger'" size="small">
@@ -85,6 +91,32 @@
             </el-table-column>
         </el-table>
     </ListPage>
+
+    <!-- 团队成员抽屉 -->
+    <el-drawer
+        v-model="membersDrawer.visible"
+        :title="`${membersDrawer.teamName} · ${$t('admin.teams.membersDrawerTitle')}`"
+        direction="rtl"
+        size="560px"
+        :destroy-on-close="true"
+    >
+        <el-table v-loading="membersDrawer.loading" :data="membersDrawer.members" stripe size="small">
+            <el-table-column prop="name" :label="$t('admin.teams.memberName')" min-width="120" show-overflow-tooltip />
+            <el-table-column prop="email" :label="$t('admin.teams.memberEmail')" min-width="180" show-overflow-tooltip />
+            <el-table-column :label="$t('admin.teams.memberRole')" width="100">
+                <template #default="{ row }">
+                    <el-tag size="small" :type="row.role === 'owner' ? 'primary' : row.role === 'admin' ? 'warning' : 'info'">
+                        {{ $t(`admin.teams.role_${row.role}`) }}
+                    </el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column :label="$t('admin.teams.memberJoinedAt')" width="170">
+                <template #default="{ row }">
+                    {{ row.joined_at ? new Date(row.joined_at).toLocaleDateString() : '-' }}
+                </template>
+            </el-table-column>
+        </el-table>
+    </el-drawer>
 </template>
 
 <script setup>
@@ -105,6 +137,15 @@ const page = ref(1)
 const perPage = ref(20)
 const loading = ref(false)
 const filter = reactive({ keyword: '', status: '' })
+
+// 团队成员抽屉
+const membersDrawer = reactive({
+    visible: false,
+    teamId: null,
+    teamName: '',
+    members: [],
+    loading: false,
+})
 
 const fetchTeams = async () => {
     loading.value = true
@@ -142,6 +183,27 @@ const handleToggle = async (row, action) => {
 }
 
 onMounted(fetchTeams)
+
+const openMembersDrawer = (team) => {
+    membersDrawer.teamId = team.id
+    membersDrawer.teamName = team.name
+    membersDrawer.members = []
+    membersDrawer.visible = true
+    fetchTeamMembers()
+}
+
+const fetchTeamMembers = async () => {
+    membersDrawer.loading = true
+    try {
+        const { data } = await client.get(`/admin/teams/${membersDrawer.teamId}/members`)
+        membersDrawer.members = data.data ?? []
+    } catch {
+        membersDrawer.members = []
+        ElMessage.error(t('common.loadFailed'))
+    } finally {
+        membersDrawer.loading = false
+    }
+}
 </script>
 
 <style scoped>
