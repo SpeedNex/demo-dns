@@ -15,117 +15,37 @@
             </el-button>
         </template>
 
-        <el-row :gutter="16" class="rbac-row">
-            <el-col :span="8">
-                <el-card shadow="never" class="list-card">
-                    <template #header>
-                        <div class="card-header">
-                            <div class="card-title">
-                                <el-icon class="title-icon"><UserFilled /></el-icon>
-                                <span class="title-text">{{ $t('admin.rbac.roles') }} ({{ roles.length }})</span>
-                            </div>
-                        </div>
+        <el-card shadow="never" class="list-card">
+            <el-table v-loading="loadingRoles" :data="roles" stripe :empty-text="$t('common.noData')">
+                <el-table-column type="index" label="#" width="50" align="center" />
+                <el-table-column prop="code" :label="$t('admin.rbac.roleCode')" min-width="140">
+                    <template #default="{ row }">
+                        <el-tag size="small" effect="light">{{ row.code }}</el-tag>
                     </template>
-                    <el-table v-loading="loadingRoles" :data="roles" stripe :empty-text="$t('common.noData')" highlight-current-row @row-click="selectRole">
-                        <el-table-column prop="code" :label="$t('admin.rbac.roleCode')" width="120">
-                            <template #default="{ row }">
-                                <el-tag size="small" effect="light">{{ row.code }}</el-tag>
-                            </template>
-                        </el-table-column>
-                        <el-table-column prop="name" :label="$t('admin.rbac.roleName')" min-width="100" />
-                        <el-table-column :label="$t('admin.rbac.actions')" width="80">
-                            <template #default="{ row }">
-                                <el-button v-if="!row.is_system" size="small" type="danger" text @click.stop="deleteRole(row)">{{ $t('common.delete') }}</el-button>
-                            </template>
-                        </el-table-column>
-                    </el-table>
-                </el-card>
-            </el-col>
-
-            <el-col :span="16">
-                <el-card v-if="selectedRole" shadow="never" class="list-card">
-                    <template #header>
-                        <div class="card-header">
-                            <div class="card-title">
-                                <el-icon class="title-icon is-warning"><Key /></el-icon>
-                                <span class="title-text">{{ $t('admin.rbac.rolePermissions') }}: {{ selectedRole.name }}</span>
-                            </div>
-                            <div class="header-actions">
-                                <el-button size="small" type="success" :loading="savingPerms" @click="savePermissions">
-                                    <el-icon class="el-icon--left"><Check /></el-icon>
-                                    <span>{{ $t('common.save') }}</span>
-                                </el-button>
-                            </div>
-                        </div>
+                </el-table-column>
+                <el-table-column prop="name" :label="$t('admin.rbac.roleName')" min-width="140" show-overflow-tooltip />
+                <el-table-column prop="description" :label="$t('admin.rbac.description')" min-width="200" show-overflow-tooltip />
+                <el-table-column :label="$t('admin.rbac.rolePermissions')" width="120" align="center">
+                    <template #default="{ row }">
+                        <el-tag v-if="row.is_system" size="small" type="info">系统</el-tag>
+                        <el-tag v-else size="small" type="success">{{ row.permission_count || 0 }}</el-tag>
                     </template>
-                    <div v-loading="loadingPerms">
-                        <el-checkbox-group v-model="selectedPermissions" class="permission-group">
-                            <div v-for="group in permissionGroups" :key="group.resource" class="permission-section">
-                                <div class="permission-section__header">
-                                    <span class="permission-section__title">{{ group.label }}</span>
-                                    <span class="permission-section__count">{{ group.items.length }} permissions</span>
-                                </div>
-                                <el-row :gutter="16">
-                                    <el-col v-for="perm in group.items" :key="perm.id" :span="12">
-                                        <el-checkbox :value="perm.id" :disabled="selectedRole.is_system">
-                                            <div class="perm-item">
-                                                <span class="perm-code">{{ perm.code }}</span>
-                                                <span class="perm-desc">{{ perm.description || `${perm.resource}.${perm.action}` }}</span>
-                                            </div>
-                                        </el-checkbox>
-                                    </el-col>
-                                </el-row>
-                            </div>
-                        </el-checkbox-group>
-                    </div>
-
-                    <el-divider content-position="left">{{ $t('admin.rbac.menuRules') }}</el-divider>
-                    <div v-loading="loadingMenuRules">
-                        <div class="menu-rules-toolbar">
-                            <el-checkbox v-model="menuRulesCheckAll" :indeterminate="menuRulesIndeterminate" @change="handleMenuRulesAll">
-                                {{ $t('admin.rbac.menuRulesAll') }}
-                            </el-checkbox>
-                            <el-button size="small" type="primary" :loading="savingMenuRules" :disabled="selectedRole.is_system" @click="saveMenuRules">
-                                <el-icon class="el-icon--left"><Check /></el-icon>
-                                <span>{{ $t('admin.rbac.menuRulesSave') }}</span>
-                            </el-button>
-                        </div>
-                        <el-checkbox-group v-model="selectedMenuRules" class="menu-rules-tree">
-                            <div v-for="root in menuTree" :key="root.id" class="menu-rules-group">
-                                <el-checkbox
-                                    :value="root.id"
-                                    :label="root.label"
-                                    :disabled="selectedRole.is_system"
-                                    @change="(v) => toggleGroupMenu(root, v)"
-                                />
-                                <div v-if="root.children && root.children.length" class="menu-rules-children">
-                                    <el-checkbox
-                                        v-for="child in root.children"
-                                        :key="child.id"
-                                        :value="child.id"
-                                        :label="child.label"
-                                        :disabled="selectedRole.is_system"
-                                    />
-                                </div>
-                            </div>
-                        </el-checkbox-group>
-                        <p v-if="!menuTree.length" class="empty-hint">{{ $t('admin.rbac.menuRulesEmpty') }}</p>
-                    </div>
-                </el-card>
-                <el-card v-else shadow="never" class="list-card">
-                    <div class="empty-state">
-                        <el-icon class="empty-icon"><Key /></el-icon>
-                        <p class="empty-title">{{ $t('admin.rbac.selectRole') }}</p>
-                    </div>
-                </el-card>
-            </el-col>
-        </el-row>
+                </el-table-column>
+                <el-table-column :label="$t('admin.rbac.actions')" width="240" fixed="right" align="center">
+                    <template #default="{ row }">
+                        <el-button size="small" type="primary" text @click="viewRolePermissions(row)">{{ $t('common.edit') }}</el-button>
+                        <el-button v-if="!row.is_system" size="small" type="danger" text @click="deleteRole(row)">{{ $t('common.delete') }}</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-card>
     </ListPage>
 
-    <el-dialog v-model="showRoleDialog" :title="editingRole ? ($t('common.edit')) : ($t('common.add'))" width="620px">
+    <!-- 添加角色 dialog -->
+    <el-dialog v-model="showRoleDialog" :title="$t('admin.rbac.addRole')" width="560px">
         <el-form :model="roleForm" label-position="top">
             <el-form-item :label="$t('admin.rbac.roleCode')" :rules="[{ required: true }]">
-                <el-input v-model="roleForm.code" :disabled="!!editingRole" />
+                <el-input v-model="roleForm.code" />
             </el-form-item>
             <el-form-item :label="$t('admin.rbac.roleName')" :rules="[{ required: true }]">
                 <el-input v-model="roleForm.name" />
@@ -133,14 +53,10 @@
             <el-form-item :label="$t('admin.rbac.description')">
                 <el-input v-model="roleForm.description" type="textarea" :rows="2" />
             </el-form-item>
-            <el-form-item v-if="!editingRole" :label="$t('admin.rbac.menuRules')">
+            <el-form-item :label="$t('admin.rbac.menuRules')">
                 <div class="add-role-menu-rules">
                     <div class="menu-rules-toolbar">
-                        <el-checkbox
-                            v-model="roleFormMenuCheckAll"
-                            :indeterminate="roleFormMenuIndeterminate"
-                            @change="handleRoleFormMenuRulesAll"
-                        >
+                        <el-checkbox v-model="roleFormMenuCheckAll" :indeterminate="roleFormMenuIndeterminate" @change="handleRoleFormMenuRulesAll">
                             {{ $t('admin.rbac.menuRulesAll') }}
                         </el-checkbox>
                     </div>
@@ -148,12 +64,7 @@
                         <div v-for="root in menuTree" :key="root.id" class="menu-rules-group">
                             <el-checkbox :value="root.id" :label="root.label" @change="(v) => toggleRoleFormGroupMenu(root, v)" />
                             <div v-if="root.children && root.children.length" class="menu-rules-children">
-                                <el-checkbox
-                                    v-for="child in root.children"
-                                    :key="child.id"
-                                    :value="child.id"
-                                    :label="child.label"
-                                />
+                                <el-checkbox v-for="child in root.children" :key="child.id" :value="child.id" :label="child.label" />
                             </div>
                         </div>
                     </el-checkbox-group>
@@ -166,13 +77,62 @@
             <el-button type="primary" :loading="savingRole" @click="handleSaveRole">{{ $t('common.confirm') }}</el-button>
         </template>
     </el-dialog>
+
+    <!-- 查看/编辑角色权限 drawer -->
+    <el-drawer v-model="showPermDrawer" :title="selectedRole ? `${$t('admin.rbac.rolePermissions')}: ${selectedRole.name}` : ''" size="60%" direction="rtl">
+        <div v-loading="loadingPerms" class="drawer-section">
+            <div class="drawer-section__title">{{ $t('admin.rbac.rolePermissions') }}</div>
+            <el-checkbox-group v-model="selectedPermissions" class="permission-group">
+                <div v-for="group in permissionGroups" :key="group.resource" class="permission-section">
+                    <div class="permission-section__header">
+                        <span class="permission-section__title">{{ group.label }}</span>
+                        <span class="permission-section__count">{{ group.items.length }}</span>
+                    </div>
+                    <el-row :gutter="16">
+                        <el-col v-for="perm in group.items" :key="perm.id" :span="12">
+                            <el-checkbox :value="perm.id" :disabled="selectedRole.is_system">
+                                <div class="perm-item">
+                                    <span class="perm-code">{{ perm.code }}</span>
+                                    <span class="perm-desc">{{ perm.description || `${perm.resource}.${perm.action}` }}</span>
+                                </div>
+                            </el-checkbox>
+                        </el-col>
+                    </el-row>
+                </div>
+            </el-checkbox-group>
+        </div>
+
+        <el-divider content-position="center">{{ $t('admin.rbac.menuRules') }}</el-divider>
+        <div v-loading="loadingMenuRules" class="drawer-section">
+            <div class="menu-rules-toolbar">
+                <el-checkbox v-model="menuRulesCheckAll" :indeterminate="menuRulesIndeterminate" @change="handleMenuRulesAll">
+                    {{ $t('admin.rbac.menuRulesAll') }}
+                </el-checkbox>
+            </div>
+            <el-checkbox-group v-model="selectedMenuRules" class="menu-rules-tree">
+                <div v-for="root in menuTree" :key="root.id" class="menu-rules-group">
+                    <el-checkbox :value="root.id" :label="root.label" :disabled="selectedRole.is_system" @change="(v) => toggleGroupMenu(root, v)" />
+                    <div v-if="root.children && root.children.length" class="menu-rules-children">
+                        <el-checkbox v-for="child in root.children" :key="child.id" :value="child.id" :label="child.label" :disabled="selectedRole.is_system" />
+                    </div>
+                </div>
+            </el-checkbox-group>
+            <p v-if="!menuTree.length" class="empty-hint">{{ $t('admin.rbac.menuRulesEmpty') }}</p>
+        </div>
+
+        <template #footer>
+            <el-button @click="showPermDrawer = false">{{ $t('common.cancel') }}</el-button>
+            <el-button type="success" :loading="savingPerms" :disabled="selectedRole.is_system" @click="savePermissions">{{ $t('common.save') }}</el-button>
+            <el-button v-if="!selectedRole.is_system" type="primary" :loading="savingMenuRules" @click="saveMenuRules">{{ $t('admin.rbac.menuRulesSave') }}</el-button>
+        </template>
+    </el-drawer>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { User, Search, Plus, UserFilled, Key, Avatar, Check } from '@element-plus/icons-vue'
+import { User, Plus, UserFilled, Key, Check } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
 
@@ -187,6 +147,7 @@ const loadingPerms = ref(false)
 const savingPerms = ref(false)
 
 const showRoleDialog = ref(false)
+const showPermDrawer = ref(false)
 const editingRole = ref(null)
 const roleForm = reactive({ code: '', name: '', description: '' })
 const savingRole = ref(false)
@@ -259,6 +220,11 @@ const selectRole = (row) => {
     fetchMenuConfig()
 }
 
+const viewRolePermissions = async (row) => {
+    selectRole(row)
+    showPermDrawer.value = true
+}
+
 const showAddRole = () => {
     editingRole.value = null
     roleForm.code = ''
@@ -274,25 +240,16 @@ const showAddRole = () => {
 const handleSaveRole = async () => {
     savingRole.value = true
     try {
-        if (editingRole.value) {
-            await client.put(`/admin/rbac/roles/${editingRole.value.id}`, roleForm)
-            ElMessage.success(t('admin.rbac.updateSuccess'))
-        } else {
-            const { data } = await client.post('/admin/rbac/roles', roleForm)
-            const newRole = data.data
-            if (newRole?.id) {
-                await client.put(`/admin/rbac/roles/${newRole.id}/menu-rules`, {
-                    nav_keys: roleFormMenuRules.value,
-                })
-            }
-            ElMessage.success(t('admin.rbac.createSuccess'))
+        const { data } = await client.post('/admin/rbac/roles', roleForm)
+        const newRole = data.data
+        if (newRole?.id) {
+            await client.put(`/admin/rbac/roles/${newRole.id}/menu-rules`, {
+                nav_keys: roleFormMenuRules.value,
+            })
         }
+        ElMessage.success(t('admin.rbac.createSuccess'))
         showRoleDialog.value = false
         await fetchRoles()
-        const created = roles.value.find((role) => role.code === roleForm.code)
-        if (created) {
-            selectRole(created)
-        }
     } catch (err) {
         ElMessage.error(err.response?.data?.message || t('admin.rbac.saveFailed'))
     } finally {
@@ -510,7 +467,8 @@ onMounted(() => {
     color: var(--color-text, #0f172a);
 }
 
-.rbac-row { margin-bottom: 0 !important; }
+.drawer-section { padding: 8px 0; }
+.drawer-section__title { font-size: 16px; font-weight: 600; color: #303133; margin-bottom: 12px; }
 .permission-group { padding: 8px 0; }
 .permission-section + .permission-section { margin-top: 20px; }
 .permission-section__header {
