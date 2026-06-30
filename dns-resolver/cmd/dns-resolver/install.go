@@ -116,6 +116,20 @@ func runInstall(args []string) error {
 		return err
 	}
 
+	// 2026-06-30: 重装前强制清理旧 api_key 文件。
+	// 原因：旧版 install.sh 不清理 → 残留 api_key 与 DB hash 不一致 → 心跳/配置 401。
+	// Go binary 自身兜底清理，不依赖 shell 脚本版本，确保重装 100% 覆盖。
+	apiKeyPath := filepath.Dir(opts.ConfigPath)
+	if !filepath.IsAbs(apiKeyPath) {
+		if wd, err := os.Getwd(); err == nil {
+			apiKeyPath = filepath.Join(wd, apiKeyPath)
+		}
+	}
+	apiKeyPath = filepath.Join(apiKeyPath, "api_key")
+	if err := os.Remove(apiKeyPath); err == nil {
+		fmt.Printf("✔ stale api_key removed: %s\n", apiKeyPath)
+	}
+
 	cfg := buildInstalledConfig(&opts)
 
 	// 2026-06-22: 一机一实例守卫 — install 时探测监听端口是否已被占用

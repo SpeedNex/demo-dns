@@ -85,42 +85,6 @@
       </el-col>
     </el-row>
 
-    <!-- 2026-06-30: 变化趋势（最近 N 天） -->
-    <el-card shadow="never" class="trend-card">
-      <template #header>
-        <div class="trend-header">
-          <span class="trend-title">{{ $t('admin.finance.summary.rangeTrend', { days: summary.range }) }}</span>
-          <el-radio-group v-model="trendRange" size="small" @change="fetchSummary">
-            <el-radio-button :value="7">7d</el-radio-button>
-            <el-radio-button :value="30">30d</el-radio-button>
-            <el-radio-button :value="90">90d</el-radio-button>
-          </el-radio-group>
-        </div>
-      </template>
-      <el-table :data="summary.trend" stripe size="small">
-        <el-table-column prop="date" :label="$t('admin.finance.trend.date')" width="120" />
-        <el-table-column :label="$t('admin.finance.trend.successAmount')" align="right">
-          <template #default="{ row }">{{ formatMoney(row.succeeded_amount, summary.currency) }}</template>
-        </el-table-column>
-        <el-table-column :label="$t('admin.finance.trend.successCount')" prop="succeeded_count" align="right" width="100" />
-        <el-table-column :label="$t('admin.finance.trend.failedAmount')" align="right">
-          <template #default="{ row }">{{ formatMoney(row.failed_amount, summary.currency) }}</template>
-        </el-table-column>
-        <el-table-column :label="$t('admin.finance.trend.failedCount')" prop="failed_count" align="right" width="100" />
-        <el-table-column :label="$t('admin.finance.trend.refundAmount')" align="right">
-          <template #default="{ row }">{{ formatMoney(row.refunded_amount, summary.currency) }}</template>
-        </el-table-column>
-        <el-table-column :label="$t('admin.finance.summary.trend')" min-width="200">
-          <template #default="{ row }">
-            <div class="trend-bar">
-              <div class="trend-bar-success" :style="{ width: trendBarWidth(row.succeeded_amount) + '%' }" />
-              <div class="trend-bar-fail" :style="{ width: trendBarWidth(row.failed_amount) + '%' }" />
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
-
     <el-table v-loading="loading" :data="items" stripe style="width: 100%">
       <template #empty>
         <div class="empty-state">
@@ -184,9 +148,8 @@ const filterUserId = ref('')
 const filterStatus = ref('')
 const exporting = ref(false)
 
-// 2026-06-30: KPI / 趋势汇总
+// 2026-06-30: KPI 汇总
 const summaryLoading = ref(false)
-const trendRange = ref(7)
 const summary = ref({
     currency: 'USD',
     range: 7,
@@ -270,23 +233,7 @@ const handleExport = async () => {
 
 onMounted(() => {
   fetchData()
-  fetchSummary()
 })
-
-// 2026-06-30: 拉取汇总数据
-const fetchSummary = async () => {
-  summaryLoading.value = true
-  try {
-    const { data } = await client.get('/admin/finance/payment-flows/summary', {
-      params: { range: trendRange.value },
-    })
-    summary.value = data.data ?? summary.value
-  } catch {
-    // 静默失败，保留上次结果
-  } finally {
-    summaryLoading.value = false
-  }
-}
 
 const percent = (rate) => {
   if (rate === null || rate === undefined || Number.isNaN(Number(rate))) return '-'
@@ -307,12 +254,7 @@ const rateClass = (rate, invert = false) => {
   return 'kpi-danger'
 }
 
-// 简单柱形比例（避免引入图表库）
-const trendBarWidth = (amount) => {
-  if (!summary.value.trend || summary.value.trend.length === 0) return 0
-  const max = Math.max(...summary.value.trend.map((d) => Number(d.succeeded_amount) + Number(d.failed_amount)), 1)
-  return Math.min(100, Math.round((Number(amount || 0) / max) * 100))
-}
+
 </script>
 
 <style scoped>
@@ -333,30 +275,4 @@ const trendBarWidth = (amount) => {
 .kpi-value.kpi-warning { color: #d97706; }
 .kpi-value.kpi-danger { color: #dc2626; }
 .kpi-sub { font-size: 12px; color: #94a3b8; margin-top: 4px; }
-
-/* 2026-06-30: 趋势卡片 */
-.trend-card {
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 10px !important;
-  margin-bottom: 16px;
-}
-.trend-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.trend-title { font-size: 14px; font-weight: 600; color: #1e293b; }
-
-.trend-bar {
-  display: flex;
-  height: 8px;
-  border-radius: 4px;
-  overflow: hidden;
-  background: #f1f5f9;
-  gap: 2px;
-}
-.trend-bar-success { background: #22c55e; height: 100%; }
-.trend-bar-fail { background: #ef4444; height: 100%; }
 </style>
