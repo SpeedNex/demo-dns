@@ -39,7 +39,7 @@
                 </div>
             </template>
             <el-table-column type="selection" width="44" />
-            <el-table-column :label="$t('admin.blacklistWhitelist.type')" width="90" align="center">
+            <el-table-column :label="$t('admin.blacklistWhitelist.type')" min-width="110" align="center">
                 <template #default="{ row }">
                     <el-tag
                         size="small"
@@ -53,7 +53,7 @@
             <el-table-column :label="$t('admin.blacklistWhitelist.domain')" min-width="240" show-overflow-tooltip>
                 <template #default="{ row }"><code>{{ row.domain }}</code></template>
             </el-table-column>
-            <el-table-column :label="$t('admin.blacklistWhitelist.matchType')" width="100">
+            <el-table-column :label="$t('admin.blacklistWhitelist.matchType')" min-width="120">
                 <template #default="{ row }">{{ row.match_type || 'exact' }}</template>
             </el-table-column>
             <el-table-column :label="$t('admin.blacklistWhitelist.owner')" min-width="200" show-overflow-tooltip>
@@ -64,19 +64,19 @@
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.blacklistWhitelist.enabled')" width="80" align="center">
+            <el-table-column :label="$t('admin.blacklistWhitelist.enabled')" min-width="100" align="center">
                 <template #default="{ row }">
                     <el-tag :type="row.enabled ? 'success' : 'info'" size="small" effect="plain">
                         {{ row.enabled ? $t('common.yes') : $t('common.no') }}
                     </el-tag>
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.blacklistWhitelist.createdAt')" min-width="170">
+            <el-table-column :label="$t('admin.blacklistWhitelist.createdAt')" min-width="180">
                 <template #default="{ row }">
                     {{ row.created_at ? new Date(row.created_at).toLocaleString() : '—' }}
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('common.actions')" width="80" fixed="right">
+            <el-table-column :label="$t('common.actions')" min-width="90" fixed="right">
                 <template #default="{ row }">
                     <el-button text type="danger" @click="deleteRule(row.id)">{{ $t('common.delete') }}</el-button>
                 </template>

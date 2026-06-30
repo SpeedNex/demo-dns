@@ -108,34 +108,34 @@
           <span>{{ row.user_name || row.user_email || '-' }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="subscription_no" :label="$t('admin.finance.subscriptionNo')" width="160" show-overflow-tooltip />
-      <el-table-column :label="$t('admin.finance.planCode')" min-width="100">
+      <el-table-column prop="subscription_no" :label="$t('admin.finance.subscriptionNo')" min-width="170" show-overflow-tooltip />
+      <el-table-column :label="$t('admin.finance.planCode')" min-width="120">
         <template #default="{ row }">
           <el-tag size="small" effect="plain">{{ getPlanName(row.plan_code) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="provider" :label="$t('admin.finance.provider')" width="80" />
-      <el-table-column :label="$t('admin.finance.type')" width="80">
+      <el-table-column prop="provider" :label="$t('admin.finance.provider')" min-width="110" />
+      <el-table-column :label="$t('admin.finance.type')" min-width="100">
         <template #default="{ row }">
           <el-tag :type="row.type === 'refund' ? 'warning' : 'success'" size="small" effect="light">
             {{ row.type === 'refund' ? $t('admin.finance.paymentTypeRefund') : $t('admin.finance.paymentTypePayment') }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('admin.finance.amount')" width="120">
+      <el-table-column :label="$t('admin.finance.amount')" min-width="130">
         <template #default="{ row }">
           <span class="amount-value">{{ formatMoney(row.amount_minor, row.currency) }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('admin.finance.status')" width="100">
+      <el-table-column :label="$t('admin.finance.status')" min-width="120">
         <template #default="{ row }">
           <el-tag :type="getStatusType(row.status)" size="small" effect="light">{{ statusLabel(row.status) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('admin.finance.time')" width="160">
+      <el-table-column :label="$t('admin.finance.time')" min-width="180">
         <template #default="{ row }">{{ row.created_at ? new Date(row.created_at).toLocaleString() : '-' }}</template>
       </el-table-column>
-      <el-table-column :label="$t('admin.finance.actions')" width="80" fixed="right">
+      <el-table-column :label="$t('admin.finance.actions')" min-width="90" fixed="right">
         <template #default="{ row }">
           <el-button size="small" text type="danger" :loading="operatingId === row.id" @click="handleDelete(row.id)">
             <el-icon><Delete /></el-icon>

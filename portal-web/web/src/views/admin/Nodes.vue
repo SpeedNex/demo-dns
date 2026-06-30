@@ -68,7 +68,7 @@
                 </div>
             </template>
             <el-table-column type="selection" width="48" />
-            <el-table-column type="index" width="50" :label="t('common.index')" />
+            <el-table-column type="index" min-width="60" :label="t('common.index')" />
             <el-table-column :label="t('admin.nodes.nodeId')" min-width="160">
                 <template #default="{ row }">
                     <div class="name-cell" style="white-space:nowrap">

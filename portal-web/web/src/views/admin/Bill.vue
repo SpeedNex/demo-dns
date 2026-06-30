@@ -71,25 +71,25 @@
                 </div>
             </template>
             <el-table-column type="selection" width="48" />
-            <el-table-column prop="billing_no" :label="$t('admin.finance.invoiceNo')" width="180" show-overflow-tooltip />
+            <el-table-column prop="billing_no" :label="$t('admin.finance.invoiceNo')" min-width="180" show-overflow-tooltip />
             <el-table-column :label="$t('admin.finance.userName')" min-width="120" show-overflow-tooltip>
                 <template #default="{ row }">
                     <span>{{ row.user_name || row.user_email || '-' }}</span>
                 </template>
             </el-table-column>
-            <el-table-column prop="user_id" :label="$t('admin.finance.userId')" width="80" />
-            <el-table-column :label="$t('admin.finance.totalAmount')" width="120">
+            <el-table-column prop="user_id" :label="$t('admin.finance.userId')" min-width="100" />
+            <el-table-column :label="$t('admin.finance.totalAmount')" min-width="130">
                 <template #default="{ row }">
                     <span class="amount-value">{{ formatMoney(row.total_amount_minor, row.currency) }}</span>
                 </template>
             </el-table-column>
-            <el-table-column prop="currency" :label="$t('admin.finance.currency')" min-width="70" />
-            <el-table-column :label="$t('admin.finance.status')" width="90">
+            <el-table-column prop="currency" :label="$t('admin.finance.currency')" min-width="90" />
+            <el-table-column :label="$t('admin.finance.status')" min-width="110">
                 <template #default="{ row }">
                     <el-tag :type="getStatusType(row.status)" size="small" effect="light">{{ transactionStatusLabel(row.status) }}</el-tag>
                 </template>
             </el-table-column>
-            <el-table-column prop="issued_at" :label="$t('admin.finance.issuedAt')" width="160">
+            <el-table-column prop="issued_at" :label="$t('admin.finance.issuedAt')" min-width="180">
                 <template #default="{ row }">{{ row.issued_at ? new Date(row.issued_at).toLocaleString() : '-' }}</template>
             </el-table-column>
             <el-table-column :label="$t('admin.finance.actions')" width="130">

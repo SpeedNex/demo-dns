@@ -45,9 +45,9 @@
                         <code class="menu-path">{{ row.path }}</code>
                     </template>
                 </el-table-column>
-                <el-table-column :label="$t('admin.menuConfig.visible')" width="90" align="center">
+                <el-table-column :label="$t('admin.menuConfig.visible')" min-width="120" align="center">
                     <template #default="{ row }">
-                        <el-switch v-model="row.visible" @change="handleVisibleChange(row)" />
+                        <el-switch v-model="row.visible" @change="handleVisibleChange(row)" :style="{ '--el-switch-on-color': '#67c23a', '--el-switch-off-color': '#dcdfe6' }" />
                     </template>
                 </el-table-column>
                 <el-table-column :label="$t('admin.menuConfig.sortOrder')" width="120" align="center">
@@ -551,6 +551,11 @@ const loadMenuConfig = async () => {
 
 :deep(.menu-table .el-table__cell) {
     padding: 10px 0;
+}
+
+/* 开关列：防止省略号 */
+:deep(.el-switch) {
+    overflow: visible;
 }
 
 /* 菜单名称单元格 */

@@ -52,15 +52,15 @@
                 </div>
             </template>
             <el-table-column type="selection" width="48" />
-            <el-table-column prop="code" :label="$t('admin.ruleCategories.code')" width="120" />
+            <el-table-column prop="code" :label="$t('admin.ruleCategories.code')" min-width="140" />
             <el-table-column prop="name" :label="$t('admin.ruleCategories.name')" min-width="140" />
             <el-table-column prop="name_en" :label="$t('admin.ruleCategories.nameEn')" min-width="140" />
-            <el-table-column :label="$t('admin.ruleCategories.group')" width="120">
+            <el-table-column :label="$t('admin.ruleCategories.group')" min-width="140">
                 <template #default="{ row }">
                     <span>{{ row.group?.label || row.group || '-' }}</span>
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.ruleCategories.enabled')" width="80" align="center">
+            <el-table-column :label="$t('admin.ruleCategories.enabled')" min-width="100" align="center">
                 <template #default="{ row }">
                     <el-switch
                         :model-value="!!row.enabled"
@@ -69,8 +69,8 @@
                     />
                 </template>
             </el-table-column>
-            <el-table-column prop="sort_order" :label="$t('admin.ruleCategories.sortOrder')" width="100" align="center" />
-            <el-table-column :label="$t('admin.ruleCategories.actions')" width="120" fixed="right">
+            <el-table-column prop="sort_order" :label="$t('admin.ruleCategories.sortOrder')" min-width="120" align="center" />
+            <el-table-column :label="$t('admin.ruleCategories.actions')" min-width="140" fixed="right">
                 <template #default="{ row }">
                     <el-button size="small" text type="primary" @click="openEditDialog(row)">
                         <el-icon><Edit /></el-icon>

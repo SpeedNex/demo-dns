@@ -89,20 +89,20 @@
                 </div>
             </template>
             <el-table-column type="selection" width="48" />
-            <el-table-column prop="id" :label="$t('admin.finance.subscriptionId')" min-width="80" />
-            <el-table-column prop="user_id" :label="$t('admin.finance.userId')" width="80" />
+            <el-table-column prop="id" :label="$t('admin.finance.subscriptionId')" min-width="100" />
+            <el-table-column prop="user_id" :label="$t('admin.finance.userId')" min-width="100" />
             <el-table-column prop="user_name" :label="$t('admin.finance.userName')" min-width="120" show-overflow-tooltip />
-            <el-table-column :label="$t('admin.finance.planCode')" width="110">
+            <el-table-column :label="$t('admin.finance.planCode')" min-width="120">
                 <template #default="{ row }">
                     <el-tag size="small" effect="plain">{{ getPlanName(row.plan_code) }}</el-tag>
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.finance.status')" width="100">
+            <el-table-column :label="$t('admin.finance.status')" min-width="120">
                 <template #default="{ row }">
                     <el-tag :type="getStatusType(row.status)" size="small" effect="light">{{ getStatusLabel(row.status) }}</el-tag>
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.finance.quotaStatus')" width="100">
+            <el-table-column :label="$t('admin.finance.quotaStatus')" min-width="130">
                 <template #default="{ row }">
                     <el-tag
                         :type="row.quota_status === 'exceeded' ? 'danger' : 'success'"
@@ -113,23 +113,23 @@
                     </el-tag>
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.finance.autoRenew')" width="80" align="center">
+            <el-table-column :label="$t('admin.finance.autoRenew')" min-width="100" align="center">
                 <template #default="{ row }">
                     <el-tag v-if="row.auto_renew" type="success" size="small">{{ $t('common.yes') }}</el-tag>
                     <el-tag v-else type="info" size="small">{{ $t('common.no') }}</el-tag>
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.finance.currentPeriodEnd')" width="170">
+            <el-table-column :label="$t('admin.finance.currentPeriodEnd')" min-width="180">
                 <template #default="{ row }">
                     {{ row.current_period_end ? new Date(row.current_period_end).toLocaleString() : '-' }}
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.finance.expiredAt')" width="170">
+            <el-table-column :label="$t('admin.finance.expiredAt')" min-width="180">
                 <template #default="{ row }">
                     {{ row.expired_at ? new Date(row.expired_at).toLocaleString() : '-' }}
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.finance.createdAt')" width="170">
+            <el-table-column :label="$t('admin.finance.createdAt')" min-width="180">
                 <template #default="{ row }">
                     {{ row.created_at ? new Date(row.created_at).toLocaleString() : '-' }}
                 </template>
