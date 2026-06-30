@@ -84,8 +84,8 @@ final class NodeTokenService
             return null;
         }
 
-        // 检查 node status
-        if ($token->node === null || $token->node->status !== 'active') {
+        // 检查 node status（2026-06-30 修复：表中无 status 列，改用 install_status）
+        if ($token->node === null || $token->node->install_status === 'pending') {
             return null;
         }
 
