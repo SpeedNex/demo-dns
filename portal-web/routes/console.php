@@ -62,3 +62,10 @@ Schedule::command('subs:grace-sweep')
     ->withoutOverlapping()
     ->runInBackground();
 
+// 威胁情报源同步 — 每日 02:30（导入 rule_items，供 resolver 拉取）
+Schedule::command('rulesources:sync')
+    ->dailyAt('02:30')
+    ->onOneServer()
+    ->withoutOverlapping()
+    ->runInBackground();
+
