@@ -49,18 +49,15 @@
                     </span>
                 </template>
                 <el-card shadow="never">
-                    <template #header>
-                        <div class="rules-head">
-                            <strong>{{ $t('admin.memberCatalogs.deviceModels') }}</strong>
-                            <div class="rules-filters">
-                                <el-input v-model="deviceModelFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="deviceModelsPage = 1">
-                                    <template #prefix><el-icon><Search /></el-icon></template>
-                                </el-input>
-                                <el-button @click="deviceModelsPage = 1"><el-icon><Search /></el-icon></el-button>
-                                <el-button type="primary" @click="openAddDialog('device_models')"><el-icon><Plus /></el-icon>{{ $t('common.add') }}</el-button>
-                            </div>
+                    <div class="rules-head">
+                        <div class="rules-filters">
+                            <el-input v-model="deviceModelFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="deviceModelsPage = 1">
+                                <template #prefix><el-icon><Search /></el-icon></template>
+                            </el-input>
+                            <el-button @click="deviceModelsPage = 1"><el-icon><Search /></el-icon></el-button>
+                            <el-button type="primary" @click="openAddDialog('device_models')"><el-icon><Plus /></el-icon>{{ $t('common.add') }}</el-button>
                         </div>
-                    </template>
+                    </div>
                     <!-- 设备卡片网格 -->
                     <div v-if="pagedRows('device_models').length === 0" class="empty-state">
                         <el-icon class="empty-icon"><Grid /></el-icon>
@@ -116,18 +113,15 @@
                     </span>
                 </template>
                 <el-card shadow="never">
-                    <template #header>
-                        <div class="rules-head">
-                            <strong>{{ $t('admin.memberCatalogs.blocklists') }}</strong>
-                            <div class="rules-filters">
-                                <el-input v-model="blocklistFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="blocklistsPage = 1">
-                                    <template #prefix><el-icon><Search /></el-icon></template>
-                                </el-input>
-                                <el-button @click="blocklistsPage = 1"><el-icon><Search /></el-icon></el-button>
-                                <el-button type="primary" @click="openAddDialog('privacy_blocklists')"><el-icon><Plus /></el-icon>{{ $t('common.add') }}</el-button>
-                            </div>
+                    <div class="rules-head">
+                        <div class="rules-filters">
+                            <el-input v-model="blocklistFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="blocklistsPage = 1">
+                                <template #prefix><el-icon><Search /></el-icon></template>
+                            </el-input>
+                            <el-button @click="blocklistsPage = 1"><el-icon><Search /></el-icon></el-button>
+                            <el-button type="primary" @click="openAddDialog('privacy_blocklists')"><el-icon><Plus /></el-icon>{{ $t('common.add') }}</el-button>
                         </div>
-                    </template>
+                    </div>
                     <el-table :data="pagedRows('privacy_blocklists')" stripe row-key="key">
                         <template #empty>
                             <div class="empty-state">
@@ -188,18 +182,15 @@
                 </template>
                 <div class="parental-grid">
                     <el-card shadow="never" class="parental-card">
-                        <template #header>
-                            <div class="rules-head">
-                                <span class="rules-head__title"><el-icon><Star /></el-icon><strong>{{ $t('admin.memberCatalogs.presets') }}</strong></span>
-                                <div class="rules-filters">
-                                    <el-input v-model="presetFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="fetchCatalogs">
-                                        <template #prefix><el-icon><Search /></el-icon></template>
-                                    </el-input>
-                                    <el-button @click="presetsPage = 1"><el-icon><Search /></el-icon></el-button>
-                                    <el-button type="primary" @click="openAddDialog('parental_presets')"><el-icon><Plus /></el-icon>{{ $t('common.add') }}</el-button>
-                                </div>
+                        <div class="rules-head">
+                            <div class="rules-filters">
+                                <el-input v-model="presetFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="fetchCatalogs">
+                                    <template #prefix><el-icon><Search /></el-icon></template>
+                                </el-input>
+                                <el-button @click="presetsPage = 1"><el-icon><Search /></el-icon></el-button>
+                                <el-button type="primary" @click="openAddDialog('parental_presets')"><el-icon><Plus /></el-icon>{{ $t('common.add') }}</el-button>
                             </div>
-                        </template>
+                        </div>
                         <el-table :data="pagedRows('parental_presets')" stripe row-key="name">
                             <template #empty>
                                 <div class="empty-state">
@@ -244,18 +235,15 @@
                         </div>
                     </el-card>
                     <el-card shadow="never" class="parental-card">
-                        <template #header>
-                            <div class="rules-head">
-                                <span class="rules-head__title"><el-icon><Files /></el-icon><strong>{{ $t('admin.memberCatalogs.categories') }}</strong></span>
-                                <div class="rules-filters">
-                                    <el-input v-model="categoryFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="categoriesPage = 1">
-                                        <template #prefix><el-icon><Search /></el-icon></template>
-                                    </el-input>
-                                    <el-button @click="categoriesPage = 1"><el-icon><Search /></el-icon></el-button>
-                                    <el-button type="primary" @click="openAddDialog('parental_categories')"><el-icon><Plus /></el-icon>{{ $t('common.add') }}</el-button>
-                                </div>
+                        <div class="rules-head">
+                            <div class="rules-filters">
+                                <el-input v-model="categoryFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="categoriesPage = 1">
+                                    <template #prefix><el-icon><Search /></el-icon></template>
+                                </el-input>
+                                <el-button @click="categoriesPage = 1"><el-icon><Search /></el-icon></el-button>
+                                <el-button type="primary" @click="openAddDialog('parental_categories')"><el-icon><Plus /></el-icon>{{ $t('common.add') }}</el-button>
                             </div>
-                        </template>
+                        </div>
                         <el-table :data="pagedRows('parental_categories')" stripe row-key="key">
                             <template #empty>
                                 <div class="empty-state">

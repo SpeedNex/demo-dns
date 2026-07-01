@@ -34,6 +34,7 @@ import AdminBrands from '@/views/admin/Brands.vue'
 import AdminSecurityData from '@/views/admin/SecurityData.vue'
 import AdminSecurityDataItem from '@/views/admin/SecurityDataItem.vue'
 import AdminSecurityCatalogPage from '@/views/admin/SecurityCatalogPage.vue'
+import AdminMemberCatalogs from '@/views/admin/MemberCatalogs.vue'
 import AdminPublishCenter from '@/views/admin/PublishCenter.vue'
 import AdminSystemConfig from '@/views/admin/SystemConfig.vue'
 import AdminAuditLogs from '@/views/admin/AuditLogs.vue'
@@ -117,7 +118,7 @@ const routes = [
             { path: 'alerts', name: 'AdminAlerts', component: AdminAlerts },
             { path: 'users', name: 'AdminUsers', component: AdminUsers },
             { path: 'devices', name: 'AdminDevices', component: AdminDevices },
-            { path: 'member-catalogs', name: 'AdminMemberCatalogs', component: AdminSecurityCatalogPage },
+            { path: 'member-catalogs', name: 'AdminMemberCatalogs', component: AdminMemberCatalogs },
             { path: 'plans', name: 'AdminPlans', component: AdminPlans },
             { path: 'bill', name: 'AdminBill', component: AdminBill },
             { path: 'subscriptions', name: 'AdminSubscriptions', component: AdminSubscriptions },

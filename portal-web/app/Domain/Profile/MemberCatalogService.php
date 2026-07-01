@@ -14,7 +14,7 @@ final class MemberCatalogService
      * @return array<string, array<int, array<string, mixed>>>
      */
     public function get(): array
-    {
+     {
         $stored = SystemConfig::query()->where('config_key', self::CONFIG_KEY)->first()?->config_value;
         $defaults = $this->defaults();
 
