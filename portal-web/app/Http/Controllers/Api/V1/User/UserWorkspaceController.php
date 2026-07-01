@@ -7,10 +7,14 @@ use App\Domain\Billing\PlanCatalogService;
 use App\Domain\Profile\MemberCatalogService;
 use App\Domain\Profile\UserWorkspaceService;
 use App\Domain\Billing\PaymentService;
+use App\Models\Profile;
+use App\Models\ProfileRule;
+use App\Models\RuleSource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 final class UserWorkspaceController
@@ -31,6 +35,16 @@ final class UserWorkspaceController
     public function catalogs(): JsonResponse
     {
         return response()->json(['data' => $this->catalogs->get()]);
+    }
+
+    public function ruleSources(): JsonResponse
+    {
+        $sources = RuleSource::where('enabled', true)
+            ->orderBy('name')
+            ->get(['code', 'name', 'description', 'item_count', 'last_sync_at'])
+            ->toArray();
+
+        return response()->json(['data' => $sources]);
     }
 
     public function security(Request $request): JsonResponse

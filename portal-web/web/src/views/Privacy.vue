@@ -226,12 +226,7 @@ const form = reactive({
 // 2026-06-22: 拦截列表是否已从后端拉取（用于防止「显示 2 项 → 变空白」闪烁）
 const blocklistLoaded = ref(false)
 
-const availableBlocklists = ref([
-    { key: 'ads_tracking', name: 'Ads & Tracking', desc: 'Ad and tracker protection', entries: 86222 },
-    { key: 'third_party_tracking', name: 'Third-party Tracking', desc: 'Cross-site tracking protection', entries: 45678 },
-    { key: 'phishing', name: 'Phishing', desc: 'Known phishing domains', entries: 32100 },
-    { key: 'malware', name: 'Malware', desc: 'Known malware domains', entries: 28900 },
-])
+const availableBlocklists = ref([])
 
 const filteredAvailableBlocklists = computed(() => {
     if (!blocklistSearch.value) return availableBlocklists.value
@@ -341,11 +336,21 @@ const fetchData = async () => {
     hydrating.value = true
     blocklistLoaded.value = false
     try {
-        const catalogResponse = await client.get('/user/catalogs')
-        const catalogs = catalogResponse.data?.data || {}
-
-        const { data } = await client.get('/user/privacy', { params: { profile_id: currentProfileId.value } })
-        const incoming = data.data || {}
+        // 从 rule_sources 拉取后台规则库列表
+        const [ruleSourcesRes, privacyRes] = await Promise.all([
+            client.get('/user/rule-sources'),
+            client.get('/user/privacy', { params: { profile_id: currentProfileId.value } }),
+        ])
+        // 映射规则源为可用拦截列表
+        const now = Date.now()
+        availableBlocklists.value = (ruleSourcesRes.data?.data || []).map((item) => ({
+            key: item.code,
+            name: item.name,
+            desc: item.description || '',
+            entries: item.item_count || 0,
+            daysAgo: item.last_sync_at ? Math.floor((now - new Date(item.last_sync_at).getTime()) / 86400000) : 0,
+        }))
+        const incoming = privacyRes.data?.data || {}
         // 重新包装 blocklists 为响应式对象，保证 form.blocklists[key] 修改可追踪
         const incomingBlocklists = { ...(incoming.blocklists || {}) }
         // 为 known blocklist key 设置默认值（false），让 activeBlocklists 派生时空白状态可见

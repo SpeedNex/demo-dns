@@ -22,6 +22,7 @@ Route::get('payment-methods', [UserWorkspaceController::class, 'paymentMethods']
 Route::get('usage', [UserWorkspaceController::class, 'usage']);
 Route::get('subscription', [UserWorkspaceController::class, 'subscription']);
 Route::get('referral-link', [UserWorkspaceController::class, 'referralLink']);
+Route::get('rule-sources', [UserWorkspaceController::class, 'ruleSources']);
 Route::put('devices/{device_id}', [UserWorkspaceController::class, 'updateDevice']);
 Route::delete('devices/{device_id}', [UserWorkspaceController::class, 'deleteDevice']);
 
