@@ -1315,6 +1315,7 @@
       "fieldType": "필드 유형",
       "fieldTypeStrategy": "전략",
       "fieldTypeSelect": "단일 선택",
+      "fieldTypeSwitch": "스위치",
       "fieldTypeMulti": "다중 선택",
       "fieldTypeText": "텍스트",
       "fieldTypeCategory": "카테고리",

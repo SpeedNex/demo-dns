@@ -1355,6 +1355,7 @@
       "fieldType": "Field Type",
       "fieldTypeStrategy": "Strategy",
       "fieldTypeSelect": "Select",
+      "fieldTypeSwitch": "Switch",
       "fieldTypeMulti": "Multi-select",
       "fieldTypeText": "Text",
       "fieldTypeCategory": "Category",

@@ -24,8 +24,10 @@
                     <el-table-column :label="$t('admin.memberCatalogs.strategyCode')" prop="key" min-width="180" />
                     <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="200" />
                     <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="400" show-overflow-tooltip />
-                    <el-table-column :label="$t('admin.memberCatalogs.fieldType')" width="100" align="center">
-                        <template #default>{{ $t('admin.memberCatalogs.fieldTypeStrategy') }}</template>
+                    <el-table-column :label="$t('admin.memberCatalogs.fieldType')" width="110" align="center">
+                        <template #default="{ row }">
+                            <el-tag size="small" :type="getFieldTypeTag(row.field_type)" effect="plain">{{ getFieldTypeLabel(row.field_type) }}</el-tag>
+                        </template>
                     </el-table-column>
                     <el-table-column :label="$t('admin.memberCatalogs.status')" width="100" align="center">
                         <template #default="{ row }">
@@ -61,8 +63,10 @@
                     <el-table-column :label="$t('admin.memberCatalogs.code')" prop="key" min-width="140" />
                     <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="140" />
                     <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="200" show-overflow-tooltip />
-                    <el-table-column :label="$t('admin.memberCatalogs.fieldType')" width="100" align="center">
-                        <template #default>{{ $t('admin.memberCatalogs.fieldTypeStrategy') }}</template>
+                    <el-table-column :label="$t('admin.memberCatalogs.fieldType')" width="110" align="center">
+                        <template #default="{ row }">
+                            <el-tag size="small" :type="getFieldTypeTag(row.field_type)" effect="plain">{{ getFieldTypeLabel(row.field_type) }}</el-tag>
+                        </template>
                     </el-table-column>
                     <el-table-column :label="$t('admin.memberCatalogs.status')" width="100" align="center">
                         <template #default="{ row }">
@@ -99,7 +103,9 @@
                         <template #empty><div class="empty">{{ $t('dashboard.noData') }}</div></template>
                         <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="160" />
                         <el-table-column :label="$t('admin.memberCatalogs.fieldType')" width="120">
-                            <template #default="{ row }">{{ $t('admin.memberCatalogs.cat' + row.category.charAt(0).toUpperCase() + row.category.slice(1)) }}</template>
+                            <template #default="{ row }">
+                                <el-tag size="small" :type="getFieldTypeTag(row.field_type)" effect="plain">{{ getFieldTypeLabel(row.field_type) }}</el-tag>
+                            </template>
                         </el-table-column>
                         <el-table-column :label="$t('admin.memberCatalogs.url')" prop="url" min-width="200" show-overflow-tooltip />
                         <el-table-column :label="$t('admin.memberCatalogs.status')" width="100" align="center">
@@ -132,8 +138,10 @@
                         <el-table-column :label="$t('admin.memberCatalogs.code')" prop="key" min-width="140" />
                         <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="160" />
                         <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="200" show-overflow-tooltip />
-                        <el-table-column :label="$t('admin.memberCatalogs.fieldType')" width="100" align="center">
-                            <template #default>{{ $t('admin.memberCatalogs.fieldTypeCategory') }}</template>
+                        <el-table-column :label="$t('admin.memberCatalogs.fieldType')" width="110" align="center">
+                            <template #default="{ row }">
+                                <el-tag size="small" :type="getFieldTypeTag(row.field_type)" effect="plain">{{ getFieldTypeLabel(row.field_type) }}</el-tag>
+                            </template>
                         </el-table-column>
                         <el-table-column :label="$t('admin.memberCatalogs.status')" width="100" align="center">
                             <template #default="{ row }">
@@ -191,6 +199,13 @@
             </el-form-item>
             <el-form-item v-if="hasField('enabled')" :label="$t('admin.memberCatalogs.status')">
                 <el-switch v-model="rowForm.enabled" />
+            </el-form-item>
+            <el-form-item v-if="hasField('field_type')" :label="$t('admin.memberCatalogs.fieldType')">
+                <el-select v-model="rowForm.field_type" style="width:100%">
+                    <el-option :label="$t('admin.memberCatalogs.fieldTypeSwitch')" value="switch" />
+                    <el-option :label="$t('admin.memberCatalogs.fieldTypeMulti')" value="multi" />
+                    <el-option :label="$t('admin.memberCatalogs.fieldTypeText')" value="text" />
+                </el-select>
             </el-form-item>
 
             <!-- 深度跟踪保护 → 设备管理 -->
@@ -330,17 +345,33 @@ const removeDevice = (index) => {
     rowForm.devices.splice(index, 1)
 }
 
+const fieldTypeOptions = [
+    { value: 'switch', labelKey: 'admin.memberCatalogs.fieldTypeSwitch' },
+    { value: 'multi', labelKey: 'admin.memberCatalogs.fieldTypeMulti' },
+    { value: 'text', labelKey: 'admin.memberCatalogs.fieldTypeText' },
+]
+
+const getFieldTypeLabel = (fieldType) => {
+    const found = fieldTypeOptions.find((o) => o.value === fieldType)
+    return found ? t(found.labelKey) : fieldType || '-'
+}
+
+const getFieldTypeTag = (fieldType) => {
+    const map = { switch: 'primary', multi: 'success', text: 'info' }
+    return map[fieldType] || 'info'
+}
+
 const fieldsPerTab = {
-    device_models: ['key', 'name', 'desc', 'enabled', 'system'],
-    privacy_blocklists: ['key', 'name', 'desc', 'days_ago', 'enabled', 'system'],
-    parental_presets: ['name', 'icon', 'category', 'enabled', 'url'],
-    parental_categories: ['key', 'name', 'desc', 'enabled'],
+    device_models: ['key', 'name', 'desc', 'field_type', 'enabled', 'system'],
+    privacy_blocklists: ['key', 'name', 'desc', 'field_type', 'days_ago', 'enabled', 'system'],
+    parental_presets: ['name', 'icon', 'category', 'field_type', 'enabled', 'url'],
+    parental_categories: ['key', 'name', 'desc', 'field_type', 'enabled'],
 }
 const createDefaults = {
-    device_models: () => ({ key: '', name: '', desc: '', enabled: true, system: false }),
-    privacy_blocklists: () => ({ key: '', name: '', desc: '', days_ago: 0, enabled: true, system: false, devices: [] }),
-    parental_presets: () => ({ name: '', icon: '', category: 'website', enabled: true, url: '' }),
-    parental_categories: () => ({ key: '', name: '', desc: '', enabled: true }),
+    device_models: () => ({ key: '', name: '', desc: '', field_type: 'switch', enabled: true, system: false }),
+    privacy_blocklists: () => ({ key: '', name: '', desc: '', field_type: 'switch', days_ago: 0, enabled: true, system: false, devices: [] }),
+    parental_presets: () => ({ name: '', icon: '', category: 'website', field_type: 'switch', enabled: true, url: '' }),
+    parental_categories: () => ({ key: '', name: '', desc: '', field_type: 'multi', enabled: true }),
 }
 
 const hasField = (key) => fieldsPerTab[editingTab.value]?.includes(key) ?? false

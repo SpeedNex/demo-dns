@@ -24,15 +24,15 @@ final class MemberCatalogService
 
         return [
             'device_models' => $this->mergeSystemDefaults(
-                $this->normalizeItems($stored['device_models'] ?? [], ['key', 'name', 'desc', 'enabled', 'system']),
+                $this->normalizeItems($stored['device_models'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled', 'system']),
                 $defaults['device_models'] ?? []
             ),
             'privacy_blocklists' => $this->mergeSystemDefaults(
-                $this->normalizeItems($stored['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'days_ago', 'enabled', 'system', 'devices']),
+                $this->normalizeItems($stored['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'field_type', 'days_ago', 'enabled', 'system', 'devices']),
                 $defaults['privacy_blocklists'] ?? []
             ),
-            'parental_presets' => $this->normalizeItems($stored['parental_presets'] ?? [], ['name', 'icon', 'category', 'enabled', 'url']),
-            'parental_categories' => $this->normalizeItems($stored['parental_categories'] ?? [], ['key', 'name', 'desc', 'enabled']),
+            'parental_presets' => $this->normalizeItems($stored['parental_presets'] ?? [], ['name', 'icon', 'category', 'field_type', 'enabled', 'url']),
+            'parental_categories' => $this->normalizeItems($stored['parental_categories'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled']),
         ];
     }
 
@@ -43,10 +43,10 @@ final class MemberCatalogService
     public function update(array $payload, int|string|null $actorId = null): array
     {
         $merged = [
-            'device_models' => $this->normalizeItems($payload['device_models'] ?? [], ['key', 'name', 'desc', 'enabled', 'system']),
-            'privacy_blocklists' => $this->normalizeItems($payload['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'days_ago', 'enabled', 'system', 'devices']),
-            'parental_presets' => $this->normalizeItems($payload['parental_presets'] ?? [], ['name', 'icon', 'category', 'enabled', 'url']),
-            'parental_categories' => $this->normalizeItems($payload['parental_categories'] ?? [], ['key', 'name', 'desc', 'enabled']),
+            'device_models' => $this->normalizeItems($payload['device_models'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled', 'system']),
+            'privacy_blocklists' => $this->normalizeItems($payload['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'field_type', 'days_ago', 'enabled', 'system', 'devices']),
+            'parental_presets' => $this->normalizeItems($payload['parental_presets'] ?? [], ['name', 'icon', 'category', 'field_type', 'enabled', 'url']),
+            'parental_categories' => $this->normalizeItems($payload['parental_categories'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled']),
         ];
 
         SystemConfig::query()->updateOrCreate(
@@ -161,30 +161,30 @@ final class MemberCatalogService
     {
         return [
             'device_models' => [
-                ['key' => 'threat_intel', 'name' => '威胁情报', 'desc' => '使用威胁情报源来阻断已知恶意域名。', 'enabled' => true, 'system' => true],
-                ['key' => 'ai_threat_detection', 'name' => 'AI 威胁检测', 'desc' => '使用人工智能检测并阻断新兴威胁。', 'enabled' => true, 'system' => true],
-                ['key' => 'google_safe_browsing', 'name' => 'Google 安全浏览', 'desc' => '使用 Google 安全浏览来拦截流氓软件和诈骗网站，该技术每天检查数十亿个链接并识别不安全的网站。与某些浏览器中内置的版本不同，这不会将你的IP地址与恶意网站相关联，并且不允许绕过该拦截。', 'enabled' => true, 'system' => true],
-                ['key' => 'anti_mining', 'name' => '挖矿病毒保护', 'desc' => '防止未经授权使用你的设备来开采加密货币。', 'enabled' => true, 'system' => true],
-                ['key' => 'dns_rebinding', 'name' => 'DNS 重新绑定攻击保护', 'desc' => '拦截包含本地 IP 地址的 DNS 查询结果，防止黑客通过互联网操纵本地设备。', 'enabled' => true, 'system' => true],
-                ['key' => 'idn_homograph', 'name' => 'IDN 同构攻击保护', 'desc' => '阻断视觉上与合法域名相似的国际化域名。', 'enabled' => true, 'system' => true],
-                ['key' => 'typosquatting', 'name' => '误植域名保护', 'desc' => '拦截热门网站的拼写错误域名，这些域名常被用于钓鱼攻击。', 'enabled' => true, 'system' => true],
-                ['key' => 'dga', 'name' => '域名生成算法（DGA）保护', 'desc' => '域名生成算法（DGA）生成的域名通常被用于各种流氓软件或病毒，这些域名可以被用作其命令和控制服务器的中心。', 'enabled' => true, 'system' => true],
-                ['key' => 'block_newly_registered', 'name' => '拦截新注册域名', 'desc' => '拦截最近 30 天内注册的域名，这些域名常被用于恶意目的。', 'enabled' => true, 'system' => true],
-                ['key' => 'block_dynamic_dns', 'name' => '拦截动态 DNS', 'desc' => '拦截动态 DNS 服务，这些服务常被攻击者用于维持对受 compromise 系统的访问。', 'enabled' => true, 'system' => true],
-                ['key' => 'block_parked_domains', 'name' => '拦截停放域名', 'desc' => '拦截停放域名，这些域名不托管合法内容。', 'enabled' => true, 'system' => true],
-                ['key' => 'block_specific_tld', 'name' => '拦截特定顶级域名', 'desc' => '拦截通常与恶意活动相关联的整个顶级域名。', 'enabled' => true, 'system' => true],
-                ['key' => 'block_csam', 'name' => '拦截儿童色情内容', 'desc' => '拦截包含儿童性虐待材料的网站。', 'enabled' => true, 'system' => true],
+                ['key' => 'threat_intel', 'name' => '威胁情报', 'desc' => '使用威胁情报源来阻断已知恶意域名。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'ai_threat_detection', 'name' => 'AI 威胁检测', 'desc' => '使用人工智能检测并阻断新兴威胁。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'google_safe_browsing', 'name' => 'Google 安全浏览', 'desc' => '使用 Google 安全浏览来拦截流氓软件和诈骗网站，该技术每天检查数十亿个链接并识别不安全的网站。与某些浏览器中内置的版本不同，这不会将你的IP地址与恶意网站相关联，并且不允许绕过该拦截。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'anti_mining', 'name' => '挖矿病毒保护', 'desc' => '防止未经授权使用你的设备来开采加密货币。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'dns_rebinding', 'name' => 'DNS 重新绑定攻击保护', 'desc' => '拦截包含本地 IP 地址的 DNS 查询结果，防止黑客通过互联网操纵本地设备。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'idn_homograph', 'name' => 'IDN 同构攻击保护', 'desc' => '阻断视觉上与合法域名相似的国际化域名。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'typosquatting', 'name' => '误植域名保护', 'desc' => '拦截热门网站的拼写错误域名，这些域名常被用于钓鱼攻击。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'dga', 'name' => '域名生成算法（DGA）保护', 'desc' => '域名生成算法（DGA）生成的域名通常被用于各种流氓软件或病毒，这些域名可以被用作其命令和控制服务器的中心。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'block_newly_registered', 'name' => '拦截新注册域名', 'desc' => '拦截最近 30 天内注册的域名，这些域名常被用于恶意目的。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'block_dynamic_dns', 'name' => '拦截动态 DNS', 'desc' => '拦截动态 DNS 服务，这些服务常被攻击者用于维持对受 compromise 系统的访问。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'block_parked_domains', 'name' => '拦截停放域名', 'desc' => '拦截停放域名，这些域名不托管合法内容。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'block_specific_tld', 'name' => '拦截特定顶级域名', 'desc' => '拦截通常与恶意活动相关联的整个顶级域名。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'block_csam', 'name' => '拦截儿童色情内容', 'desc' => '拦截包含儿童性虐待材料的网站。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
             ],
             'privacy_blocklists' => [
-                ['key' => 'deep_tracking_protection', 'name' => '深度跟踪保护', 'desc' => '拦截通常在操作系统级运行的深度跟踪软件，这些跟踪软件知道你在设备上的所有行为。这可能包括你访问的所有网站、你输入的所有内容或你的位置。', 'entries' => 0, 'days_ago' => 0, 'enabled' => true, 'system' => true, 'devices' => [
+                ['key' => 'deep_tracking_protection', 'name' => '深度跟踪保护', 'desc' => '拦截通常在操作系统级运行的深度跟踪软件，这些跟踪软件知道你在设备上的所有行为。这可能包括你访问的所有网站、你输入的所有内容或你的位置。', 'field_type' => 'multi', 'entries' => 0, 'days_ago' => 0, 'enabled' => true, 'system' => true, 'devices' => [
                     ['key' => 'iphone', 'name' => 'iPhone', 'icon' => '📱', 'enabled' => true],
                     ['key' => 'android', 'name' => 'Android', 'icon' => '🤖', 'enabled' => true],
                     ['key' => 'windows', 'name' => 'Windows', 'icon' => '🖥️', 'enabled' => true],
                     ['key' => 'macos', 'name' => 'macOS', 'icon' => '💻', 'enabled' => true],
                     ['key' => 'router', 'name' => '路由器', 'icon' => '📡', 'enabled' => false],
                 ]],
-                ['key' => 'disguised_trackers', 'name' => '拦截伪装过的第三方跟踪器', 'desc' => '拦截伪装成第一方资源的第三方跟踪器，这些跟踪器试图绕过常规跟踪保护。', 'entries' => 0, 'days_ago' => 0, 'enabled' => true, 'system' => true],
-                ['key' => 'allow_marketing_links', 'name' => '允许营销和跟踪链接', 'desc' => '允许部分已知包含跟踪参数的营销链接正常访问，同时保留对恶意域名的拦截。', 'entries' => 0, 'days_ago' => 0, 'enabled' => false, 'system' => true],
+                ['key' => 'disguised_trackers', 'name' => '拦截伪装过的第三方跟踪器', 'desc' => '拦截伪装成第一方资源的第三方跟踪器，这些跟踪器试图绕过常规跟踪保护。', 'field_type' => 'switch', 'entries' => 0, 'days_ago' => 0, 'enabled' => true, 'system' => true],
+                ['key' => 'allow_marketing_links', 'name' => '允许营销和跟踪链接', 'desc' => '允许部分已知包含跟踪参数的营销链接正常访问，同时保留对恶意域名的拦截。', 'field_type' => 'switch', 'entries' => 0, 'days_ago' => 0, 'enabled' => false, 'system' => true],
             ],
             'parental_presets' => [],
             'parental_categories' => [],
