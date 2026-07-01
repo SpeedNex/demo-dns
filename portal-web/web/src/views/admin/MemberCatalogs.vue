@@ -110,7 +110,7 @@
                         <el-table-column :label="$t('admin.memberCatalogs.url')" prop="url" min-width="200" show-overflow-tooltip />
                         <el-table-column :label="$t('admin.memberCatalogs.status')" width="100" align="center">
                             <template #default="{ row }">
-                                <el-switch v-model="row.enabled" @change="toggleRow('parental_presets', row)" />
+                                <el-tag size="small" :type="row.enabled ? 'success' : 'info'" effect="plain" style="cursor:pointer" @click="toggleRow('parental_presets', row)">{{ row.enabled ? $t('admin.memberCatalogs.statusShown') : $t('admin.memberCatalogs.statusHidden') }}</el-tag>
                             </template>
                         </el-table-column>
                         <el-table-column :label="$t('common.actions')" width="100" fixed="right">
@@ -145,7 +145,7 @@
                         </el-table-column>
                         <el-table-column :label="$t('admin.memberCatalogs.status')" width="100" align="center">
                             <template #default="{ row }">
-                                <el-switch v-model="row.enabled" @change="toggleRow('parental_categories', row)" />
+                                <el-tag size="small" :type="row.enabled ? 'success' : 'info'" effect="plain" style="cursor:pointer" @click="toggleRow('parental_categories', row)">{{ row.enabled ? $t('admin.memberCatalogs.statusShown') : $t('admin.memberCatalogs.statusHidden') }}</el-tag>
                             </template>
                         </el-table-column>
                         <el-table-column :label="$t('common.actions')" width="100" fixed="right">
@@ -223,7 +223,7 @@
                         <el-table-column prop="name" :label="$t('admin.memberCatalogs.deviceName')" />
                         <el-table-column :label="$t('admin.memberCatalogs.status')" width="80" align="center">
                             <template #default="{ row }">
-                                <el-switch v-model="row.enabled" size="small" />
+                                <el-tag size="small" :type="row.enabled ? 'success' : 'info'" effect="plain">{{ row.enabled ? $t('admin.memberCatalogs.statusShown') : $t('admin.memberCatalogs.statusHidden') }}</el-tag>
                             </template>
                         </el-table-column>
                         <el-table-column :label="$t('common.actions')" width="90" align="center">
