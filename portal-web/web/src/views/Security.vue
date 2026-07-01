@@ -56,10 +56,10 @@ const betaKeys = computed(() =>
         .map(item => item.key)
 )
 
-// 从 catalog 中过滤出 switch 类型且后台设置为显示的安全防护项
+// 从 catalog 中过滤出 switch 类型的安全防护项
 const securityItems = computed(() =>
     catalogItems.value
-        .filter(item => item.field_type === 'switch' && item.enabled !== false)
+        .filter(item => item.field_type === 'switch')
         .map(item => ({
             ...item,
             beta: betaKeys.value.includes(item.key),

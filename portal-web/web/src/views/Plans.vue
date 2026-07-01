@@ -11,13 +11,6 @@
             当前您使用的是 <strong>Free</strong> 套餐，升级后可解锁无限查询、家长监护、查询日志分析等高级功能。
         </el-alert>
 
-        <div v-if="hasYearlyPlan" class="billing-cycle-toggle">
-            <el-radio-group v-model="selectedCycle" size="default">
-                <el-radio-button value="monthly">月付</el-radio-button>
-                <el-radio-button value="yearly">年付</el-radio-button>
-            </el-radio-group>
-        </div>
-
         <el-row v-loading="loading" :gutter="20">
             <el-col v-for="plan in plans" :key="plan.code" :xs="24" :sm="12" :md="8">
                 <el-card class="plan-card" :class="{ featured: plan.is_featured }" shadow="hover">
@@ -32,7 +25,7 @@
                     </div>
 
                     <div class="plan-prices">
-                        <div v-for="price in filteredPrices(plan.prices)" :key="price.billing_cycle" class="price-item">
+                        <div v-for="price in plan.prices" :key="price.billing_cycle" class="price-item">
                             <div class="price-cycle">{{ price.billing_cycle === 'monthly' ? '月付' : '年付' }}</div>
                             <div class="price-amount">
                                 <span class="price-amount-num">{{ money(price.amount_minor, price.currency) }}</span>
@@ -83,15 +76,8 @@ const router = useRouter()
 const loading = ref(false)
 const buying = ref(null)
 const plans = ref([])
-const selectedCycle = ref('monthly')
 
 const hasPaidPlans = computed(() => plans.value.some(p => p.prices?.some(pr => pr.amount_minor > 0)))
-const hasYearlyPlan = computed(() => plans.value.some(p => p.prices?.some(pr => pr.billing_cycle === 'yearly' && pr.amount_minor > 0)))
-
-const filteredPrices = (prices) => {
-    if (!prices) return []
-    return prices.filter(p => p.billing_cycle === selectedCycle.value)
-}
 
 const money = (minor, currency = 'USD') => {
     const code = String(currency || 'USD').toUpperCase()
@@ -119,14 +105,14 @@ const fetchPlans = async () => {
 }
 
 const handleBuy = async (plan) => {
-    const selectedPrice = plan.prices?.find(p => p.billing_cycle === selectedCycle.value && p.amount_minor > 0)
-    if (!selectedPrice) {
+    const paidPrice = plan.prices?.find(p => p.amount_minor > 0)
+    if (!paidPrice) {
         ElMessage.warning('该套餐暂不支持购买')
         return
     }
     try {
         await ElMessageBox.confirm(
-            `确认购买 ${plan.name}（${selectedPrice.billing_cycle === 'monthly' ? '月付' : '年付'} ${money(selectedPrice.amount_minor, selectedPrice.currency)}）？`,
+            `确认购买 ${plan.name}（${paidPrice.billing_cycle === 'monthly' ? '月付' : '年付'} ${money(paidPrice.amount_minor, paidPrice.currency)}）？`,
             '确认订单',
             { confirmButtonText: '确认下单', cancelButtonText: '取消', type: 'info' }
         )
@@ -138,8 +124,8 @@ const handleBuy = async (plan) => {
     try {
         const { data } = await client.post('/user/orders', {
             plan_code: plan.code,
-            billing_cycle: selectedPrice.billing_cycle,
-            currency: selectedPrice.currency,
+            billing_cycle: paidPrice.billing_cycle,
+            currency: paidPrice.currency,
         })
         ElMessage.success('订单创建成功，正在跳转到支付...')
         // 跳转到订单详情 / 支付
@@ -263,10 +249,5 @@ onMounted(fetchPlans)
 }
 .plan-action {
     margin-top: 8px;
-}
-.billing-cycle-toggle {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
 }
 </style>
