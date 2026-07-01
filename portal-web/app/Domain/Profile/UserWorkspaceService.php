@@ -19,26 +19,6 @@ use Illuminate\Validation\ValidationException;
 
 final class UserWorkspaceService
 {
-    private const DEFAULT_SECURITY = [
-        'enabled' => true,
-        'block_malware' => true,
-        'block_phishing' => true,
-        'block_command_and_control' => true,
-        'block_cryptojacking' => true,
-        'threat_intel' => true,
-        'ai_threat_detection' => false,
-        'google_safe_browsing' => true,
-        'dns_rebind' => true,
-        'idn_homograph' => true,
-        'typo_squatting' => true,
-        'dga_protection' => true,
-        'block_new_domains' => true,
-        'block_dynamic_dns' => false,
-        'block_parked_domains' => true,
-        'block_tld' => false,
-        'child_abuse' => true,
-    ];
-
     private const DEFAULT_PRIVACY = [
         'enabled' => true,
         'block_trackers' => true,
@@ -78,6 +58,7 @@ final class UserWorkspaceService
         private readonly QueryLogReadService $queryLogReader = new QueryLogReadService(),
         private readonly \App\Infrastructure\ClickHouse\UserAnalyticsService $clickhouseAnalytics = new \App\Infrastructure\ClickHouse\UserAnalyticsService(),
         private readonly PlanCatalogService $planCatalog = new PlanCatalogService(),
+        private readonly MemberCatalogService $memberCatalogs = new MemberCatalogService(),
     ) {
     }
 
@@ -97,7 +78,7 @@ final class UserWorkspaceService
             'default_action' => 'allow',
             'block_response' => 'nxdomain',
             'security_enabled' => true,
-            'security_settings' => self::DEFAULT_SECURITY,
+            'security_settings' => $this->defaultSecuritySettings(),
             'privacy_enabled' => true,
             'privacy_settings' => self::DEFAULT_PRIVACY,
             'parental_enabled' => false,
@@ -128,18 +109,36 @@ final class UserWorkspaceService
         return $this->primaryProfile($userId);
     }
 
+    /**
+     * 从 catalog device_models 生成默认安全防护设置
+     */
+    private function defaultSecuritySettings(): array
+    {
+        $defaults = [];
+        foreach ($this->memberCatalogs->get()['device_models'] ?? [] as $item) {
+            if (($item['field_type'] ?? '') === 'switch' && !empty($item['key'])) {
+                $defaults[$item['key']] = (bool) ($item['enabled'] ?? true);
+            }
+        }
+        $defaults['enabled'] = true;
+        return $defaults;
+    }
+
     public function getSecurity(string $userId, ?string $profileId = null): array
     {
-        return $this->securityPayload($this->resolveProfile($userId, $profileId));
+        $profile = $this->resolveProfile($userId, $profileId);
+        return $this->securityPayload($profile);
     }
 
     public function updateSecurity(string $userId, array $payload, ?string $profileId = null): array
     {
         $profile = $this->resolveProfile($userId, $profileId);
-        $settings = array_merge(self::DEFAULT_SECURITY, $profile->security_settings ?? [], $payload);
+        $defaults = $this->defaultSecuritySettings();
+        $stored = is_array($profile->security_settings) ? $profile->security_settings : [];
+        $settings = array_merge($defaults, $stored, $payload);
 
         $profile->update([
-            'security_enabled' => (bool) $settings['enabled'],
+            'security_enabled' => (bool) ($settings['enabled'] ?? true),
             'security_settings' => $settings,
         ]);
 
@@ -644,7 +643,7 @@ final class UserWorkspaceService
             ? json_decode($profile->parental_settings, true) ?? []
             : ($profile->parental_settings ?? []);
 
-        $profile->security_settings = array_merge(self::DEFAULT_SECURITY, $securitySettings);
+        $profile->security_settings = array_merge($this->defaultSecuritySettings(), $securitySettings);
         $profile->privacy_settings = array_merge(self::DEFAULT_PRIVACY, $privacySettings);
         $profile->parental_settings = array_merge(self::DEFAULT_PARENTAL, $parentalSettings);
 
@@ -653,7 +652,12 @@ final class UserWorkspaceService
 
     private function securityPayload(Profile $profile): array
     {
-        return array_merge(self::DEFAULT_SECURITY, $profile->security_settings ?? [], [
+        $defaults = $this->defaultSecuritySettings();
+        $settings = is_array($profile->security_settings)
+            ? $profile->security_settings
+            : [];
+
+        return array_merge($defaults, $settings, [
             'enabled' => (bool) $profile->security_enabled,
         ]);
     }
@@ -727,7 +731,7 @@ final class UserWorkspaceService
 
     /**
      * @param Collection<int, array<string, mixed>> $logs
-     * @return array<int, array<string, mixed>>
+     * @return array<string, mixed>
      */
     private function aggregateDomains(Collection $logs): array
     {
@@ -780,7 +784,7 @@ final class UserWorkspaceService
                 ->toArray();
 
             $featureSettings = [
-                'security' => $profile->security_settings ?? self::DEFAULT_SECURITY,
+                'security' => $profile->security_settings ?? $this->defaultSecuritySettings(),
                 'privacy' => $profile->privacy_settings ?? self::DEFAULT_PRIVACY,
                 'parental' => $profile->parental_settings ?? self::DEFAULT_PARENTAL,
             ];
@@ -790,55 +794,4 @@ final class UserWorkspaceService
             $parentalSettings = $featureSettings['parental'] ?? [];
             $blockedCategories = $parentalSettings['blocked_categories'] ?? [];
             if (!empty($blockedCategories) && is_array($blockedCategories)) {
-                $categoryKeys = array_map(fn ($c) => is_string($c) ? $c : ($c['key'] ?? ''), $blockedCategories);
-                $categoryKeys = array_filter($categoryKeys);
-                if (!empty($categoryKeys)) {
-                    $categoryRules = \App\Models\RuleItem::whereIn('category', $categoryKeys)
-                        ->where('action', 'block')
-                        ->get(['domain', 'category'])
-                        ->map(fn ($item) => [
-                            'list_type' => 'category:parental:' . $item->category,
-                            'match_type' => 'suffix',
-                            'domain' => $item->domain,
-                            'normalized_domain' => \App\Domain\Profile\DomainNormalizer::normalize($item->domain),
-                            'action' => 'block',
-                            'enabled' => true,
-                            'category' => $item->category,
-                            'rule_id' => 'cat_' . $item->category . '_' . md5($item->domain),
-                        ])
-                        ->toArray();
-                    $rules = array_merge($rules, $categoryRules);
-                }
-            }
-
-            \Illuminate\Support\Facades\Log::info('AutoPublish triggered', [
-                'profile_id' => $profile->profile_id,
-                'rules_count' => count($rules),
-                'feature_settings' => $featureSettings,
-            ]);
-
-            $result = $publishService->publish(
-                $profile->toArray(),
-                $rules,
-                $featureSettings,
-            );
-
-            // 同步更新 Profile 的 version 和 published_at，确保下次发布版本号递增
-            $profile->update([
-                'version' => (int) ($result['config_version'] ?? 0),
-                'published_at' => now(),
-            ]);
-
-            \Illuminate\Support\Facades\Log::info('AutoPublish succeeded', [
-                'profile_id' => $profile->profile_id,
-                'result' => $result,
-            ]);
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('AutoPublish failed', [
-                'profile_id' => $profile->profile_id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-        }
-    }
-}
+                $
