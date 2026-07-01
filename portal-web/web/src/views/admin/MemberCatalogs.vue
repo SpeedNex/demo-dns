@@ -24,6 +24,9 @@
                     <el-table-column :label="$t('admin.memberCatalogs.strategyCode')" prop="key" min-width="180" />
                     <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="200" />
                     <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="400" show-overflow-tooltip />
+                    <el-table-column :label="$t('admin.memberCatalogs.fieldType')" width="100" align="center">
+                        <template #default>{{ $t('admin.memberCatalogs.fieldTypeStrategy') }}</template>
+                    </el-table-column>
                     <el-table-column :label="$t('admin.memberCatalogs.status')" width="100" align="center">
                         <template #default="{ row }">
                             <el-switch v-model="row.enabled" @change="toggleRow('device_models', row)" />
@@ -58,7 +61,9 @@
                     <el-table-column :label="$t('admin.memberCatalogs.code')" prop="key" min-width="140" />
                     <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="140" />
                     <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="200" show-overflow-tooltip />
-
+                    <el-table-column :label="$t('admin.memberCatalogs.fieldType')" width="100" align="center">
+                        <template #default>{{ $t('admin.memberCatalogs.fieldTypeStrategy') }}</template>
+                    </el-table-column>
                     <el-table-column :label="$t('admin.memberCatalogs.status')" width="100" align="center">
                         <template #default="{ row }">
                             <el-switch v-model="row.enabled" @change="toggleRow('privacy_blocklists', row)" />
@@ -93,7 +98,7 @@
                     <el-table :data="pagedRows('parental_presets')" stripe size="small">
                         <template #empty><div class="empty">{{ $t('dashboard.noData') }}</div></template>
                         <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="160" />
-                        <el-table-column :label="$t('admin.memberCatalogs.type')" width="120">
+                        <el-table-column :label="$t('admin.memberCatalogs.fieldType')" width="120">
                             <template #default="{ row }">{{ $t('admin.memberCatalogs.cat' + row.category.charAt(0).toUpperCase() + row.category.slice(1)) }}</template>
                         </el-table-column>
                         <el-table-column :label="$t('admin.memberCatalogs.url')" prop="url" min-width="200" show-overflow-tooltip />
@@ -127,6 +132,9 @@
                         <el-table-column :label="$t('admin.memberCatalogs.code')" prop="key" min-width="140" />
                         <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="160" />
                         <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="200" show-overflow-tooltip />
+                        <el-table-column :label="$t('admin.memberCatalogs.fieldType')" width="100" align="center">
+                            <template #default>{{ $t('admin.memberCatalogs.fieldTypeCategory') }}</template>
+                        </el-table-column>
                         <el-table-column :label="$t('admin.memberCatalogs.status')" width="100" align="center">
                             <template #default="{ row }">
                                 <el-switch v-model="row.enabled" @change="toggleRow('parental_categories', row)" />
