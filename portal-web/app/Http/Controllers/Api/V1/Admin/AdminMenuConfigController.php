@@ -115,6 +115,7 @@ class AdminMenuConfigController extends Controller
                         'visible' => $item['visible'],
                         'sort_order' => $item['sort'],
                         'parent_key' => null,
+                        'permission_code' => $item['permissionCode'] ?? null,
                     ]);
                 }
             }
@@ -129,6 +130,7 @@ class AdminMenuConfigController extends Controller
                         'visible' => $item['visible'],
                         'sort_order' => $item['sort'],
                         'parent_key' => $item['parentId'] ?? null,
+                        'permission_code' => $item['permissionCode'] ?? null,
                     ]);
                 }
             }
@@ -159,6 +161,46 @@ class AdminMenuConfigController extends Controller
         $menu->update(['visible' => $validated['visible']]);
 
         return response()->json(['message' => 'Visibility updated successfully']);
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'menu_key' => 'required|string|max:80|unique:admin_menu_rule,menu_key',
+            'labelKey' => 'required|string|max:100',
+            'path' => 'required|string|max:200',
+            'icon' => 'sometimes|string|max:50',
+            'visible' => 'required|boolean',
+            'sort' => 'required|integer|min:0',
+            'parentId' => 'sometimes|string|max:80',
+            'permission_code' => 'sometimes|string|max:80',
+        ]);
+
+        $menu = AdminMenuRule::create([
+            'menu_key' => $validated['menu_key'],
+            'title_key' => $validated['labelKey'],
+            'path' => $validated['path'],
+            'icon' => $validated['icon'] ?? null,
+            'visible' => $validated['visible'],
+            'sort_order' => $validated['sort'],
+            'parent_key' => $validated['parentId'] ?? null,
+            'permission_code' => $validated['permission_code'] ?? null,
+            'group_key' => 'custom',
+        ]);
+
+        return response()->json([
+            'data' => [
+                'id' => $menu->menu_key,
+                'menuKey' => $menu->menu_key,
+                'labelKey' => $menu->title_key,
+                'path' => $menu->path,
+                'icon' => $menu->icon,
+                'visible' => $menu->visible,
+                'sort' => $menu->sort_order,
+                'permissionCode' => $menu->permission_code,
+                'parentId' => $menu->parent_key,
+            ],
+        ], 201);
     }
 
     private function allowedMenuKeys(Request $request): ?array

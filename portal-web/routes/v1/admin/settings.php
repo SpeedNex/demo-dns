@@ -30,6 +30,7 @@ Route::middleware('permission:admin.system_config.read')->group(function (): voi
 Route::middleware('permission:admin.system_config.write')->group(function (): void {
     Route::put('menu-config', [AdminMenuConfigController::class, 'update']);
     Route::put('menu-config/visibility', [AdminMenuConfigController::class, 'updateVisibility']);
+    Route::post('menu-config', [AdminMenuConfigController::class, 'store']);
 });
 
 // Alerts
