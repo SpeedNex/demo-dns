@@ -206,7 +206,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Key, Search, RefreshLeft, Delete } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'

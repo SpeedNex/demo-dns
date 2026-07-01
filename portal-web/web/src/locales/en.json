@@ -1322,10 +1322,14 @@
       "color": "Color",
       "entries": "Entries",
       "updatedDays": "Updated (days)",
+      "recent": "Recent",
       "category": "Category",
       "addRow": "Add row",
       "confirmDeleteRule": "Delete this rule?",
-      "confirmBatchDeleteRules": "Delete {count} selected rules?"
+      "confirmBatchDeleteRules": "Delete {count} selected rules?",
+      "catWebsite": "Website",
+      "catApp": "App",
+      "catGame": "Game"
     },
     "systemConfig": {
       "title": "System Config",

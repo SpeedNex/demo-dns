@@ -1298,10 +1298,14 @@
       "color": "색상",
       "entries": "항목 수",
       "updatedDays": "업데이트(일)",
+      "recent": "최신",
       "category": "카테고리",
       "addRow": "행 추가",
       "confirmDeleteRule": "이 규칙을 삭제하시겠습니까?",
-      "confirmBatchDeleteRules": "{count}개의 선택된 규칙을 삭제하시겠습니까?"
+      "confirmBatchDeleteRules": "{count}개의 선택된 규칙을 삭제하시겠습니까?",
+      "catWebsite": "웹사이트",
+      "catApp": "앱",
+      "catGame": "게임"
     },
     "systemConfig": {
       "title": "시스템 설정",

@@ -1318,10 +1318,14 @@
       "color": "颜色",
       "entries": "条目数",
       "updatedDays": "更新时间(天)",
+      "recent": "近期",
       "category": "类别",
       "addRow": "新增一行",
       "confirmDeleteRule": "确认删除该规则吗？",
-      "confirmBatchDeleteRules": "确认删除选中的 {count} 条规则吗？"
+      "confirmBatchDeleteRules": "确认删除选中的 {count} 条规则吗？",
+      "catWebsite": "网站",
+      "catApp": "应用",
+      "catGame": "游戏"
     },
     "systemConfig": {
       "title": "系统配置",

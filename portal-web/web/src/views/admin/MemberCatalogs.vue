@@ -7,21 +7,61 @@
         :show-pagination="false"
         @refresh="fetchAll"
     >
+        <!-- 概览统计卡片 -->
+        <div class="stat-cards">
+            <div class="stat-card stat-card--device">
+                <div class="stat-card__icon"><Monitor /></div>
+                <div class="stat-card__info">
+                    <div class="stat-card__label">{{ $t('admin.memberCatalogs.deviceModels') }}</div>
+                    <div class="stat-card__value">{{ catalogs.device_models.length }}</div>
+                </div>
+            </div>
+            <div class="stat-card stat-card--block">
+                <div class="stat-card__icon"><Lock /></div>
+                <div class="stat-card__info">
+                    <div class="stat-card__label">{{ $t('admin.memberCatalogs.blocklists') }}</div>
+                    <div class="stat-card__value">{{ catalogs.privacy_blocklists.length }}</div>
+                </div>
+            </div>
+            <div class="stat-card stat-card--preset">
+                <div class="stat-card__icon"><Star /></div>
+                <div class="stat-card__info">
+                    <div class="stat-card__label">{{ $t('admin.memberCatalogs.presets') }}</div>
+                    <div class="stat-card__value">{{ catalogs.parental_presets.length }}</div>
+                </div>
+            </div>
+            <div class="stat-card stat-card--category">
+                <div class="stat-card__icon"><Files /></div>
+                <div class="stat-card__info">
+                    <div class="stat-card__label">{{ $t('admin.memberCatalogs.categories') }}</div>
+                    <div class="stat-card__value">{{ catalogs.parental_categories.length }}</div>
+                </div>
+            </div>
+        </div>
+
         <el-tabs v-model="activeTab" class="catalog-tabs">
             <!-- 设备型号 Tab：标准列表格式 + 分页 -->
             <el-tab-pane :label="$t('admin.memberCatalogs.tabDeviceModels')" name="device_models">
+                <template #label>
+                    <span class="tab-label">
+                        <el-icon><Monitor /></el-icon>{{ $t('admin.memberCatalogs.tabDeviceModels') }}
+                        <el-tag size="small" class="tab-count" effect="plain" round>{{ catalogs.device_models.length }}</el-tag>
+                    </span>
+                </template>
                 <el-card shadow="never">
                     <template #header>
                         <div class="rules-head">
                             <strong>{{ $t('admin.memberCatalogs.deviceModels') }}</strong>
                             <div class="rules-filters">
-                                <el-input v-model="deviceModelFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="fetchCatalogs" />
-                                <el-button @click="fetchCatalogs">{{ $t('common.search') }}</el-button>
-                                <el-button type="primary" @click="openAddDialog('device_models')">{{ $t('common.add') }}</el-button>
+                                <el-input v-model="deviceModelFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="fetchCatalogs">
+                                    <template #prefix><el-icon><Search /></el-icon></template>
+                                </el-input>
+                                <el-button @click="fetchCatalogs"><el-icon><Search /></el-icon></el-button>
+                                <el-button type="primary" @click="openAddDialog('device_models')"><el-icon><Plus /></el-icon>{{ $t('common.add') }}</el-button>
                             </div>
                         </div>
                     </template>
-                    <el-table :data="pagedRows('device_models')" stripe>
+                    <el-table :data="pagedRows('device_models')" stripe row-key="id">
                         <template #empty>
                             <div class="empty-state">
                                 <el-icon class="empty-icon"><Grid /></el-icon>
@@ -29,7 +69,14 @@
                             </div>
                         </template>
                         <el-table-column :label="$t('admin.memberCatalogs.id')" prop="id" min-width="140" show-overflow-tooltip />
-                        <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="140" show-overflow-tooltip />
+                        <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="140" show-overflow-tooltip>
+                            <template #default="{ row }">
+                                <div class="name-cell">
+                                    <el-icon v-if="row.icon" class="name-cell__icon"><Picture /></el-icon>
+                                    <span class="name-cell__text">{{ row.name }}</span>
+                                </div>
+                            </template>
+                        </el-table-column>
                         <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="240" show-overflow-tooltip />
                         <el-table-column :label="$t('admin.memberCatalogs.icon')" min-width="260" show-overflow-tooltip>
                             <template #default="{ row }">
@@ -37,16 +84,19 @@
                                 <span v-else>-</span>
                             </template>
                         </el-table-column>
-                        <el-table-column :label="$t('admin.memberCatalogs.color')" width="100">
+                        <el-table-column :label="$t('admin.memberCatalogs.color')" width="120" align="center">
                             <template #default="{ row }">
-                                <el-tag v-if="row.color" size="small" :style="{ backgroundColor: row.color, color: '#fff', borderColor: row.color }">{{ row.color }}</el-tag>
+                                <div v-if="row.color" class="color-preview">
+                                    <span class="color-preview__swatch" :style="{ backgroundColor: row.color }"></span>
+                                    <el-tag size="small" :style="{ backgroundColor: row.color, color: '#fff', borderColor: row.color }">{{ row.color }}</el-tag>
+                                </div>
                                 <span v-else>-</span>
                             </template>
                         </el-table-column>
-                        <el-table-column :label="$t('common.actions')" width="160" fixed="right">
+                        <el-table-column :label="$t('common.actions')" width="140" fixed="right">
                             <template #default="{ $index }">
-                                <el-button text type="primary" @click="openEditDialog('device_models', $index)">{{ $t('common.edit') }}</el-button>
-                                <el-button text type="danger" @click="removeRow('device_models', $index)">{{ $t('common.delete') }}</el-button>
+                                <el-button circle size="small" @click="openEditDialog('device_models', $index)"><el-icon><Edit /></el-icon></el-button>
+                                <el-button circle size="small" type="danger" @click="removeRow('device_models', $index)"><el-icon><Delete /></el-icon></el-button>
                             </template>
                         </el-table-column>
                     </el-table>
@@ -69,33 +119,54 @@
 
             <!-- 隐私 Blocklists Tab：标准列表格式 + 分页 -->
             <el-tab-pane :label="$t('admin.memberCatalogs.tabBlocklists')" name="privacy_blocklists">
+                <template #label>
+                    <span class="tab-label">
+                        <el-icon><Lock /></el-icon>{{ $t('admin.memberCatalogs.tabBlocklists') }}
+                        <el-tag size="small" class="tab-count" effect="plain" round>{{ catalogs.privacy_blocklists.length }}</el-tag>
+                    </span>
+                </template>
                 <el-card shadow="never">
                     <template #header>
                         <div class="rules-head">
                             <strong>{{ $t('admin.memberCatalogs.blocklists') }}</strong>
                             <div class="rules-filters">
-                                <el-input v-model="blocklistFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="fetchCatalogs" />
-                                <el-button @click="fetchCatalogs">{{ $t('common.search') }}</el-button>
-                                <el-button type="primary" @click="openAddDialog('privacy_blocklists')">{{ $t('common.add') }}</el-button>
+                                <el-input v-model="blocklistFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="fetchCatalogs">
+                                    <template #prefix><el-icon><Search /></el-icon></template>
+                                </el-input>
+                                <el-button @click="fetchCatalogs"><el-icon><Search /></el-icon></el-button>
+                                <el-button type="primary" @click="openAddDialog('privacy_blocklists')"><el-icon><Plus /></el-icon>{{ $t('common.add') }}</el-button>
                             </div>
                         </div>
                     </template>
-                    <el-table :data="pagedRows('privacy_blocklists')" stripe>
+                    <el-table :data="pagedRows('privacy_blocklists')" stripe row-key="key">
                         <template #empty>
                             <div class="empty-state">
                                 <el-icon class="empty-icon"><Grid /></el-icon>
                                 <p class="empty-title">{{ $t('dashboard.noData') }}</p>
                             </div>
                         </template>
-                        <el-table-column :label="$t('admin.memberCatalogs.id')" prop="key" min-width="160" show-overflow-tooltip />
+                        <el-table-column :label="$t('admin.memberCatalogs.id')" prop="key" min-width="160" show-overflow-tooltip>
+                            <template #default="{ row }">
+                                <el-tag size="small" type="info" effect="plain" round>{{ row.key }}</el-tag>
+                            </template>
+                        </el-table-column>
                         <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="160" show-overflow-tooltip />
                         <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="280" show-overflow-tooltip />
-                        <el-table-column :label="$t('admin.memberCatalogs.entries')" prop="entries" width="120" align="right" />
-                        <el-table-column :label="$t('admin.memberCatalogs.updatedDays')" prop="days_ago" width="120" align="right" />
-                        <el-table-column :label="$t('common.actions')" width="160" fixed="right">
+                        <el-table-column :label="$t('admin.memberCatalogs.entries')" prop="entries" width="130" align="right">
+                            <template #default="{ row }">
+                                <strong>{{ formatNumber(row.entries) }}</strong>
+                            </template>
+                        </el-table-column>
+                        <el-table-column :label="$t('admin.memberCatalogs.updatedDays')" prop="days_ago" width="130" align="center">
+                            <template #default="{ row }">
+                                <el-tag v-if="row.days_ago <= 3" size="small" type="success" effect="light">{{ $t('admin.memberCatalogs.recent') }}</el-tag>
+                                <span v-else class="cell-sub">{{ row.days_ago }}d</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column :label="$t('common.actions')" width="140" fixed="right">
                             <template #default="{ $index }">
-                                <el-button text type="primary" @click="openEditDialog('privacy_blocklists', $index)">{{ $t('common.edit') }}</el-button>
-                                <el-button text type="danger" @click="removeRow('privacy_blocklists', $index)">{{ $t('common.delete') }}</el-button>
+                                <el-button circle size="small" @click="openEditDialog('privacy_blocklists', $index)"><el-icon><Edit /></el-icon></el-button>
+                                <el-button circle size="small" type="danger" @click="removeRow('privacy_blocklists', $index)"><el-icon><Delete /></el-icon></el-button>
                             </template>
                         </el-table-column>
                     </el-table>
@@ -118,103 +189,119 @@
 
             <!-- 家长（预设 + 分类）Tab：标准列表格式 + 分页 -->
             <el-tab-pane :label="$t('admin.memberCatalogs.tabParental')" name="parental">
-                <el-card shadow="never" style="margin-bottom: 16px;">
-                    <template #header>
-                        <div class="rules-head">
-                            <strong>{{ $t('admin.memberCatalogs.presets') }}</strong>
-                            <div class="rules-filters">
-                                <el-input v-model="presetFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="fetchCatalogs" />
-                                <el-button @click="fetchCatalogs">{{ $t('common.search') }}</el-button>
-                                <el-button type="primary" @click="openAddDialog('parental_presets')">{{ $t('common.add') }}</el-button>
-                            </div>
-                        </div>
-                    </template>
-                    <el-table :data="pagedRows('parental_presets')" stripe>
-                        <template #empty>
-                            <div class="empty-state">
-                                <el-icon class="empty-icon"><Grid /></el-icon>
-                                <p class="empty-title">{{ $t('dashboard.noData') }}</p>
+                <template #label>
+                    <span class="tab-label">
+                        <el-icon><Star /></el-icon>{{ $t('admin.memberCatalogs.tabParental') }}
+                        <el-tag size="small" class="tab-count" effect="plain" round>{{ catalogs.parental_presets.length + catalogs.parental_categories.length }}</el-tag>
+                    </span>
+                </template>
+                <div class="parental-grid">
+                    <el-card shadow="never" class="parental-card">
+                        <template #header>
+                            <div class="rules-head">
+                                <span class="rules-head__title"><el-icon><Star /></el-icon><strong>{{ $t('admin.memberCatalogs.presets') }}</strong></span>
+                                <div class="rules-filters">
+                                    <el-input v-model="presetFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="fetchCatalogs">
+                                        <template #prefix><el-icon><Search /></el-icon></template>
+                                    </el-input>
+                                    <el-button @click="fetchCatalogs"><el-icon><Search /></el-icon></el-button>
+                                    <el-button type="primary" @click="openAddDialog('parental_presets')"><el-icon><Plus /></el-icon>{{ $t('common.add') }}</el-button>
+                                </div>
                             </div>
                         </template>
-                        <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="160" show-overflow-tooltip />
-                        <el-table-column :label="$t('admin.memberCatalogs.icon')" min-width="320" show-overflow-tooltip>
-                            <template #default="{ row }">
-                                <div class="icon-cell">
-                                    <el-image v-if="row.icon" :src="row.icon" style="width:24px;height:24px;border-radius:4px" fit="cover" />
-                                    <span class="cell-sub">{{ row.icon || '-' }}</span>
+                        <el-table :data="pagedRows('parental_presets')" stripe row-key="name">
+                            <template #empty>
+                                <div class="empty-state">
+                                    <el-icon class="empty-icon"><Grid /></el-icon>
+                                    <p class="empty-title">{{ $t('dashboard.noData') }}</p>
                                 </div>
                             </template>
-                        </el-table-column>
-                        <el-table-column :label="$t('admin.memberCatalogs.category')" width="140">
-                            <template #default="{ row }">
-                                <el-tag size="small" effect="light">{{ row.category }}</el-tag>
-                            </template>
-                        </el-table-column>
-                        <el-table-column :label="$t('common.actions')" width="160" fixed="right">
-                            <template #default="{ $index }">
-                                <el-button text type="primary" @click="openEditDialog('parental_presets', $index)">{{ $t('common.edit') }}</el-button>
-                                <el-button text type="danger" @click="removeRow('parental_presets', $index)">{{ $t('common.delete') }}</el-button>
-                            </template>
-                        </el-table-column>
-                    </el-table>
-                    <div class="pagination-bar">
-                        <div class="pagination-total">
-                            {{ $t('common.totalPrefix') }} <strong>{{ filteredRows('parental_presets').length }}</strong> {{ $t('common.itemsSuffix') }}
-                        </div>
-                        <el-pagination
-                            v-model:current-page="presetsPage"
-                            v-model:page-size="presetsPerPage"
-                            :page-sizes="[10, 20, 50, 100]"
-                            :total="filteredRows('parental_presets').length"
-                            layout="sizes, prev, pager, next"
-                            background
-                            size="small"
-                        />
-                    </div>
-                </el-card>
-                <el-card shadow="never">
-                    <template #header>
-                        <div class="rules-head">
-                            <strong>{{ $t('admin.memberCatalogs.categories') }}</strong>
-                            <div class="rules-filters">
-                                <el-input v-model="categoryFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="fetchCatalogs" />
-                                <el-button @click="fetchCatalogs">{{ $t('common.search') }}</el-button>
-                                <el-button type="primary" @click="openAddDialog('parental_categories')">{{ $t('common.add') }}</el-button>
+                            <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="160" show-overflow-tooltip>
+                                <template #default="{ row }">
+                                    <div class="preset-cell">
+                                        <el-image v-if="row.icon" :src="row.icon" class="preset-cell__img" fit="cover" />
+                                        <el-icon v-else class="preset-cell__img preset-cell__img--placeholder"><Picture /></el-icon>
+                                        <span class="preset-cell__name">{{ row.name }}</span>
+                                    </div>
+                                </template>
+                            </el-table-column>
+                            <el-table-column :label="$t('admin.memberCatalogs.category')" width="120" align="center">
+                                <template #default="{ row }">
+                                    <el-tag size="small" :type="categoryTagType(row.category)" effect="light">{{ row.category }}</el-tag>
+                                </template>
+                            </el-table-column>
+                            <el-table-column :label="$t('common.actions')" width="120" fixed="right" align="center">
+                                <template #default="{ $index }">
+                                    <el-button circle size="small" @click="openEditDialog('parental_presets', $index)"><el-icon><Edit /></el-icon></el-button>
+                                    <el-button circle size="small" type="danger" @click="removeRow('parental_presets', $index)"><el-icon><Delete /></el-icon></el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                        <div class="pagination-bar">
+                            <div class="pagination-total">
+                                {{ $t('common.totalPrefix') }} <strong>{{ filteredRows('parental_presets').length }}</strong> {{ $t('common.itemsSuffix') }}
                             </div>
+                            <el-pagination
+                                v-model:current-page="presetsPage"
+                                v-model:page-size="presetsPerPage"
+                                :page-sizes="[10, 20, 50, 100]"
+                                :total="filteredRows('parental_presets').length"
+                                layout="sizes, prev, pager, next"
+                                background
+                                size="small"
+                            />
                         </div>
-                    </template>
-                    <el-table :data="pagedRows('parental_categories')" stripe>
-                        <template #empty>
-                            <div class="empty-state">
-                                <el-icon class="empty-icon"><Grid /></el-icon>
-                                <p class="empty-title">{{ $t('dashboard.noData') }}</p>
+                    </el-card>
+                    <el-card shadow="never" class="parental-card">
+                        <template #header>
+                            <div class="rules-head">
+                                <span class="rules-head__title"><el-icon><Files /></el-icon><strong>{{ $t('admin.memberCatalogs.categories') }}</strong></span>
+                                <div class="rules-filters">
+                                    <el-input v-model="categoryFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="fetchCatalogs">
+                                        <template #prefix><el-icon><Search /></el-icon></template>
+                                    </el-input>
+                                    <el-button @click="fetchCatalogs"><el-icon><Search /></el-icon></el-button>
+                                    <el-button type="primary" @click="openAddDialog('parental_categories')"><el-icon><Plus /></el-icon>{{ $t('common.add') }}</el-button>
+                                </div>
                             </div>
                         </template>
-                        <el-table-column :label="$t('admin.memberCatalogs.id')" prop="key" min-width="160" show-overflow-tooltip />
-                        <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="160" show-overflow-tooltip />
-                        <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="320" show-overflow-tooltip />
-                        <el-table-column :label="$t('common.actions')" width="160" fixed="right">
-                            <template #default="{ $index }">
-                                <el-button text type="primary" @click="openEditDialog('parental_categories', $index)">{{ $t('common.edit') }}</el-button>
-                                <el-button text type="danger" @click="removeRow('parental_categories', $index)">{{ $t('common.delete') }}</el-button>
+                        <el-table :data="pagedRows('parental_categories')" stripe row-key="key">
+                            <template #empty>
+                                <div class="empty-state">
+                                    <el-icon class="empty-icon"><Grid /></el-icon>
+                                    <p class="empty-title">{{ $t('dashboard.noData') }}</p>
+                                </div>
                             </template>
-                        </el-table-column>
-                    </el-table>
-                    <div class="pagination-bar">
-                        <div class="pagination-total">
-                            {{ $t('common.totalPrefix') }} <strong>{{ filteredRows('parental_categories').length }}</strong> {{ $t('common.itemsSuffix') }}
+                            <el-table-column :label="$t('admin.memberCatalogs.id')" prop="key" min-width="160" show-overflow-tooltip>
+                                <template #default="{ row }">
+                                    <el-tag size="small" type="info" effect="plain" round>{{ row.key }}</el-tag>
+                                </template>
+                            </el-table-column>
+                            <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="160" show-overflow-tooltip />
+                            <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="220" show-overflow-tooltip />
+                            <el-table-column :label="$t('common.actions')" width="120" fixed="right" align="center">
+                                <template #default="{ $index }">
+                                    <el-button circle size="small" @click="openEditDialog('parental_categories', $index)"><el-icon><Edit /></el-icon></el-button>
+                                    <el-button circle size="small" type="danger" @click="removeRow('parental_categories', $index)"><el-icon><Delete /></el-icon></el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                        <div class="pagination-bar">
+                            <div class="pagination-total">
+                                {{ $t('common.totalPrefix') }} <strong>{{ filteredRows('parental_categories').length }}</strong> {{ $t('common.itemsSuffix') }}
+                            </div>
+                            <el-pagination
+                                v-model:current-page="categoriesPage"
+                                v-model:page-size="categoriesPerPage"
+                                :page-sizes="[10, 20, 50, 100]"
+                                :total="filteredRows('parental_categories').length"
+                                layout="sizes, prev, pager, next"
+                                background
+                                size="small"
+                            />
                         </div>
-                        <el-pagination
-                            v-model:current-page="categoriesPage"
-                            v-model:page-size="categoriesPerPage"
-                            :page-sizes="[10, 20, 50, 100]"
-                            :total="filteredRows('parental_categories').length"
-                            layout="sizes, prev, pager, next"
-                            background
-                            size="small"
-                        />
-                    </div>
-                </el-card>
+                    </el-card>
+                </div>
             </el-tab-pane>
         </el-tabs>
     </ListPage>
@@ -240,16 +327,16 @@
                 <el-input v-model="rowForm.color" />
             </el-form-item>
             <el-form-item v-if="hasField('entries')" :label="$t('admin.memberCatalogs.entries')">
-                <el-input-number v-model="rowForm.entries" :min="0" />
+                <el-input-number v-model="rowForm.entries" :min="0" style="width: 100%" />
             </el-form-item>
             <el-form-item v-if="hasField('days_ago')" :label="$t('admin.memberCatalogs.updatedDays')">
-                <el-input-number v-model="rowForm.days_ago" :min="0" />
+                <el-input-number v-model="rowForm.days_ago" :min="0" style="width: 100%" />
             </el-form-item>
             <el-form-item v-if="hasField('category')" :label="$t('admin.memberCatalogs.category')">
                 <el-select v-model="rowForm.category" style="width:100%">
-                    <el-option label="website" value="website" />
-                    <el-option label="app" value="app" />
-                    <el-option label="game" value="game" />
+                    <el-option :label="$t('admin.memberCatalogs.catWebsite')" value="website" />
+                    <el-option :label="$t('admin.memberCatalogs.catApp')" value="app" />
+                    <el-option :label="$t('admin.memberCatalogs.catGame')" value="game" />
                 </el-select>
             </el-form-item>
         </el-form>
@@ -263,7 +350,7 @@
 <script setup>
 import { computed, ref, reactive, watch } from 'vue'
 import { ElButton, ElInput, ElInputNumber, ElMessage, ElMessageBox, ElOption, ElSelect, ElTable, ElTableColumn, ElTabs, ElTabPane, ElDialog, ElForm, ElFormItem, ElTag, ElImage, ElIcon } from 'element-plus'
-import { Grid } from '@element-plus/icons-vue'
+import { Delete, Edit, Files, Grid, Lock, Monitor, Picture, Plus, Search, Star } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
@@ -330,6 +417,18 @@ const totalItems = computed(() =>
     + catalogs.parental_presets.length
     + catalogs.parental_categories.length
 )
+
+const categoryTagType = (cat) => {
+    if (cat === 'website') return ''
+    if (cat === 'app') return 'warning'
+    if (cat === 'game') return 'success'
+    return 'info'
+}
+
+const formatNumber = (n) => {
+    if (n == null) return '-'
+    return n.toLocaleString()
+}
 
 // 过滤 + 分页：根据 tab 名称返回当前页的数据
 const filterMap = {
@@ -487,8 +586,60 @@ fetchAll()
 .catalog-tabs {
     background: #fff;
     padding: 16px;
-    border-radius: 6px;
+    border-radius: 8px;
 }
+
+/* ===== 概览统计卡片 ===== */
+.stat-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 20px;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+.stat-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+.stat-card__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    font-size: 22px;
+    color: #fff;
+}
+.stat-card--device .stat-card__icon { background: linear-gradient(135deg, #3b82f6, #06b6d4); }
+.stat-card--block  .stat-card__icon { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+.stat-card--preset .stat-card__icon { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+.stat-card--category .stat-card__icon { background: linear-gradient(135deg, #10b981, #06b6d4); }
+.stat-card__info { display: flex; flex-direction: column; gap: 2px; }
+.stat-card__label { font-size: 13px; color: #64748b; }
+.stat-card__value { font-size: 24px; font-weight: 700; color: #0f172a; line-height: 1.2; }
+
+/* ===== Tab 标签数量徽章 ===== */
+.tab-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.tab-count {
+    margin-left: 4px;
+    font-weight: 500;
+}
+
+/* ===== 表格头部 ===== */
 .rules-head {
     display: flex;
     align-items: center;
@@ -496,27 +647,69 @@ fetchAll()
     gap: 12px;
     flex-wrap: wrap;
 }
+.rules-head__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
 .rules-filters {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
 }
-.catalog-tabs :deep(.el-input__wrapper),
-.catalog-tabs :deep(.el-select__wrapper),
-.catalog-tabs :deep(.el-input-number),
-.catalog-tabs :deep(.el-input-number .el-input__wrapper),
-:deep(.el-dialog .el-input__wrapper),
-:deep(.el-dialog .el-select__wrapper),
-:deep(.el-dialog .el-input-number),
-:deep(.el-dialog .el-input-number .el-input__wrapper) {
-    min-height: 40px;
-}
-.user-cell, .profile-cell {
+
+/* ===== 表格单元格 ===== */
+.name-cell {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
+    align-items: center;
+    gap: 8px;
 }
+.name-cell__icon {
+    font-size: 16px;
+    color: #06b6d4;
+    flex-shrink: 0;
+}
+.name-cell__text {
+    font-weight: 500;
+    color: #0f172a;
+}
+
+.color-preview {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.color-preview__swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.preset-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.preset-cell__img {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+.preset-cell__img--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+    color: #94a3b8;
+}
+.preset-cell__name {
+    font-weight: 500;
+    color: #0f172a;
+}
+
 .cell-primary {
     color: #0f172a;
     font-weight: 500;
@@ -526,7 +719,7 @@ fetchAll()
     max-width: 100%;
 }
 .cell-sub {
-    font-size: 11px;
+    font-size: 12px;
     color: #94a3b8;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     white-space: nowrap;
@@ -534,12 +727,8 @@ fetchAll()
     text-overflow: ellipsis;
     max-width: 100%;
 }
-.icon-cell {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-}
+
+/* ===== 分页 ===== */
 .pagination-bar {
     display: flex;
     align-items: center;
@@ -557,7 +746,36 @@ fetchAll()
     font-weight: 600;
     margin: 0 2px;
 }
+
+/* ===== 空状态 ===== */
 .empty-state { padding: 40px 0; text-align: center; color: #64748b; }
 .empty-icon { font-size: 48px; color: #cbd5e1; margin-bottom: 12px; }
 .empty-title { font-size: 16px; font-weight: 600; color: #475569; margin: 0 0 4px; }
+
+/* ===== Parental 卡片网格（宽屏并排） ===== */
+.parental-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+.parental-card {
+    min-width: 0;
+}
+@media (max-width: 1100px) {
+    .parental-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===== 表单控件尺寸 ===== */
+.catalog-tabs :deep(.el-input__wrapper),
+.catalog-tabs :deep(.el-select__wrapper),
+.catalog-tabs :deep(.el-input-number),
+.catalog-tabs :deep(.el-input-number .el-input__wrapper),
+:deep(.el-dialog .el-input__wrapper),
+:deep(.el-dialog .el-select__wrapper),
+:deep(.el-dialog .el-input-number),
+:deep(.el-dialog .el-input-number .el-input__wrapper) {
+    min-height: 40px;
+}
 </style>
