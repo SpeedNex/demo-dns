@@ -343,22 +343,7 @@ const fetchData = async () => {
     try {
         const catalogResponse = await client.get('/user/catalogs')
         const catalogs = catalogResponse.data?.data || {}
-        if (Array.isArray(catalogs.privacy_blocklists) && catalogs.privacy_blocklists.length > 0) {
-            availableBlocklists.value = catalogs.privacy_blocklists.map((item) => ({
-                key: item.key,
-                name: item.name,
-                desc: item.desc,
-                entries: Number(item.entries || 0),
-                daysAgo: Number(item.days_ago || 0),
-            }))
-        }
-        if (Array.isArray(catalogs.device_models) && catalogs.device_models.length > 0) {
-            devices.value = catalogs.device_models.map((item) => ({
-                ...item,
-                name: displayText(item.name),
-                desc: displayText(item.desc),
-            }))
-        }
+
         const { data } = await client.get('/user/privacy', { params: { profile_id: currentProfileId.value } })
         const incoming = data.data || {}
         // 重新包装 blocklists 为响应式对象，保证 form.blocklists[key] 修改可追踪
