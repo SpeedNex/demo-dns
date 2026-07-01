@@ -145,6 +145,7 @@
                         <el-table-column :label="$t('admin.memberCatalogs.entries')" prop="entries" width="130" align="right">
                             <template #default="{ row }">
                                 <strong>{{ formatNumber(row.entries) }}</strong>
+                                <span class="cell-sub"> {{ $t('admin.memberCatalogs.entriesUnit') }}</span>
                             </template>
                         </el-table-column>
                         <el-table-column :label="$t('admin.memberCatalogs.updatedDays')" prop="days_ago" width="130" align="center">
@@ -217,7 +218,7 @@
                             </el-table-column>
                             <el-table-column :label="$t('admin.memberCatalogs.category')" width="120" align="center">
                                 <template #default="{ row }">
-                                    <el-tag size="small" :type="categoryTagType(row.category)" effect="light">{{ row.category }}</el-tag>
+                                    <el-tag size="small" :type="categoryTagType(row.category)" effect="light">{{ $t('admin.memberCatalogs.cat' + row.category.charAt(0).toUpperCase() + row.category.slice(1)) }}</el-tag>
                                 </template>
                             </el-table-column>
                             <el-table-column :label="$t('common.actions')" width="120" fixed="right" align="center">
