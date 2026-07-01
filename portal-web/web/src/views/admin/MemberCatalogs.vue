@@ -53,10 +53,10 @@
                         <div class="rules-head">
                             <strong>{{ $t('admin.memberCatalogs.deviceModels') }}</strong>
                             <div class="rules-filters">
-                                <el-input v-model="deviceModelFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="fetchCatalogs">
+                                <el-input v-model="deviceModelFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="deviceModelsPage = 1">
                                     <template #prefix><el-icon><Search /></el-icon></template>
                                 </el-input>
-                                <el-button @click="fetchCatalogs"><el-icon><Search /></el-icon></el-button>
+                                <el-button @click="deviceModelsPage = 1"><el-icon><Search /></el-icon></el-button>
                                 <el-button type="primary" @click="openAddDialog('device_models')"><el-icon><Plus /></el-icon>{{ $t('common.add') }}</el-button>
                             </div>
                         </div>
@@ -130,10 +130,10 @@
                         <div class="rules-head">
                             <strong>{{ $t('admin.memberCatalogs.blocklists') }}</strong>
                             <div class="rules-filters">
-                                <el-input v-model="blocklistFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="fetchCatalogs">
+                                <el-input v-model="blocklistFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="blocklistsPage = 1">
                                     <template #prefix><el-icon><Search /></el-icon></template>
                                 </el-input>
-                                <el-button @click="fetchCatalogs"><el-icon><Search /></el-icon></el-button>
+                                <el-button @click="blocklistsPage = 1"><el-icon><Search /></el-icon></el-button>
                                 <el-button type="primary" @click="openAddDialog('privacy_blocklists')"><el-icon><Plus /></el-icon>{{ $t('common.add') }}</el-button>
                             </div>
                         </div>
@@ -204,7 +204,7 @@
                                     <el-input v-model="presetFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="fetchCatalogs">
                                         <template #prefix><el-icon><Search /></el-icon></template>
                                     </el-input>
-                                    <el-button @click="fetchCatalogs"><el-icon><Search /></el-icon></el-button>
+                                    <el-button @click="presetsPage = 1"><el-icon><Search /></el-icon></el-button>
                                     <el-button type="primary" @click="openAddDialog('parental_presets')"><el-icon><Plus /></el-icon>{{ $t('common.add') }}</el-button>
                                 </div>
                             </div>
@@ -257,10 +257,10 @@
                             <div class="rules-head">
                                 <span class="rules-head__title"><el-icon><Files /></el-icon><strong>{{ $t('admin.memberCatalogs.categories') }}</strong></span>
                                 <div class="rules-filters">
-                                    <el-input v-model="categoryFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="fetchCatalogs">
+                                    <el-input v-model="categoryFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="categoriesPage = 1">
                                         <template #prefix><el-icon><Search /></el-icon></template>
                                     </el-input>
-                                    <el-button @click="fetchCatalogs"><el-icon><Search /></el-icon></el-button>
+                                    <el-button @click="categoriesPage = 1"><el-icon><Search /></el-icon></el-button>
                                     <el-button type="primary" @click="openAddDialog('parental_categories')"><el-icon><Plus /></el-icon>{{ $t('common.add') }}</el-button>
                                 </div>
                             </div>
@@ -349,7 +349,7 @@
 
 <script setup>
 import { computed, ref, reactive, watch } from 'vue'
-import { ElButton, ElInput, ElInputNumber, ElMessage, ElMessageBox, ElOption, ElSelect, ElTable, ElTableColumn, ElTabs, ElTabPane, ElDialog, ElForm, ElFormItem, ElTag, ElImage, ElIcon } from 'element-plus'
+import { ElButton, ElInput, ElInputNumber, ElMessage, ElOption, ElSelect, ElTable, ElTableColumn, ElTabs, ElTabPane, ElDialog, ElForm, ElFormItem, ElTag, ElImage, ElIcon } from 'element-plus'
 import { Delete, Edit, Files, Grid, Lock, Monitor, Picture, Plus, Search, Star } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import ListPage from '@/components/ListPage.vue'
@@ -366,13 +366,6 @@ const catalogs = reactive({
     parental_presets: [],
     parental_categories: [],
 })
-
-const rules = ref([])
-const rulesMeta = ref(null)
-const selectedRules = ref([])
-const ruleFilter = reactive({ list_type: 'block', domain: '' })
-const rulesPage = ref(1)
-const rulesPerPage = ref(20)
 
 // 4 个列表 tab 各自的分页 state
 const deviceModelsPage = ref(1)
@@ -466,75 +459,15 @@ watch(() => presetFilter.name, () => { presetsPage.value = 1 })
 watch(() => categoryFilter.name, () => { categoriesPage.value = 1 })
 
 const fetchAll = async () => {
-    await Promise.all([fetchCatalogs(), fetchRules()])
+    await fetchCatalogs()
 }
 
 const fetchCatalogs = async () => {
     try {
         const { data } = await client.get('/admin/member-catalogs')
         Object.assign(catalogs, data.data || {})
-    } catch (error) {
+    } catch {
         // 静默失败保留旧值
-    }
-}
-
-const handleSave = async () => {
-    saving.value = true
-    try {
-        await client.put('/admin/member-catalogs', catalogs)
-        ElMessage.success(t('admin.memberCatalogs.saved'))
-        await fetchCatalogs()
-    } catch (error) {
-        ElMessage.error(error.response?.data?.message || t('admin.memberCatalogs.saveFailed'))
-    } finally {
-        saving.value = false
-    }
-}
-
-const fetchRules = async () => {
-    try {
-        const { data } = await client.get('/admin/member-rules', {
-            params: {
-                list_type: ruleFilter.list_type,
-                domain: ruleFilter.domain,
-                page: rulesPage.value,
-                per_page: rulesPerPage.value,
-            },
-        })
-        rules.value = data.data || []
-        rulesMeta.value = data.meta || null
-    } catch (error) {
-        rules.value = []
-        rulesMeta.value = null
-    }
-}
-
-const deleteRule = async (id) => {
-    try {
-        await ElMessageBox.confirm(t('admin.memberCatalogs.confirmDeleteRule'), t('common.notice'), { type: 'warning' })
-        await client.delete(`/admin/member-rules/${id}`)
-        ElMessage.success(t('common.deleteSuccess'))
-        await fetchRules()
-    } catch (error) {
-        if (error !== 'cancel') {
-            ElMessage.error(t('common.deleteFailed'))
-        }
-    }
-}
-
-const batchDeleteRules = async () => {
-    try {
-        await ElMessageBox.confirm(t('admin.memberCatalogs.confirmBatchDeleteRules', { count: selectedRules.value.length }), t('common.notice'), { type: 'warning' })
-        await client.post('/admin/member-rules/batch-destroy', {
-            ids: selectedRules.value.map((item) => item.id),
-        })
-        ElMessage.success(t('common.deleteSuccess'))
-        selectedRules.value = []
-        await fetchRules()
-    } catch (error) {
-        if (error !== 'cancel') {
-            ElMessage.error(t('common.deleteFailed'))
-        }
     }
 }
 

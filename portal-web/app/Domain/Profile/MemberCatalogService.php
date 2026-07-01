@@ -94,6 +94,12 @@ final class MemberCatalogService
                 ['id' => 'windows', 'name' => 'Windows', 'desc' => 'Desktop and laptop devices', 'icon' => '/static/media/windows.svg', 'color' => '#0078d4'],
                 ['id' => 'apple', 'name' => 'Apple', 'desc' => 'iOS, macOS and tvOS', 'icon' => '/static/media/apple.svg', 'color' => '#555555'],
                 ['id' => 'android', 'name' => 'Android', 'desc' => 'Phones, tablets and Android TV', 'icon' => '/static/media/android.svg', 'color' => '#3ddc84'],
+                ['id' => 'samsung', 'name' => 'Samsung', 'desc' => 'Phones, tablets and smart TVs', 'icon' => '/static/media/samsung.svg', 'color' => '#1428a0'],
+                ['id' => 'xiaomi', 'name' => 'Xiaomi', 'desc' => 'Phones, tablets, smart TVs and routers', 'icon' => '/static/media/xiaomi.svg', 'color' => '#ff6900'],
+                ['id' => 'huawei', 'name' => 'Huawei', 'desc' => 'Phones and tablets', 'icon' => '/static/media/huawei.svg', 'color' => '#cf0a2c'],
+                ['id' => 'alexa', 'name' => 'Amazon Alexa', 'desc' => 'Alexa-enabled devices', 'icon' => '/static/media/alexa.svg', 'color' => '#00cae4'],
+                ['id' => 'roku', 'name' => 'Roku', 'desc' => 'All Roku streaming devices', 'icon' => '/static/media/roku.svg', 'color' => '#6f1d8f'],
+                ['id' => 'sonos', 'name' => 'Sonos', 'desc' => 'Smart speakers', 'icon' => '/static/media/sonos.svg', 'color' => '#da3d2e'],
             ],
             'privacy_blocklists' => [
                 ['key' => 'ads_tracking', 'name' => 'Ads & Tracking', 'desc' => 'Ad and tracker protection', 'entries' => 86222, 'days_ago' => 5],
