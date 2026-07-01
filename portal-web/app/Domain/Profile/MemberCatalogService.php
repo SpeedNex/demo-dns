@@ -23,10 +23,10 @@ final class MemberCatalogService
         }
 
         return [
-            'device_models' => $this->normalizeItems($stored['device_models'] ?? $defaults['device_models'], ['id', 'name', 'desc', 'icon', 'color']),
-            'privacy_blocklists' => $this->normalizeItems($stored['privacy_blocklists'] ?? $defaults['privacy_blocklists'], ['key', 'name', 'desc', 'entries', 'days_ago']),
-            'parental_presets' => $this->normalizeItems($stored['parental_presets'] ?? $defaults['parental_presets'], ['name', 'icon', 'category']),
-            'parental_categories' => $this->normalizeItems($stored['parental_categories'] ?? $defaults['parental_categories'], ['key', 'name', 'desc']),
+            'device_models' => $this->normalizeItems($stored['device_models'] ?? $defaults['device_models'], ['id', 'name', 'desc', 'icon', 'color', 'enabled']),
+            'privacy_blocklists' => $this->normalizeItems($stored['privacy_blocklists'] ?? $defaults['privacy_blocklists'], ['key', 'name', 'desc', 'entries', 'days_ago', 'enabled']),
+            'parental_presets' => $this->normalizeItems($stored['parental_presets'] ?? $defaults['parental_presets'], ['name', 'icon', 'category', 'enabled']),
+            'parental_categories' => $this->normalizeItems($stored['parental_categories'] ?? $defaults['parental_categories'], ['key', 'name', 'desc', 'enabled']),
         ];
     }
 
@@ -37,10 +37,10 @@ final class MemberCatalogService
     public function update(array $payload, int|string|null $actorId = null): array
     {
         $merged = [
-            'device_models' => $this->normalizeItems($payload['device_models'] ?? [], ['id', 'name', 'desc', 'icon', 'color']),
-            'privacy_blocklists' => $this->normalizeItems($payload['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'entries', 'days_ago']),
-            'parental_presets' => $this->normalizeItems($payload['parental_presets'] ?? [], ['name', 'icon', 'category']),
-            'parental_categories' => $this->normalizeItems($payload['parental_categories'] ?? [], ['key', 'name', 'desc']),
+            'device_models' => $this->normalizeItems($payload['device_models'] ?? [], ['id', 'name', 'desc', 'icon', 'color', 'enabled']),
+            'privacy_blocklists' => $this->normalizeItems($payload['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'entries', 'days_ago', 'enabled']),
+            'parental_presets' => $this->normalizeItems($payload['parental_presets'] ?? [], ['name', 'icon', 'category', 'enabled']),
+            'parental_categories' => $this->normalizeItems($payload['parental_categories'] ?? [], ['key', 'name', 'desc', 'enabled']),
         ];
 
         SystemConfig::query()->updateOrCreate(
@@ -63,13 +63,18 @@ final class MemberCatalogService
             ->map(function (array $item) use ($fields): array {
                 $normalized = [];
                 foreach ($fields as $field) {
-                    $normalized[$field] = $item[$field] ?? null;
+                    $value = $item[$field] ?? null;
+                    if ($field === 'enabled') {
+                        $normalized[$field] = (bool) $value;
+                    } else {
+                        $normalized[$field] = $value;
+                    }
                 }
 
                 return $normalized;
             })
             ->filter(function (array $item): bool {
-                foreach ($item as $value) {
+                foreach ($item as $field => $value) {
                     if (is_string($value) && trim($value) !== '') {
                         return true;
                     }
