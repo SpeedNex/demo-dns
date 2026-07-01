@@ -102,6 +102,7 @@
                     <el-table :data="pagedRows('parental_presets')" stripe size="small">
                         <template #empty><div class="empty">{{ $t('dashboard.noData') }}</div></template>
                         <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="160" />
+                        <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="300" show-overflow-tooltip />
                         <el-table-column :label="$t('admin.memberCatalogs.fieldType')" width="120">
                             <template #default="{ row }">
                                 <el-tag size="small" :type="getFieldTypeTag(row.field_type)" effect="plain">{{ getFieldTypeLabel(row.field_type) }}</el-tag>
@@ -365,13 +366,13 @@ const getFieldTypeTag = (fieldType) => {
 const fieldsPerTab = {
     device_models: ['key', 'name', 'desc', 'field_type', 'enabled', 'system'],
     privacy_blocklists: ['key', 'name', 'desc', 'field_type', 'entries', 'days_ago', 'enabled', 'system'],
-    parental_presets: ['name', 'icon', 'category', 'field_type', 'enabled', 'url'],
+    parental_presets: ['name', 'key', 'icon', 'category', 'field_type', 'desc', 'enabled', 'url', 'system'],
     parental_categories: ['key', 'name', 'desc', 'field_type', 'enabled'],
 }
 const createDefaults = {
     device_models: () => ({ key: '', name: '', desc: '', field_type: 'switch', enabled: true, system: false }),
     privacy_blocklists: () => ({ key: '', name: '', desc: '', field_type: 'switch', entries: 0, days_ago: 0, enabled: true, system: false, devices: [] }),
-    parental_presets: () => ({ name: '', icon: '', category: 'website', field_type: 'switch', enabled: true, url: '' }),
+    parental_presets: () => ({ name: '', key: '', icon: '', category: 'website', field_type: 'switch', desc: '', enabled: true, url: '', system: false }),
     parental_categories: () => ({ key: '', name: '', desc: '', field_type: 'multi', enabled: true }),
 }
 

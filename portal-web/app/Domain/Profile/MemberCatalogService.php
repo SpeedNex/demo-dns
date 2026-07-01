@@ -31,7 +31,10 @@ final class MemberCatalogService
                 $this->normalizeItems($stored['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'field_type', 'entries', 'days_ago', 'enabled', 'system', 'devices']),
                 $defaults['privacy_blocklists'] ?? []
             ),
-            'parental_presets' => $this->normalizeItems($stored['parental_presets'] ?? [], ['name', 'icon', 'category', 'field_type', 'enabled', 'url']),
+            'parental_presets' => $this->mergeSystemDefaults(
+                $this->normalizeItems($stored['parental_presets'] ?? [], ['name', 'key', 'icon', 'category', 'field_type', 'desc', 'enabled', 'url', 'system']),
+                $defaults['parental_presets'] ?? []
+            ),
             'parental_categories' => $this->normalizeItems($stored['parental_categories'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled']),
         ];
     }
@@ -45,7 +48,7 @@ final class MemberCatalogService
         $merged = [
             'device_models' => $this->normalizeItems($payload['device_models'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled', 'system']),
             'privacy_blocklists' => $this->normalizeItems($payload['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'field_type', 'entries', 'days_ago', 'enabled', 'system', 'devices']),
-            'parental_presets' => $this->normalizeItems($payload['parental_presets'] ?? [], ['name', 'icon', 'category', 'field_type', 'enabled', 'url']),
+            'parental_presets' => $this->normalizeItems($payload['parental_presets'] ?? [], ['name', 'key', 'icon', 'category', 'field_type', 'desc', 'enabled', 'url', 'system']),
             'parental_categories' => $this->normalizeItems($payload['parental_categories'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled']),
         ];
 
@@ -186,7 +189,11 @@ final class MemberCatalogService
                 ['key' => 'disguised_trackers', 'name' => '拦截伪装过的第三方跟踪器', 'desc' => '拦截伪装成第一方资源的第三方跟踪器，这些跟踪器试图绕过常规跟踪保护。', 'field_type' => 'switch', 'entries' => 0, 'days_ago' => 0, 'enabled' => true, 'system' => true],
                 ['key' => 'allow_marketing_links', 'name' => '允许营销和跟踪链接', 'desc' => '允许部分已知包含跟踪参数的营销链接正常访问，同时保留对恶意域名的拦截。', 'field_type' => 'switch', 'entries' => 0, 'days_ago' => 0, 'enabled' => false, 'system' => true],
             ],
-            'parental_presets' => [],
+            'parental_presets' => [
+                ['key' => 'safe_search', 'name' => '安全搜索', 'icon' => '🔍', 'category' => 'website', 'desc' => '在主流搜索引擎上过滤掉含有色情内容的搜索结果，包括图像和视频。如果有搜索引擎不支持此功能，则整个搜索引擎都将被拦截。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'youtube_restricted', 'name' => 'YouTube 受限模式', 'icon' => '📺', 'category' => 'website', 'desc' => '过滤掉 YouTube 上的成人视频，并阻止嵌入的成人视频在其他网站上观看。这也将隐藏所有评论。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'block_bypass', 'name' => '阻止绕过', 'icon' => '🛡️', 'category' => 'website', 'desc' => '阻止用户通过代理或 VPN 绕过家长监护设置。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+            ],
             'parental_categories' => [],
         ];
     }
