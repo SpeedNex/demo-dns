@@ -35,7 +35,7 @@
                         </el-button>
                     </div>
                     <el-divider />
-                    <el-button type="primary" size="small" plain @click="showCatalogModal = true">
+                    <el-button type="primary" size="small" plain @click="showBlocklistModal = true">
                         <el-icon><Plus /></el-icon>
                         {{ $t('privacy.catalogs.add') }}
                     </el-button>
@@ -71,7 +71,7 @@
                     </el-button>
                 </div>
                 <el-divider />
-                <el-button type="primary" size="small" plain @click="showCatalogModal = true; catalogActiveTab = 'devices'">
+                <el-button type="primary" size="small" plain @click="showDeviceModal = true">
                     <el-icon><Plus /></el-icon>
                     {{ $t('privacy.catalogs.addDevice') }}
                 </el-button>
@@ -104,83 +104,89 @@
             </div>
         </el-card>
 
-        <!-- 合并的分类目录对话框 -->
+        <!-- 添加拦截列表弹窗 -->
         <el-dialog
-            v-model="showCatalogModal"
-            :title="$t('privacy.catalogs.add')"
+            v-model="showBlocklistModal"
+            :title="$t('privacy.catalogs.addBlocklists')"
             :close-on-click-modal="false"
             width="620px"
-            class="catalog-dialog"
+            class="blocklist-dialog"
         >
             <div class="dialog-header">
-                <div class="dialog-title">{{ $t('privacy.catalogs.title') }}</div>
-                <div class="dialog-subtitle">{{ $t('privacy.catalogs.desc') }}</div>
+                <div class="dialog-title">{{ $t('privacy.catalogs.addBlocklists') }}</div>
+                <div class="dialog-subtitle">{{ $t('privacy.catalogs.blocklistsDesc') }}</div>
             </div>
-            <el-tabs v-model="catalogActiveTab" class="catalog-tabs">
-                <!-- 隐私拦截列表 -->
-                <el-tab-pane :label="$t('privacy.catalogs.blocklists')" name="blocklists">
-                    <el-input
-                        v-model="blocklistSearch"
-                        :placeholder="$t('logs.searchDomain')"
-                        clearable
-                        class="blocklist-search"
+            <el-input
+                v-model="blocklistSearch"
+                :placeholder="$t('logs.searchDomain')"
+                clearable
+                class="blocklist-search"
+            >
+                <template #prefix>
+                    <el-icon><Search /></el-icon>
+                </template>
+            </el-input>
+            <div class="catalog-list">
+                <div
+                    v-for="list in filteredAvailableBlocklists"
+                    :key="list.key"
+                    class="catalog-select-item"
+                >
+                    <div class="catalog-info">
+                        <div class="setting-label">{{ displayText(list.name) }}</div>
+                        <div class="setting-desc">{{ displayText(list.desc) }}</div>
+                        <div class="setting-meta">{{ list.entries.toLocaleString() }} {{ $t('privacy.blocklists.entries', { count: 1 }) }}</div>
+                    </div>
+                    <el-button
+                        size="small"
+                        type="primary"
+                        plain
+                        :disabled="Boolean(form.blocklists[list.key])"
+                        @click="addBlocklist(list)"
                     >
-                        <template #prefix>
-                            <el-icon><Search /></el-icon>
-                        </template>
-                    </el-input>
-                    <div class="catalog-list">
-                        <div
-                            v-for="list in filteredAvailableBlocklists"
-                            :key="list.key"
-                            class="catalog-select-item"
-                        >
-                            <div class="catalog-info">
-                                <div class="setting-label">{{ displayText(list.name) }}</div>
-                                <div class="setting-desc">{{ displayText(list.desc) }}</div>
-                                <div class="setting-meta">{{ list.entries.toLocaleString() }} {{ $t('privacy.blocklists.entries', { count: 1 }) }}</div>
-                            </div>
-                            <el-button
-                                size="small"
-                                type="primary"
-                                plain
-                                :disabled="Boolean(form.blocklists[list.key])"
-                                @click="addBlocklist(list)"
-                            >
-                                {{ form.blocklists[list.key] ? $t('privacy.blocklists.alreadyAdded') : $t('privacy.blocklists.add') }}
-                            </el-button>
-                        </div>
+                        {{ form.blocklists[list.key] ? $t('privacy.blocklists.alreadyAdded') : $t('privacy.blocklists.add') }}
+                    </el-button>
+                </div>
+            </div>
+        </el-dialog>
+
+        <!-- 添加设备弹窗 -->
+        <el-dialog
+            v-model="showDeviceModal"
+            :title="$t('privacy.catalogs.addDevice')"
+            :close-on-click-modal="false"
+            width="560px"
+            class="device-dialog"
+        >
+            <div class="dialog-header">
+                <div class="dialog-title">{{ $t('privacy.catalogs.addDevice') }}</div>
+                <div class="dialog-subtitle">{{ $t('privacy.blocklists.deepTrackingDesc') }}</div>
+            </div>
+            <div class="device-grid">
+                <div
+                    v-for="device in devices"
+                    :key="device.id"
+                    class="device-card"
+                    :class="{ active: form.deep_tracking_devices.includes(device.id) }"
+                    @click="addDevice(device)"
+                >
+                    <div class="device-card-icon" :style="{ background: device.color + '15' }">
+                        <img :src="device.icon" :alt="device.name" style="width: 26px; height: 26px;">
                     </div>
-                </el-tab-pane>
-                <!-- 设备型号 -->
-                <el-tab-pane :label="$t('privacy.catalogs.devices')" name="devices">
-                    <div class="device-grid">
-                        <div
-                            v-for="device in devices"
-                            :key="device.id"
-                            class="device-card"
-                            :class="{ active: form.deep_tracking_devices.includes(device.id) }"
-                            @click="addDevice(device)"
-                        >
-                            <div class="device-card-icon" :style="{ background: device.color + '15' }">
-                                <img :src="device.icon" :alt="device.name" style="width: 26px; height: 26px;">
-                            </div>
-                            <div class="device-card-content">
-                                <div class="setting-label">{{ device.name }}</div>
-                                <div class="setting-desc">{{ device.desc }}</div>
-                            </div>
-                            <div class="device-card-action">
-                                <el-icon v-if="form.deep_tracking_devices.includes(device.id)" class="check-icon">
-                                    <Check />
-                                </el-icon>
-                                <el-icon v-else class="add-icon">
-                                    <Plus />
-                                </el-icon>
-                            </div>
-                        </div>
+                    <div class="device-card-content">
+                        <div class="setting-label">{{ device.name }}</div>
+                        <div class="setting-desc">{{ device.desc }}</div>
                     </div>
-                </el-tab-pane>
-            </el-tabs>
+                    <div class="device-card-action">
+                        <el-icon v-if="form.deep_tracking_devices.includes(device.id)" class="check-icon">
+                            <Check />
+                        </el-icon>
+                        <el-icon v-else class="add-icon">
+                            <Plus />
+                        </el-icon>
+                    </div>
+                </div>
+            </div>
         </el-dialog>
     </Layout>
 </template>
@@ -198,8 +204,8 @@ const { t, locale } = useI18n()
 const { currentProfileId } = useCurrentProfile()
 const saving = ref(false)
 const hydrating = ref(false)
-const showCatalogModal = ref(false)
-const catalogActiveTab = ref('blocklists')
+const showBlocklistModal = ref(false)
+const showDeviceModal = ref(false)
 const blocklistSearch = ref('')
 let saveTimer = null
 
@@ -301,7 +307,7 @@ const removeBlocklist = async (key) => {
 }
 const addBlocklist = async (list) => {
     form.blocklists[list.key] = true
-    showCatalogModal.value = false
+    showBlocklistModal.value = false
     // 立即同步到后端
     await savePrivacy()
 }
@@ -646,36 +652,8 @@ watch(currentProfileId, fetchData)
     margin: 8px 0;
 }
 
-/* 分类目录弹窗（合并后） */
-:deep(.catalog-dialog .el-dialog__header) {
-    padding: 24px 24px 0;
-    margin-right: 0;
-}
-:deep(.catalog-dialog .el-dialog__body) {
-    padding: 16px 24px 24px;
-}
-.catalog-tabs :deep(.el-tabs__header) {
-    margin-bottom: 16px;
-}
-.catalog-tabs :deep(.el-tabs__nav-wrap::after) {
-    height: 1px;
-}
-.catalog-tabs :deep(.el-tabs__item) {
-    font-size: 14px;
-    padding: 0 20px;
-    height: 40px;
-    line-height: 40px;
-}
-.catalog-tabs :deep(.el-tabs__item.is-active) {
-    color: var(--color-primary);
-    font-weight: 600;
-}
-.catalog-tabs :deep(.el-tabs__active-bar) {
-    height: 2px;
-    border-radius: 1px;
-}
 .catalog-list {
-    max-height: 380px;
+    max-height: 420px;
     overflow-y: auto;
 }
 .catalog-select-item {

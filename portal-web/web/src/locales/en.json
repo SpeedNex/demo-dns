@@ -281,6 +281,8 @@
       "title": "Add Catalog",
       "desc": "Select blocklists or devices to add",
       "add": "Add Catalog",
+      "addBlocklists": "Add Blocklists",
+      "blocklistsDesc": "Select blocklists to use",
       "addDevice": "Add Device",
       "blocklists": "Blocklists",
       "devices": "Devices"
