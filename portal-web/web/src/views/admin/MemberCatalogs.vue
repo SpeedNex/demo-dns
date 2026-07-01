@@ -164,16 +164,28 @@
         </el-tabs>
     </ListPage>
 
-    <el-dialog v-model="showRowDialog" :title="editingIndex === null ? $t('common.add') : $t('common.edit')" width="720">
+    <el-dialog v-model="showRowDialog" :title="editingIndex === null ? $t('common.add') : $t('common.edit')" width="880">
         <el-form :model="rowForm" label-position="top">
-            <el-form-item v-if="hasField('key')" :label="$t('admin.memberCatalogs.code')">
+            <el-form-item v-if="hasField('name')" :label="$t('admin.memberCatalogs.name')" required>
+                <el-input v-model="rowForm.name" />
+            </el-form-item>
+            <el-form-item v-if="hasField('key')" :label="$t('admin.memberCatalogs.code')" required>
                 <el-input v-model="rowForm.key" />
             </el-form-item>
-            <el-form-item v-if="hasField('id')" :label="$t('admin.memberCatalogs.code')">
+            <el-form-item v-if="hasField('id')" :label="$t('admin.memberCatalogs.code')" required>
                 <el-input v-model="rowForm.id" />
             </el-form-item>
-            <el-form-item v-if="hasField('name')" :label="$t('admin.memberCatalogs.name')">
-                <el-input v-model="rowForm.name" />
+            <el-form-item v-if="hasField('field_type')" :label="$t('admin.memberCatalogs.fieldType')">
+                <el-select v-model="rowForm.field_type" style="width:100%">
+                    <el-option :label="$t('admin.memberCatalogs.fieldTypeSwitch')" value="switch" />
+                    <el-option :label="$t('admin.memberCatalogs.fieldTypeMulti')" value="multi" />
+                </el-select>
+            </el-form-item>
+            <el-form-item v-if="hasField('entries')" :label="$t('admin.memberCatalogs.entries')">
+                <el-input-number v-model="rowForm.entries" :min="0" style="width: 100%" />
+            </el-form-item>
+            <el-form-item v-if="hasField('days_ago')" :label="$t('admin.memberCatalogs.updatedDays')">
+                <el-input-number v-model="rowForm.days_ago" :min="0" style="width: 100%" />
             </el-form-item>
             <el-form-item v-if="hasField('desc')" :label="$t('admin.memberCatalogs.description')">
                 <el-input v-model="rowForm.desc" type="textarea" :rows="2" />
@@ -187,9 +199,6 @@
             <el-form-item v-if="hasField('color')" :label="$t('admin.memberCatalogs.color')">
                 <el-input v-model="rowForm.color" />
             </el-form-item>
-            <el-form-item v-if="hasField('days_ago')" :label="$t('admin.memberCatalogs.updatedDays')">
-                <el-input-number v-model="rowForm.days_ago" :min="0" style="width: 100%" />
-            </el-form-item>
             <el-form-item v-if="hasField('category')" :label="$t('admin.memberCatalogs.category')">
                 <el-select v-model="rowForm.category" style="width:100%">
                     <el-option :label="$t('admin.memberCatalogs.catWebsite')" value="website" />
@@ -199,12 +208,6 @@
             </el-form-item>
             <el-form-item v-if="hasField('enabled')" :label="$t('admin.memberCatalogs.status')">
                 <el-switch v-model="rowForm.enabled" />
-            </el-form-item>
-            <el-form-item v-if="hasField('field_type')" :label="$t('admin.memberCatalogs.fieldType')">
-                <el-select v-model="rowForm.field_type" style="width:100%">
-                    <el-option :label="$t('admin.memberCatalogs.fieldTypeSwitch')" value="switch" />
-                    <el-option :label="$t('admin.memberCatalogs.fieldTypeMulti')" value="multi" />
-                </el-select>
             </el-form-item>
 
             <!-- 深度跟踪保护 → 设备管理 -->
@@ -361,13 +364,13 @@ const getFieldTypeTag = (fieldType) => {
 
 const fieldsPerTab = {
     device_models: ['key', 'name', 'desc', 'field_type', 'enabled', 'system'],
-    privacy_blocklists: ['key', 'name', 'desc', 'field_type', 'days_ago', 'enabled', 'system'],
+    privacy_blocklists: ['key', 'name', 'desc', 'field_type', 'entries', 'days_ago', 'enabled', 'system'],
     parental_presets: ['name', 'icon', 'category', 'field_type', 'enabled', 'url'],
     parental_categories: ['key', 'name', 'desc', 'field_type', 'enabled'],
 }
 const createDefaults = {
     device_models: () => ({ key: '', name: '', desc: '', field_type: 'switch', enabled: true, system: false }),
-    privacy_blocklists: () => ({ key: '', name: '', desc: '', field_type: 'switch', days_ago: 0, enabled: true, system: false, devices: [] }),
+    privacy_blocklists: () => ({ key: '', name: '', desc: '', field_type: 'switch', entries: 0, days_ago: 0, enabled: true, system: false, devices: [] }),
     parental_presets: () => ({ name: '', icon: '', category: 'website', field_type: 'switch', enabled: true, url: '' }),
     parental_categories: () => ({ key: '', name: '', desc: '', field_type: 'multi', enabled: true }),
 }
