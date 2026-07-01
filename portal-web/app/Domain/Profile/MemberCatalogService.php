@@ -90,37 +90,10 @@ final class MemberCatalogService
     private function defaults(): array
     {
         return [
-            'device_models' => [
-                ['id' => 'windows', 'name' => 'Windows', 'desc' => 'Desktop and laptop devices', 'icon' => '/static/media/windows.svg', 'color' => '#0078d4'],
-                ['id' => 'apple', 'name' => 'Apple', 'desc' => 'iOS, macOS and tvOS', 'icon' => '/static/media/apple.svg', 'color' => '#555555'],
-                ['id' => 'android', 'name' => 'Android', 'desc' => 'Phones, tablets and Android TV', 'icon' => '/static/media/android.svg', 'color' => '#3ddc84'],
-                ['id' => 'samsung', 'name' => 'Samsung', 'desc' => 'Phones, tablets and smart TVs', 'icon' => '/static/media/samsung.svg', 'color' => '#1428a0'],
-                ['id' => 'xiaomi', 'name' => 'Xiaomi', 'desc' => 'Phones, tablets, smart TVs and routers', 'icon' => '/static/media/xiaomi.svg', 'color' => '#ff6900'],
-                ['id' => 'huawei', 'name' => 'Huawei', 'desc' => 'Phones and tablets', 'icon' => '/static/media/huawei.svg', 'color' => '#cf0a2c'],
-                ['id' => 'alexa', 'name' => 'Amazon Alexa', 'desc' => 'Alexa-enabled devices', 'icon' => '/static/media/alexa.svg', 'color' => '#00cae4'],
-                ['id' => 'roku', 'name' => 'Roku', 'desc' => 'All Roku streaming devices', 'icon' => '/static/media/roku.svg', 'color' => '#6f1d8f'],
-                ['id' => 'sonos', 'name' => 'Sonos', 'desc' => 'Smart speakers', 'icon' => '/static/media/sonos.svg', 'color' => '#da3d2e'],
-            ],
-            'privacy_blocklists' => [
-                ['key' => 'ads_tracking', 'name' => 'Ads & Tracking', 'desc' => 'Ad and tracker protection', 'entries' => 86222, 'days_ago' => 5],
-                ['key' => 'third_party_tracking', 'name' => 'Third-party Tracking', 'desc' => 'Cross-site tracking protection', 'entries' => 45678, 'days_ago' => 3],
-                ['key' => 'phishing', 'name' => 'Phishing', 'desc' => 'Known phishing domains', 'entries' => 32100, 'days_ago' => 2],
-                ['key' => 'malware', 'name' => 'Malware', 'desc' => 'Known malware domains', 'entries' => 28900, 'days_ago' => 2],
-            ],
-            'parental_presets' => [
-                ['name' => 'TikTok', 'icon' => 'https://favicons.nextdns.io/hex:7777772e74696b746f6b2e636f6d@1x.png', 'category' => 'website'],
-                ['name' => 'Instagram', 'icon' => 'https://favicons.nextdns.io/hex:7777772e696e7374616772616d2e636f6d@1x.png', 'category' => 'app'],
-                ['name' => 'YouTube', 'icon' => 'https://favicons.nextdns.io/hex:7777772e796f75747562652e636f6d@1x.png', 'category' => 'website'],
-                ['name' => 'Discord', 'icon' => 'https://favicons.nextdns.io/hex:646973636f72646170702e636f6d@1x.png', 'category' => 'app'],
-                ['name' => 'Roblox', 'icon' => 'https://favicons.nextdns.io/hex:7777772e726f626c6f782e636f6d@1x.png', 'category' => 'game'],
-            ],
-            'parental_categories' => [
-                ['key' => 'adult', 'name' => 'Adult Content', 'desc' => 'Adult and explicit content'],
-                ['key' => 'gambling', 'name' => 'Gambling', 'desc' => 'Betting and gambling services'],
-                ['key' => 'social', 'name' => 'Social Media', 'desc' => 'Social networks and communities'],
-                ['key' => 'gaming', 'name' => 'Gaming', 'desc' => 'Gaming platforms and launchers'],
-                ['key' => 'streaming', 'name' => 'Streaming', 'desc' => 'Video and live streaming'],
-            ],
+            'device_models' => [],
+            'privacy_blocklists' => [],
+            'parental_presets' => [],
+            'parental_categories' => [],
         ];
     }
 }
