@@ -44,15 +44,28 @@ final class ProfilePublishApplicationService
         $blockedItems = $parentalSettings['blocked_items'] ?? [];
         if (! empty($blockedItems) && is_array($blockedItems)) {
             foreach ($blockedItems as $item) {
-                if (empty($item['name'])) {
+                $name = $item['name'] ?? '';
+                if (empty($name)) {
                     continue;
                 }
+
+                // 如果名称不是域名格式，尝试转换为域名（小写+无空格）
+                $domain = $name;
+                if (! str_contains($domain, '.')) {
+                    // 尝试常见的域名映射或跳过
+                    $domain = strtolower(str_replace(' ', '', $domain)) . '.com';
+                }
+
+                if (! str_contains($domain, '.')) {
+                    continue;
+                }
+
                 $category = $item['category'] ?? 'default';
                 $rules[] = [
                     'list_type' => 'category:parental:'.$category,
                     'match_type' => 'exact',
-                    'domain' => $item['name'],
-                    'normalized_domain' => $item['name'],
+                    'domain' => $domain,
+                    'normalized_domain' => $domain,
                     'action' => 'block',
                     'category' => 'parental',
                     'enabled' => true,

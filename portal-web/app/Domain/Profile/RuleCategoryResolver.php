@@ -48,6 +48,12 @@ final class RuleCategoryResolver
         $out = [];
         foreach ($rows as $row) {
             $domain = strtolower(trim((string) $row->domain));
+            
+            // 清理 adblock 格式: ||domain^ 或 ||domain 或 domain^
+            $domain = preg_replace('/^\\|\\|/', '', $domain);
+            $domain = preg_replace('/\\^$/', '', $domain);
+            $domain = trim($domain);
+            
             if ($domain === '' || strlen($domain) > 255) {
                 continue;
             }
