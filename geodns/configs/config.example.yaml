@@ -1,5 +1,8 @@
 server:
   listen_addr: ":5354"
+  # DNS 监听地址。配置后启用 DNS 协议服务，通过标准 DNS A/AAAA 查询返回 resolver IP。
+  # 设置为 "disabled" 或空则禁用 DNS 服务器。
+  listen_dns_addr: ":53"
   # 2026-06-15: portal-web hosts the health-view endpoint now.
   console_health_url: "http://127.0.0.1:8081/api/v1/internal/geodns/health-view"
   # 必须与 portal-web 中 INTERNAL_SHARED_TOKEN 保持一致；portal 中间件
@@ -9,3 +12,8 @@ server:
   refresh_interval: "15s"
 routing:
   global_fallback_region: "global"
+  # serve_domain 是 GeoDNS 服务的域名。
+  # 配置后只对此域名（及其子域名）的 A/AAAA 查询返回 resolver IP。
+  # 例如 "dns.example.com" → 查询 dns.example.com 返回 resolver IP
+  # 留空则响应所有域名。
+  # serve_domain: "dns.example.com"

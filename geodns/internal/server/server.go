@@ -21,6 +21,7 @@ type Server struct {
 	router    *router.Router
 	client    healthview.Client
 	heartbeat *node.HeartbeatClient
+	dnsServer *DNSServer
 	startTime time.Time
 
 	mu   sync.RWMutex
@@ -55,14 +56,15 @@ func New(cfg *config.Config) *Server {
 	}
 
 	return &Server{
-		cfg:       cfg,
-		router:    r,
+		cfg:    cfg,
+		router: r,
 		client: healthview.Client{
 			BaseURL:    cfg.Server.ConsoleHealthURL,
 			Token:      cfg.HealthViewToken(),
 			HTTPClient: &http.Client{Timeout: timeout},
 		},
 		heartbeat: hb,
+		dnsServer: NewDNSServer(cfg, r),
 		startTime: time.Now(),
 	}
 }
@@ -105,7 +107,7 @@ func (s *Server) Run(ctx context.Context) error {
 
 	serverErr := make(chan error, 1)
 	go func() {
-		log.Printf("geodns: listening on %s (refresh=%s, source=%s)",
+		log.Printf("geodns: HTTP listening on %s (refresh=%s, source=%s)",
 			s.cfg.Server.ListenAddr, s.cfg.RefreshDuration(), s.cfg.Server.ConsoleHealthURL)
 		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			serverErr <- err
@@ -113,6 +115,21 @@ func (s *Server) Run(ctx context.Context) error {
 		}
 		serverErr <- nil
 	}()
+
+	// 启动 DNS 服务器（如果配置了 DNS 监听地址）
+	dnsAddr := s.cfg.DNSListenAddr()
+	dnsErrChan := make(chan error, 1)
+	if dnsAddr != "" && dnsAddr != "disabled" {
+		go func() {
+			log.Printf("geodns: DNS server starting on %s", dnsAddr)
+			if err := s.dnsServer.Run(ctx, dnsAddr); err != nil && !errors.Is(err, context.Canceled) {
+				dnsErrChan <- err
+			}
+			dnsErrChan <- nil
+		}()
+	} else {
+		dnsErrChan <- nil
+	}
 
 	for {
 		select {
@@ -128,6 +145,10 @@ func (s *Server) Run(ctx context.Context) error {
 				return err
 			}
 			return nil
+		case err := <-dnsErrChan:
+			if err != nil {
+				log.Printf("geodns: DNS server error: %v", err)
+			}
 		case <-refreshTicker.C:
 			if err := s.refreshOnce(ctx); err != nil {
 				log.Printf("geodns: health view refresh failed: %v", err)
@@ -163,6 +184,11 @@ func (s *Server) refreshOnce(ctx context.Context) error {
 	s.mu.Lock()
 	s.view = view
 	s.mu.Unlock()
+
+	// 同步更新 DNS 服务器的健康视图
+	if s.dnsServer != nil {
+		s.dnsServer.UpdateView(view)
+	}
 
 	log.Printf("geodns: refreshed health view: %d node(s), generated_at=%s, ttl=%ds",
 		len(view.Nodes), view.GeneratedAt.Format(time.RFC3339), view.TTLSeconds)

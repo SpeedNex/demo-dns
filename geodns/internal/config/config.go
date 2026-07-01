@@ -26,6 +26,9 @@ type RoutingConfig struct {
 	GlobalFallbackRegion string   `yaml:"global_fallback_region"`
 	AllowedRegions      []string `yaml:"allowed_regions,omitempty"`
 	OverloadThreshold   float64  `yaml:"overload_threshold,omitempty"`
+	// ServeDomain 是 GeoDNS 服务的域名，对此域名的 A/AAAA 查询返回 resolver IP。
+	// 为空则响应所有域名。
+	ServeDomain         string   `yaml:"serve_domain,omitempty"`
 }
 
 // NodeConfig 节点鉴权配置。
@@ -118,6 +121,13 @@ func (c *Config) DNSListenAddr() string {
 		return c.Server.ListenDNSAddr
 	}
 	return ":53"
+}
+
+// ServeDomain 返回 GeoDNS 服务的域名。
+// 例如 "dns.example.com"，对此域名的 A/AAAA 查询将返回 resolver IP。
+// 为空则响应所有域名。
+func (c *Config) ServeDomain() string {
+	return c.Routing.ServeDomain
 }
 
 func Load(path string) (*Config, error) {
