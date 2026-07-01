@@ -28,7 +28,7 @@ final class MemberCatalogService
                 $defaults['device_models'] ?? []
             ),
             'privacy_blocklists' => $this->mergeSystemDefaults(
-                $this->normalizeItems($stored['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'field_type', 'entries', 'days_ago', 'enabled', 'system', 'devices']),
+                $this->normalizeItems($stored['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'field_type', 'days_ago', 'enabled', 'system', 'devices']),
                 $defaults['privacy_blocklists'] ?? []
             ),
             'parental_presets' => $this->mergeSystemDefaults(
@@ -47,7 +47,7 @@ final class MemberCatalogService
     {
         $merged = [
             'device_models' => $this->normalizeItems($payload['device_models'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled', 'system']),
-            'privacy_blocklists' => $this->normalizeItems($payload['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'field_type', 'entries', 'days_ago', 'enabled', 'system', 'devices']),
+            'privacy_blocklists' => $this->normalizeItems($payload['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'field_type', 'days_ago', 'enabled', 'system', 'devices']),
             'parental_presets' => $this->normalizeItems($payload['parental_presets'] ?? [], ['name', 'key', 'icon', 'category', 'field_type', 'desc', 'enabled', 'url', 'system']),
             'parental_categories' => $this->normalizeItems($payload['parental_categories'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled']),
         ];
@@ -179,15 +179,15 @@ final class MemberCatalogService
                 ['key' => 'block_csam', 'name' => '拦截儿童色情内容', 'desc' => '拦截包含儿童性虐待材料的网站。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
             ],
             'privacy_blocklists' => [
-                ['key' => 'deep_tracking_protection', 'name' => '深度跟踪保护', 'desc' => '拦截通常在操作系统级运行的深度跟踪软件，这些跟踪软件知道你在设备上的所有行为。这可能包括你访问的所有网站、你输入的所有内容或你的位置。', 'field_type' => 'multi', 'entries' => 0, 'days_ago' => 0, 'enabled' => true, 'system' => true, 'devices' => [
+                ['key' => 'deep_tracking_protection', 'name' => '深度跟踪保护', 'desc' => '拦截通常在操作系统级运行的深度跟踪软件，这些跟踪软件知道你在设备上的所有行为。这可能包括你访问的所有网站、你输入的所有内容或你的位置。', 'field_type' => 'multi', 'days_ago' => 0, 'enabled' => true, 'system' => true, 'devices' => [
                     ['key' => 'iphone', 'name' => 'iPhone', 'icon' => '📱', 'enabled' => true],
                     ['key' => 'android', 'name' => 'Android', 'icon' => '🤖', 'enabled' => true],
                     ['key' => 'windows', 'name' => 'Windows', 'icon' => '🖥️', 'enabled' => true],
                     ['key' => 'macos', 'name' => 'macOS', 'icon' => '💻', 'enabled' => true],
                     ['key' => 'router', 'name' => '路由器', 'icon' => '📡', 'enabled' => false],
                 ]],
-                ['key' => 'disguised_trackers', 'name' => '拦截伪装过的第三方跟踪器', 'desc' => '拦截伪装成第一方资源的第三方跟踪器，这些跟踪器试图绕过常规跟踪保护。', 'field_type' => 'switch', 'entries' => 0, 'days_ago' => 0, 'enabled' => true, 'system' => true],
-                ['key' => 'allow_marketing_links', 'name' => '允许营销和跟踪链接', 'desc' => '允许部分已知包含跟踪参数的营销链接正常访问，同时保留对恶意域名的拦截。', 'field_type' => 'switch', 'entries' => 0, 'days_ago' => 0, 'enabled' => false, 'system' => true],
+                ['key' => 'disguised_trackers', 'name' => '拦截伪装过的第三方跟踪器', 'desc' => '拦截伪装成第一方资源的第三方跟踪器，这些跟踪器试图绕过常规跟踪保护。', 'field_type' => 'switch', 'days_ago' => 0, 'enabled' => true, 'system' => true],
+                ['key' => 'allow_marketing_links', 'name' => '允许营销和跟踪链接', 'desc' => '允许部分已知包含跟踪参数的营销链接正常访问，同时保留对恶意域名的拦截。', 'field_type' => 'switch', 'days_ago' => 0, 'enabled' => false, 'system' => true],
             ],
             'parental_presets' => [
                 ['key' => 'safe_search', 'name' => '安全搜索', 'icon' => '🔍', 'category' => 'website', 'desc' => '在主流搜索引擎上过滤掉含有色情内容的搜索结果，包括图像和视频。如果有搜索引擎不支持此功能，则整个搜索引擎都将被拦截。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],

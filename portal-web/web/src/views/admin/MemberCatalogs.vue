@@ -34,7 +34,7 @@
                             <el-switch v-model="row.enabled" @change="toggleRow('device_models', row)" />
                         </template>
                     </el-table-column>
-                    <el-table-column :label="$t('common.actions')" width="100" fixed="right">
+                    <el-table-column :label="$t('common.actions')" width="140" fixed="right">
                         <template #default="{ row, $index }">
                             <el-button link size="small" @click="openEditDialog('device_models', $index)"><el-icon><Edit /></el-icon></el-button>
                             <el-button v-if="!row.system" link size="small" type="danger" @click="removeRow('device_models', $index)"><el-icon><Delete /></el-icon></el-button>
@@ -73,7 +73,7 @@
                             <el-switch v-model="row.enabled" @change="toggleRow('privacy_blocklists', row)" />
                         </template>
                     </el-table-column>
-                    <el-table-column :label="$t('common.actions')" width="100" fixed="right">
+                    <el-table-column :label="$t('common.actions')" width="140" fixed="right">
                         <template #default="{ row, $index }">
                             <el-button link size="small" @click="openEditDialog('privacy_blocklists', $index)"><el-icon><Edit /></el-icon></el-button>
                             <el-button v-if="!row.system" link size="small" type="danger" @click="removeRow('privacy_blocklists', $index)"><el-icon><Delete /></el-icon></el-button>
@@ -114,7 +114,7 @@
                                 <el-switch v-model="row.enabled" @change="toggleRow('parental_presets', row)" />
                             </template>
                         </el-table-column>
-                        <el-table-column :label="$t('common.actions')" width="100" fixed="right">
+                        <el-table-column :label="$t('common.actions')" width="140" fixed="right">
                             <template #default="{ $index }">
                                 <el-button link size="small" @click="openEditDialog('parental_presets', $index)"><el-icon><Edit /></el-icon></el-button>
                                 <el-button link size="small" type="danger" @click="removeRow('parental_presets', $index)"><el-icon><Delete /></el-icon></el-button>
@@ -149,7 +149,7 @@
                                 <el-switch v-model="row.enabled" @change="toggleRow('parental_categories', row)" />
                             </template>
                         </el-table-column>
-                        <el-table-column :label="$t('common.actions')" width="100" fixed="right">
+                        <el-table-column :label="$t('common.actions')" width="140" fixed="right">
                             <template #default="{ $index }">
                                 <el-button link size="small" @click="openEditDialog('parental_categories', $index)"><el-icon><Edit /></el-icon></el-button>
                                 <el-button link size="small" type="danger" @click="removeRow('parental_categories', $index)"><el-icon><Delete /></el-icon></el-button>
@@ -181,9 +181,6 @@
                     <el-option :label="$t('admin.memberCatalogs.fieldTypeSwitch')" value="switch" />
                     <el-option :label="$t('admin.memberCatalogs.fieldTypeMulti')" value="multi" />
                 </el-select>
-            </el-form-item>
-            <el-form-item v-if="hasField('entries')" :label="$t('admin.memberCatalogs.entries')">
-                <el-input-number v-model="rowForm.entries" :min="0" style="width: 100%" />
             </el-form-item>
             <el-form-item v-if="hasField('days_ago')" :label="$t('admin.memberCatalogs.updatedDays')">
                 <el-input-number v-model="rowForm.days_ago" :min="0" style="width: 100%" />
@@ -230,7 +227,7 @@
                                 <el-switch v-model="row.enabled" size="small" />
                             </template>
                         </el-table-column>
-                        <el-table-column :label="$t('common.actions')" width="90" align="center">
+                        <el-table-column :label="$t('common.actions')" width="120" align="center">
                             <template #default="{ $index }">
                                 <el-button link size="small" @click="openDeviceDialog($index)"><el-icon><Edit /></el-icon></el-button>
                                 <el-button link size="small" type="danger" @click="removeDevice($index)"><el-icon><Delete /></el-icon></el-button>
@@ -365,13 +362,13 @@ const getFieldTypeTag = (fieldType) => {
 
 const fieldsPerTab = {
     device_models: ['key', 'name', 'desc', 'field_type', 'enabled', 'system'],
-    privacy_blocklists: ['key', 'name', 'desc', 'field_type', 'entries', 'days_ago', 'enabled', 'system'],
+    privacy_blocklists: ['key', 'name', 'desc', 'field_type', 'days_ago', 'enabled', 'system'],
     parental_presets: ['name', 'key', 'icon', 'category', 'field_type', 'desc', 'enabled', 'url', 'system'],
     parental_categories: ['key', 'name', 'desc', 'field_type', 'enabled'],
 }
 const createDefaults = {
     device_models: () => ({ key: '', name: '', desc: '', field_type: 'switch', enabled: true, system: false }),
-    privacy_blocklists: () => ({ key: '', name: '', desc: '', field_type: 'switch', entries: 0, days_ago: 0, enabled: true, system: false, devices: [] }),
+    privacy_blocklists: () => ({ key: '', name: '', desc: '', field_type: 'switch', days_ago: 0, enabled: true, system: false, devices: [] }),
     parental_presets: () => ({ name: '', key: '', icon: '', category: 'website', field_type: 'switch', desc: '', enabled: true, url: '', system: false }),
     parental_categories: () => ({ key: '', name: '', desc: '', field_type: 'multi', enabled: true }),
 }
