@@ -34,7 +34,7 @@
                                 <span>{{ $t('admin.protectionPolicies.securityProtection') }}</span>
                             </div>
                         </template>
-                        <el-form label-position="left" label-width="220px">
+                        <el-form label-position="left" class="policy-form">
                             <!-- 威胁情报 -->
                             <el-form-item>
                                 <div class="setting-row">
@@ -281,7 +281,7 @@
                                 <span>{{ $t('admin.protectionPolicies.privacy') }}</span>
                             </div>
                         </template>
-                        <el-form label-position="left" label-width="220px">
+                        <el-form label-position="left" class="policy-form">
                             <el-form-item>
                                 <div class="setting-row">
                                     <div class="setting-info">
@@ -357,7 +357,7 @@
                                 <span>{{ $t('admin.protectionPolicies.family') }}</span>
                             </div>
                         </template>
-                        <el-form label-position="left" label-width="220px">
+                        <el-form label-position="left" class="policy-form">
                             <el-form-item>
                                 <div class="setting-row">
                                     <div class="setting-info">
@@ -784,45 +784,54 @@ onMounted(fetchAll)
     gap: 16px;
 }
 .policy-card {
-    border-radius: 8px;
+    border-radius: 10px;
+    border: 1px solid #f1f5f9;
+}
+.policy-form :deep(.el-form-item) {
+    margin-bottom: 16px;
+}
+.policy-form :deep(.el-form-item:last-child) {
+    margin-bottom: 0;
 }
 .card-header {
     display: flex;
     align-items: center;
     gap: 8px;
     font-weight: 600;
+    font-size: 14px;
+    color: #1e293b;
 }
 .setting-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     width: 100%;
-    padding: 4px 0;
+    gap: 16px;
 }
 .setting-info {
     display: flex;
     flex-direction: column;
     gap: 4px;
     flex: 1;
-    margin-right: 24px;
+    min-width: 0;
 }
 .setting-label {
-    font-size: 15px;
-    font-weight: 600;
-    color: #303133;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
 }
 .setting-desc {
-    font-size: 13px;
-    color: #909399;
-    line-height: 1.6;
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.5;
 }
 .sub-form-item {
-    padding-left: 24px;
+    padding-left: 0;
 }
 .form-hint {
-    margin-left: 12px;
-    color: #909399;
+    color: #6b7280;
     font-size: 12px;
+    margin-top: 4px;
 }
 .rules-head {
     display: flex;
@@ -844,35 +853,28 @@ onMounted(fetchAll)
     flex-wrap: wrap;
     gap: 12px;
     margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #f1f5f9;
 }
 .pagination-total {
     font-size: 13px;
     color: #64748b;
 }
 .pagination-total strong {
-    color: #0f172a;
+    color: #1e293b;
     font-weight: 600;
-    margin: 0 2px;
 }
-.empty-state { padding: 40px 0; text-align: center; color: #64748b; }
-.empty-icon { font-size: 48px; color: #cbd5e1; margin-bottom: 12px; }
-.empty-title { font-size: 16px; font-weight: 600; color: #475569; margin: 0 0 4px; }
+.empty-state { padding: 48px 0; text-align: center; color: #64748b; }
+.empty-icon { font-size: 56px; color: #cbd5e1; margin-bottom: 16px; }
+.empty-title { font-size: 16px; font-weight: 600; color: #475569; }
 .cell-primary {
-    color: #0f172a;
+    color: #1e293b;
     font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
 }
 .cell-sub {
     font-size: 11px;
     color: #94a3b8;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
 }
 .icon-cell {
     display: flex;
