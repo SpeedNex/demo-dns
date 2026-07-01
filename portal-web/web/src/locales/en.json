@@ -277,6 +277,14 @@
       "noDevices": "No devices",
       "empty": "No blocklists"
     },
+    "catalogs": {
+      "title": "Add Catalog",
+      "desc": "Select blocklists or devices to add",
+      "add": "Add Catalog",
+      "addDevice": "Add Device",
+      "blocklists": "Blocklists",
+      "devices": "Devices"
+    },
     "addDevice": "Add Device",
     "special": {
       "title": "Special Settings",

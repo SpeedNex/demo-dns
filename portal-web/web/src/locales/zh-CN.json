@@ -277,6 +277,14 @@
       "noDevices": "暂未添加设备",
       "empty": "暂无拦截列表"
     },
+    "catalogs": {
+      "title": "添加分类目录",
+      "desc": "选择要添加的拦截列表或设备",
+      "add": "添加目录",
+      "addDevice": "添加设备",
+      "blocklists": "拦截列表",
+      "devices": "设备型号"
+    },
     "addDevice": "添加设备",
     "special": {
       "title": "特殊设置",
