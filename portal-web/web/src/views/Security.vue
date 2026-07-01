@@ -9,179 +9,29 @@
 
         <el-card shadow="never" class="settings-card">
             <el-form label-position="top">
-                <!-- 威胁情报源 -->
-                <el-form-item>
-                    <div class="setting-row">
-                        <div class="setting-info">
-                            <span class="setting-label">{{ $t('security.threatIntel') }}</span>
-                            <span class="setting-desc">{{ $t('security.threatIntelDesc') }}</span>
+                <!-- 动态渲染安全防护项 -->
+                <template v-for="(item, index) in securityItems" :key="item.key">
+                    <el-form-item>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <span class="setting-label">
+                                    {{ item.name }}
+                                    <el-tag v-if="item.beta" size="small" type="warning" effect="light" style="margin-left:6px">beta</el-tag>
+                                </span>
+                                <span class="setting-desc">{{ item.desc }}</span>
+                            </div>
+                            <el-switch v-model="form[item.key]" :active-color="item.activeColor || '#409eff'" />
                         </div>
-                        <el-switch v-model="form.threat_intel" />
-                    </div>
-                </el-form-item>
-
-                <el-divider />
-
-                <!-- AI 威胁检测 -->
-                <el-form-item>
-                    <div class="setting-row">
-                        <div class="setting-info">
-                            <span class="setting-label">{{ $t('security.aiDetection') }} <el-tag size="small" type="warning" effect="light" style="margin-left:6px">beta</el-tag></span>
-                            <span class="setting-desc">{{ $t('security.aiDetectionDesc') }}</span>
-                        </div>
-                        <el-switch v-model="form.ai_threat_detection" />
-                    </div>
-                </el-form-item>
-
-                <el-divider />
-
-                <!-- Google 安全浏览 -->
-                <el-form-item>
-                    <div class="setting-row">
-                        <div class="setting-info">
-                            <span class="setting-label">{{ $t('security.googleSafeBrowsing') }}</span>
-                            <span class="setting-desc">{{ $t('security.googleSafeBrowsingDesc') }}</span>
-                        </div>
-                        <el-switch v-model="form.google_safe_browsing" active-color="#409eff" />
-                    </div>
-                </el-form-item>
-
-                <el-divider />
-
-                <!-- 挖矿病毒保护 -->
-                <el-form-item>
-                    <div class="setting-row">
-                        <div class="setting-info">
-                            <span class="setting-label">{{ $t('security.blockCryptojacking') }}</span>
-                            <span class="setting-desc">{{ $t('security.blockCryptojackingDesc') }}</span>
-                        </div>
-                        <el-switch v-model="form.block_cryptojacking" active-color="#409eff" />
-                    </div>
-                </el-form-item>
-
-                <el-divider />
-
-                <!-- DNS 重新绑定攻击保护 -->
-                <el-form-item>
-                    <div class="setting-row">
-                        <div class="setting-info">
-                            <span class="setting-label">{{ $t('security.dnsRebind') }}</span>
-                            <span class="setting-desc">{{ $t('security.dnsRebindDesc') }}</span>
-                        </div>
-                        <el-switch v-model="form.dns_rebind" active-color="#409eff" />
-                    </div>
-                </el-form-item>
-
-                <el-divider />
-
-                <!-- IDN 同构攻击保护 -->
-                <el-form-item>
-                    <div class="setting-row">
-                        <div class="setting-info">
-                            <span class="setting-label">{{ $t('security.idnHomo') }}</span>
-                            <span class="setting-desc">{{ $t('security.idnHomoDesc') }}</span>
-                        </div>
-                        <el-switch v-model="form.idn_homograph" />
-                    </div>
-                </el-form-item>
-
-                <el-divider />
-
-                <!-- 误植域名保护 -->
-                <el-form-item>
-                    <div class="setting-row">
-                        <div class="setting-info">
-                            <span class="setting-label">{{ $t('security.typoSquat') }}</span>
-                            <span class="setting-desc">{{ $t('security.typoSquatDesc') }}</span>
-                        </div>
-                        <el-switch v-model="form.typo_squatting" active-color="#409eff" />
-                    </div>
-                </el-form-item>
-
-                <el-divider />
-
-                <!-- DGA 保护 -->
-                <el-form-item>
-                    <div class="setting-row">
-                        <div class="setting-info">
-                            <span class="setting-label">{{ $t('security.dga') }}</span>
-                            <span class="setting-desc">{{ $t('security.dgaDesc') }}</span>
-                        </div>
-                        <el-switch v-model="form.dga_protection" active-color="#409eff" />
-                    </div>
-                </el-form-item>
-
-                <el-divider />
-
-                <!-- 拦截新注册域名 -->
-                <el-form-item>
-                    <div class="setting-row">
-                        <div class="setting-info">
-                            <span class="setting-label">{{ $t('security.newDomains') }}</span>
-                            <span class="setting-desc">{{ $t('security.newDomainsDesc') }}</span>
-                        </div>
-                        <el-switch v-model="form.block_new_domains" active-color="#409eff" />
-                    </div>
-                </el-form-item>
-
-                <el-divider />
-
-                <!-- 拦截动态 DNS -->
-                <el-form-item>
-                    <div class="setting-row">
-                        <div class="setting-info">
-                            <span class="setting-label">{{ $t('security.dynamicDns') }} <el-tag size="small" type="warning" effect="light" style="margin-left:6px">beta</el-tag></span>
-                            <span class="setting-desc">{{ $t('security.dynamicDnsDesc') }}</span>
-                        </div>
-                        <el-switch v-model="form.block_dynamic_dns" />
-                    </div>
-                </el-form-item>
-
-                <el-divider />
-
-                <!-- 拦截停放域名 -->
-                <el-form-item>
-                    <div class="setting-row">
-                        <div class="setting-info">
-                            <span class="setting-label">{{ $t('security.parkedDomains') }}</span>
-                            <span class="setting-desc">{{ $t('security.parkedDomainsDesc') }}</span>
-                        </div>
-                        <el-switch v-model="form.block_parked_domains" active-color="#409eff" />
-                    </div>
-                </el-form-item>
-
-                <el-divider />
-
-                <!-- 拦截顶级域名 -->
-                <el-form-item>
-                    <div class="setting-row">
-                        <div class="setting-info">
-                            <span class="setting-label">{{ $t('security.blockTld') }}</span>
-                            <span class="setting-desc">{{ $t('security.blockTldDesc') }}</span>
-                        </div>
-                        <el-switch v-model="form.block_tld" />
-                    </div>
-                </el-form-item>
-
-                <el-divider />
-
-                <!-- 拦截儿童色情 -->
-                <el-form-item>
-                    <div class="setting-row">
-                        <div class="setting-info">
-                            <span class="setting-label">{{ $t('security.childAbuse') }}</span>
-                            <span class="setting-desc">{{ $t('security.childAbuseDesc') }}</span>
-                        </div>
-                        <el-switch v-model="form.child_abuse" />
-                    </div>
-                </el-form-item>
+                    </el-form-item>
+                    <el-divider v-if="index < securityItems.length - 1" />
+                </template>
             </el-form>
         </el-card>
     </Layout>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch, nextTick } from 'vue'
+import { ref, reactive, onMounted, watch, nextTick, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import client from '@/api/client'
@@ -192,24 +42,29 @@ const { t } = useI18n()
 const { currentProfileId } = useCurrentProfile()
 const saving = ref(false)
 const hydrating = ref(false)
+const catalogItems = ref([])
 let saveTimer = null
 
 const form = reactive({
     enabled: true,
-    threat_intel: true,
-    ai_threat_detection: false,
-    google_safe_browsing: true,
-    block_cryptojacking: true,
-    dns_rebind: true,
-    idn_homograph: true,
-    typo_squatting: true,
-    dga_protection: true,
-    block_new_domains: true,
-    block_dynamic_dns: false,
-    block_parked_domains: true,
-    block_tld: false,
-    child_abuse: true,
 })
+
+// 标记为 beta 的功能项（与 catalogue 中的 key 对应）
+const betaKeys = computed(() =>
+    catalogItems.value
+        .filter(item => (item.tags || '').includes('beta'))
+        .map(item => item.key)
+)
+
+// 从 catalog 中过滤出 switch 类型的安全防护项
+const securityItems = computed(() =>
+    catalogItems.value
+        .filter(item => item.field_type === 'switch')
+        .map(item => ({
+            ...item,
+            beta: betaKeys.value.includes(item.key),
+        }))
+)
 
 const autoSave = () => {
     if (hydrating.value || !currentProfileId.value) return
@@ -233,6 +88,16 @@ watch(
     { deep: true }
 )
 
+const fetchCatalogs = async () => {
+    try {
+        const { data } = await client.get('/user/catalogs')
+        catalogItems.value = data.data?.device_models || []
+    } catch {
+        // 获取 catalog 失败时使用空数组
+        catalogItems.value = []
+    }
+}
+
 const fetchData = async () => {
     if (!currentProfileId.value) return
     hydrating.value = true
@@ -249,7 +114,10 @@ const fetchData = async () => {
 // 切换 profile 时重新加载数据
 watch(currentProfileId, fetchData)
 
-onMounted(fetchData)
+onMounted(async () => {
+    await fetchCatalogs()
+    await fetchData()
+})
 </script>
 
 <style scoped>

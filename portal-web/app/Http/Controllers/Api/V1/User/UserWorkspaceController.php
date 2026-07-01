@@ -44,25 +44,18 @@ final class UserWorkspaceController
 
     public function updateSecurity(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'enabled' => 'required|boolean',
-            'block_malware' => 'sometimes|boolean',
-            'block_phishing' => 'sometimes|boolean',
-            'block_command_and_control' => 'sometimes|boolean',
-            'block_cryptojacking' => 'sometimes|boolean',
-            'threat_intel' => 'sometimes|boolean',
-            'ai_threat_detection' => 'sometimes|boolean',
-            'google_safe_browsing' => 'sometimes|boolean',
-            'dns_rebind' => 'sometimes|boolean',
-            'idn_homograph' => 'sometimes|boolean',
-            'typo_squatting' => 'sometimes|boolean',
-            'dga_protection' => 'sometimes|boolean',
-            'block_new_domains' => 'sometimes|boolean',
-            'block_dynamic_dns' => 'sometimes|boolean',
-            'block_parked_domains' => 'sometimes|boolean',
-            'block_tld' => 'sometimes|boolean',
-            'child_abuse' => 'sometimes|boolean',
-        ]);
+        // 动态验证：根据 catalog device_models 中的 switch 字段生成验证规则
+        $catalogKeys = collect($this->catalogs->get()['device_models'] ?? [])
+            ->filter(fn ($item) => ($item['field_type'] ?? '') === 'switch' && ! empty($item['key']))
+            ->pluck('key')
+            ->all();
+
+        $rules = ['enabled' => 'required|boolean'];
+        foreach ($catalogKeys as $key) {
+            $rules[$key] = 'sometimes|boolean';
+        }
+
+        $validated = $request->validate($rules);
 
         return response()->json(['data' => $this->workspace->updateSecurity($request->user()->uid, $validated, $this->profileId($request))]);
     }
