@@ -93,7 +93,7 @@
                     <el-table :data="pagedRows('parental_presets')" stripe size="small">
                         <template #empty><div class="empty">{{ $t('dashboard.noData') }}</div></template>
                         <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="160" />
-                        <el-table-column :label="$t('admin.memberCatalogs.category')" width="120">
+                        <el-table-column :label="$t('admin.memberCatalogs.type')" width="120">
                             <template #default="{ row }">{{ $t('admin.memberCatalogs.cat' + row.category.charAt(0).toUpperCase() + row.category.slice(1)) }}</template>
                         </el-table-column>
                         <el-table-column :label="$t('admin.memberCatalogs.url')" prop="url" min-width="200" show-overflow-tooltip />
@@ -148,7 +148,7 @@
         </el-tabs>
     </ListPage>
 
-    <el-dialog v-model="showRowDialog" :title="editingIndex === null ? $t('common.add') : $t('common.edit')" width="560">
+    <el-dialog v-model="showRowDialog" :title="editingIndex === null ? $t('common.add') : $t('common.edit')" width="720">
         <el-form :model="rowForm" label-position="top">
             <el-form-item v-if="hasField('key')" :label="$t('admin.memberCatalogs.code')">
                 <el-input v-model="rowForm.key" />

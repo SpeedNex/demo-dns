@@ -1299,8 +1299,8 @@
       }
     },
     "memberCatalogs": {
-      "title": "Member Catalogs",
-      "desc": "Device models, privacy blocklists, parental presets and category catalogs",
+      "title": "Member-side Strategy Config",
+      "desc": "Security strategies, privacy blocklists, parental presets and category catalogs",
       "tabBlockList": "Block List",
       "tabDeviceModels": "Device Models",
       "tabBlocklists": "Privacy Blocklists",

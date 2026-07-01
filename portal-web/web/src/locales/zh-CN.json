@@ -1295,8 +1295,8 @@
       }
     },
     "memberCatalogs": {
-      "title": "会员策略目录",
-      "desc": "设备型号、隐私拦截列表、家长监护预设与分类目录",
+      "title": "会员侧策略配置",
+      "desc": "安全防护策略、隐私拦截列表、家长监护预设与分类目录",
       "tabBlockList": "黑名单",
       "tabDeviceModels": "设备型号",
       "tabBlocklists": "隐私拦截列表",
