@@ -81,15 +81,17 @@
             </template>
             <el-table-column type="selection" width="48" />
             <el-table-column prop="domain" :label="$t('admin.rules.domain')" min-width="240" show-overflow-tooltip />
-            <el-table-column prop="category" :label="$t('admin.rules.category')" width="120">
+            <el-table-column prop="category" :label="$t('admin.rules.category')" width="140">
                 <template #default="{ row }">
-                    <el-tag size="small" effect="plain">{{ row.category || '-' }}</el-tag>
+                    <el-tag size="small" effect="plain">
+                        {{ $t(`admin.rules.cat${row.category ? row.category.charAt(0).toUpperCase() + row.category.slice(1).replace(/_([a-z])/g, (_, c) => c.toUpperCase()) : 'Default'}`, row.category || '-') }}
+                    </el-tag>
                 </template>
             </el-table-column>
-            <el-table-column prop="action" :label="$t('admin.rules.action')" width="100">
+            <el-table-column prop="action" :label="$t('admin.rules.action')" width="110">
                 <template #default="{ row }">
                     <el-tag size="small" :type="row.action === 'block' ? 'danger' : 'success'" effect="light">
-                        {{ row.action }}
+                        {{ $t(`admin.rules.action${row.action ? row.action.charAt(0).toUpperCase() + row.action.slice(1) : 'Block'}`, row.action || '-') }}
                     </el-tag>
                 </template>
             </el-table-column>

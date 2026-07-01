@@ -57,7 +57,8 @@
             <el-table-column prop="name_en" :label="$t('admin.ruleCategories.nameEn')" min-width="140" />
             <el-table-column :label="$t('admin.ruleCategories.group')" min-width="140">
                 <template #default="{ row }">
-                    <span>{{ row.group?.label || row.group || '-' }}</span>
+                    <el-tag v-if="row.group" size="small" effect="light">{{ $t(`admin.ruleCategories.group${row.group.charAt(0).toUpperCase() + row.group.slice(1)}`, row.group) }}</el-tag>
+                    <span v-else>-</span>
                 </template>
             </el-table-column>
             <el-table-column :label="$t('admin.ruleCategories.enabled')" min-width="100" align="center">
