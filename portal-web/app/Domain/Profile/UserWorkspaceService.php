@@ -794,4 +794,55 @@ final class UserWorkspaceService
             $parentalSettings = $featureSettings['parental'] ?? [];
             $blockedCategories = $parentalSettings['blocked_categories'] ?? [];
             if (!empty($blockedCategories) && is_array($blockedCategories)) {
-                $
+                $categoryKeys = array_map(fn ($c) => is_string($c) ? $c : ($c['key'] ?? ''), $blockedCategories);
+                $categoryKeys = array_filter($categoryKeys);
+                if (!empty($categoryKeys)) {
+                    $categoryRules = \App\Models\RuleItem::whereIn('category', $categoryKeys)
+                        ->where('action', 'block')
+                        ->get(['domain', 'category'])
+                        ->map(fn ($item) => [
+                            'list_type' => 'category:parental:' . $item->category,
+                            'match_type' => 'suffix',
+                            'domain' => $item->domain,
+                            'normalized_domain' => \App\Domain\Profile\DomainNormalizer::normalize($item->domain),
+                            'action' => 'block',
+                            'enabled' => true,
+                            'category' => $item->category,
+                            'rule_id' => 'cat_' . $item->category . '_' . md5($item->domain),
+                        ])
+                        ->toArray();
+                    $rules = array_merge($rules, $categoryRules);
+                }
+            }
+
+            \Illuminate\Support\Facades\Log::info('AutoPublish triggered', [
+                'profile_id' => $profile->profile_id,
+                'rules_count' => count($rules),
+                'feature_settings' => $featureSettings,
+            ]);
+
+            $result = $publishService->publish(
+                $profile->toArray(),
+                $rules,
+                $featureSettings,
+            );
+
+            // 同步更新 Profile 的 version 和 published_at，确保下次发布版本号递增
+            $profile->update([
+                'version' => (int) ($result['config_version'] ?? 0),
+                'published_at' => now(),
+            ]);
+
+            \Illuminate\Support\Facades\Log::info('AutoPublish succeeded', [
+                'profile_id' => $profile->profile_id,
+                'result' => $result,
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('AutoPublish failed', [
+                'profile_id' => $profile->profile_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
+    }
+}
