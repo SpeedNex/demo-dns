@@ -22,7 +22,7 @@ final class MemberCatalogService
             return $defaults;
         }
 
-        return [
+        $result = [
             'device_models' => $this->mergeSystemDefaults(
                 $this->normalizeItems($stored['device_models'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled', 'system']),
                 $defaults['device_models'] ?? []
@@ -37,6 +37,24 @@ final class MemberCatalogService
             ),
             'parental_categories' => $this->normalizeItems($stored['parental_categories'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled']),
         ];
+
+        // 确保每组所有项都有 field_type 默认值
+        $defaultFieldTypes = [
+            'device_models' => 'switch',
+            'privacy_blocklists' => 'switch',
+            'parental_presets' => 'switch',
+            'parental_categories' => 'multi',
+        ];
+        foreach ($defaultFieldTypes as $group => $defaultType) {
+            foreach ($result[$group] as &$item) {
+                if (empty($item['field_type'])) {
+                    $item['field_type'] = $defaultType;
+                }
+            }
+            unset($item);
+        }
+
+        return $result;
     }
 
     /**
