@@ -1354,6 +1354,8 @@
       "fieldTypeSwitch": "开关",
       "fieldTypeMulti": "多选",
       "fieldTypeText": "文本",
+      "statusShown": "显示",
+      "statusHidden": "隐藏",
       "fieldTypeCategory": "分类",
       "deviceList": "关联设备",
       "addDevice": "新增设备",

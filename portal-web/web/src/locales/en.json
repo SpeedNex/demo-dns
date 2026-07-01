@@ -1358,6 +1358,8 @@
       "fieldTypeSwitch": "Switch",
       "fieldTypeMulti": "Multi-select",
       "fieldTypeText": "Text",
+      "statusShown": "Shown",
+      "statusHidden": "Hidden",
       "fieldTypeCategory": "Category",
       "deviceList": "Linked Devices",
       "addDevice": "Add Device",

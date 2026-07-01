@@ -1318,6 +1318,8 @@
       "fieldTypeSwitch": "스위치",
       "fieldTypeMulti": "다중 선택",
       "fieldTypeText": "텍스트",
+      "statusShown": "표시",
+      "statusHidden": "숨김",
       "fieldTypeCategory": "카테고리",
       "deviceList": "연결된 기기",
       "addDevice": "기기 추가",

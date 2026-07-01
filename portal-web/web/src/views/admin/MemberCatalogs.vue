@@ -31,7 +31,7 @@
                     </el-table-column>
                     <el-table-column :label="$t('admin.memberCatalogs.status')" width="100" align="center">
                         <template #default="{ row }">
-                            <el-switch v-model="row.enabled" @change="toggleRow('device_models', row)" />
+                            <el-tag size="small" :type="row.enabled ? 'success' : 'info'" effect="plain" style="cursor:pointer" @click="toggleRow('device_models', row)">{{ row.enabled ? $t('admin.memberCatalogs.statusShown') : $t('admin.memberCatalogs.statusHidden') }}</el-tag>
                         </template>
                     </el-table-column>
                     <el-table-column :label="$t('common.actions')" width="100" fixed="right">
@@ -70,7 +70,7 @@
                     </el-table-column>
                     <el-table-column :label="$t('admin.memberCatalogs.status')" width="100" align="center">
                         <template #default="{ row }">
-                            <el-switch v-model="row.enabled" @change="toggleRow('privacy_blocklists', row)" />
+                            <el-tag size="small" :type="row.enabled ? 'success' : 'info'" effect="plain" style="cursor:pointer" @click="toggleRow('privacy_blocklists', row)">{{ row.enabled ? $t('admin.memberCatalogs.statusShown') : $t('admin.memberCatalogs.statusHidden') }}</el-tag>
                         </template>
                     </el-table-column>
                     <el-table-column :label="$t('common.actions')" width="100" fixed="right">
