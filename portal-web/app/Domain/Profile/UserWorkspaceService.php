@@ -632,9 +632,21 @@ final class UserWorkspaceService
 
     private function hydrateProfileSettings(Profile $profile): Profile
     {
-        $profile->security_settings = array_merge(self::DEFAULT_SECURITY, $profile->security_settings ?? []);
-        $profile->privacy_settings = array_merge(self::DEFAULT_PRIVACY, $profile->privacy_settings ?? []);
-        $profile->parental_settings = array_merge(self::DEFAULT_PARENTAL, $profile->parental_settings ?? []);
+        $securitySettings = is_string($profile->security_settings)
+            ? json_decode($profile->security_settings, true) ?? []
+            : ($profile->security_settings ?? []);
+
+        $privacySettings = is_string($profile->privacy_settings)
+            ? json_decode($profile->privacy_settings, true) ?? []
+            : ($profile->privacy_settings ?? []);
+
+        $parentalSettings = is_string($profile->parental_settings)
+            ? json_decode($profile->parental_settings, true) ?? []
+            : ($profile->parental_settings ?? []);
+
+        $profile->security_settings = array_merge(self::DEFAULT_SECURITY, $securitySettings);
+        $profile->privacy_settings = array_merge(self::DEFAULT_PRIVACY, $privacySettings);
+        $profile->parental_settings = array_merge(self::DEFAULT_PARENTAL, $parentalSettings);
 
         return $profile;
     }
@@ -648,9 +660,13 @@ final class UserWorkspaceService
 
     private function privacyPayload(Profile $profile): array
     {
-        return array_merge(self::DEFAULT_PRIVACY, $profile->privacy_settings ?? [], [
+        $privacySettings = is_array($profile->privacy_settings)
+            ? $profile->privacy_settings
+            : [];
+
+        return array_merge(self::DEFAULT_PRIVACY, $privacySettings, [
             'enabled' => (bool) $profile->privacy_enabled,
-            'log_mode' => ($profile->privacy_settings['log_mode'] ?? $profile->log_mode) ?: 'full',
+            'log_mode' => ($privacySettings['log_mode'] ?? $profile->log_mode) ?: 'full',
         ]);
     }
 
