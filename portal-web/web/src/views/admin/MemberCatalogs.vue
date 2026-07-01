@@ -40,7 +40,7 @@
         </div>
 
         <el-tabs v-model="activeTab" class="catalog-tabs">
-            <!-- 设备型号 Tab：标准列表格式 + 分页 -->
+            <!-- 设备型号 Tab：卡片网格形式 -->
             <el-tab-pane :label="$t('admin.memberCatalogs.tabDeviceModels')" name="device_models">
                 <template #label>
                     <span class="tab-label">
@@ -61,53 +61,43 @@
                             </div>
                         </div>
                     </template>
-                    <el-table :data="pagedRows('device_models')" stripe row-key="id">
-                        <template #empty>
-                            <div class="empty-state">
-                                <el-icon class="empty-icon"><Grid /></el-icon>
-                                <p class="empty-title">{{ $t('dashboard.noData') }}</p>
+                    <!-- 设备卡片网格 -->
+                    <div v-if="pagedRows('device_models').length === 0" class="empty-state">
+                        <el-icon class="empty-icon"><Grid /></el-icon>
+                        <p class="empty-title">{{ $t('dashboard.noData') }}</p>
+                    </div>
+                    <div v-else class="device-card-grid">
+                        <div
+                            v-for="device in pagedRows('device_models')"
+                            :key="device.id"
+                            class="device-admin-card"
+                        >
+                            <div class="device-admin-card__icon" :style="{ backgroundColor: device.color + '15' }">
+                                <img v-if="device.icon" :src="device.icon" :alt="device.name" class="device-icon-img">
+                                <el-icon v-else :size="32"><Monitor /></el-icon>
                             </div>
-                        </template>
-                        <el-table-column :label="$t('admin.memberCatalogs.id')" prop="id" min-width="140" show-overflow-tooltip />
-                        <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="140" show-overflow-tooltip>
-                            <template #default="{ row }">
-                                <div class="name-cell">
-                                    <el-icon v-if="row.icon" class="name-cell__icon"><Picture /></el-icon>
-                                    <span class="name-cell__text">{{ row.name }}</span>
+                            <div class="device-admin-card__info">
+                                <div class="device-admin-card__name">{{ device.name }}</div>
+                                <div class="device-admin-card__desc">{{ device.desc }}</div>
+                                <div class="device-admin-card__meta">
+                                    <span class="device-admin-card__id">{{ device.id }}</span>
+                                    <span class="device-admin-card__color" :style="{ backgroundColor: device.color }"></span>
                                 </div>
-                            </template>
-                        </el-table-column>
-                        <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="240" show-overflow-tooltip />
-                        <el-table-column :label="$t('admin.memberCatalogs.icon')" min-width="260" show-overflow-tooltip>
-                            <template #default="{ row }">
-                                <span v-if="row.icon" class="cell-sub">{{ row.icon }}</span>
-                                <span v-else>-</span>
-                            </template>
-                        </el-table-column>
-                        <el-table-column :label="$t('admin.memberCatalogs.color')" width="120" align="center">
-                            <template #default="{ row }">
-                                <div v-if="row.color" class="color-preview">
-                                    <span class="color-preview__swatch" :style="{ backgroundColor: row.color }"></span>
-                                    <el-tag size="small" :style="{ backgroundColor: row.color, color: '#fff', borderColor: row.color }">{{ row.color }}</el-tag>
-                                </div>
-                                <span v-else>-</span>
-                            </template>
-                        </el-table-column>
-                        <el-table-column :label="$t('common.actions')" width="140" fixed="right">
-                            <template #default="{ $index }">
-                                <el-button circle size="small" @click="openEditDialog('device_models', $index)"><el-icon><Edit /></el-icon></el-button>
-                                <el-button circle size="small" type="danger" @click="removeRow('device_models', $index)"><el-icon><Delete /></el-icon></el-button>
-                            </template>
-                        </el-table-column>
-                    </el-table>
-                    <div class="pagination-bar">
+                            </div>
+                            <div class="device-admin-card__actions">
+                                <el-button circle size="small" @click="openEditDialog('device_models', deviceModelsPage * deviceModelsPerPage - deviceModelsPerPage + pagedRows('device_models').indexOf(device))"><el-icon><Edit /></el-icon></el-button>
+                                <el-button circle size="small" type="danger" @click="removeRow('device_models', deviceModelsPage * deviceModelsPerPage - deviceModelsPerPage + pagedRows('device_models').indexOf(device))"><el-icon><Delete /></el-icon></el-button>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="filteredRows('device_models').length > deviceModelsPerPage" class="pagination-bar">
                         <div class="pagination-total">
                             {{ $t('common.totalPrefix') }} <strong>{{ filteredRows('device_models').length }}</strong> {{ $t('common.itemsSuffix') }}
                         </div>
                         <el-pagination
                             v-model:current-page="deviceModelsPage"
                             v-model:page-size="deviceModelsPerPage"
-                            :page-sizes="[10, 20, 50, 100]"
+                            :page-sizes="[12, 24, 48]"
                             :total="filteredRows('device_models').length"
                             layout="sizes, prev, pager, next"
                             background
@@ -844,5 +834,81 @@ fetchAll()
 :deep(.el-input-number .el-input__wrapper) {
     border-radius: 8px;
     min-height: 40px;
+}
+
+/* ===== 设备卡片网格 ===== */
+.device-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+.device-admin-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1.5px solid #e2e8f0;
+    background: #fff;
+    transition: all 0.2s ease;
+    position: relative;
+}
+.device-admin-card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+.device-admin-card__icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.device-icon-img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+.device-admin-card__info {
+    flex: 1;
+    min-width: 0;
+}
+.device-admin-card__name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+.device-admin-card__desc {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.4;
+    margin-bottom: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.device-admin-card__meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.device-admin-card__id {
+    font-size: 11px;
+    color: #94a3b8;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.device-admin-card__color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+.device-admin-card__actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
 }
 </style>
