@@ -204,7 +204,6 @@
                 <el-select v-model="rowForm.field_type" style="width:100%">
                     <el-option :label="$t('admin.memberCatalogs.fieldTypeSwitch')" value="switch" />
                     <el-option :label="$t('admin.memberCatalogs.fieldTypeMulti')" value="multi" />
-                    <el-option :label="$t('admin.memberCatalogs.fieldTypeText')" value="text" />
                 </el-select>
             </el-form-item>
 
@@ -348,7 +347,6 @@ const removeDevice = (index) => {
 const fieldTypeOptions = [
     { value: 'switch', labelKey: 'admin.memberCatalogs.fieldTypeSwitch' },
     { value: 'multi', labelKey: 'admin.memberCatalogs.fieldTypeMulti' },
-    { value: 'text', labelKey: 'admin.memberCatalogs.fieldTypeText' },
 ]
 
 const getFieldTypeLabel = (fieldType) => {
@@ -357,7 +355,7 @@ const getFieldTypeLabel = (fieldType) => {
 }
 
 const getFieldTypeTag = (fieldType) => {
-    const map = { switch: 'primary', multi: 'success', text: 'info' }
+    const map = { switch: 'primary', multi: 'success' }
     return map[fieldType] || 'info'
 }
 
