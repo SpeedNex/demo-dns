@@ -39,8 +39,14 @@ final class ProfilePublishApplicationService
         $devices = $profile->devices()->get()->toArray();
         $categoryRules = $this->categoryResolver->loadCategoryRules();
 
+        // 确保 parental_settings 是数组（防止 JSON 字符串未正确解析）
+        $parentalSettings = $profile->parental_settings;
+        if (is_string($parentalSettings)) {
+            $parentalSettings = json_decode($parentalSettings, true) ?? [];
+        }
+        $parentalSettings = is_array($parentalSettings) ? $parentalSettings : [];
+
         // 将 parental blocked_items 转换为规则（因为 resolver 只从 rules 列表加载域名规则）
-        $parentalSettings = is_array($profile->parental_settings) ? $profile->parental_settings : [];
         $blockedItems = $parentalSettings['blocked_items'] ?? [];
         if (! empty($blockedItems) && is_array($blockedItems)) {
             foreach ($blockedItems as $item) {
@@ -52,7 +58,6 @@ final class ProfilePublishApplicationService
                 // 如果名称不是域名格式，尝试转换为域名（小写+无空格）
                 $domain = $name;
                 if (! str_contains($domain, '.')) {
-                    // 尝试常见的域名映射或跳过
                     $domain = strtolower(str_replace(' ', '', $domain)) . '.com';
                 }
 
@@ -73,6 +78,16 @@ final class ProfilePublishApplicationService
             }
         }
 
+        // 确保其他 settings 也是数组
+        $securitySettings = $profile->security_settings;
+        if (is_string($securitySettings)) {
+            $securitySettings = json_decode($securitySettings, true) ?? [];
+        }
+        $privacySettings = $profile->privacy_settings;
+        if (is_string($privacySettings)) {
+            $privacySettings = json_decode($privacySettings, true) ?? [];
+        }
+
         $security = array_merge([
             'enabled' => true,
             'block_malware' => true,
@@ -91,7 +106,7 @@ final class ProfilePublishApplicationService
             'block_parked_domains' => true,
             'block_tld' => false,
             'child_abuse' => true,
-        ], is_array($profile->security_settings) ? $profile->security_settings : []);
+        ], is_array($securitySettings) ? $securitySettings : []);
 
         $privacy = array_merge([
             'enabled' => true,
@@ -104,7 +119,7 @@ final class ProfilePublishApplicationService
             'log_mode' => 'full',
             'blocklists' => [],
             'deep_tracking_devices' => [],
-        ], is_array($profile->privacy_settings) ? $profile->privacy_settings : []);
+        ], is_array($privacySettings) ? $privacySettings : []);
 
         $parental = array_merge([
             'enabled' => false,
@@ -119,7 +134,7 @@ final class ProfilePublishApplicationService
             'time_limits' => [],
             'blocked_items' => [],
             'blocked_categories' => [],
-        ], is_array($profile->parental_settings) ? $profile->parental_settings : []);
+        ], is_array($parentalSettings) ? $parentalSettings : []);
 
         $featureSettings = [
             'security' => [
