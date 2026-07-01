@@ -1333,9 +1333,12 @@
       "matchType": "Match",
       "enabled": "Enabled",
       "id": "ID",
+      "code": "Code",
+      "strategyCode": "Strategy Code",
       "name": "Name",
       "description": "Description",
       "icon": "Icon",
+      "url": "URL",
       "color": "Color",
       "entries": "Entries",
       "entriesUnit": "entries",
@@ -1348,7 +1351,13 @@
       "confirmBatchDeleteRules": "Delete {count} selected rules?",
       "catWebsite": "Website",
       "catApp": "App",
-      "catGame": "Game"
+      "catGame": "Game",
+      "deviceList": "Linked Devices",
+      "addDevice": "Add Device",
+      "editDevice": "Edit Device",
+      "deviceKey": "Device Code",
+      "deviceName": "Device Name",
+      "deviceIcon": "Device Icon"
     },
     "systemConfig": {
       "title": "System Config",

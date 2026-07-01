@@ -21,18 +21,18 @@
                 </div>
                 <el-table :data="pagedRows('device_models')" stripe size="small">
                     <template #empty><div class="empty">{{ $t('dashboard.noData') }}</div></template>
-                    <el-table-column :label="$t('admin.memberCatalogs.id')" prop="id" min-width="120" />
-                    <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="140" />
-                    <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="200" show-overflow-tooltip />
+                    <el-table-column :label="$t('admin.memberCatalogs.strategyCode')" prop="key" min-width="180" />
+                    <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="200" />
+                    <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="400" show-overflow-tooltip />
                     <el-table-column :label="$t('admin.memberCatalogs.status')" width="100" align="center">
                         <template #default="{ row }">
                             <el-switch v-model="row.enabled" @change="toggleRow('device_models', row)" />
                         </template>
                     </el-table-column>
                     <el-table-column :label="$t('common.actions')" width="100" fixed="right">
-                        <template #default="{ $index }">
+                        <template #default="{ row, $index }">
                             <el-button link size="small" @click="openEditDialog('device_models', $index)"><el-icon><Edit /></el-icon></el-button>
-                            <el-button link size="small" type="danger" @click="removeRow('device_models', $index)"><el-icon><Delete /></el-icon></el-button>
+                            <el-button v-if="!row.system" link size="small" type="danger" @click="removeRow('device_models', $index)"><el-icon><Delete /></el-icon></el-button>
                         </template>
                     </el-table-column>
                 </el-table>
@@ -55,7 +55,7 @@
                 </div>
                 <el-table :data="pagedRows('privacy_blocklists')" stripe size="small">
                     <template #empty><div class="empty">{{ $t('dashboard.noData') }}</div></template>
-                    <el-table-column :label="$t('admin.memberCatalogs.id')" prop="key" min-width="140" />
+                    <el-table-column :label="$t('admin.memberCatalogs.code')" prop="key" min-width="140" />
                     <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="140" />
                     <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="200" show-overflow-tooltip />
                     <el-table-column :label="$t('admin.memberCatalogs.entries')" prop="entries" width="120" align="right" :formatter="(row) => formatNumber(row.entries)" />
@@ -65,9 +65,9 @@
                         </template>
                     </el-table-column>
                     <el-table-column :label="$t('common.actions')" width="100" fixed="right">
-                        <template #default="{ $index }">
+                        <template #default="{ row, $index }">
                             <el-button link size="small" @click="openEditDialog('privacy_blocklists', $index)"><el-icon><Edit /></el-icon></el-button>
-                            <el-button link size="small" type="danger" @click="removeRow('privacy_blocklists', $index)"><el-icon><Delete /></el-icon></el-button>
+                            <el-button v-if="!row.system" link size="small" type="danger" @click="removeRow('privacy_blocklists', $index)"><el-icon><Delete /></el-icon></el-button>
                         </template>
                     </el-table-column>
                 </el-table>
@@ -96,6 +96,7 @@
                         <el-table-column :label="$t('admin.memberCatalogs.category')" width="120">
                             <template #default="{ row }">{{ $t('admin.memberCatalogs.cat' + row.category.charAt(0).toUpperCase() + row.category.slice(1)) }}</template>
                         </el-table-column>
+                        <el-table-column :label="$t('admin.memberCatalogs.url')" prop="url" min-width="200" show-overflow-tooltip />
                         <el-table-column :label="$t('admin.memberCatalogs.status')" width="100" align="center">
                             <template #default="{ row }">
                                 <el-switch v-model="row.enabled" @change="toggleRow('parental_presets', row)" />
@@ -123,7 +124,7 @@
                     </div>
                     <el-table :data="pagedRows('parental_categories')" stripe size="small">
                         <template #empty><div class="empty">{{ $t('dashboard.noData') }}</div></template>
-                        <el-table-column :label="$t('admin.memberCatalogs.id')" prop="key" min-width="140" />
+                        <el-table-column :label="$t('admin.memberCatalogs.code')" prop="key" min-width="140" />
                         <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="160" />
                         <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="200" show-overflow-tooltip />
                         <el-table-column :label="$t('admin.memberCatalogs.status')" width="100" align="center">
@@ -149,10 +150,10 @@
 
     <el-dialog v-model="showRowDialog" :title="editingIndex === null ? $t('common.add') : $t('common.edit')" width="560">
         <el-form :model="rowForm" label-position="top">
-            <el-form-item v-if="hasField('key')" :label="$t('admin.memberCatalogs.id')">
+            <el-form-item v-if="hasField('key')" :label="$t('admin.memberCatalogs.code')">
                 <el-input v-model="rowForm.key" />
             </el-form-item>
-            <el-form-item v-if="hasField('id')" :label="$t('admin.memberCatalogs.id')">
+            <el-form-item v-if="hasField('id')" :label="$t('admin.memberCatalogs.code')">
                 <el-input v-model="rowForm.id" />
             </el-form-item>
             <el-form-item v-if="hasField('name')" :label="$t('admin.memberCatalogs.name')">
@@ -163,6 +164,9 @@
             </el-form-item>
             <el-form-item v-if="hasField('icon')" :label="$t('admin.memberCatalogs.icon')">
                 <el-input v-model="rowForm.icon" />
+            </el-form-item>
+            <el-form-item v-if="hasField('url')" :label="$t('admin.memberCatalogs.url')">
+                <el-input v-model="rowForm.url" placeholder="https://example.com" />
             </el-form-item>
             <el-form-item v-if="hasField('color')" :label="$t('admin.memberCatalogs.color')">
                 <el-input v-model="rowForm.color" />
@@ -183,7 +187,58 @@
             <el-form-item v-if="hasField('enabled')" :label="$t('admin.memberCatalogs.status')">
                 <el-switch v-model="rowForm.enabled" />
             </el-form-item>
+
+            <!-- 深度跟踪保护 → 设备管理 -->
+            <template v-if="editingTab === 'privacy_blocklists' && rowForm.key === 'deep_tracking_protection'">
+                <el-divider />
+                <div class="device-section">
+                    <div class="device-header">
+                        <span class="device-title">{{ $t('admin.memberCatalogs.deviceList') }}</span>
+                        <el-button size="small" @click="openDeviceDialog(-1)"><el-icon><Plus /></el-icon>{{ $t('admin.memberCatalogs.addDevice') }}</el-button>
+                    </div>
+                    <el-table :data="(rowForm.devices || [])" size="small" stripe>
+                        <el-table-column prop="icon" width="50" align="center">
+                            <template #default="{ row }"><span class="device-icon">{{ row.icon }}</span></template>
+                        </el-table-column>
+                        <el-table-column prop="key" :label="$t('admin.memberCatalogs.deviceKey')" width="140" />
+                        <el-table-column prop="name" :label="$t('admin.memberCatalogs.deviceName')" />
+                        <el-table-column :label="$t('admin.memberCatalogs.status')" width="80" align="center">
+                            <template #default="{ row }">
+                                <el-switch v-model="row.enabled" size="small" />
+                            </template>
+                        </el-table-column>
+                        <el-table-column :label="$t('common.actions')" width="90" align="center">
+                            <template #default="{ $index }">
+                                <el-button link size="small" @click="openDeviceDialog($index)"><el-icon><Edit /></el-icon></el-button>
+                                <el-button link size="small" type="danger" @click="removeDevice($index)"><el-icon><Delete /></el-icon></el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </div>
+            </template>
         </el-form>
+
+        <!-- 设备编辑子弹窗 -->
+        <el-dialog v-model="showDeviceDialog" :title="deviceEditIndex === -1 ? $t('admin.memberCatalogs.addDevice') : $t('admin.memberCatalogs.editDevice')" width="420" append-to-body>
+            <el-form :model="deviceForm" label-position="top">
+                <el-form-item :label="$t('admin.memberCatalogs.deviceKey')">
+                    <el-input v-model="deviceForm.key" />
+                </el-form-item>
+                <el-form-item :label="$t('admin.memberCatalogs.deviceName')">
+                    <el-input v-model="deviceForm.name" />
+                </el-form-item>
+                <el-form-item :label="$t('admin.memberCatalogs.deviceIcon')">
+                    <el-input v-model="deviceForm.icon" maxlength="4" style="width: 120px" />
+                </el-form-item>
+                <el-form-item :label="$t('admin.memberCatalogs.status')">
+                    <el-switch v-model="deviceForm.enabled" />
+                </el-form-item>
+            </el-form>
+            <template #footer>
+                <el-button @click="showDeviceDialog = false">{{ $t('common.cancel') }}</el-button>
+                <el-button type="primary" @click="saveDevice">{{ $t('common.confirm') }}</el-button>
+            </template>
+        </el-dialog>
         <template #footer>
             <el-button @click="showRowDialog = false">{{ $t('common.cancel') }}</el-button>
             <el-button type="primary" :loading="saving" @click="handleSaveRow">{{ $t('common.confirm') }}</el-button>
@@ -193,7 +248,7 @@
 
 <script setup>
 import { computed, ref, reactive, watch } from 'vue'
-import { ElButton, ElInput, ElInputNumber, ElMessage, ElOption, ElSelect, ElSwitch, ElTable, ElTableColumn, ElTabs, ElTabPane, ElDialog, ElForm, ElFormItem, ElIcon } from 'element-plus'
+import { ElButton, ElDivider, ElInput, ElInputNumber, ElMessage, ElOption, ElSelect, ElSwitch, ElTable, ElTableColumn, ElTabs, ElTabPane, ElDialog, ElForm, ElFormItem, ElIcon } from 'element-plus'
 import { Delete, Edit, Grid, Plus, Search } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import ListPage from '@/components/ListPage.vue'
@@ -233,16 +288,53 @@ const editingTab = ref(null)
 const editingIndex = ref(null)
 const rowForm = reactive({})
 
+// 设备编辑 dialog
+const showDeviceDialog = ref(false)
+const deviceEditIndex = ref(-1)
+const deviceForm = reactive({ key: '', name: '', icon: '📱', enabled: true })
+
+const openDeviceDialog = (index) => {
+    deviceEditIndex.value = index
+    if (index === -1) {
+        Object.assign(deviceForm, { key: '', name: '', icon: '📱', enabled: true })
+    } else {
+        const d = rowForm.devices?.[index]
+        if (d) Object.assign(deviceForm, { ...d })
+    }
+    showDeviceDialog.value = true
+}
+
+const saveDevice = () => {
+    if (! deviceForm.key || ! deviceForm.name) {
+        ElMessage.warning(t('admin.memberCatalogs.name') + ' / ' + t('admin.memberCatalogs.deviceKey') + ' ' + t('common.required'))
+        return
+    }
+    if (! Array.isArray(rowForm.devices)) {
+        rowForm.devices = []
+    }
+    if (deviceEditIndex.value === -1) {
+        rowForm.devices.push({ ...deviceForm })
+    } else {
+        rowForm.devices.splice(deviceEditIndex.value, 1, { ...deviceForm })
+    }
+    showDeviceDialog.value = false
+}
+
+const removeDevice = (index) => {
+    if (! Array.isArray(rowForm.devices)) return
+    rowForm.devices.splice(index, 1)
+}
+
 const fieldsPerTab = {
-    device_models: ['id', 'name', 'desc', 'icon', 'color', 'enabled'],
-    privacy_blocklists: ['key', 'name', 'desc', 'entries', 'days_ago', 'enabled'],
-    parental_presets: ['name', 'icon', 'category', 'enabled'],
+    device_models: ['key', 'name', 'desc', 'enabled', 'system'],
+    privacy_blocklists: ['key', 'name', 'desc', 'entries', 'days_ago', 'enabled', 'system'],
+    parental_presets: ['name', 'icon', 'category', 'enabled', 'url'],
     parental_categories: ['key', 'name', 'desc', 'enabled'],
 }
 const createDefaults = {
-    device_models: () => ({ id: '', name: '', desc: '', icon: '', color: '', enabled: true }),
-    privacy_blocklists: () => ({ key: '', name: '', desc: '', entries: 0, days_ago: 0, enabled: true }),
-    parental_presets: () => ({ name: '', icon: '', category: 'website', enabled: true }),
+    device_models: () => ({ key: '', name: '', desc: '', enabled: true, system: false }),
+    privacy_blocklists: () => ({ key: '', name: '', desc: '', entries: 0, days_ago: 0, enabled: true, system: false, devices: [] }),
+    parental_presets: () => ({ name: '', icon: '', category: 'website', enabled: true, url: '' }),
     parental_categories: () => ({ key: '', name: '', desc: '', enabled: true }),
 }
 
@@ -388,6 +480,26 @@ fetchAll()
     padding: 32px 0;
     text-align: center;
     color: #999;
+}
+
+.device-section {
+    margin-top: 12px;
+}
+
+.device-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.device-title {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.device-icon {
+    font-size: 18px;
 }
 
 .parental-section {
