@@ -71,12 +71,18 @@ final class MemberCatalogService
     {
         $storedKeys = array_column($stored, 'key');
 
-        // 已存储项：补充缺失的 devices 字段
+        // 已存储项：从默认项补充缺失字段（如 field_type），并补充 devices
         foreach ($stored as &$item) {
-            if (! empty($item['system']) && empty($item['devices'])) {
-                $defaultItem = collect($defaults)->firstWhere('key', $item['key']);
-                if (! empty($defaultItem['devices'])) {
-                    $item['devices'] = $defaultItem['devices'];
+            if (empty($item['system'])) {
+                continue;
+            }
+            $defaultItem = collect($defaults)->firstWhere('key', $item['key']);
+            if (empty($defaultItem)) {
+                continue;
+            }
+            foreach ($defaultItem as $field => $value) {
+                if (! array_key_exists($field, $item) || is_null($item[$field])) {
+                    $item[$field] = $value;
                 }
             }
         }
