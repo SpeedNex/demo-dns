@@ -36,7 +36,6 @@ final class AdminMemberCatalogController
             'privacy_blocklists.*.key' => 'nullable|string|max:60',
             'privacy_blocklists.*.name' => 'nullable|string|max:120',
             'privacy_blocklists.*.desc' => 'nullable|string|max:255',
-            'privacy_blocklists.*.entries' => 'nullable|integer|min:0',
             'privacy_blocklists.*.days_ago' => 'nullable|integer|min:0',
             'privacy_blocklists.*.enabled' => 'nullable|boolean',
             'privacy_blocklists.*.system' => 'nullable|boolean',

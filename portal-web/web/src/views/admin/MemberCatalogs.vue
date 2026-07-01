@@ -58,7 +58,7 @@
                     <el-table-column :label="$t('admin.memberCatalogs.code')" prop="key" min-width="140" />
                     <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="140" />
                     <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="200" show-overflow-tooltip />
-                    <el-table-column :label="$t('admin.memberCatalogs.entries')" prop="entries" width="120" align="right" :formatter="(row) => formatNumber(row.entries)" />
+
                     <el-table-column :label="$t('admin.memberCatalogs.status')" width="100" align="center">
                         <template #default="{ row }">
                             <el-switch v-model="row.enabled" @change="toggleRow('privacy_blocklists', row)" />
@@ -170,9 +170,6 @@
             </el-form-item>
             <el-form-item v-if="hasField('color')" :label="$t('admin.memberCatalogs.color')">
                 <el-input v-model="rowForm.color" />
-            </el-form-item>
-            <el-form-item v-if="hasField('entries')" :label="$t('admin.memberCatalogs.entries')">
-                <el-input-number v-model="rowForm.entries" :min="0" style="width: 100%" />
             </el-form-item>
             <el-form-item v-if="hasField('days_ago')" :label="$t('admin.memberCatalogs.updatedDays')">
                 <el-input-number v-model="rowForm.days_ago" :min="0" style="width: 100%" />
@@ -327,13 +324,13 @@ const removeDevice = (index) => {
 
 const fieldsPerTab = {
     device_models: ['key', 'name', 'desc', 'enabled', 'system'],
-    privacy_blocklists: ['key', 'name', 'desc', 'entries', 'days_ago', 'enabled', 'system'],
+    privacy_blocklists: ['key', 'name', 'desc', 'days_ago', 'enabled', 'system'],
     parental_presets: ['name', 'icon', 'category', 'enabled', 'url'],
     parental_categories: ['key', 'name', 'desc', 'enabled'],
 }
 const createDefaults = {
     device_models: () => ({ key: '', name: '', desc: '', enabled: true, system: false }),
-    privacy_blocklists: () => ({ key: '', name: '', desc: '', entries: 0, days_ago: 0, enabled: true, system: false, devices: [] }),
+    privacy_blocklists: () => ({ key: '', name: '', desc: '', days_ago: 0, enabled: true, system: false, devices: [] }),
     parental_presets: () => ({ name: '', icon: '', category: 'website', enabled: true, url: '' }),
     parental_categories: () => ({ key: '', name: '', desc: '', enabled: true }),
 }

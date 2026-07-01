@@ -28,7 +28,7 @@ final class MemberCatalogService
                 $defaults['device_models'] ?? []
             ),
             'privacy_blocklists' => $this->mergeSystemDefaults(
-                $this->normalizeItems($stored['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'entries', 'days_ago', 'enabled', 'system', 'devices']),
+                $this->normalizeItems($stored['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'days_ago', 'enabled', 'system', 'devices']),
                 $defaults['privacy_blocklists'] ?? []
             ),
             'parental_presets' => $this->normalizeItems($stored['parental_presets'] ?? [], ['name', 'icon', 'category', 'enabled', 'url']),
@@ -44,7 +44,7 @@ final class MemberCatalogService
     {
         $merged = [
             'device_models' => $this->normalizeItems($payload['device_models'] ?? [], ['key', 'name', 'desc', 'enabled', 'system']),
-            'privacy_blocklists' => $this->normalizeItems($payload['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'entries', 'days_ago', 'enabled', 'system', 'devices']),
+            'privacy_blocklists' => $this->normalizeItems($payload['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'days_ago', 'enabled', 'system', 'devices']),
             'parental_presets' => $this->normalizeItems($payload['parental_presets'] ?? [], ['name', 'icon', 'category', 'enabled', 'url']),
             'parental_categories' => $this->normalizeItems($payload['parental_categories'] ?? [], ['key', 'name', 'desc', 'enabled']),
         ];
