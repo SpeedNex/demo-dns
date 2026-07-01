@@ -15,7 +15,7 @@ final class MemberCatalogService
      */
     public function get(): array
     {
-        $stored = SystemConfig::query()->find(self::CONFIG_KEY)?->value;
+        $stored = SystemConfig::query()->where('config_key', self::CONFIG_KEY)->first()?->config_value;
         $defaults = $this->defaults();
 
         if (! is_array($stored)) {
@@ -44,8 +44,8 @@ final class MemberCatalogService
         ];
 
         SystemConfig::query()->updateOrCreate(
-            ['key' => self::CONFIG_KEY],
-            ['value' => $merged, 'updated_by' => $actorId ?? 'system'],
+            ['config_key' => self::CONFIG_KEY],
+            ['config_value' => $merged, 'updated_by' => $actorId ?? 'system'],
         );
 
         return $merged;
