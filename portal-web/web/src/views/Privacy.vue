@@ -324,11 +324,11 @@ const addBlocklist = async (list) => {
 const addDevice = async (device) => {
     if (!form.deep_tracking_devices.includes(device.key)) {
         form.deep_tracking_devices.push(device.key)
-        form.blocklists.deep_tracking = true
+        form.blocklists.deep_tracking_protection = true
     } else {
         form.deep_tracking_devices.splice(form.deep_tracking_devices.indexOf(device.key), 1)
         if (form.deep_tracking_devices.length === 0) {
-            form.blocklists.deep_tracking = false
+            form.blocklists.deep_tracking_protection = false
         }
     }
     await savePrivacy()
@@ -339,7 +339,7 @@ const removeDevice = async (deviceId) => {
     if (index > -1) {
         form.deep_tracking_devices.splice(index, 1)
         if (form.deep_tracking_devices.length === 0) {
-            form.blocklists.deep_tracking = false
+            form.blocklists.deep_tracking_protection = false
         }
     }
     await savePrivacy()
