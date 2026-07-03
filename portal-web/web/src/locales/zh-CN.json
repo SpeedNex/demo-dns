@@ -605,7 +605,7 @@
     "desc": "管理您的账户设置、余额和订阅",
     "quota": {
       "title": "套餐额度",
-      "desc": "每月可免费查询 300,000 次。超过额度后，下个月前所有功能将被暂时禁用。",
+      "desc": "免费套餐包含每月限定查询次数。升级到专业版可获得无限制查询和高级功能。",
       "unlimitedDesc": "当前为无限套餐，无查询限制。",
       "used": "{used}/{total} 次查询",
       "unlimited": "无限查询",
@@ -1291,8 +1291,19 @@
         "domain_list": "域名列表",
         "adblock": "广告拦截",
         "hosts": "Hosts 文件",
-        "rpz": "响应策略区"
+        "rpz": "响应策略区",
+        "ruleTypeFallback": "未知类型"
       }
+    },
+    "parentalControl": {
+      "title": "家长监护",
+      "desc": "限制对特定网站、应用程序和游戏的访问",
+      "presets": "预设",
+      "presetsDesc": "家长监护的网站、应用和游戏预设",
+      "categories": "分类",
+      "categoriesDesc": "家长监护分类目录",
+      "status": "状态",
+      "enabled": "已启用"
     },
     "memberCatalogs": {
       "title": "会员侧策略配置",
@@ -1844,7 +1855,8 @@
         "failedAmount": "失败金额",
         "failedCount": "失败笔数",
         "refundAmount": "退款金额"
-      }
+      },
+      "confirmBatchDelete": "确定删除选中的 {count} 条记录？"
     },
     "rbac": {
       "title": "角色权限",

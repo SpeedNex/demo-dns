@@ -12,7 +12,7 @@
                     <router-link to="/" class="nav-brand">
                         <div class="nav-brand__mark">O</div>
                         <div class="nav-brand__text">
-                            <strong>OcerDNS</strong>
+                            <strong>{{ siteName }}</strong>
                         </div>
                     </router-link>
                 </div>
@@ -145,10 +145,12 @@ import client from '@/api/client'
 import enLocale from 'element-plus/dist/locale/en.mjs'
 import zhLocale from 'element-plus/dist/locale/zh-cn.mjs'
 import koLocale from 'element-plus/dist/locale/ko.mjs'
+import { SITE_NAME } from '@/config'
 
 const route = useRoute()
 const router = useRouter()
 const { locale, t } = useI18n()
+const siteName = SITE_NAME
 
 const elLocaleMap = { 'en': enLocale, 'zh-CN': zhLocale, 'ko': koLocale }
 const elLocale = ref(elLocaleMap[locale.value] || zhLocale)

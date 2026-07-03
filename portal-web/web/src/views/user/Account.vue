@@ -305,9 +305,9 @@ const loading = ref(false)
 const userInfo = ref({ email: '', username: '' })
 const usageData = ref({
     queries_used: 0,
-    queries_total: 300000,
+    queries_total: 0,
     is_unlimited: false,
-    upgrade_price: 'USD3.99',
+    upgrade_price: '',
     quota_status: 'normal',
     plan_code: 'free',
 })

@@ -237,9 +237,13 @@ final class UserWorkspaceController
             'match_type' => ['sometimes', Rule::in(['exact', 'suffix', 'wildcard'])],
         ]);
 
-        return response()->json([
-            'data' => $this->workspace->createRule($request->user()->uid, $listType, $validated, $this->profileId($request)),
-        ], 201);
+        try {
+            $rule = $this->workspace->createRule($request->user()->uid, $listType, $validated, $this->profileId($request));
+        } catch (\InvalidArgumentException $e) {
+            return \App\Helpers\ApiResponse::error('INVALID_ARGUMENT', $e->getMessage(), 422);
+        }
+
+        return response()->json(['data' => $rule], 201);
     }
 
     public function createAllowlistRule(Request $request): JsonResponse
@@ -277,9 +281,13 @@ final class UserWorkspaceController
             'enabled' => 'boolean',
         ]);
 
-        return response()->json([
-            'data' => $this->workspaceRuleService->updateRule($request->user()->uid, $listType, $ruleId, $validated, $this->profileId($request)),
-        ]);
+        try {
+            $rule = $this->workspaceRuleService->updateRule($request->user()->uid, $listType, $ruleId, $validated, $this->profileId($request));
+        } catch (\InvalidArgumentException $e) {
+            return \App\Helpers\ApiResponse::error('INVALID_ARGUMENT', $e->getMessage(), 422);
+        }
+
+        return response()->json(['data' => $rule]);
     }
 
     public function updateAllowlistRule(Request $request, string $ruleId): JsonResponse
@@ -296,11 +304,14 @@ final class UserWorkspaceController
     {
         $validated = $request->validate([
             'ids' => 'required|array|min:1',
-            'ids.*' => 'string',
+            'ids.*' => 'required',
         ]);
 
+        // 统一转为 string 类型，兼容 int/string 混合输入
+        $ids = array_map('strval', $validated['ids']);
+
         return response()->json([
-            'data' => $this->workspace->batchDeleteRules($request->user()->uid, $listType, $validated['ids'], $this->profileId($request)),
+            'data' => $this->workspace->batchDeleteRules($request->user()->uid, $listType, $ids, $this->profileId($request)),
         ]);
     }
 

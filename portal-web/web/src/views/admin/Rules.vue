@@ -52,7 +52,9 @@
             </el-table-column>
             <el-table-column prop="type" :label="$t('admin.ruleLibrary.type')" width="130">
                 <template #default="{ row }">
-                    <el-tag size="small" effect="light">{{ $t(`admin.ruleLibrary.ruleType.${row.type}`) }}</el-tag>
+                    <el-tag size="small" effect="light">
+                        {{ $te(`admin.ruleLibrary.ruleType.${row.type}`) ? $t(`admin.ruleLibrary.ruleType.${row.type}`) : row.type }}
+                    </el-tag>
                 </template>
             </el-table-column>
             <el-table-column prop="url" :label="$t('admin.ruleLibrary.url')" min-width="240" show-overflow-tooltip />

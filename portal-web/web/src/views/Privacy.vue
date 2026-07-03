@@ -54,19 +54,18 @@
                 </div>
                 <div
                     v-for="device in addedDevices"
-                    :key="device.id"
+                    :key="device.key"
                     class="setting-row"
                 >
                     <div class="setting-info setting-info-row">
-                        <div class="device-icon" :style="{ background: device.color + '15' }">
-                            <img :src="device.icon" :alt="device.name" style="width: 22px; height: 22px;">
+                        <div class="device-icon">
+                            <span class="device-emoji">{{ device.icon }}</span>
                         </div>
                         <div class="setting-info-text">
                             <span class="setting-label">{{ device.name }}</span>
-                            <span class="setting-desc">{{ device.desc }}</span>
                         </div>
                     </div>
-                    <el-button link @click="removeDevice(device.id)">
+                    <el-button link @click="removeDevice(device.key)">
                         <el-icon><Delete /></el-icon>
                     </el-button>
                 </div>
@@ -165,20 +164,19 @@
             <div class="device-grid">
                 <div
                     v-for="device in devices"
-                    :key="device.id"
+                    :key="device.key"
                     class="device-card"
-                    :class="{ active: form.deep_tracking_devices.includes(device.id) }"
+                    :class="{ active: form.deep_tracking_devices.includes(device.key) }"
                     @click="addDevice(device)"
                 >
-                    <div class="device-card-icon" :style="{ background: device.color + '15' }">
-                        <img :src="device.icon" :alt="device.name" style="width: 26px; height: 26px;">
+                    <div class="device-card-icon">
+                        <span class="device-emoji">{{ device.icon }}</span>
                     </div>
                     <div class="device-card-content">
                         <div class="setting-label">{{ device.name }}</div>
-                        <div class="setting-desc">{{ device.desc }}</div>
                     </div>
                     <div class="device-card-action">
-                        <el-icon v-if="form.deep_tracking_devices.includes(device.id)" class="check-icon">
+                        <el-icon v-if="form.deep_tracking_devices.includes(device.key)" class="check-icon">
                             <Check />
                         </el-icon>
                         <el-icon v-else class="add-icon">
@@ -242,19 +240,13 @@ const activeBlocklists = computed(() => {
     return availableBlocklists.value.filter(list => !!form.blocklists?.[list.key])
 })
 
-const devices = ref([
-    { id: 'windows', name: 'Windows', desc: '所有版本', icon: '/static/media/windows.svg', color: '#0078d4' },
-    { id: 'apple', name: '苹果', desc: 'iOS、macOS 和 tvOS', icon: '/static/media/apple.svg', color: '#555555' },
-    { id: 'samsung', name: '三星', desc: '手机、平板电脑和智能电视', icon: '/static/media/samsung.svg', color: '#1428a0' },
-    { id: 'xiaomi', name: '小米', desc: '手机、平板电脑、智能电视和路由器', icon: '/static/media/xiaomi.svg', color: '#ff6900' },
-    { id: 'huawei', name: '华为', desc: '手机和平板电脑', icon: '/static/media/huawei.svg', color: '#cf0a2c' },
-    { id: 'alexa', name: '亚马逊 Alexa 助手', desc: '支持 Alexa 助手的设备', icon: '/static/media/alexa.svg', color: '#00d4ff' },
-    { id: 'roku', name: 'Roku', desc: '所有 Roku 机顶盒', icon: '/static/media/roku.svg', color: '#6616d0' },
-    { id: 'sonos', name: 'Sonos', desc: '音箱', icon: '/static/media/sonos.svg', color: '#e30022' },
-])
+// 设备列表不再写死，改从后台 /user/catalogs 拉取 deep_tracking_protection.devices
+// 后台在 admin/member-catalogs 可编辑 devices 增删 + 启停
+// 数据结构：{ key: 'iphone', name: 'iPhone', icon: '📱', enabled: true }
+const devices = ref([])
 
 const addedDevices = computed(() => {
-    return devices.value.filter(d => form.deep_tracking_devices.includes(d.id))
+    return devices.value.filter(d => form.deep_tracking_devices.includes(d.key))
 })
 
 const displayText = (value) => {
@@ -307,11 +299,11 @@ const addBlocklist = async (list) => {
     await savePrivacy()
 }
 const addDevice = async (device) => {
-    if (!form.deep_tracking_devices.includes(device.id)) {
-        form.deep_tracking_devices.push(device.id)
+    if (!form.deep_tracking_devices.includes(device.key)) {
+        form.deep_tracking_devices.push(device.key)
         form.blocklists.deep_tracking = true
     } else {
-        form.deep_tracking_devices.splice(form.deep_tracking_devices.indexOf(device.id), 1)
+        form.deep_tracking_devices.splice(form.deep_tracking_devices.indexOf(device.key), 1)
         if (form.deep_tracking_devices.length === 0) {
             form.blocklists.deep_tracking = false
         }
@@ -336,9 +328,10 @@ const fetchData = async () => {
     hydrating.value = true
     blocklistLoaded.value = false
     try {
-        // 从 rule_sources 拉取后台规则库列表
-        const [ruleSourcesRes, privacyRes] = await Promise.all([
+        // 并行拉取：后台规则库 / 后台会员目录 / 用户隐私配置
+        const [ruleSourcesRes, catalogsRes, privacyRes] = await Promise.all([
             client.get('/user/rule-sources'),
+            client.get('/user/catalogs'),
             client.get('/user/privacy', { params: { profile_id: currentProfileId.value } }),
         ])
         // 映射规则源为可用拦截列表
@@ -350,6 +343,13 @@ const fetchData = async () => {
             entries: item.item_count || 0,
             daysAgo: item.last_sync_at ? Math.floor((now - new Date(item.last_sync_at).getTime()) / 86400000) : 0,
         }))
+        // 设备多选选项：从后台 member_feature_catalogs.privacy_blocklists[deep_tracking_protection].devices 拉取
+        // 仅保留 enabled=true 的项，admin 后台可控制哪些设备对用户可见
+        const privacyBlocklists = catalogsRes.data?.data?.privacy_blocklists || []
+        const deepTrackingItem = privacyBlocklists.find((it) => it.key === 'deep_tracking_protection')
+        devices.value = Array.isArray(deepTrackingItem?.devices)
+            ? deepTrackingItem.devices.filter((d) => d && d.key && d.enabled !== false)
+            : []
         const incoming = privacyRes.data?.data || {}
         // 重新包装 blocklists 为响应式对象，保证 form.blocklists[key] 修改可追踪
         const incomingBlocklists = { ...(incoming.blocklists || {}) }
@@ -475,6 +475,12 @@ watch(currentProfileId, fetchData)
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    background: var(--color-bg-secondary);
+}
+
+.device-emoji {
+    font-size: 22px;
+    line-height: 1;
 }
 
 .note-box {
@@ -563,10 +569,11 @@ watch(currentProfileId, fetchData)
     justify-content: center;
     margin-right: 12px;
     flex-shrink: 0;
+    background: var(--color-bg-secondary);
 }
-.device-card-icon img {
-    width: 26px;
-    height: 26px;
+.device-card-icon .device-emoji {
+    font-size: 24px;
+    line-height: 1;
 }
 .device-card-content {
     flex: 1;

@@ -1,0 +1,52 @@
+/**
+ * 家长控制 - 应用/网站预设列表
+ * 图标 URL 可通过 VITE_FAVICON_BASE 环境变量配置
+ */
+
+const FAVICON_BASE = import.meta.env.VITE_FAVICON_BASE || '/icons'
+
+export default [
+  { name: '抖音/TikTok', icon: 'tiktok.png', category: 'website' },
+  { name: 'Tinder', icon: 'tinder.png', category: 'app' },
+  { name: 'Instagram', icon: 'instagram.png', category: 'app' },
+  { name: 'Snapchat', icon: 'snapchat.png', category: 'app' },
+  { name: 'Facebook', icon: 'facebook.png', category: 'website' },
+  { name: 'Twitter', icon: 'twitter.png', category: 'website' },
+  { name: 'Reddit', icon: 'reddit.png', category: 'website' },
+  { name: '罗布乐思（Roblox）', icon: 'roblox.png', category: 'game' },
+  { name: 'YouTube', icon: 'youtube.png', category: 'website' },
+  { name: 'VK', icon: 'vk.png', category: 'website' },
+  { name: 'Tumblr', icon: 'tumblr.png', category: 'website' },
+  { name: 'Telegram', icon: 'telegram.png', category: 'app' },
+  { name: '9GAG', icon: '9gag.png', category: 'website' },
+  { name: 'Twitch', icon: 'twitch.png', category: 'website' },
+  { name: '堡垒之夜（Fortnite）', icon: '', category: 'game' },
+  { name: '英雄联盟（League of Legends）', icon: 'leagueoflegends.png', category: 'game' },
+  { name: 'Discord', icon: 'discord.png', category: 'app' },
+  { name: 'Messenger', icon: 'messenger.png', category: 'app' },
+  { name: 'Dailymotion', icon: 'dailymotion.png', category: 'website' },
+  { name: 'BeReal', icon: 'bereal.png', category: 'app' },
+  { name: 'Pinterest', icon: 'pinterest.png', category: 'website' },
+  { name: '我的世界（Minecraft）', icon: 'minecraft.png', category: 'game' },
+  { name: '暴雪（Blizzard）', icon: 'blizzard.png', category: 'game' },
+  { name: 'Imgur', icon: 'imgur.png', category: 'website' },
+  { name: 'Hulu', icon: 'hulu.png', category: 'website' },
+  { name: 'Xbox Live', icon: '', category: 'game' },
+  { name: 'Vimeo', icon: 'vimeo.png', category: 'website' },
+  { name: 'Netflix', icon: 'netflix.png', category: 'website' },
+  { name: 'Steam', icon: 'steam.png', category: 'game' },
+  { name: 'Mastodon', icon: 'mastodon.png', category: 'app' },
+  { name: 'Skype', icon: 'skype.png', category: 'app' },
+  { name: 'PlayStation Network', icon: '', category: 'game' },
+  { name: '迪士尼+（Disney+）', icon: 'disneyplus.png', category: 'website' },
+  { name: 'Prime Video', icon: 'primevideo.png', category: 'website' },
+  { name: 'HBO Max', icon: 'hbomax.png', category: 'website' },
+  { name: 'WhatsApp', icon: 'whatsapp.png', category: 'app' },
+  { name: '信号（Signal）', icon: 'signal.png', category: 'app' },
+  { name: 'eBay', icon: 'ebay.png', category: 'website' },
+  { name: 'Google 聊天', icon: 'googlechat.png', category: 'app' },
+  { name: 'Spotify', icon: 'spotify.png', category: 'website' },
+  { name: 'ChatGPT', icon: 'chatgpt.png', category: 'website' },
+  { name: '亚马逊（Amazon）', icon: 'amazon.png', category: 'website' },
+  { name: 'Zoom', icon: 'zoom.png', category: 'app' },
+]

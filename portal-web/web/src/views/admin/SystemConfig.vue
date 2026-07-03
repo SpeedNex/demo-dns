@@ -174,6 +174,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import client from '@/api/client'
+import { SITE_NAME, DNS_DOMAIN_DEFAULT } from '@/config'
 
 const { t } = useI18n()
 
@@ -182,12 +183,12 @@ const saving = ref(false)
 
 const defaultConfig = {
     basic: {
-        site_name: 'OcerDNS',
+        site_name: SITE_NAME,
         site_url: '',
         site_description: '',
     },
     dns: {
-        dns_domain: 'dns.ocerdns.local',
+        dns_domain: DNS_DOMAIN_DEFAULT,
         default_upstream: '1.1.1.1:53',
         timeout_ms: 5000,
         log_retention_days: 90,
@@ -224,7 +225,7 @@ const defaultConfig = {
         smtp_username: '',
         smtp_password: '',
         from_address: 'noreply@example.com',
-        from_name: 'OcerDNS',
+        from_name: SITE_NAME,
     },
 }
 

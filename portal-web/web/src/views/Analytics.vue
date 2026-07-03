@@ -222,7 +222,8 @@ const dnssec = ref(null)
 const quotaPercent = computed(() => {
     if (!stats.value) return 0
     const used = stats.value.today_queries || 0
-    const limit = 300000
+    const limit = stats.value.quota_limit || 0
+    if (limit <= 0) return 0
     return Math.min(Math.round((used / limit) * 100), 100)
 })
 

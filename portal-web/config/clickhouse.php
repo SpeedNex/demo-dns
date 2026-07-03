@@ -26,7 +26,7 @@ return [
     | in-process analytics path returns 0 rows (with a log line).
     */
     'host'        => '127.0.0.1',
-    'port'        => 8123,
+    'port'        => 8124,
     'database'    => 'ocer_dns',
     'username'    => 'ocer',
     'password'    => '',

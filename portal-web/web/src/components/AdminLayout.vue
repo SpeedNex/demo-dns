@@ -237,6 +237,7 @@ const titleMap = {
     AdminAdmins: 'admin.adminUsers.title',
     AdminMemberPolicies: 'admin.memberPolicies.title',
     AdminBlacklistWhitelist: 'admin.blacklistWhitelist.title',
+    AdminParentalControl: 'admin.parentalControl.title',
     AdminTeams: 'admin.teams.title',
 }
 

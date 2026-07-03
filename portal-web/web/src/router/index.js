@@ -55,6 +55,7 @@ import AdminAdmins from '@/views/admin/AdminAdmins.vue'
 import AdminMemberPolicies from '@/views/admin/MemberPolicies.vue'
 import AdminBlacklistWhitelist from '@/views/admin/BlacklistWhitelist.vue'
 import AdminProfilePublish from '@/views/admin/ProfilePublish.vue'
+import AdminParentalControl from '@/views/admin/ParentalControlAdmin.vue'
 import AdminTeams from '@/views/admin/Teams.vue'
 
 const routes = [
@@ -132,6 +133,7 @@ const routes = [
             { path: 'member-policies', name: 'AdminMemberPolicies', component: AdminMemberPolicies },
             { path: 'blacklist-whitelist', name: 'AdminBlacklistWhitelist', component: AdminBlacklistWhitelist },
             { path: 'profile-publish', name: 'AdminProfilePublish', component: AdminProfilePublish },
+            { path: 'parental-control', name: 'AdminParentalControl', component: AdminParentalControl },
             { path: 'teams', name: 'AdminTeams', component: AdminTeams },
         ],
     },

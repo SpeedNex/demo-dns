@@ -2,6 +2,28 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-07-03 — 写死设备导入后台 + /user/privacy 设备多选改为从后台拉取
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-03 | code | 前端 Privacy.vue 删除 8 个写死设备（Windows/苹果/三星/小米/华为/Alexa/Roku/Sonos），改为从 `/user/catalogs` 接口拉取 `member_feature_catalogs.privacy_blocklists[deep_tracking_protection].devices` | portal-web/web/src/views/Privacy.vue | ok |
+| 2026-07-03 | code | 弹窗/主页 icon 由 SVG 改用 emoji 字符串；id 字段统一改为 key | portal-web/web/src/views/Privacy.vue | ok |
+| 2026-07-03 | code | 后端 MemberCatalogService::defaults() 的 deep_tracking_devices 由 5 个扩展为 8 个：新增原前端写死的 apple/samsung/xiaomi/huawei/alexa/roku/sonos（emoji 图标），并移除 iphone / android / macos / router 共 4 个原有 key，admin 与用户端数据源合一。实测 dns_profiles.privacy_settings.deep_tracking_devices 中无含老 key 的记录，清理 SQL 可跳过 | portal-web/app/Domain/Profile/MemberCatalogService.php | ok |
+
+## 2026-07-03 — /admin/rules 类型字段 i18n 兜底加固
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-03 | code | Rules.vue 类型列新增 `$te()` 兜底：i18n 命中走翻译，未命中回退显示原 type 字符串，避免显示 i18n key path | portal-web/web/src/views/admin/Rules.vue | ok |
+| 2026-07-03 | code | 新增 admin.ruleLibrary.ruleType.ruleTypeFallback i18n key（zh-CN/en/ko） | portal-web/web/src/locales/{zh-CN,en,ko}.json | ok |
+
+## 2026-07-03 — MemberCatalogService 全量数据库化（去掉代码兜底）
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-03 | code | MemberCatalogService::get() 移除 `defaults()` 兜底，改为纯 DB 读取；未配置返回 4 个空数组；defaults() 改为 public 仅供 Seeder 调用；删除合并方法 mergeSystemDefaults | portal-web/app/Domain/Profile/MemberCatalogService.php | ok |
+| 2026-07-03 | code | 新增 MemberFeatureCatalogSeeder，写入 13 device_models / 3 privacy_blocklists（含 8 deep_tracking devices）/ 3 parental_presets 到 dns_system_configs 表。新环境必须跑 `php artisan db:seed --class=MemberFeatureCatalogSeeder` | portal-web/database/seeders/MemberFeatureCatalogSeeder.php | ok |
+
 ## 2026-06-30 — 前端 UI i18n 完善（frontend-ui.md P1 修复）
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |

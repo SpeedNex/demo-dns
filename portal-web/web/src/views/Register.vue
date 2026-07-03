@@ -1,7 +1,7 @@
 <template>
     <AuthShell
         logo="O"
-        brand="OcerDNS"
+        :brand="siteName"
         brand-tagline="Personal DNS privacy and control"
         eyebrow="Create Workspace"
         :title="$t('home.ctaTitle')"
@@ -55,11 +55,13 @@ import { User, Message, Lock } from '@element-plus/icons-vue'
 import client from '@/api/client'
 import AuthShell from '@/components/AuthShell.vue'
 import { redirectToConsole } from '@/composables/usePostAuthRedirect'
+import { SITE_NAME } from '@/config'
 
 const router = useRouter()
 const { t } = useI18n()
 const formRef = ref(null)
 const loading = ref(false)
+const siteName = SITE_NAME
 
 const form = reactive({
     username: '',

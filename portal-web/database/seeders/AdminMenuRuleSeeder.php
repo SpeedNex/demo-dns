@@ -36,6 +36,9 @@ class AdminMenuRuleSeeder extends Seeder
             ['menu_key' => 'security_items', 'parent_key' => 'rule_sources', 'title_key' => 'admin.menu.securityItems', 'path' => '/admin/security-items', 'icon' => 'Lock', 'sort_order' => 52, 'visible' => 1, 'permission_code' => 'admin.rules.read', 'group_key' => 'rule', 'created_at' => $now, 'updated_at' => $now],
             ['menu_key' => 'rule_categories', 'parent_key' => 'rule_sources', 'title_key' => 'admin.menu.ruleCategories', 'path' => '/admin/rule-categories', 'icon' => 'FolderOpened', 'sort_order' => 53, 'visible' => 1, 'permission_code' => 'admin.rules.read', 'group_key' => 'rule', 'created_at' => $now, 'updated_at' => $now],
 
+            // Parental Control
+            ['menu_key' => 'parental-control', 'parent_key' => null, 'title_key' => 'admin.parentalControl.title', 'path' => '/admin/parental-control', 'icon' => 'Lock', 'sort_order' => 55, 'visible' => 1, 'permission_code' => 'admin.parental-control.read', 'group_key' => 'protection', 'created_at' => $now, 'updated_at' => $now],
+
             // Analytics
             ['menu_key' => 'query-logs', 'parent_key' => null, 'title_key' => 'admin.menu.queryLogs', 'path' => '/admin/analytics/query-logs', 'icon' => 'DocumentCopy', 'sort_order' => 60, 'visible' => 1, 'permission_code' => 'admin.analytics.read', 'group_key' => 'analytics', 'created_at' => $now, 'updated_at' => $now],
             ['menu_key' => 'usage-stats', 'parent_key' => 'query-logs', 'title_key' => 'admin.menu.usageStats', 'path' => '/admin/analytics/usage-stats', 'icon' => 'DataAnalysis', 'sort_order' => 61, 'visible' => 1, 'permission_code' => 'admin.analytics.read', 'group_key' => 'analytics', 'created_at' => $now, 'updated_at' => $now],

@@ -1,7 +1,7 @@
 <template>
     <AuthShell
         logo="O"
-        brand="OcerDNS"
+        :brand="siteName"
         brand-tagline="Personal DNS privacy and control"
         :eyebrow="$t('auth.eyebrowMember')"
         :title="$t('home.title2')"
@@ -48,10 +48,12 @@ import { User, Lock } from '@element-plus/icons-vue'
 import client from '@/api/client'
 import AuthShell from '@/components/AuthShell.vue'
 import { redirectToConsole } from '@/composables/usePostAuthRedirect'
+import { SITE_NAME } from '@/config'
 
 const { t } = useI18n()
 const router = useRouter()
 const formRef = ref(null)
+const siteName = SITE_NAME
 const loading = ref(false)
 
 const form = reactive({

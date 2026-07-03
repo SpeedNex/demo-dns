@@ -5,7 +5,7 @@
             <div class="container nav">
                 <div class="logo">
                     <div class="logo-mark">O</div>
-                    <span>OcerDNS</span>
+                    <span>{{ siteName }}</span>
                 </div>
                 <nav class="nav-links">
                     <a href="#features">{{ $t('nav.features') }}</a>
@@ -172,7 +172,7 @@
 
         <footer class="home-footer">
             <div class="container footer-grid">
-                <div>© 2026 OcerDNS · {{ $t('home.footer') }}</div>
+                <div>© 2026 {{ siteName }} · {{ $t('home.footer') }}</div>
                 <div>{{ $t('home.footerLinks') }}</div>
             </div>
         </footer>
@@ -182,6 +182,9 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { SITE_NAME } from '@/config'
+
+const siteName = SITE_NAME
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import {

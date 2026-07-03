@@ -170,7 +170,7 @@
     "quickAccess": "Quick Access",
     "dnsOverHttps": "DNS-over-HTTPS",
     "endpointsTitle": "DNS Endpoints",
-    "endpointsTag": "NextDNS Style",
+    "endpointsTag": "Standard DNS",
     "boundIpTitle": "Bound IPs",
     "boundIpTag": "Resolved Addresses",
     "boundDeviceIps": "Bound Device IPs",
@@ -263,7 +263,7 @@
       "beta": "beta",
       "entries": "{count} entries",
       "updated": "Updated {days} days ago",
-      "adsTracking": "NextDNS Recommended Ads & Tracking Blocklist",
+      "adsTracking": "Recommended Ads & Tracking Blocklist",
       "adsTrackingDesc": "Comprehensive coverage to block ads and trackers from almost every country. This is the recommended base block list.",
       "deepTracking": "Deep Tracking Protection",
       "deepTrackingDesc": "Blocks deep tracking software that typically operates at the operating system level and knows everything you do on your device. This may include all websites you visit, everything you type, or your location.",
@@ -604,7 +604,7 @@
     "desc": "Manage your account settings, balance and subscription",
     "quota": {
       "title": "Plan Quota",
-      "desc": "NextDNS offers 300,000 free queries per month. After exceeding the quota, all features will be temporarily disabled until next month.",
+      "desc": "Free plan includes limited queries per month. Upgrade to Pro for unlimited queries and advanced features.",
       "unlimitedDesc": "You are on an unlimited plan with no query limits.",
       "used": "{used}/{total} queries",
       "unlimited": "Unlimited queries",
@@ -706,7 +706,7 @@
     "buyNow": "Buy Now",
     "free": "Free",
     "freeDesc": "For personal use",
-    "freeQuota": "300,000 queries/month",
+    "freeQuota": "Limited queries/month",
     "pro": "Pro",
     "proDesc": "For power users",
     "proQuota": "Unlimited queries",
@@ -1295,8 +1295,19 @@
         "domain_list": "Domain List",
         "adblock": "AdBlock",
         "hosts": "Hosts",
-        "rpz": "RPZ"
+        "rpz": "RPZ",
+        "ruleTypeFallback": "Unknown Type"
       }
+    },
+    "parentalControl": {
+      "title": "Parental Control",
+      "desc": "Restrict access to specific websites, apps and games",
+      "presets": "Presets",
+      "presetsDesc": "Website, app and game presets for parental control",
+      "categories": "Categories",
+      "categoriesDesc": "Parental control categories catalog",
+      "status": "Status",
+      "enabled": "Enabled"
     },
     "memberCatalogs": {
       "title": "Member-side Strategy Config",
@@ -1848,7 +1859,8 @@
         "failedAmount": "Failed Amount",
         "failedCount": "Failed Count",
         "refundAmount": "Refund Amount"
-      }
+      },
+      "confirmBatchDelete": "Delete {count} selected item(s)?"
     },
     "rbac": {
       "title": "Roles & Permissions",

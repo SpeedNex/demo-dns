@@ -8,7 +8,7 @@ use App\Models\SystemConfig;
 
 final class MemberCatalogService
 {
-    private const CONFIG_KEY = 'member_feature_catalogs';
+    public const CONFIG_KEY = 'member_feature_catalogs';
 
     /**
      * @return array<string, array<int, array<string, mixed>>>
@@ -16,25 +16,20 @@ final class MemberCatalogService
     public function get(): array
     {
         $stored = SystemConfig::query()->where('config_key', self::CONFIG_KEY)->first()?->config_value;
-        $defaults = $this->defaults();
 
         if (! is_array($stored)) {
-            return $defaults;
+            return [
+                'device_models' => [],
+                'privacy_blocklists' => [],
+                'parental_presets' => [],
+                'parental_categories' => [],
+            ];
         }
 
         $result = [
-            'device_models' => $this->mergeSystemDefaults(
-                $this->normalizeItems($stored['device_models'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled', 'system']),
-                $defaults['device_models'] ?? []
-            ),
-            'privacy_blocklists' => $this->mergeSystemDefaults(
-                $this->normalizeItems($stored['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'field_type', 'days_ago', 'enabled', 'system', 'devices']),
-                $defaults['privacy_blocklists'] ?? []
-            ),
-            'parental_presets' => $this->mergeSystemDefaults(
-                $this->normalizeItems($stored['parental_presets'] ?? [], ['name', 'key', 'icon', 'category', 'field_type', 'desc', 'enabled', 'url', 'system']),
-                $defaults['parental_presets'] ?? []
-            ),
+            'device_models' => $this->normalizeItems($stored['device_models'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled', 'system']),
+            'privacy_blocklists' => $this->normalizeItems($stored['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'field_type', 'days_ago', 'enabled', 'system', 'devices']),
+            'parental_presets' => $this->normalizeItems($stored['parental_presets'] ?? [], ['name', 'key', 'icon', 'category', 'field_type', 'desc', 'enabled', 'url', 'system']),
             'parental_categories' => $this->normalizeItems($stored['parental_categories'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled']),
         ];
 
@@ -76,45 +71,6 @@ final class MemberCatalogService
         );
 
         return $merged;
-    }
-
-    /**
-     * 合并系统内置项：已存储的数据优先，缺失的系统默认项自动补入
-     *
-     * @param array<int, array<string, mixed>> $stored
-     * @param array<int, array<string, mixed>> $defaults
-     * @return array<int, array<string, mixed>>
-     */
-    private function mergeSystemDefaults(array $stored, array $defaults): array
-    {
-        $storedKeys = array_column($stored, 'key');
-
-        // 已存储项：从默认项补充缺失字段（如 field_type），并补充 devices
-        foreach ($stored as &$item) {
-            if (empty($item['system'])) {
-                continue;
-            }
-            $defaultItem = collect($defaults)->firstWhere('key', $item['key']);
-            if (empty($defaultItem)) {
-                continue;
-            }
-            foreach ($defaultItem as $field => $value) {
-                if (! array_key_exists($field, $item) || is_null($item[$field])) {
-                    $item[$field] = $value;
-                }
-            }
-        }
-        unset($item);
-
-        // 缺失的系统默认项：自动补入
-        foreach ($defaults as $item) {
-            if (empty($item['key']) || in_array($item['key'], $storedKeys, true)) {
-                continue;
-            }
-            $stored[] = $item;
-        }
-
-        return $stored;
     }
 
     /**
@@ -184,7 +140,7 @@ final class MemberCatalogService
     /**
      * @return array<string, array<int, array<string, mixed>>>
      */
-    private function defaults(): array
+    public function defaults(): array
     {
         return [
             'device_models' => [
@@ -204,11 +160,14 @@ final class MemberCatalogService
             ],
             'privacy_blocklists' => [
                 ['key' => 'deep_tracking_protection', 'name' => '深度跟踪保护', 'desc' => '拦截通常在操作系统级运行的深度跟踪软件，这些跟踪软件知道你在设备上的所有行为。这可能包括你访问的所有网站、你输入的所有内容或你的位置。', 'field_type' => 'multi', 'days_ago' => 0, 'enabled' => true, 'system' => true, 'devices' => [
-                    ['key' => 'iphone', 'name' => 'iPhone', 'icon' => '📱', 'enabled' => true],
-                    ['key' => 'android', 'name' => 'Android', 'icon' => '🤖', 'enabled' => true],
                     ['key' => 'windows', 'name' => 'Windows', 'icon' => '🖥️', 'enabled' => true],
-                    ['key' => 'macos', 'name' => 'macOS', 'icon' => '💻', 'enabled' => true],
-                    ['key' => 'router', 'name' => '路由器', 'icon' => '📡', 'enabled' => false],
+                    ['key' => 'apple', 'name' => '苹果', 'icon' => '🍎', 'enabled' => true],
+                    ['key' => 'samsung', 'name' => '三星', 'icon' => '📱', 'enabled' => true],
+                    ['key' => 'xiaomi', 'name' => '小米', 'icon' => '📱', 'enabled' => true],
+                    ['key' => 'huawei', 'name' => '华为', 'icon' => '📱', 'enabled' => true],
+                    ['key' => 'alexa', 'name' => '亚马逊 Alexa 助手', 'icon' => '🔊', 'enabled' => true],
+                    ['key' => 'roku', 'name' => 'Roku', 'icon' => '📺', 'enabled' => true],
+                    ['key' => 'sonos', 'name' => 'Sonos', 'icon' => '🔊', 'enabled' => true],
                 ]],
                 ['key' => 'disguised_trackers', 'name' => '拦截伪装过的第三方跟踪器', 'desc' => '拦截伪装成第一方资源的第三方跟踪器，这些跟踪器试图绕过常规跟踪保护。', 'field_type' => 'switch', 'days_ago' => 0, 'enabled' => true, 'system' => true],
                 ['key' => 'allow_marketing_links', 'name' => '允许营销和跟踪链接', 'desc' => '允许部分已知包含跟踪参数的营销链接正常访问，同时保留对恶意域名的拦截。', 'field_type' => 'switch', 'days_ago' => 0, 'enabled' => false, 'system' => true],

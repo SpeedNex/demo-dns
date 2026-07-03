@@ -39,16 +39,17 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import client from '@/api/client'
+import { SITE_NAME, DNS_DOMAIN_DEFAULT } from '@/config'
 
 const { t } = useI18n()
 
 const saving = ref(false)
 
 const defaultConfig = {
-    site_name: 'OcerDNS',
+    site_name: SITE_NAME,
     site_url: '',
     site_description: '',
-    dns_domain: 'dns.ocerdns.local',
+    dns_domain: DNS_DOMAIN_DEFAULT,
 }
 
 const config = ref(JSON.parse(JSON.stringify(defaultConfig)))

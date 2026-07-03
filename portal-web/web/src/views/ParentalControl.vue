@@ -133,6 +133,7 @@ import { useI18n } from 'vue-i18n'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
 import { useCurrentProfile } from '@/composables/useCurrentProfile'
+import parentalApps from '@/config/parental-apps'
 
 const { t, locale } = useI18n()
 const { currentProfileId } = useCurrentProfile()
@@ -198,51 +199,10 @@ const form = reactive({
     time_limits: {},
 })
 
-const presets = ref([
-    { name: '抖音/TikTok', icon: 'https://favicons.nextdns.io/hex:7777772e74696b746f6b2e636f6d@1x.png', category: 'website' },
-    { name: 'Tinder', icon: 'https://favicons.nextdns.io/hex:74696e6465722e636f6d@1x.png', category: 'app' },
-    { name: 'Instagram', icon: 'https://favicons.nextdns.io/hex:7777772e696e7374616772616d2e636f6d@1x.png', category: 'app' },
-    { name: 'Snapchat', icon: 'https://favicons.nextdns.io/hex:7777772e736e6170636861742e636f6d@1x.png', category: 'app' },
-    { name: 'Facebook', icon: 'https://favicons.nextdns.io/hex:7777772e66616365626f6f6b2e636f6d@1x.png', category: 'website' },
-    { name: 'Twitter', icon: 'https://favicons.nextdns.io/hex:747769747465722e636f6d@1x.png', category: 'website' },
-    { name: 'Reddit', icon: 'https://favicons.nextdns.io/hex:7777772e7265646469742e636f6d@1x.png', category: 'website' },
-    { name: '罗布乐思（Roblox）', icon: 'https://favicons.nextdns.io/hex:7777772e726f626c6f782e636f6d@1x.png', category: 'game' },
-    { name: 'YouTube', icon: 'https://favicons.nextdns.io/hex:7777772e796f75747562652e636f6d@1x.png', category: 'website' },
-    { name: 'VK', icon: 'https://favicons.nextdns.io/hex:766b2e636f6d@1x.png', category: 'website' },
-    { name: 'Tumblr', icon: 'https://favicons.nextdns.io/hex:7777772e74756d626c722e636f6d@1x.png', category: 'website' },
-    { name: 'Telegram', icon: 'https://favicons.nextdns.io/hex:74656c656772616d2e6f7267@1x.png', category: 'app' },
-    { name: '9GAG', icon: 'https://favicons.nextdns.io/hex:396761672e636f6d@1x.png', category: 'website' },
-    { name: 'Twitch', icon: 'https://favicons.nextdns.io/hex:7777772e7477697463682e7476@1x.png', category: 'website' },
-    { name: '堡垒之夜（Fortnite）', icon: '', category: 'game' },
-    { name: '英雄联盟（League of Legends）', icon: 'https://favicons.nextdns.io/hex:7777772e6c65616775656f666c6567656e64732e636f6d@1x.png', category: 'game' },
-    { name: 'Discord', icon: 'https://favicons.nextdns.io/hex:646973636f72646170702e636f6d@1x.png', category: 'app' },
-    { name: 'Messenger', icon: 'https://favicons.nextdns.io/hex:7777772e6d657373656e6765722e636f6d@1x.png', category: 'app' },
-    { name: 'Dailymotion', icon: 'https://favicons.nextdns.io/hex:7777772e6461696c796d6f74696f6e2e636f6d@1x.png', category: 'website' },
-    { name: 'BeReal', icon: 'https://favicons.nextdns.io/hex:626572652e616c@1x.png', category: 'app' },
-    { name: 'Pinterest', icon: 'https://favicons.nextdns.io/hex:7777772e70696e7465726573742e636f6d@1x.png', category: 'website' },
-    { name: '我的世界（Minecraft）', icon: 'https://favicons.nextdns.io/hex:7777772e6d696e6563726166742e6e6574@1x.png', category: 'game' },
-    { name: '暴雪（Blizzard）', icon: 'https://favicons.nextdns.io/hex:7777772e626c697a7a6172642e636f6d@1x.png', category: 'game' },
-    { name: 'Imgur', icon: 'https://favicons.nextdns.io/hex:696d6775722e636f6d@1x.png', category: 'website' },
-    { name: 'Hulu', icon: 'https://favicons.nextdns.io/hex:7777772e68756c752e636f6d@1x.png', category: 'website' },
-    { name: 'Xbox Live', icon: '', category: 'game' },
-    { name: 'Vimeo', icon: 'https://favicons.nextdns.io/hex:76696d656f2e636f6d@1x.png', category: 'website' },
-    { name: 'Netflix', icon: 'https://favicons.nextdns.io/hex:7777772e6e6574666c69782e636f6d@1x.png', category: 'website' },
-    { name: 'Steam', icon: 'https://favicons.nextdns.io/hex:73746f72652e737465616d706f77657265642e636f6d@1x.png', category: 'game' },
-    { name: 'Mastodon', icon: 'https://favicons.nextdns.io/hex:6a6f696e6d6173746f646f6e2e6f7267@1x.png', category: 'app' },
-    { name: 'Skype', icon: 'https://favicons.nextdns.io/hex:7777772e736b7970652e636f6d@1x.png', category: 'app' },
-    { name: 'PlayStation Network', icon: '', category: 'game' },
-    { name: '迪士尼+（Disney+）', icon: 'https://favicons.nextdns.io/hex:7777772e6469736e6579706c75732e636f6d@1x.png', category: 'website' },
-    { name: 'Prime Video', icon: 'https://favicons.nextdns.io/hex:7777772e7072696d65766964656f2e636f6d@1x.png', category: 'website' },
-    { name: 'HBO Max', icon: 'https://favicons.nextdns.io/hex:7777772e68626f6d61782e636f6d@1x.png', category: 'website' },
-    { name: 'WhatsApp', icon: 'https://favicons.nextdns.io/hex:7777772e77686174736170702e636f6d@1x.png', category: 'app' },
-    { name: '信号（Signal）', icon: 'https://favicons.nextdns.io/hex:7369676e616c2e6f7267@1x.png', category: 'app' },
-    { name: 'eBay', icon: 'https://favicons.nextdns.io/hex:7777772e656261792e636f6d@1x.png', category: 'website' },
-    { name: 'Google 聊天', icon: 'https://favicons.nextdns.io/hex:636861742e676f6f676c652e636f6d@1x.png', category: 'app' },
-    { name: 'Spotify', icon: 'https://favicons.nextdns.io/hex:7777772e73706f746966792e636f6d@1x.png', category: 'website' },
-    { name: 'ChatGPT', icon: 'https://favicons.nextdns.io/hex:636861742e6f70656e61692e636f6d@1x.png', category: 'website' },
-    { name: '亚马逊（Amazon）', icon: 'https://favicons.nextdns.io/hex:7777772e616d617a6f6e2e636f6d@1x.png', category: 'website' },
-    { name: 'Zoom', icon: 'https://favicons.nextdns.io/hex:7a6f6f6d2e7573@1x.png', category: 'app' },
-])
+const presets = ref(parentalApps.map(app => ({
+    ...app,
+    icon: app.icon ? `${import.meta.env.VITE_FAVICON_BASE || '/icons'}/${app.icon}` : ''
+})))
 
 const blockedItems = ref([])
 
@@ -266,11 +226,19 @@ const filteredPresets = computed(() => {
     return presets.value.filter((p) => getLocalizedValue(p.name).toLowerCase().includes(q))
 })
 
-const safeSearchItems = [
+// safeSearchItems 优先从 catalogs.parental_presets 获取（后台"会员目录"管理中可配置）
+// 安全搜索在后台 catalog 中的 key 与前端 form 字段名有差异，需要映射
+const safeSearchFormKeyMap = {
+    safe_search: 'safe_search',
+    youtube_restricted: 'youtube_restricted_mode',
+    block_bypass: 'block_bypass',
+}
+const safeSearchFallbackItems = [
     { key: 'safe_search', label: 'parental.safeSearch.safeSearch', desc: 'parental.safeSearch.safeSearchDesc' },
     { key: 'youtube_restricted_mode', label: 'parental.safeSearch.youtubeRestricted', desc: 'parental.safeSearch.youtubeRestrictedDesc' },
     { key: 'block_bypass', label: 'parental.safeSearch.blockBypass', desc: 'parental.safeSearch.blockBypassDesc' },
 ]
+const safeSearchItems = ref([...safeSearchFallbackItems])
 
 const handleSave = async (forceData = null) => {
     if (!currentProfileId.value) return
@@ -332,6 +300,16 @@ onMounted(async () => {
         const catalogs = catalogResponse.data?.data || {}
         if (Array.isArray(catalogs.parental_presets) && catalogs.parental_presets.length > 0) {
             presets.value = catalogs.parental_presets
+            // 从 parental_presets 中提取安全搜索项（safe_search、youtube_restricted、block_bypass）
+            const safeSearchKeys = Object.keys(safeSearchFormKeyMap)
+            const found = catalogs.parental_presets.filter((p) => safeSearchKeys.includes(p.key))
+            if (found.length > 0) {
+                safeSearchItems.value = found.map((p) => ({
+                    key: safeSearchFormKeyMap[p.key] || p.key,
+                    label: p.name,
+                    desc: p.desc,
+                }))
+            }
         }
         if (Array.isArray(catalogs.parental_categories) && catalogs.parental_categories.length > 0) {
             categoryPresets.value = catalogs.parental_categories

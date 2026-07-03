@@ -163,7 +163,7 @@
     "noDevices": "기기 없음",
     "quickAccess": "빠른 접근",
     "endpointsTitle": "DNS 엔드포인트",
-    "endpointsTag": "NextDNS 스타일",
+    "endpointsTag": "OcerDNS 스타일",
     "boundIpTitle": "바인딩된 IP",
     "boundIpTag": "연결된 IP",
     "boundDeviceIps": "바인딩된 기기 IP",
@@ -263,7 +263,7 @@
       "beta": "beta",
       "entries": "{count} 개 항목",
       "updated": "{days}일 전 업데이트",
-      "adsTracking": "NextDNS 추천 광고 및 추적 차단 목록",
+      "adsTracking": "추천 광고 및 추적 차단 목록",
       "adsTrackingDesc": "거의 모든 국가의 광고 및 추적자를 차단하기 위한 포괄적인 범위. 이것은 추천되는 기본 차단 목록입니다.",
       "deepTracking": "심층 추적 보호",
       "deepTrackingDesc": "일반적으로 운영 체제 수준에서 작동하며 장치에서 수행하는 모든 작업을 알고 있는 심층 추적 소프트웨어를 차단합니다. 여기에는 방문하는 모든 웹사이트, 입력하는 모든 내용 또는 위치가 포함될 수 있습니다.",
@@ -595,7 +595,7 @@
     "desc": "계정 설정, 잔액 및 구독 관리",
     "quota": {
       "title": "플랜 할당량",
-      "desc": "NextDNS는每月 300,000회의 무료 查询를 제공합니다. 할당량을 초과하면 다음 달까지 모든 기능이 일시적으로 비활성화됩니다.",
+      "desc": "무료 플랜은 매월 제한된 검색을 포함합니다. 무제한 검색 및 고급 기능을 위해 Pro로 업그레이드하세요.",
       "unlimitedDesc": "현재 무제한 플랜으로 查询 제한이 없습니다.",
       "used": "{used}/{total}회 查询",
       "unlimited": "무제한 查询",
@@ -691,7 +691,7 @@
     "plans": {
       "free": "무료",
       "freeDesc": "개인 사용",
-      "freeQuota": "300,000 쿼리/월",
+      "freeQuota": "월간 제한된 쿼리",
       "pro": "프로",
       "proDesc": "고급 사용자용",
       "proQuota": "무제한 쿼리",
@@ -1261,8 +1261,19 @@
         "domain_list": "도메인 목록",
         "adblock": "광고 차단",
         "hosts": "호스트 파일",
-        "rpz": "RPZ"
+        "rpz": "RPZ",
+        "ruleTypeFallback": "알 수 없는 유형"
       }
+    },
+    "parentalControl": {
+      "title": "자녀 보호",
+      "desc": "특정 웹사이트, 앱 및 게임에 대한 접근을 제한합니다",
+      "presets": "프리셋",
+      "presetsDesc": "자녀 보호를 위한 웹사이트, 앱 및 게임 프리셋",
+      "categories": "카테고리",
+      "categoriesDesc": "자녀 보호 카테고리 카탈로그",
+      "status": "상태",
+      "enabled": "활성화"
     },
     "memberCatalogs": {
       "title": "멤버 측 전략 구성",
@@ -1702,7 +1713,8 @@
         "failedAmount": "실패 금액",
         "failedCount": "실패 건수",
         "refundAmount": "환불 금액"
-      }
+      },
+      "confirmBatchDelete": "선택한 {count}개의 항목을 삭제하시겠습니까?"
     },
     "rbac": {
       "title": "역할 및 권한",
