@@ -17,14 +17,14 @@ final class MemberCatalogService
     {
         $stored = SystemConfig::query()->where('config_key', self::CONFIG_KEY)->first()?->config_value;
 
+        $defaults = $this->defaults();
+
         if (! is_array($stored)) {
-            return [
-                'device_models' => [],
-                'privacy_blocklists' => [],
-                'parental_presets' => [],
-                'parental_categories' => [],
-            ];
+            return $defaults;
         }
+
+        // 自动合并默认 devices（生产数据库旧数据可能缺少 devices 字段）
+        $stored = $this->mergeDefaultDevices($stored, $defaults);
 
         $result = [
             'device_models' => $this->normalizeItems($stored['device_models'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled', 'system']),
@@ -50,6 +50,53 @@ final class MemberCatalogService
         }
 
         return $result;
+    }
+
+    /**
+     * 递归合并默认 devices 到存储数据（不覆盖用户已保存的字段）
+     *
+     * @param array<string, mixed> $stored
+     * @param array<string, mixed> $defaults
+     * @return array<string, mixed>
+     */
+    private function mergeDefaultDevices(array $stored, array $defaults): array
+    {
+        // 合并 privacy_blocklists 的 devices
+        if (isset($defaults['privacy_blocklists'])) {
+            foreach ($defaults['privacy_blocklists'] as $defaultItem) {
+                $key = $defaultItem['key'] ?? null;
+                if ($key === null || ! isset($defaultItem['devices'])) {
+                    continue;
+                }
+
+                // 查找存储中对应的项
+                $storedIdx = null;
+                foreach ($stored['privacy_blocklists'] ?? [] as $idx => $item) {
+                    if (($item['key'] ?? null) === $key) {
+                        $storedIdx = $idx;
+                        break;
+                    }
+                }
+
+                if ($storedIdx === null) {
+                    // 存储中不存在该项，添加完整默认项
+                    $stored['privacy_blocklists'][] = $defaultItem;
+                } else {
+                    // 存储中存在该项，合并默认 devices（添加缺失的）
+                    $storedDevices = $stored['privacy_blocklists'][$storedIdx]['devices'] ?? [];
+                    $storedKeys = array_column($storedDevices, 'key');
+                    foreach ($defaultItem['devices'] as $d) {
+                        if (!in_array($d['key'], $storedKeys, true)) {
+                            $storedDevices[] = $d;
+                            $storedKeys[] = $d['key'];
+                        }
+                    }
+                    $stored['privacy_blocklists'][$storedIdx]['devices'] = $storedDevices;
+                }
+            }
+        }
+
+        return $stored;
     }
 
     /**
