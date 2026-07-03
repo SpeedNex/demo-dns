@@ -1369,7 +1369,14 @@
       "editDevice": "编辑设备",
       "deviceKey": "设备编码",
       "deviceName": "设备名称",
-      "deviceIcon": "设备图标"
+      "deviceIcon": "设备图标",
+      "type": "类型",
+      "switch": "开关",
+      "multiSelect": "多选",
+      "details": "详情",
+      "viewOptions": "查看选项 ({count} 项)",
+      "addUrlPlaceholder": "添加网址后按回车",
+      "urlHint": "每个网址需包含域名，例如：example.com"
     },
     "systemConfig": {
       "title": "系统配置",
@@ -2032,27 +2039,6 @@
       "batchDeleted": "已删除 {count} 个规则源",
       "batchSynced": "已同步 {count} 个规则源",
       "emptyDesc2": "点击右上角的「创建规则源」添加您的第一个规则源。"
-    },
-    "brands": {
-      "title": "品牌网站",
-      "searchPlaceholder": "搜索域名或品牌名",
-      "category": "分类",
-      "import": "导入",
-      "export": "导出",
-      "create": "添加品牌",
-      "edit": "编辑品牌",
-      "emptyDesc": "暂无品牌数据，点击右上角添加。",
-      "domain": "域名",
-      "name": "品牌名称",
-      "alexaRank": "Alexa 排名",
-      "enabled": "启用",
-      "actions": "操作",
-      "confirmDelete": "确定删除此品牌？",
-      "required": "此项为必填",
-      "importHint": "批量导入品牌，每行一个：域名[Tab]名称[Tab]分类",
-      "importPlaceholder": "example.com\tExample Inc\ttech",
-      "importEmpty": "请输入至少一个品牌",
-      "imported": "已导入 {count} 个品牌"
     },
     "protectionPolicies": {
       "title": "防护策略",

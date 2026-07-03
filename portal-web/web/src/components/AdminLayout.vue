@@ -216,7 +216,6 @@ const titleMap = {
     AdminRules: 'nav.ruleLibrary',
     AdminRuleItems: 'admin.rules.title',
     AdminRuleCategories: 'admin.ruleCategories.title',
-    AdminBrands: 'admin.brands.title',
     AdminSecurityData: 'admin.securityData.title',
     AdminSecurityDataItem: 'admin.securityData.title',
     AdminProtectionPolicies: 'admin.protectionPolicies.title',

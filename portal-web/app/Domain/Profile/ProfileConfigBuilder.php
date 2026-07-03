@@ -2,7 +2,6 @@
 
 namespace App\Domain\Profile;
 
-use App\Models\Brand;
 use App\Models\SystemConfig;
 use Illuminate\Support\Facades\DB;
 
@@ -30,12 +29,6 @@ final class ProfileConfigBuilder
             'security' => array_merge(
                 $this->globalSecurityDefaults(),
                 $featureSettings['security'] ?? ['enabled' => true],
-                [
-                    'brand_domains' => Brand::where('enabled', true)
-                        ->whereNotNull('domain')
-                        ->pluck('domain')
-                        ->toArray(),
-                ],
             ),
             'adblock' => [
                 'enabled' => (bool) ($profile['adblock_enabled'] ?? false),

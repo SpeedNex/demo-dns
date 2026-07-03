@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Api\V1\Admin\AdminRuleController;
 use App\Http\Controllers\Api\V1\Admin\AdminCategoryController;
-use App\Http\Controllers\Api\V1\Admin\AdminBrandController;
 use App\Http\Controllers\Api\V1\Admin\AdminRuleItemController;
 use App\Http\Controllers\Api\V1\Admin\AdminSecurityDataController;
 use Illuminate\Support\Facades\Route;
@@ -14,8 +13,6 @@ Route::middleware('permission:admin.rules.read')->group(function (): void {
     Route::get('rules/{id}', [AdminRuleController::class, 'show'])->whereNumber('id');
     Route::get('rule-categories', [AdminCategoryController::class, 'index']);
     Route::get('rule-categories/options', [AdminCategoryController::class, 'options']);
-    Route::get('brands', [AdminBrandController::class, 'index']);
-    Route::get('brands/export', [AdminBrandController::class, 'export']);
 });
 Route::middleware('permission:admin.rules.write')->group(function (): void {
     Route::post('rules', [AdminRuleController::class, 'store']);
@@ -30,10 +27,6 @@ Route::middleware('permission:admin.rules.write')->group(function (): void {
     Route::put('rule-categories/{id}', [AdminCategoryController::class, 'update']);
     Route::delete('rule-categories/{id}', [AdminCategoryController::class, 'destroy']);
     Route::post('rule-categories/batch-destroy', [AdminCategoryController::class, 'batchDestroy']);
-    Route::post('brands', [AdminBrandController::class, 'store']);
-    Route::put('brands/{id}', [AdminBrandController::class, 'update']);
-    Route::delete('brands/{id}', [AdminBrandController::class, 'destroy']);
-    Route::post('brands/import', [AdminBrandController::class, 'import']);
 });
 
 // Security Data (DDNS / Parked / TLD / AllowList / BlockList)

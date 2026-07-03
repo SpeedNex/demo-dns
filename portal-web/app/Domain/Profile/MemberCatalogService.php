@@ -28,14 +28,13 @@ final class MemberCatalogService
         $result = [
             'device_models' => $this->normalizeItems($stored['device_models'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled', 'system']),
             'privacy_blocklists' => $this->normalizeItems($stored['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'field_type', 'days_ago', 'enabled', 'system', 'devices']),
-            'parental_presets' => $this->normalizeItems($stored['parental_presets'] ?? [], ['name', 'key', 'icon', 'category', 'field_type', 'desc', 'enabled', 'url', 'system']),
+            'parental_presets' => $this->normalizeParentalPresets($stored['parental_presets'] ?? []),
         ];
 
         // 确保每组所有项都有 field_type 默认值
         $defaultFieldTypes = [
             'device_models' => 'switch',
             'privacy_blocklists' => 'switch',
-            'parental_presets' => 'switch',
         ];
         foreach ($defaultFieldTypes as $group => $defaultType) {
             foreach ($result[$group] as &$item) {
@@ -66,7 +65,7 @@ final class MemberCatalogService
         $merged = [
             'device_models' => $this->normalizeItems($payload['device_models'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled', 'system']),
             'privacy_blocklists' => $this->normalizeItems($payload['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'field_type', 'days_ago', 'enabled', 'system', 'devices']),
-            'parental_presets' => $this->normalizeItems($payload['parental_presets'] ?? [], ['name', 'key', 'icon', 'category', 'field_type', 'desc', 'enabled', 'url', 'system']),
+            'parental_presets' => $this->normalizeParentalPresets($payload['parental_presets'] ?? []),
         ];
 
         SystemConfig::query()->updateOrCreate(
@@ -75,6 +74,74 @@ final class MemberCatalogService
         );
 
         return $merged;
+    }
+
+    /**
+     * 标准化家长监护预设
+     * 结构：
+     * - safe_search: 开关
+     * - youtube_restricted: 开关
+     * - block_bypass: 开关
+     * - app_presets: 多选（包含所有网站/应用/游戏选项）
+     *
+     * @param array<int, array<string, mixed>> $items
+     * @return array<int, array<string, mixed>>
+     */
+    private function normalizeParentalPresets(array $items): array
+    {
+        return collect($items)
+            ->filter(fn ($item) => is_array($item))
+            ->map(function (array $item): array {
+                $normalized = [
+                    'key' => (string) ($item['key'] ?? ''),
+                    'name' => (string) ($item['name'] ?? ''),
+                    'desc' => (string) ($item['desc'] ?? ''),
+                    'icon' => (string) ($item['icon'] ?? ''),
+                    'field_type' => (string) ($item['field_type'] ?? 'switch'),
+                    'enabled' => (bool) ($item['enabled'] ?? true),
+                    'system' => (bool) ($item['system'] ?? false),
+                    'url' => is_array($item['url'] ?? null) ? $item['url'] : [],
+                ];
+
+                // 多选类型：标准化 options 数组
+                if ($normalized['field_type'] === 'multi' && isset($item['options'])) {
+                    $normalized['options'] = $this->normalizeOptions($item['options']);
+                }
+
+                return $normalized;
+            })
+            ->filter(function (array $item): bool {
+                if ($item['system']) {
+                    return true;
+                }
+                return ! empty($item['name']);
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * 标准化多选选项
+     *
+     * @param array<int, array<string, mixed>> $options
+     * @return array<int, array<string, mixed>>
+     */
+    private function normalizeOptions(array $options): array
+    {
+        return collect($options)
+            ->filter(fn ($opt) => is_array($opt) && ! empty($opt['name']))
+            ->map(function (array $opt): array {
+                return [
+                    'name' => (string) ($opt['name'] ?? ''),
+                    'icon' => (string) ($opt['icon'] ?? '🌐'),
+                    'category' => (string) ($opt['category'] ?? 'website'),
+                    'desc' => (string) ($opt['desc'] ?? ''),
+                    'url' => is_array($opt['url'] ?? null) ? array_filter($opt['url'], fn ($v) => is_string($v) && trim($v) !== '') : [],
+                    'enabled' => (bool) ($opt['enabled'] ?? true),
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     /**

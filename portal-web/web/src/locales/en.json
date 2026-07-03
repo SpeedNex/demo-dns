@@ -1373,7 +1373,14 @@
       "editDevice": "Edit Device",
       "deviceKey": "Device Code",
       "deviceName": "Device Name",
-      "deviceIcon": "Device Icon"
+      "deviceIcon": "Device Icon",
+      "type": "Type",
+      "switch": "Switch",
+      "multiSelect": "Multi-Select",
+      "details": "Details",
+      "viewOptions": "View Options ({count})",
+      "addUrlPlaceholder": "Add URL and press Enter",
+      "urlHint": "Each URL must include the domain, e.g. example.com"
     },
     "systemConfig": {
       "title": "System Config",
@@ -2004,27 +2011,6 @@
       "codeRequired": "Code is required",
       "nameRequired": "Name is required",
       "required": "Required"
-    },
-    "brands": {
-      "title": "Brand Sites",
-      "searchPlaceholder": "Search domain or brand name",
-      "category": "Category",
-      "import": "Import",
-      "export": "Export",
-      "create": "Add Brand",
-      "edit": "Edit Brand",
-      "emptyDesc": "No brand data found. Click the button on the top right to add.",
-      "domain": "Domain",
-      "name": "Brand Name",
-      "alexaRank": "Alexa Rank",
-      "enabled": "Enabled",
-      "actions": "Actions",
-      "confirmDelete": "Delete this brand?",
-      "required": "This field is required",
-      "importHint": "Batch import brands, one per line: domain[Tab]name[Tab]category",
-      "importPlaceholder": "example.com\tExample Inc\ttech",
-      "importEmpty": "Please enter at least one brand",
-      "imported": "{count} brand(s) imported"
     },
     "protectionPolicies": {
       "title": "Protection Policies",

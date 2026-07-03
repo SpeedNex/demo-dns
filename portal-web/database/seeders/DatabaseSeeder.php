@@ -51,6 +51,5 @@ class DatabaseSeeder extends Seeder
 
         // Seed rule categories and brands (Phase 1 data fill)
         $this->call(RuleCategorySeeder::class);
-        $this->call(BrandSeeder::class);
     }
 }

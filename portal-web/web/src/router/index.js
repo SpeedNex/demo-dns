@@ -30,7 +30,6 @@ import AdminGeoDNS from '@/views/admin/GeoDNS.vue'
 import AdminRules from '@/views/admin/Rules.vue'
 import AdminRuleItems from '@/views/admin/RuleItems.vue'
 import AdminRuleCategories from '@/views/admin/RuleCategories.vue'
-import AdminBrands from '@/views/admin/Brands.vue'
 import AdminSecurityData from '@/views/admin/SecurityData.vue'
 import AdminSecurityDataItem from '@/views/admin/SecurityDataItem.vue'
 import AdminSecurityCatalogPage from '@/views/admin/SecurityCatalogPage.vue'
@@ -110,7 +109,6 @@ const routes = [
             { path: 'rules', name: 'AdminRules', component: AdminRules },
             { path: 'rules/items', name: 'AdminRuleItems', component: AdminRuleItems },
             { path: 'rule-categories', name: 'AdminRuleCategories', component: AdminRuleCategories },
-            { path: 'brands', name: 'AdminBrands', component: AdminBrands },
             { path: 'security-data', name: 'AdminSecurityData', component: AdminSecurityData },
             { path: 'security-data/:group', name: 'AdminSecurityDataItem', component: AdminSecurityDataItem },
             { path: 'security-catalog', name: 'AdminProtectionPolicies', component: AdminSecurityCatalogPage },

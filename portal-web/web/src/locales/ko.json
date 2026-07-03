@@ -1334,7 +1334,14 @@
       "editDevice": "기기 편집",
       "deviceKey": "기기 코드",
       "deviceName": "기기 이름",
-      "deviceIcon": "기기 아이콘"
+      "deviceIcon": "기기 아이콘",
+      "type": "유형",
+      "switch": "스위치",
+      "multiSelect": "다중 선택",
+      "details": "상세",
+      "viewOptions": "옵션 보기 ({count}개)",
+      "addUrlPlaceholder": "URL 추가 후 Enter",
+      "urlHint": "각 URL은 도메인을 포함해야 합니다 (예: example.com)"
     },
     "systemConfig": {
       "title": "시스템 설정",
@@ -1852,27 +1859,6 @@
       "codeRequired": "코드는 필수입니다",
       "nameRequired": "이름은 필수입니다",
       "required": "필수"
-    },
-    "brands": {
-      "title": "브랜드 사이트",
-      "searchPlaceholder": "도메인 또는 브랜드명 검색",
-      "category": "카테고리",
-      "import": "가져오기",
-      "export": "내보내기",
-      "create": "브랜드 추가",
-      "edit": "브랜드 편집",
-      "emptyDesc": "브랜드 데이터가 없습니다. 오른쪽 상단의 버튼을 클릭하여 추가하세요.",
-      "domain": "도메인",
-      "name": "브랜드명",
-      "alexaRank": "Alexa 순위",
-      "enabled": "활성화",
-      "actions": "작업",
-      "confirmDelete": "이 브랜드를 삭제하시겠습니까?",
-      "required": "필수 항목입니다",
-      "importHint": "브랜드를 일괄 가져오기합니다. 한 줄에 하나씩: 도메인[Tab]이름[Tab]카테고리",
-      "importPlaceholder": "example.com\tExample Inc\ttech",
-      "importEmpty": "최소 하나의 브랜드를 입력하세요",
-      "imported": "{count}개 브랜드를 가져왔습니다"
     },
     "protectionPolicies": {
       "title": "보호 정책",

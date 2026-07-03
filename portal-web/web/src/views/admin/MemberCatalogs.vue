@@ -21,8 +21,8 @@
                 </div>
                 <el-table :data="pagedRows('device_models')" stripe size="small">
                     <template #empty><div class="empty">{{ $t('dashboard.noData') }}</div></template>
-                    <el-table-column :label="$t('admin.memberCatalogs.strategyCode')" prop="key" min-width="180" />
                     <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="200" />
+                    <el-table-column :label="$t('admin.memberCatalogs.strategyCode')" prop="key" min-width="180" />
                     <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="400" show-overflow-tooltip />
                     <el-table-column :label="$t('admin.memberCatalogs.fieldType')" width="110" align="center">
                         <template #default="{ row }">
@@ -60,8 +60,8 @@
                 </div>
                 <el-table :data="pagedRows('privacy_blocklists')" stripe size="small">
                     <template #empty><div class="empty">{{ $t('dashboard.noData') }}</div></template>
-                    <el-table-column :label="$t('admin.memberCatalogs.code')" prop="key" min-width="140" />
                     <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="140" />
+                    <el-table-column :label="$t('admin.memberCatalogs.code')" prop="key" min-width="140" />
                     <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="200" show-overflow-tooltip />
                     <el-table-column :label="$t('admin.memberCatalogs.fieldType')" width="110" align="center">
                         <template #default="{ row }">
