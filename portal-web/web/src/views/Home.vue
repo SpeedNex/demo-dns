@@ -233,7 +233,7 @@ const goConsole = async () => {
             await router.push(`/user/${key}`)
             return
         }
-    } catch () {
+    } catch (_) {
         if (savedId) {
             await router.push(`/user/${savedId}`)
             return
