@@ -225,6 +225,7 @@ const titleMap = {
     AdminUsers: 'admin.users',
     AdminDevices: 'admin.devices',
     AdminMemberCatalogs: 'admin.memberCatalogs.title',
+    AdminMemberCatalogs: 'admin.memberCatalogs.title',
     AdminPlans: 'admin.plans.title',
     AdminBill: 'admin.finance.bill',
     AdminSubscriptions: 'admin.finance.subscriptionList',

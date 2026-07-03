@@ -77,6 +77,18 @@ final class MemberCatalogService
     }
 
     /**
+     * 将 url 字段安全转为字符串（兼容旧版数组格式）
+     */
+    private function urlToString(mixed $url): string
+    {
+        if (is_array($url)) {
+            $first = $url[array_key_first($url)] ?? '';
+            return is_string($first) ? $first : '';
+        }
+        return (string) ($url ?? '');
+    }
+
+    /**
      * 标准化家长监护预设
      * 结构：
      * - safe_search: 开关
@@ -100,7 +112,7 @@ final class MemberCatalogService
                     'field_type' => (string) ($item['field_type'] ?? 'switch'),
                     'enabled' => (bool) ($item['enabled'] ?? true),
                     'system' => (bool) ($item['system'] ?? false),
-                    'url' => is_array($item['url'] ?? null) ? $item['url'] : [],
+                    'url' => $this->urlToString($item['url'] ?? ''),
                 ];
 
                 // 多选类型：标准化 options 数组
@@ -136,7 +148,7 @@ final class MemberCatalogService
                     'icon' => (string) ($opt['icon'] ?? '🌐'),
                     'category' => (string) ($opt['category'] ?? 'website'),
                     'desc' => (string) ($opt['desc'] ?? ''),
-                    'url' => is_array($opt['url'] ?? null) ? array_filter($opt['url'], fn ($v) => is_string($v) && trim($v) !== '') : [],
+                    'url' => $this->urlToString($opt['value'] ?? $opt['url'] ?? ''),
                     'enabled' => (bool) ($opt['enabled'] ?? true),
                 ];
             })

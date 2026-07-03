@@ -21,22 +21,30 @@
 
             <el-divider />
 
-            <!-- 安全搜索 / YouTube 受限模式 / 阻止绕过 -->
+            <!-- 网站、应用程序和游戏 -->
             <div class="section">
-                <h3 class="section-title">{{ $t('parental.safeSearch.title') }}</h3>
-                <p class="section-desc">{{ $t('parental.safeSearch.desc') }}</p>
-                <div class="blocklist-grid">
-                    <div v-for="item in safeSearchItems" :key="item.key" class="blocklist-card">
-                        <div class="blocklist-header">
-                            <div class="blocklist-info">
-                                <span v-if="item.icon" class="safe-search-icon">{{ item.icon }}</span>
-                                <h4 class="blocklist-name">{{ item.label }}</h4>
+                <h3 class="section-title">{{ $t('parental.websites.title') }}</h3>
+                <p class="section-desc">{{ $t('parental.websites.desc') }}</p>
+
+                <el-table :data="blockedItems" stripe :empty-text="$t('parental.emptyBlockedItems')" size="small">
+                    <el-table-column :label="$t('parental.name')" min-width="200">
+                        <template #default="{ row }">
+                            <div class="item-cell">
+                                <span>{{ row.name }}</span>
                             </div>
-                            <el-switch v-model="form[item.key]" @change="autoSave" />
-                        </div>
-                        <p class="blocklist-desc">{{ item.desc }}</p>
-                    </div>
-                </div>
+                        </template>
+                    </el-table-column>
+                    <el-table-column :label="$t('parental.actions')" width="80">
+                        <template #default="{ row }">
+                            <el-button size="small" text type="danger" @click="removeBlockedItem(row)">{{ $t('parental.remove') }}</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+
+                <el-button size="small" style="margin-top:12px" @click="showItemPicker = true">
+                    <el-icon><Plus /></el-icon>
+                    {{ $t('parental.addWebsiteAppGame') }}
+                </el-button>
             </div>
 
             <el-divider />
@@ -45,12 +53,14 @@
             <div class="section">
                 <h3 class="section-title">{{ $t('parental.categories.title') }}</h3>
                 <p class="section-desc">{{ $t('parental.categories.desc') }}</p>
-                
+
                 <el-table :data="blockedCategories" stripe :empty-text="$t('parental.emptyBlockedCategories')" size="small">
                     <el-table-column :label="$t('parental.categoryLabel')" min-width="200">
                         <template #default="{ row }">
-                            <div style="font-weight:500">{{ getCategoryName(row.key) }}</div>
-                            <div style="font-size:0.9em;opacity:0.5;margin-top:2px">{{ getCategoryDesc(row.key) }}</div>
+                            <div>
+                                <div style="font-weight:500">{{ getCategoryName(row.key) }}</div>
+                                <div style="font-size:0.9em;opacity:0.5;margin-top:2px">{{ getCategoryDesc(row.key) }}</div>
+                            </div>
                         </template>
                     </el-table-column>
                     <el-table-column :label="$t('parental.actions')" width="80">
@@ -68,90 +78,65 @@
 
             <el-divider />
 
-            <!-- 网站、应用程序和游戏 -->
+            <!-- 安全搜索 / YouTube 受限模式 / 阻止绕过 -->
             <div class="section">
-                <h3 class="section-title">{{ $t('parental.websites.title') }}</h3>
-                <p class="section-desc">{{ $t('parental.websites.desc') }}</p>
-
-                <!-- 分类过滤 -->
-                <div class="category-tabs">
-                    <el-radio-group v-model="activeCategory" size="small">
-                        <el-radio-button value="all">{{ $t('parental.all') }}</el-radio-button>
-                        <el-radio-button value="social">社交</el-radio-button>
-                        <el-radio-button value="app">应用</el-radio-button>
-                        <el-radio-button value="video">视频</el-radio-button>
-                        <el-radio-button value="game">游戏</el-radio-button>
-                        <el-radio-button value="shopping">购物</el-radio-button>
-                        <el-radio-button value="adult">成人</el-radio-button>
-                        <el-radio-button value="gambling">赌博</el-radio-button>
-                        <el-radio-button value="violence">暴力</el-radio-button>
-                    </el-radio-group>
+                <div v-for="item in safeSearchItems" :key="item.key" class="setting-row safe-row">
+                    <div class="safe-info">
+                        <div>
+                            <h4 class="safe-name">{{ item.label }}</h4>
+                            <p class="safe-desc">{{ item.desc }}</p>
+                        </div>
+                    </div>
+                    <el-switch v-model="form[item.key]" @change="autoSave" />
                 </div>
-
-                <!-- 搜索 -->
-                <div style="margin:12px 0">
-                    <el-input v-model="searchQuery" :placeholder="$t('parental.searchPlaceholder')" size="small" clearable prefix-icon="Search" />
-                </div>
-
-                <!-- 表格 -->
-                <el-table :data="filteredOptions" stripe size="small" style="width:100%">
-                    <el-table-column :label="$t('parental.name')" min-width="180">
-                        <template #default="{ row }">
-                            <div style="display:flex;align-items:center;gap:8px">
-                                <span style="font-size:16px">{{ row.icon || '🌐' }}</span>
-                                <span>{{ row.name }}</span>
-                                <el-tag v-if="row.category" size="small" :type="getCategoryTagType(row.category)" style="margin-left:4px">
-                                    {{ getCategoryLabel(row.category) }}
-                                </el-tag>
-                            </div>
-                        </template>
-                    </el-table-column>
-                    <el-table-column prop="desc" :label="$t('parental.description')" min-width="200" show-overflow-tooltip />
-                    <el-table-column :label="$t('parental.status')" width="80" align="center">
-                        <template #default="{ row }">
-                            <el-switch 
-                                :model-value="row._active" 
-                                @change="toggleOption(row, $event)" 
-                                size="small"
-                            />
-                        </template>
-                    </el-table-column>
-                    <el-table-column :label="$t('parental.url')" min-width="200">
-                        <template #default="{ row }">
-                            <el-select
-                                v-model="row._customUrls"
-                                multiple
-                                filterable
-                                allow-create
-                                default-first-option
-                                :placeholder="$t('parental.addUrlPlaceholder')"
-                                size="small"
-                                style="width:100%"
-                                @change="autoSave"
-                            >
-                                <el-option
-                                    v-for="url in (row.url || [])"
-                                    :key="url"
-                                    :label="url"
-                                    :value="url"
-                                />
-                            </el-select>
-                        </template>
-                    </el-table-column>
-                </el-table>
             </div>
         </el-card>
+
+        <!-- 添加网站/应用/游戏 弹窗 -->
+        <el-dialog v-model="showItemPicker" :title="$t('parental.addWebsiteAppGameTitle')" width="600px" top="5vh">
+            <div style="max-height:480px;overflow-y:auto">
+                <div v-for="opt in availableOptions" :key="opt.name" class="picker-item">
+                    <div>
+                        <div style="font-weight:500">
+                            {{ opt.name }}
+                        </div>
+                        <div v-if="opt.desc" style="font-size:0.9em;opacity:0.5;margin-top:2px">{{ opt.desc }}</div>
+                    </div>
+                    <el-button
+                        size="small"
+                        type="primary"
+                        style="font-weight:bold;font-size:12px;text-transform:uppercase;flex-shrink:0;margin-left:12px"
+                        @click="addBlockedItem(opt)"
+                    >
+                        {{ $t('parental.add') }}
+                    </el-button>
+                </div>
+                <div v-if="availableOptions.length === 0" class="empty-picker">
+                    {{ $t('parental.emptyBlockedItems') }}
+                </div>
+            </div>
+        </el-dialog>
 
         <!-- 分类目录选择弹窗 -->
         <el-dialog v-model="showCategoryPicker" :title="$t('parental.addCategoryTitle')" width="600px" top="5vh">
             <div style="max-height:480px;overflow-y:auto">
-                <div v-for="cat in categoryPresets" :key="cat.key" class="picker-item" :style="{ borderLeftColor: '#8b5cf6' }">
+                <div v-for="cat in categoryPresets" :key="cat.key" class="picker-item" style="borderLeftColor:#8b5cf6">
                     <div>
                         <div style="font-weight:500">{{ getCategoryName(cat.key) }}</div>
                         <div style="font-size:0.9em;opacity:0.5;margin-top:2px">{{ getCategoryDesc(cat.key) }}</div>
                     </div>
-                    <el-button v-if="!isCategoryBlocked(cat)" size="small" type="primary" style="font-weight:bold;font-size:12px;text-transform:uppercase;flex-shrink:0;margin-left:12px" @click="blockCategory(cat)">{{ $t('parental.add') }}</el-button>
-                    <el-tag v-else type="success" size="small" effect="dark" style="flex-shrink:0;margin-left:12px">{{ $t('parental.added') }}</el-tag>
+                    <el-button
+                        v-if="!isCategoryBlocked(cat)"
+                        size="small"
+                        type="primary"
+                        style="font-weight:bold;font-size:12px;text-transform:uppercase;flex-shrink:0;margin-left:12px"
+                        @click="blockCategory(cat)"
+                    >
+                        {{ $t('parental.add') }}
+                    </el-button>
+                    <el-tag v-else type="success" size="small" effect="dark" style="flex-shrink:0;margin-left:12px">
+                        {{ $t('parental.added') }}
+                    </el-tag>
                 </div>
             </div>
         </el-dialog>
@@ -172,6 +157,7 @@ const { currentProfileId } = useCurrentProfile()
 const saving = ref(false)
 const hydrating = ref(false)
 const showCategoryPicker = ref(false)
+const showItemPicker = ref(false)
 const searchQuery = ref('')
 const activeCategory = ref('all')
 
@@ -197,6 +183,12 @@ const safeSearchItems = ref([])
 // 应用/网站/游戏选项
 const appOptions = ref([])
 
+// 当前已拦截的项目（active === true）
+const blockedItems = computed(() => appOptions.value.filter((p) => p._active))
+
+// 可用于添加的选项（未拦截的）
+const availableOptions = computed(() => appOptions.value.filter((p) => !p._active))
+
 const getCategoryName = (key) => {
     if (!key) return ''
     const preset = categoryPresets.value.find((item) => item.key === key)
@@ -213,43 +205,25 @@ const getCategoryDesc = (key) => {
 }
 
 const isCategoryBlocked = (cat) => blockedCategories.value.some((b) => b.key === cat.key)
-const blockCategory = (cat) => { 
+const blockCategory = (cat) => {
     if (!isCategoryBlocked(cat)) {
         blockedCategories.value = [...blockedCategories.value, { ...cat }]
         autoSave()
     }
 }
-const removeCategory = (row) => { 
+const removeCategory = (row) => {
     blockedCategories.value = blockedCategories.value.filter((b) => b.key !== row.key)
     autoSave()
 }
 
-const getCategoryTagType = (category) => {
-    const map = { social: 'primary', app: 'success', video: 'warning', game: 'danger', shopping: 'info' }
-    return map[category] || 'info'
+// 添加/移除已拦截的项目
+const addBlockedItem = (row) => {
+    row._active = true
+    showItemPicker.value = false
+    autoSave()
 }
-
-const getCategoryLabel = (category) => {
-    const map = { social: '社交', app: '应用', video: '视频', game: '游戏', shopping: '购物', adult: '成人', gambling: '赌博', violence: '暴力' }
-    return map[category] || category
-}
-
-// 过滤后的表格数据
-const filteredOptions = computed(() => {
-    let result = appOptions.value
-    if (activeCategory.value !== 'all') {
-        result = result.filter((p) => p.category === activeCategory.value)
-    }
-    const q = searchQuery.value.toLowerCase().trim()
-    if (q) {
-        result = result.filter((p) => p.name.toLowerCase().includes(q) || (p.desc || '').toLowerCase().includes(q))
-    }
-    return result
-})
-
-// 切换选项
-const toggleOption = (row, value) => {
-    row._active = value
+const removeBlockedItem = (row) => {
+    row._active = false
     autoSave()
 }
 
@@ -258,7 +232,7 @@ const handleSave = async () => {
     saving.value = true
     try {
         // 收集激活的选项
-        const blockedItems = appOptions.value
+        const blockedItemsData = appOptions.value
             .filter((p) => p._active)
             .map((p) => ({
                 name: p.name,
@@ -267,10 +241,10 @@ const handleSave = async () => {
                 desc: p.desc,
                 url: p._customUrls || p.url || [],
             }))
-        
+
         const data = {
             ...form,
-            blocked_items: blockedItems,
+            blocked_items: blockedItemsData,
             blocked_categories: [...blockedCategories.value],
             profile_id: currentProfileId.value,
         }
@@ -302,7 +276,7 @@ const fetchData = async () => {
     try {
         const { data } = await client.get('/user/parental', { params: { profile_id: currentProfileId.value } })
         const apiData = data.data || {}
-        Object.assign(form, { 
+        Object.assign(form, {
             enabled: apiData.enabled ?? false,
             safe_search: apiData.safe_search ?? false,
             youtube_restricted_mode: apiData.youtube_restricted_mode ?? false,
@@ -335,8 +309,6 @@ watch(currentProfileId, fetchData)
 
 onMounted(async () => {
     // 从 catalogs.parental_presets 获取数据
-    // 结构: 4 行 - safe_search, youtube_restricted, block_bypass (switch)
-    //       app_presets (multi, 包含 options 数组)
     try {
         const catalogResponse = await client.get('/user/catalogs')
         const catalogs = catalogResponse.data?.data || {}
@@ -361,7 +333,7 @@ onMounted(async () => {
             }
         }
     } catch {}
-    
+
     // 从 rule-categories 获取家长监护分类目录
     try {
         const categoryResponse = await client.get('/user/rule-categories', { params: { group: 'family' } })
@@ -370,7 +342,7 @@ onMounted(async () => {
             categoryPresets.value = categories
         }
     } catch {}
-    
+
     await fetchData()
 })
 </script>
@@ -390,14 +362,13 @@ onMounted(async () => {
 .section-title { font-size: 16px; font-weight: 600; color: var(--color-text); margin: 0 0 4px; }
 .section-desc { font-size: 13px; color: var(--color-text-muted); margin: 0 0 16px; }
 .setting-row .section-desc { margin-bottom: 0; }
-.blocklist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-.blocklist-card { background: var(--color-bg-secondary); border-radius: var(--radius-lg); padding: 16px; border: 1px solid var(--color-border); transition: background-color 0.2s, border-color 0.2s; }
-.blocklist-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-.blocklist-info { display: flex; align-items: center; gap: 8px; }
-.blocklist-name { font-size: 14px; font-weight: 600; color: var(--color-text); margin: 0; }
-.safe-search-icon { font-size: 18px; }
-.blocklist-desc { font-size: 13px; color: var(--color-text-muted); margin: 0; line-height: 1.5; }
-.category-tabs { margin-bottom: 12px; }
+.item-cell { display: flex; align-items: center; gap: 8px; }
+.safe-row { padding: 12px 0; border-bottom: 1px solid var(--color-border); }
+.safe-row:last-child { border-bottom: none; }
+.safe-info { display: flex; align-items: flex-start; gap: 10px; flex: 1; }
+.safe-search-icon { font-size: 18px; margin-top: 2px; flex-shrink: 0; }
+.safe-name { font-size: 15px; font-weight: 600; color: var(--color-text); margin: 0 0 4px; }
+.safe-desc { font-size: 13px; color: var(--color-text-muted); margin: 0; line-height: 1.5; }
 .picker-item {
     display: flex;
     align-items: center;
@@ -407,5 +378,10 @@ onMounted(async () => {
     background: var(--color-bg-secondary);
     border-radius: var(--radius-md);
     margin-bottom: 8px;
+}
+.empty-picker {
+    padding: 40px 0;
+    text-align: center;
+    color: var(--color-text-muted);
 }
 </style>

@@ -22,7 +22,7 @@
                 <el-table :data="pagedRows('device_models')" stripe size="small">
                     <template #empty><div class="empty">{{ $t('dashboard.noData') }}</div></template>
                     <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="200" />
-                    <el-table-column :label="$t('admin.memberCatalogs.strategyCode')" prop="key" min-width="180" />
+                    <el-table-column :label="$t('admin.memberCatalogs.code')" prop="key" min-width="180" />
                     <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="400" show-overflow-tooltip />
                     <el-table-column :label="$t('admin.memberCatalogs.fieldType')" width="110" align="center">
                         <template #default="{ row }">
@@ -102,22 +102,22 @@
                     <el-table :data="pagedRows('parental_presets')" stripe size="small">
                         <template #empty><div class="empty">{{ $t('dashboard.noData') }}</div></template>
                         <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="160" />
+                        <el-table-column :label="$t('admin.memberCatalogs.code')" prop="key" min-width="140" />
                         <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="300" show-overflow-tooltip />
-                        <el-table-column :label="$t('admin.memberCatalogs.fieldType')" width="120">
+                        <el-table-column :label="$t('admin.memberCatalogs.fieldType')" width="110" align="center">
                             <template #default="{ row }">
                                 <el-tag size="small" :type="getFieldTypeTag(row.field_type)" effect="plain">{{ getFieldTypeLabel(row.field_type) }}</el-tag>
                             </template>
                         </el-table-column>
-                        <el-table-column :label="$t('admin.memberCatalogs.url')" prop="url" min-width="200" show-overflow-tooltip />
                         <el-table-column :label="$t('admin.memberCatalogs.status')" width="100" align="center">
                             <template #default="{ row }">
                                 <el-switch v-model="row.enabled" @change="toggleRow('parental_presets', row)" />
                             </template>
                         </el-table-column>
                         <el-table-column :label="$t('common.actions')" width="140" fixed="right">
-                            <template #default="{ $index }">
+                            <template #default="{ row, $index }">
                                 <el-button link size="small" @click="openEditDialog('parental_presets', $index)"><el-icon><Edit /></el-icon></el-button>
-                                <el-button link size="small" type="danger" @click="removeRow('parental_presets', $index)"><el-icon><Delete /></el-icon></el-button>
+                                <el-button v-if="!row.system" link size="small" type="danger" @click="removeRow('parental_presets', $index)"><el-icon><Delete /></el-icon></el-button>
                             </template>
                         </el-table-column>
                     </el-table>
@@ -147,6 +147,22 @@
                     <el-option :label="$t('admin.memberCatalogs.fieldTypeMulti')" value="multi" />
                 </el-select>
             </el-form-item>
+            <template v-if="hasField('field_type') && hasField('options') && rowForm.field_type === 'multi'">
+                <el-divider />
+                <el-form-item :label="$t('admin.memberCatalogs.optionList')">
+                    <div class="option-list-wrapper">
+                        <div v-for="(opt, idx) in rowForm.options" :key="idx" class="option-item">
+                            <el-input v-model="opt.value" placeholder="选项值（网址）" size="small" class="option-input" />
+                            <el-input v-model="opt.name" :placeholder="$t('admin.memberCatalogs.name')" size="small" class="option-input" @input="autoFillUrl(opt)" />
+                            <el-button size="small" type="danger" :icon="Delete" circle @click="removeOption(idx)" />
+                        </div>
+                        <el-button size="small" @click="addOption">
+                            <el-icon><Plus /></el-icon>
+                            {{ $t('common.add') }}
+                        </el-button>
+                    </div>
+                </el-form-item>
+            </template>
             <el-form-item v-if="hasField('days_ago')" :label="$t('admin.memberCatalogs.updatedDays')">
                 <el-input-number v-model="rowForm.days_ago" :min="0" style="width: 100%" />
             </el-form-item>
@@ -267,6 +283,7 @@ const presetFilter = reactive({ name: '' })
 const showRowDialog = ref(false)
 const editingTab = ref(null)
 const editingIndex = ref(null)
+const editingKey = ref(null)
 const rowForm = reactive({})
 
 // 设备编辑 dialog
@@ -306,6 +323,97 @@ const removeDevice = (index) => {
     rowForm.devices.splice(index, 1)
 }
 
+const addOption = () => {
+    if (! Array.isArray(rowForm.options)) {
+        rowForm.options = []
+    }
+    rowForm.options.push({ name: '', value: '' })
+}
+
+const removeOption = (index) => {
+    if (! Array.isArray(rowForm.options)) return
+    rowForm.options.splice(index, 1)
+}
+
+const nameUrlMap = {
+    'facebook': 'https://www.facebook.com',
+    'instagram': 'https://www.instagram.com',
+    'twitter': 'https://www.twitter.com',
+    'x': 'https://www.x.com',
+    'tiktok': 'https://www.tiktok.com',
+    '抖音': 'https://www.tiktok.com',
+    'youtube': 'https://www.youtube.com',
+    'snapchat': 'https://www.snapchat.com',
+    'reddit': 'https://www.reddit.com',
+    'pinterest': 'https://www.pinterest.com',
+    'linkedin': 'https://www.linkedin.com',
+    'tumblr': 'https://www.tumblr.com',
+    'telegram': 'https://www.telegram.org',
+    'whatsapp': 'https://www.whatsapp.com',
+    'signal': 'https://www.signal.org',
+    'messenger': 'https://www.messenger.com',
+    'discord': 'https://www.discord.com',
+    'twitch': 'https://www.twitch.tv',
+    '9gag': 'https://www.9gag.com',
+    'dailymotion': 'https://www.dailymotion.com',
+    'vimeo': 'https://www.vimeo.com',
+    'bereal': 'https://www.bereal.com',
+    'imgur': 'https://www.imgur.com',
+    'mastodon': 'https://www.mastodon.social',
+    'skype': 'https://www.skype.com',
+    'steam': 'https://www.steampowered.com',
+    'spotify': 'https://www.spotify.com',
+    'chatgpt': 'https://www.chatgpt.com',
+    'openai': 'https://www.openai.com',
+    'netflix': 'https://www.netflix.com',
+    'hulu': 'https://www.hulu.com',
+    'hbomax': 'https://www.hbomax.com',
+    'hbo max': 'https://www.hbomax.com',
+    'prime video': 'https://www.primevideo.com',
+    'disney+': 'https://www.disneyplus.com',
+    '迪士尼+': 'https://www.disneyplus.com',
+    'disney': 'https://www.disneyplus.com',
+    'roblox': 'https://www.roblox.com',
+    '罗布乐思': 'https://www.roblox.com',
+    '堡垒之夜': 'https://www.fortnite.com',
+    'fortnite': 'https://www.fortnite.com',
+    '英雄联盟': 'https://www.leagueoflegends.com',
+    'league of legends': 'https://www.leagueoflegends.com',
+    '我的世界': 'https://www.minecraft.net',
+    'minecraft': 'https://www.minecraft.net',
+    '暴雪': 'https://www.blizzard.com',
+    'blizzard': 'https://www.blizzard.com',
+    'xbox live': 'https://www.xbox.com',
+    'playstation network': 'https://www.playstation.com',
+    'playstation': 'https://www.playstation.com',
+    'vk': 'https://www.vk.com',
+    'ebay': 'https://www.ebay.com',
+    'google 聊天': 'https://mail.google.com/chat',
+    'google chat': 'https://mail.google.com/chat',
+    '亚马逊': 'https://www.amazon.com',
+    'amazon': 'https://www.amazon.com',
+    'zoom': 'https://www.zoom.us',
+    'tinder': 'https://www.tinder.com',
+}
+
+const autoFillUrl = (opt) => {
+    if (! opt.name || opt.value) return
+    const key = opt.name.toLowerCase().trim()
+    for (const [keyword, url] of Object.entries(nameUrlMap)) {
+        if (key.includes(keyword)) {
+            opt.value = url
+            return
+        }
+    }
+    const clean = opt.name.replace(/[（(].*[）)]/g, '').replace(/[/].*$/, '').trim()
+    if (clean) {
+        const domain = clean.toLowerCase().replace(/[^a-z0-9]/g, '')
+        if (domain) {
+            opt.value = `https://www.${domain}.com`
+        }
+    }
+}
+
 const fieldTypeOptions = [
     { value: 'switch', labelKey: 'admin.memberCatalogs.fieldTypeSwitch' },
     { value: 'multi', labelKey: 'admin.memberCatalogs.fieldTypeMulti' },
@@ -322,14 +430,14 @@ const getFieldTypeTag = (fieldType) => {
 }
 
 const fieldsPerTab = {
-    device_models: ['key', 'name', 'desc', 'field_type', 'enabled', 'system'],
-    privacy_blocklists: ['key', 'name', 'desc', 'field_type', 'days_ago', 'enabled', 'system'],
-    parental_presets: ['name', 'key', 'icon', 'category', 'field_type', 'desc', 'enabled', 'url', 'system'],
+    device_models: ['key', 'name', 'desc', 'field_type', 'options', 'enabled', 'system'],
+    privacy_blocklists: ['key', 'name', 'desc', 'field_type', 'options', 'days_ago', 'enabled', 'system'],
+    parental_presets: ['name', 'key', 'category', 'field_type', 'desc', 'options', 'enabled', 'system'],
 }
 const createDefaults = {
-    device_models: () => ({ key: '', name: '', desc: '', field_type: 'switch', enabled: true, system: false }),
-    privacy_blocklists: () => ({ key: '', name: '', desc: '', field_type: 'switch', days_ago: 0, enabled: true, system: false, devices: [] }),
-    parental_presets: () => ({ name: '', key: '', icon: '', category: 'website', field_type: 'switch', desc: '', enabled: true, url: '', system: false }),
+    device_models: () => ({ key: '', name: '', desc: '', field_type: 'switch', options: [], enabled: true, system: false }),
+    privacy_blocklists: () => ({ key: '', name: '', desc: '', field_type: 'switch', options: [], days_ago: 0, enabled: true, system: false, devices: [] }),
+    parental_presets: () => ({ name: '', key: '', icon: '', category: 'website', field_type: 'switch', desc: '', options: [], enabled: true, url: '', system: false }),
 }
 
 const hasField = (key) => fieldsPerTab[editingTab.value]?.includes(key) ?? false
@@ -409,6 +517,7 @@ const toggleRow = async (key, row) => {
 const openAddDialog = (key) => {
     editingTab.value = key
     editingIndex.value = null
+    editingKey.value = null
     Object.keys(rowForm).forEach((k) => delete rowForm[k])
     Object.assign(rowForm, createDefaults[key]())
     showRowDialog.value = true
@@ -418,21 +527,41 @@ const openEditDialog = (key, index) => {
     editingTab.value = key
     editingIndex.value = index
     const source = catalogs[key][index] || {}
+    editingKey.value = source.key || null
     Object.keys(rowForm).forEach((k) => delete rowForm[k])
     Object.assign(rowForm, createDefaults[key](), source)
+    // 同步后端返回的 url 到前端用的 value 字段
+    if (Array.isArray(rowForm.options)) {
+        rowForm.options.forEach((opt) => {
+            if (opt.url !== undefined && opt.value === undefined) {
+                opt.value = opt.url
+            }
+            autoFillUrl(opt)
+        })
+    }
     showRowDialog.value = true
 }
 
 const handleSaveRow = async () => {
-    if (editingIndex.value === null) {
-        catalogs[editingTab.value].push({ ...rowForm })
-    } else {
-        catalogs[editingTab.value].splice(editingIndex.value, 1, { ...rowForm })
-    }
     showRowDialog.value = false
     try {
         saving.value = true
-        await client.put('/admin/member-catalogs', catalogs)
+        const items = [...catalogs[editingTab.value]]
+        if (editingIndex.value === null) {
+            // 新增
+            items.push({ ...rowForm })
+        } else {
+            // 用 key 查找真实索引，避免筛选/分页导致索引错位
+            const realIdx = editingKey.value
+                ? items.findIndex((item) => item.key === editingKey.value)
+                : -1
+            const idx = realIdx >= 0 ? realIdx : editingIndex.value
+            // 合并原始数据防止 rowForm 缺字段
+            const original = items[idx] || {}
+            items[idx] = { ...original, ...rowForm }
+        }
+        const payload = { ...catalogs, [editingTab.value]: items }
+        await client.put('/admin/member-catalogs', payload)
         ElMessage.success(t('admin.memberCatalogs.saved'))
         await fetchCatalogs()
     } catch (error) {
@@ -501,5 +630,22 @@ fetchAll()
     font-size: 14px;
     font-weight: 500;
     color: #333;
+}
+
+.option-list-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.option-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.option-input {
+    flex: 1;
 }
 </style>
