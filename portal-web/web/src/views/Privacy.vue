@@ -70,10 +70,22 @@
                     </el-button>
                 </div>
                 <el-divider />
-                <el-button type="primary" size="small" plain @click="showDeviceModal = true">
-                    <el-icon><Plus /></el-icon>
-                    {{ $t('privacy.catalogs.addDevice') }}
-                </el-button>
+                <el-tooltip
+                    :disabled="form.blocklists.deep_tracking_protection === true"
+                    content="请先开启深度跟踪保护开关"
+                    placement="top"
+                >
+                    <el-button
+                        type="primary"
+                        size="small"
+                        plain
+                        :disabled="form.blocklists.deep_tracking_protection !== true"
+                        @click="showDeviceModal = true"
+                    >
+                        <el-icon><Plus /></el-icon>
+                        {{ $t('privacy.catalogs.addDevice') }}
+                    </el-button>
+                </el-tooltip>
             </div>
 
             <!-- 第三方跟踪 -->
@@ -285,6 +297,17 @@ watch(
     () => ({ ...form, blocklists: { ...form.blocklists }, deep_tracking_devices: [...form.deep_tracking_devices] }),
     autoSave,
     { deep: true }
+)
+
+// 数据一致性: 关闭深度跟踪保护时立即清空设备选择（UI 即时响应，后端也会校验）
+watch(
+    () => form.blocklists.deep_tracking_protection,
+    (val) => {
+        if (val === true) return
+        if (form.deep_tracking_devices.length > 0) {
+            form.deep_tracking_devices = []
+        }
+    }
 )
 
 const removeBlocklist = async (key) => {

@@ -123,6 +123,24 @@ final class UserWorkspaceController
             ]
         );
 
+        // 数据一致性校验: deep_tracking_protection=false 时清空 devices
+        if (($validated['blocklists']['deep_tracking_protection'] ?? false) === false) {
+            $validated['deep_tracking_devices'] = [];
+        }
+
+        // 数据一致性校验: 统一 allow_marketing_links (根级别为准，同步到 blocklists)
+        if (isset($validated['allow_marketing_links'])) {
+            $validated['blocklists']['allow_marketing_links'] = $validated['allow_marketing_links'];
+        } elseif (isset($validated['blocklists']['allow_marketing_links'])) {
+            $validated['allow_marketing_links'] = $validated['blocklists']['allow_marketing_links'];
+        } else {
+            $validated['allow_marketing_links'] = false;
+            $validated['blocklists']['allow_marketing_links'] = false;
+        }
+
+        // 清理旧字段 deep_tracking (保留 deep_tracking_protection)
+        unset($validated['blocklists']['deep_tracking']);
+
         return response()->json(['data' => $this->workspace->updatePrivacy($request->user()->uid, $validated, $this->profileId($request))]);
     }
 
