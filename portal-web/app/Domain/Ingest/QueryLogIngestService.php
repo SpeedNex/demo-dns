@@ -28,6 +28,13 @@ final class QueryLogIngestService
             'received_count' => $itemCount,
             'duplicate' => false,
             'content_sha256' => $contentSha,
+            // P0 修复: 显式 ACK 回执，resolver 据此确认 buffer 可安全删除
+            'ack' => [
+                'ack_id' => 'ack_' . hash('sha256', $batch['batch_id'] . $contentSha),
+                'stored_count' => $itemCount,
+                'checksum' => $contentSha,
+                'confirmed_at' => now()->toIso8601String(),
+            ],
         ];
     }
 }

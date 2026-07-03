@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Domain\Profile\MemberCatalogService;
 use App\Models\ProfileVersion;
 use App\Models\Device;
 use App\Models\Node;
+use App\Models\SystemConfig;
 use App\Models\User;
 use App\Infrastructure\ClickHouse\ClickHouseClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -16,6 +18,21 @@ final class MemberWorkspaceTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seedCatalog();
+    }
+
+    private function seedCatalog(): void
+    {
+        $service = new MemberCatalogService();
+        SystemConfig::query()->updateOrCreate(
+            ['config_key' => MemberCatalogService::CONFIG_KEY],
+            ['config_value' => $service->defaults(), 'description' => 'Test catalog'],
+        );
+    }
+
     public function test_member_workspace_endpoints_persist_primary_profile_settings(): void
     {
         $user = $this->createUser('workspace1@example.com', 'password123');
@@ -24,11 +41,11 @@ final class MemberWorkspaceTest extends TestCase
 
         $this->putJson('/api/v1/user/security', [
             'enabled' => true,
-            'block_malware' => true,
-            'block_phishing' => false,
-            'block_command_and_control' => true,
-            'block_cryptojacking' => false,
-        ])->assertOk()->assertJsonPath('data.block_phishing', false);
+            'threat_intel' => true,
+            'ai_threat_detection' => false,
+            'google_safe_browsing' => true,
+            'dns_rebind' => true,
+        ])->assertOk()->assertJsonPath('data.ai_threat_detection', false);
 
         $this->putJson('/api/v1/user/privacy', [
             'enabled' => true,

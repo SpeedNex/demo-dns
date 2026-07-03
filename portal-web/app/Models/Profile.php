@@ -69,6 +69,7 @@ class Profile extends BaseModel
             'parental_enabled' => 'boolean',
             'parental_settings' => 'array',
             'safesearch_enabled' => 'boolean',
+            'safe_search_enabled' => 'boolean',
             'log_retention_days' => 'integer',
             'version' => 'integer',
             'published_at' => 'datetime',

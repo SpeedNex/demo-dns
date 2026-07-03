@@ -141,6 +141,19 @@ func (b *Buffer) Flush() {
 	}
 }
 
+// AckResponse 是 portal-web 返回的显式 ACK 回执，用于确认 buffer 可安全删除。
+type AckResponse struct {
+	Accepted      bool   `json:"accepted"`
+	BatchID       string `json:"batch_id"`
+	ReceivedCount int    `json:"received_count"`
+	Ack           struct {
+		AckID        string `json:"ack_id"`
+		StoredCount  int    `json:"stored_count"`
+		Checksum     string `json:"checksum"`
+		ConfirmedAt  string `json:"confirmed_at"`
+	} `json:"ack"`
+}
+
 func (b *Buffer) sendBatch(batch []LogEntry) error {
 	payload := map[string]any{
 		"batch_id": fmt.Sprintf("batch_%d", time.Now().UnixNano()),
@@ -177,6 +190,13 @@ func (b *Buffer) sendBatch(batch []LogEntry) error {
 	log.Printf("[日志] 发送批次 url=%s status=%d 响应长度=%d", b.cpURL, resp.StatusCode, len(respBody))
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("http status %d", resp.StatusCode)
+	}
+
+	// P0 修复: 解析显式 ACK 回执，确认 buffer 可安全删除
+	var ack AckResponse
+	if err := json.Unmarshal(respBody, &ack); err == nil && ack.Accepted {
+		log.Printf("[日志] ACK 确认 ack_id=%s stored=%d checksum=%s",
+			ack.Ack.AckID, ack.Ack.StoredCount, ack.Ack.Checksum)
 	}
 
 	return nil

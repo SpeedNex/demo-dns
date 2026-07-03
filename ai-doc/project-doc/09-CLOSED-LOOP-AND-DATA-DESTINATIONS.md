@@ -220,31 +220,91 @@ Pro / Business / Education：
 
 2. 用户创建 Profile / 规则
    -> portal-web 保存业务数据
-   -> portal-web 调用 Console 域发布配置
+   -> 用户点击发布
 
-3. resolver 拉取配置
-   -> 得到 plan_code=free、monthly_query_limit、used_query_count、quota_status
+3. 发布时构建 Bundle（仅此一次）
+   -> ProfilePublishService 写 profile_versions 表
+   -> ProfileConfigBuilder::build() 生成 resolver config bundle
+   -> Bundle 存数据库（version 唯一事实来源）
+   ⚠️ 注意：Bundle 只在 Publish 时构建，Pull 时只下载不构建
 
-4. resolver 处理 DNS 查询
+4. resolver 心跳检测新版本
+   -> POST /api/v1/node/heartbeat
+   -> 返回 { latest_version, should_pull, next_interval }
+   -> 不返回 config_endpoint（固定为 /api/v1/node/dns-resolver/config）
+
+5. resolver 拉取 Global Config（不含 Profile）
+   -> GET /api/v1/node/dns-resolver/config
+   -> 返回 { version, checksum, upstreams, plans, rulesets, limits }
+   -> 不含 profiles 数据（避免全量拉取）
+
+6. resolver 按需懒加载 Profile
+   -> POST /api/v1/node/dns-resolver/profiles/check（批量检查版本）
+   -> GET /api/v1/node/dns-resolver/profiles/{id}（按需拉取单个）
+
+7. resolver 发送配置 ACK（含状态）
+   -> POST /api/v1/node/dns-resolver/config/ack
+   -> 返回 { status: "success" | "failed" | "checksum_failed" | "apply_failed" }
+   -> 后台可观测节点更新状态
+
+8. resolver 处理 DNS 查询
    -> protected mode（quota_status=normal）：执行过滤并写日志
    -> rejected mode（quota_status=exceeded）：DNS 协议层硬拒绝返回 SERVFAIL
+   -> 规则引擎顺序：Allow → Block → Security → Parental → Adblock → Default
 
-5. resolver 批量上报 query logs
-   ->5. portal-web 写 ClickHouse
-   -> usage worker 聚合 query count
+9. resolver 批量上报 query logs（带显式 ACK）
+   -> POST /api/v1/node/dns-resolver/query-logs
+   -> portal-web 写 ClickHouse dns_logs + usage_events（两条链路独立）
+   -> 返回 { ack: { ack_id, stored_count, checksum, confirmed_at } }
+   -> resolver 收到 ACK 后安全删除本地 buffer
+   -> ⚠️ 无 ACK 或 500 → resolver 写入磁盘 buffer 等待重试
 
-6. portal-web 上报 usage batch
-   -> portal-web 幂等累加 usage_counters
+10. usage worker 聚合用量
+    -> 从 usage_events 聚合（不直接读 dns_logs，解耦）
+    -> 写入 usage_records → billings
 
-7. Free 达到 300,000
-   -> portal-web 生成 quota_status=exceeded 状态
-   ->8. portal-web 更新 config version  -> resolver 拉取后切换到 rejected mode（硬拒绝 SERVFAIL）
+11. quota check（增量优化）
+    -> 只检查有 usage_events 变化的用户（非全量扫描）
+    -> 变化用户 → ConfigVersion++ → resolver 拉取
 
-8. 用户升级 Pro
-   -> portal-web 创建订单/发票/支付
-   -> payment succeeded 后 subscription active
-   -> quota 变为 quota_status=unlimited，monthly_query_limit=null
-   -> resolver 恢复 protected mode
+12. Free 达到 300,000
+    -> portal-web 生成 quota_status=exceeded 状态
+    -> resolver 拉取后切换到 rejected mode（硬拒绝 SERVFAIL）
+
+13. 用户升级 Pro
+    -> portal-web 创建订单/发票/支付
+    -> payment succeeded 后 subscription active
+    -> quota 变为 quota_status=unlimited，monthly_query_limit=null
+    -> resolver 恢复 protected mode
+```
+
+### 7.1 QueryLog 与 Billing 解耦
+
+```text
+dns_logs（ClickHouse）── 原始查询日志，7天 TTL，用于统计/分析
+        │
+        ↓（独立写入）
+usage_events（ClickHouse）── 用量事件，永久保留，用于计费
+        │
+        ↓（usage worker 聚合）
+usage_records（MySQL）── 聚合用量记录
+        │
+        ↓
+billings（MySQL）── 计费账单
+
+⚠️ Billing 不直接依赖 dns_logs，日志删除不影响计费准确性
+```
+
+### 7.2 GeoDNS 与 Resolver 入口（待统一）
+
+```text
+当前实现：
+  UDP/TCP/DoH → resolver（直接）
+  DoT/DoQ → geodns → resolver
+
+⚠️ 入口不统一，未来需决策：
+  方案 A：geodns 代理所有协议（统一入口，便于灰度/多集群）
+  方案 B：所有协议直连 resolver（简化架构，geodns 仅做调度）
 ```
 
 ## 8. 幂等要求

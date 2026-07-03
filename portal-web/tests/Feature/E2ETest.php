@@ -22,9 +22,11 @@ use App\Models\ProfileVersion;
 use App\Models\Device;
 use App\Models\Profile;
 use App\Models\ProfileRule;
+use App\Models\SystemConfig;
 use App\Models\User;
 use App\Models\Node;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
@@ -33,6 +35,31 @@ use Tests\TestCase;
 final class E2ETest extends TestCase
 {
     use RefreshDatabase;
+
+    /**
+     * JSON flags for boolean-safe encoding
+     */
+    private const JSON_FLAGS = JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seedCatalog();
+    }
+
+    /**
+     * Seed the member feature catalog so security validation rules recognize all switch fields.
+     */
+    private function seedCatalog(): void
+    {
+        $service = new \App\Domain\Profile\MemberCatalogService();
+        $defaults = $service->defaults();
+
+        SystemConfig::query()->updateOrCreate(
+            ['config_key' => \App\Domain\Profile\MemberCatalogService::CONFIG_KEY],
+            ['config_value' => $defaults, 'description' => 'Test catalog'],
+        );
+    }
 
     private string $testEmail;
     private string $testPassword = 'TestPassword123!';
@@ -185,7 +212,7 @@ final class E2ETest extends TestCase
             $this->userId = $user->uid;
 
             // 创建 Free 订阅
-            \DB::table('subscriptions')->insert([
+            DB::table('subscriptions')->insert([
                 'user_id' => $this->userId,
                 'plan_id' => 1,
                 'plan_code' => 'free',
@@ -280,22 +307,19 @@ final class E2ETest extends TestCase
 
             $response = $this->putJson('/api/v1/user/security', [
                 'enabled' => true,
-                'block_malware' => true,
-                'block_phishing' => true,
-                'block_command_and_control' => true,
-                'block_cryptojacking' => false,
                 'threat_intel' => true,
                 'ai_threat_detection' => false,
                 'google_safe_browsing' => true,
+                'anti_mining' => true,
                 'dns_rebind' => true,
                 'idn_homograph' => true,
-                'typo_squatting' => true,
-                'dga_protection' => true,
-                'block_new_domains' => false,
+                'typosquatting' => true,
+                'dga' => true,
+                'block_newly_registered' => false,
                 'block_dynamic_dns' => false,
                 'block_parked_domains' => true,
-                'block_tld' => false,
-                'child_abuse' => true,
+                'block_specific_tld' => false,
+                'block_csam' => true,
             ], $this->createAuthHeaders());
 
             if ($response->status() !== 200) {
@@ -304,9 +328,12 @@ final class E2ETest extends TestCase
 
             $data = $response->json()['data'];
 
-            // 验证配置是否生效
-            if ($data['block_phishing'] !== true) {
-                throw new \Exception('安全配置未正确保存');
+            // 验证配置是否生效（boolean false 值通过 JSON 往返后仍为 false，不会变成 null）
+            if ($data['ai_threat_detection'] !== false) {
+                throw new \Exception('安全配置 boolean false 未正确保存（P0 修复验证）');
+            }
+            if ($data['threat_intel'] !== true) {
+                throw new \Exception('安全配置 boolean true 未正确保存');
             }
 
             // 等待一小段时间让 autoPublish 完成

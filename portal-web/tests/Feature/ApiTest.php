@@ -53,6 +53,14 @@ class ApiTest extends TestCase
 
     protected function seedDatabase()
     {
+        // Seed member feature catalog for dynamic validation rules
+        $catalogService = new \App\Domain\Profile\MemberCatalogService();
+        SystemConfig::create([
+            'config_key' => \App\Domain\Profile\MemberCatalogService::CONFIG_KEY,
+            'config_value' => $catalogService->defaults(),
+            'description' => 'Member feature catalog',
+        ]);
+
         $user = User::create([
             'username' => 'test-user',
             'email' => 'user@example.com',
@@ -205,22 +213,19 @@ class ApiTest extends TestCase
     {
         $this->callMemberApi('PUT', '/api/v1/user/security', [
             'enabled' => true,
-            'block_malware' => true,
-            'block_phishing' => true,
-            'block_command_and_control' => true,
-            'block_cryptojacking' => true,
             'threat_intel' => true,
             'ai_threat_detection' => false,
             'google_safe_browsing' => true,
+            'anti_mining' => true,
             'dns_rebind' => true,
             'idn_homograph' => true,
-            'typo_squatting' => true,
-            'dga_protection' => true,
-            'block_new_domains' => true,
+            'typosquatting' => true,
+            'dga' => true,
+            'block_newly_registered' => true,
             'block_dynamic_dns' => false,
             'block_parked_domains' => true,
-            'block_tld' => false,
-            'child_abuse' => true,
+            'block_specific_tld' => false,
+            'block_csam' => true,
         ], 200);
     }
 
@@ -308,8 +313,8 @@ class ApiTest extends TestCase
     {
         $this->callMemberApi('PUT', '/api/v1/user/settings/security', [
             'enabled' => true,
-            'block_malware' => true,
-            'block_phishing' => true,
+            'threat_intel' => true,
+            'dns_rebind' => true,
         ], 200);
     }
 
