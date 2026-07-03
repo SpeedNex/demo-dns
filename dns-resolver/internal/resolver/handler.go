@@ -83,6 +83,8 @@ func (h *Handler) Handle(
 	deviceType string,
 	blockResponse string,
 	safeSearchEnabled bool,
+	youtubeRestrictedEnabled bool,
+	blockBypassEnabled bool,
 ) *Result {
 	h.metrics.IncQueries()
 
@@ -121,13 +123,15 @@ func (h *Handler) Handle(
 
 	// ② 规则引擎判定
 	decision := h.resolutionLayer.Resolve(&ResolutionContext{
-		ProfileUID:        profileID,
-		DeviceUID:         deviceID,
-		SafeSearchEnabled: safeSearchEnabled,
-		ClientIP:          net.ParseIP(clientIP),
-		Domain:            domain,
-		QueryType:         queryType,
-		Protocol:          protocol,
+		ProfileUID:                profileID,
+		DeviceUID:                 deviceID,
+		SafeSearchEnabled:         safeSearchEnabled,
+		YouTubeRestrictedEnabled:  youtubeRestrictedEnabled,
+		BlockBypassEnabled:        blockBypassEnabled,
+		ClientIP:                  net.ParseIP(clientIP),
+		Domain:                    domain,
+		QueryType:                 queryType,
+		Protocol:                  protocol,
 	})
 
 	switch decision.Action {

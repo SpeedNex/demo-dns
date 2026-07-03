@@ -55,20 +55,19 @@ final class ProfilePublishApplicationService
                     continue;
                 }
 
-                // 如果名称不是域名格式，尝试转换为域名（小写+无空格）
-                $domain = $name;
-                if (! str_contains($domain, '.')) {
-                    $domain = strtolower(str_replace(' ', '', $domain)) . '.com';
-                }
-
-                if (! str_contains($domain, '.')) {
+                // 提取纯英文字符作为域名基础（例如 "TikTok/抖音" → "tiktok"）
+                $base = preg_replace('/[^a-zA-Z0-9.-]/', '', explode('/', $name)[0]);
+                if (empty($base)) {
                     continue;
                 }
+                $domain = strtolower($base);
+                if (! str_contains($domain, '.')) {
+                    $domain .= '.com';
+                }
 
-                $category = $item['category'] ?? 'default';
                 $rules[] = [
-                    'list_type' => 'category:parental:'.$category,
-                    'match_type' => 'exact',
+                    'list_type' => 'blocklist',
+                    'match_type' => 'suffix',
                     'domain' => $domain,
                     'normalized_domain' => $domain,
                     'action' => 'block',

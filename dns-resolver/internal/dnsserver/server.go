@@ -157,6 +157,8 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg, proto string) {
 	// ③ 通过 ProfileConfigLoader 加载策略配置
 	blockResponse := blockresponse.ModeNXDomain
 	safeSearchEnabled := false
+	youtubeRestrictedEnabled := false
+	blockBypassEnabled := false
 	if profileUID != "" && s.profileConfigLoader != nil {
 		if pc, err := s.profileConfigLoader(profileUID); err == nil {
 			if pc.BlockResponse != "" {
@@ -166,6 +168,16 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg, proto string) {
 				if v, ok := pc.Parental["safe_search"]; ok {
 					if b, ok := v.(bool); ok && b {
 						safeSearchEnabled = true
+					}
+				}
+				if v, ok := pc.Parental["youtube_restricted_mode"]; ok {
+					if b, ok := v.(bool); ok && b {
+						youtubeRestrictedEnabled = true
+					}
+				}
+				if v, ok := pc.Parental["block_bypass"]; ok {
+					if b, ok := v.(bool); ok && b {
+						blockBypassEnabled = true
 					}
 				}
 			}
@@ -185,7 +197,7 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg, proto string) {
 	}
 
 	// ④ 共享 pipeline：去重 → 规则判定 → DNS 缓存 → 上游转发 → 日志
-	result := s.handler.Handle(req, w.RemoteAddr().String(), proto, profileUID, deviceID, "", blockResponse, safeSearchEnabled)
+	result := s.handler.Handle(req, w.RemoteAddr().String(), proto, profileUID, deviceID, "", blockResponse, safeSearchEnabled, youtubeRestrictedEnabled, blockBypassEnabled)
 
 	// ⑤ 写出响应
 	_ = w.WriteMsg(result.Reply)

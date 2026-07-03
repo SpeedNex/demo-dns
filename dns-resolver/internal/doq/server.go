@@ -150,7 +150,7 @@ func (s *Server) handleStream(stream *quic.Stream, remoteAddr string, profileUID
 	}
 
 	// ① SNI profile_id 校验（6位），非法格式直接拒绝
-	profileID, blockResponse, deviceID, safeSearchEnabled := profileUID, "nxdomain", "", false
+	profileID, blockResponse, deviceID, safeSearchEnabled, youtubeRestrictedEnabled, blockBypassEnabled := profileUID, "nxdomain", "", false, false, false
 	if profileID == "" || len(profileID) != 6 {
 		reply := new(dns.Msg)
 		reply.SetReply(req)
@@ -169,6 +169,12 @@ func (s *Server) handleStream(stream *quic.Stream, remoteAddr string, profileUID
 			if pc.Parental != nil {
 				if v, ok := pc.Parental["safe_search"].(bool); ok {
 					safeSearchEnabled = v
+				}
+				if v, ok := pc.Parental["youtube_restricted_mode"].(bool); ok {
+					youtubeRestrictedEnabled = v
+				}
+				if v, ok := pc.Parental["block_bypass"].(bool); ok {
+					blockBypassEnabled = v
 				}
 			}
 			if deviceID == "" && len(pc.Devices) > 0 {
@@ -194,7 +200,7 @@ func (s *Server) handleStream(stream *quic.Stream, remoteAddr string, profileUID
 	}
 
 	// ③ 共享 pipeline
-	result := s.handler.Handle(req, remoteAddr, "doq", profileID, deviceID, "", blockResponse, safeSearchEnabled)
+	result := s.handler.Handle(req, remoteAddr, "doq", profileID, deviceID, "", blockResponse, safeSearchEnabled, youtubeRestrictedEnabled, blockBypassEnabled)
 
 	// ④ 写出响应
 	s.writeStream(stream, result.Reply)

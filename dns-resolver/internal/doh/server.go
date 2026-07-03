@@ -296,10 +296,22 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 
 		// 从 Profile 读取 safe_search 配置
 		safeSearchEnabled := false
+		youtubeRestrictedEnabled := false
+		blockBypassEnabled := false
 		if pc != nil && pc.Parental != nil {
 			if v, ok := pc.Parental["safe_search"]; ok {
 				if b, ok := v.(bool); ok {
 					safeSearchEnabled = b
+				}
+			}
+			if v, ok := pc.Parental["youtube_restricted_mode"]; ok {
+				if b, ok := v.(bool); ok {
+					youtubeRestrictedEnabled = b
+				}
+			}
+			if v, ok := pc.Parental["block_bypass"]; ok {
+				if b, ok := v.(bool); ok {
+					blockBypassEnabled = b
 				}
 			}
 		}
@@ -312,14 +324,16 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 
 		// Build resolution context
 		ctx := &resolver.ResolutionContext{
-			ProfileUID:        profileUID,
-			DeviceUID:         deviceUID,
-			DeviceType:        deviceType,
-			SafeSearchEnabled: safeSearchEnabled,
-			ClientIP:          remoteIPFromAddr(r.RemoteAddr),
-			Domain:            domain,
-			QueryType:         queryType,
-			Protocol:          "doh",
+			ProfileUID:                profileUID,
+			DeviceUID:                 deviceUID,
+			DeviceType:                deviceType,
+			SafeSearchEnabled:         safeSearchEnabled,
+			YouTubeRestrictedEnabled:  youtubeRestrictedEnabled,
+			BlockBypassEnabled:        blockBypassEnabled,
+			ClientIP:                  remoteIPFromAddr(r.RemoteAddr),
+			Domain:                    domain,
+			QueryType:                 queryType,
+			Protocol:                  "doh",
 		}
 
 		// Run the full resolution pipeline

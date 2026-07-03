@@ -815,6 +815,36 @@ final class UserWorkspaceService
                 }
             }
 
+            // 将 parental blocked_items 转换为规则（resolver 只从 rules 列表加载域名规则）
+            $blockedItems = $parentalSettings['blocked_items'] ?? [];
+            if (!empty($blockedItems) && is_array($blockedItems)) {
+                foreach ($blockedItems as $item) {
+                    $name = $item['name'] ?? '';
+                    if (empty($name)) {
+                        continue;
+                    }
+                    // 提取纯英文字符作为域名基础（例如 "TikTok/抖音" → "tiktok"）
+                    $base = preg_replace('/[^a-zA-Z0-9.-]/', '', explode('/', $name)[0]);
+                    if (empty($base)) {
+                        continue;
+                    }
+                    $domain = strtolower($base);
+                    if (!str_contains($domain, '.')) {
+                        $domain .= '.com';
+                    }
+                    $rules[] = [
+                        'list_type' => 'blocklist',
+                        'match_type' => 'suffix',
+                        'domain' => $domain,
+                        'normalized_domain' => $domain,
+                        'action' => 'block',
+                        'category' => 'parental',
+                        'enabled' => true,
+                        'rule_id' => 'bi_' . md5($domain),
+                    ];
+                }
+            }
+
             \Illuminate\Support\Facades\Log::info('AutoPublish triggered', [
                 'profile_id' => $profile->profile_id,
                 'rules_count' => count($rules),

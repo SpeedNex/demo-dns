@@ -13,14 +13,16 @@ import (
 
 // ResolutionContext holds the full context of a DNS query resolution.
 type ResolutionContext struct {
-	ProfileUID        string
-	DeviceUID         string
-	DeviceType        string
-	SafeSearchEnabled bool
-	ClientIP          net.IP
-	Domain            string
-	QueryType         string
-	Protocol          string // "doh", "dot", "udp"
+	ProfileUID                string
+	DeviceUID                 string
+	DeviceType                string
+	SafeSearchEnabled         bool
+	YouTubeRestrictedEnabled  bool
+	BlockBypassEnabled        bool
+	ClientIP                  net.IP
+	Domain                    string
+	QueryType                 string
+	Protocol                  string // "doh", "dot", "udp"
 }
 
 // profileSecurity stores the parsed security algorithm config for a profile.
@@ -220,6 +222,30 @@ func (prl *ProfileResolutionLayer) Resolve(ctx *ResolutionContext) *matching.Dec
 		}
 	}
 
+	// YouTube Restricted Mode: independent from SafeSearch.
+	// When youtube_restricted_mode is enabled, rewrite YouTube to restrictmoderate.
+	// This runs after SafeSearch so it takes effect even when safe_search is off.
+	if ctx.YouTubeRestrictedEnabled && decision.Action == "ALLOW" {
+		if redirect, ok := YouTubeRestrictedRedirect(ctx.Domain); ok {
+			decision.Action = "REWRITE"
+			decision.Reason = "youtube_restricted"
+			decision.Category = redirect
+		}
+	}
+
+	// Block Bypass: when enabled, block known VPN, proxy, Tor and encrypted DNS domains.
+	if ctx.BlockBypassEnabled && decision.Action == "ALLOW" {
+		if CheckBlockBypassDomain(ctx.Domain) {
+			log.Printf("[家长] profile=%s domain=%s 类型=block_bypass 已拦截",
+				ctx.ProfileUID, ctx.Domain)
+			return &matching.Decision{
+				Action:   "BLOCK",
+				Reason:   "block_bypass",
+				Category: "parental",
+			}
+		}
+	}
+
 	log.Printf("[查询] profile=%s device=%s domain=%s action=%s reason=%s",
 		ctx.ProfileUID, ctx.DeviceUID, ctx.Domain, decision.Action, decision.Reason)
 
@@ -285,6 +311,48 @@ func SafeSearchRedirect(domain string) (string, bool) {
 		return "safe.duckduckgo.com", true
 	}
 	return "", false
+}
+
+// YouTubeRestrictedRedirect returns the rewritten target host for YouTube
+// when YouTube Restricted Mode is enabled independently from SafeSearch.
+func YouTubeRestrictedRedirect(domain string) (string, bool) {
+	switch strings.ToLower(domain) {
+	case "www.youtube.com", "youtube.com", "m.youtube.com",
+		"youtubei.googleapis.com", "www.youtube-nocookie.com":
+		return "restrictmoderate.youtube.com", true
+	}
+	return "", false
+}
+
+// blockBypassDomains lists known VPN, proxy, Tor, and encrypted DNS domains
+// that should be blocked when block_bypass parental setting is enabled.
+var blockBypassDomains = []string{
+	// VPN providers
+	"nordvpn.com", "expressvpn.com", "surfshark.com", "cyberghost.com",
+	"privateinternetaccess.com", "protonvpn.com", "mullvad.net",
+	"windscribe.com", "hotspotshield.com", "tunnelbear.com",
+	"vyprvpn.com", "ipvanish.com", "purevpn.com", "safervpn.com",
+	// Proxy services
+	"hidemyass.com", "proxy-nvpn.com", "free-proxy.com",
+	// Tor network
+	"torproject.org", "tor2web.org", "onion.link", "onion.cab",
+	"tor.eff.org",
+	// Encrypted DNS providers (blocking bypass via alt DNS)
+	"cloudflare-dns.com", "dns.google", "dns.google.com",
+	"dns.quad9.net", "dns.nextdns.io", "dns.adguard.com",
+	"doh.xfinity.com", "doh.opendns.com",
+}
+
+// CheckBlockBypassDomain returns true if the domain is a known bypass domain
+// that should be blocked when block_bypass parental setting is enabled.
+func CheckBlockBypassDomain(domain string) bool {
+	d := strings.ToLower(strings.TrimRight(domain, "."))
+	for _, bypass := range blockBypassDomains {
+		if d == bypass || strings.HasSuffix(d, "."+bypass) {
+			return true
+		}
+	}
+	return false
 }
 
 // ExtractProfileFromPath extracts the profile UID from a DoH URL path.
