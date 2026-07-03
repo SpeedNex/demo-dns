@@ -8,7 +8,6 @@
         :show-pagination="false"
         @refresh="fetchCatalogs"
     >
-        <!-- 家长监护预设（只显示 3 行开关 + 1 行多选） -->
         <div class="parental-section">
             <h4 class="section-title">
                 <el-icon><Star /></el-icon>
@@ -32,9 +31,7 @@
                             <span>{{ row.desc || '-' }}</span>
                         </template>
                         <template v-else>
-                            <el-button text size="small" @click="openOptionsDialog(row)">
-                                {{ $t('admin.memberCatalogs.viewOptions', { count: (row.options || []).length }) }}
-                            </el-button>
+                            <span>{{ $t('admin.memberCatalogs.hasOptions', { count: (row.options || []).length }) }}</span>
                         </template>
                     </template>
                 </el-table-column>
@@ -47,9 +44,9 @@
                         />
                     </template>
                 </el-table-column>
-                <el-table-column :label="$t('common.actions')" width="140" fixed="right">
-                    <template #default="{ $index }">
-                        <el-button link size="small" @click="openEditDialog($index)">
+                <el-table-column :label="$t('common.actions')" width="100" fixed="right">
+                    <template #default="{ row, $index }">
+                        <el-button link size="small" @click="openEditDialog(row, $index)">
                             <el-icon><Edit /></el-icon>
                         </el-button>
                     </template>
@@ -58,21 +55,87 @@
         </div>
     </ListPage>
 
-    <!-- 编辑对话框（开关行） -->
-    <el-dialog v-model="showEditDialog" :title="$t('common.edit')" width="600">
+    <!-- 编辑对话框（开关行+多选行共用，多选行直接显示选项列表） -->
+    <el-dialog v-model="showEditDialog" :title="editTitle" width="800" top="5vh">
         <el-form ref="formRef" :model="editForm" label-position="top">
-            <el-form-item :label="$t('admin.memberCatalogs.name')" prop="name">
-                <el-input v-model="editForm.name" maxlength="120" disabled />
-            </el-form-item>
+            <el-row :gutter="16">
+                <el-col :span="12">
+                    <el-form-item :label="$t('admin.memberCatalogs.name')" prop="name">
+                        <el-input v-model="editForm.name" maxlength="120" disabled />
+                    </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                    <el-form-item :label="$t('admin.parentalControl.enabled')">
+                        <el-switch v-model="editForm.enabled" />
+                    </el-form-item>
+                </el-col>
+            </el-row>
             <el-form-item :label="$t('admin.memberCatalogs.description')" prop="desc">
                 <el-input v-model="editForm.desc" type="textarea" :rows="2" maxlength="500" />
             </el-form-item>
             <el-form-item :label="$t('admin.memberCatalogs.icon')" prop="icon">
                 <el-input v-model="editForm.icon" maxlength="50" />
             </el-form-item>
-            <el-form-item :label="$t('admin.parentalControl.enabled')">
-                <el-switch v-model="editForm.enabled" />
-            </el-form-item>
+
+            <!-- 多选行：直接显示选项表格 -->
+            <template v-if="editForm._isMulti">
+                <el-divider />
+                <div class="options-section">
+                    <div class="options-header">
+                        <h4>{{ $t('admin.memberCatalogs.optionList') }}（{{ filteredOptions.length }}）</h4>
+                        <div class="options-toolbar">
+                            <el-input
+                                v-model="optionFilter"
+                                :placeholder="$t('admin.memberCatalogs.searchName')"
+                                clearable
+                                size="small"
+                                style="width: 200px"
+                            >
+                                <template #prefix><el-icon><Search /></el-icon></template>
+                            </el-input>
+                            <el-button size="small" type="primary" @click="openAddOptionDialog">
+                                <el-icon><Plus /></el-icon>{{ $t('common.add') }}
+                            </el-button>
+                        </div>
+                    </div>
+                    <el-table :data="filteredOptions" stripe size="small" max-height="300">
+                        <template #empty>
+                            <div class="empty">{{ $t('dashboard.noData') }}</div>
+                        </template>
+                        <el-table-column :label="$t('admin.memberCatalogs.name')" min-width="150">
+                            <template #default="{ row }">
+                                <div style="display:flex;align-items:center;gap:6px">
+                                    <span style="font-size:16px">{{ row.icon || '🌐' }}</span>
+                                    <span>{{ row.name }}</span>
+                                </div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column :label="$t('admin.memberCatalogs.category')" width="80" align="center">
+                            <template #default="{ row }">
+                                <el-tag size="small" effect="plain">{{ categoryLabel(row.category) }}</el-tag>
+                            </template>
+                        </el-table-column>
+                        <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="160" show-overflow-tooltip />
+                        <el-table-column :label="$t('admin.memberCatalogs.url')" min-width="180">
+                            <template #default="{ row }">
+                                <div style="font-size:12px;color:#909399">
+                                    {{ (row.url || []).join(', ') || '-' }}
+                                </div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column :label="$t('common.actions')" width="90" fixed="right">
+                            <template #default="{ $index }">
+                                <el-button link size="small" @click="openEditOptionDialog($index)">
+                                    <el-icon><Edit /></el-icon>
+                                </el-button>
+                                <el-button link size="small" type="danger" @click="removeOption($index)">
+                                    <el-icon><Delete /></el-icon>
+                                </el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </div>
+            </template>
         </el-form>
         <template #footer>
             <el-button @click="showEditDialog = false">{{ $t('common.cancel') }}</el-button>
@@ -80,64 +143,8 @@
         </template>
     </el-dialog>
 
-    <!-- 多选选项管理对话框 -->
-    <el-dialog v-model="showOptionsDialog" :title="optionsDialogTitle" width="800" top="5vh">
-        <div class="toolbar">
-            <el-input
-                v-model="optionFilter"
-                :placeholder="$t('admin.memberCatalogs.searchName')"
-                clearable
-                style="width: 240px"
-            >
-                <template #prefix><el-icon><Search /></el-icon></template>
-            </el-input>
-            <el-button type="primary" @click="openAddOptionDialog">
-                <el-icon><Plus /></el-icon>{{ $t('common.add') }}
-            </el-button>
-        </div>
-        <el-table :data="filteredOptions" stripe size="small">
-            <template #empty>
-                <div class="empty">{{ $t('dashboard.noData') }}</div>
-            </template>
-            <el-table-column :label="$t('admin.memberCatalogs.name')" min-width="160">
-                <template #default="{ row }">
-                    <div style="display:flex;align-items:center;gap:6px">
-                        <span style="font-size:16px">{{ row.icon || '🌐' }}</span>
-                        <span>{{ row.name }}</span>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column :label="$t('admin.memberCatalogs.category')" width="100" align="center">
-                <template #default="{ row }">
-                    <el-tag size="small" effect="plain">{{ categoryLabel(row.category) }}</el-tag>
-                </template>
-            </el-table-column>
-            <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="200" show-overflow-tooltip />
-            <el-table-column :label="$t('admin.memberCatalogs.url')" min-width="200">
-                <template #default="{ row }">
-                    <div style="font-size:12px;color:#909399">
-                        {{ (row.url || []).join(', ') || '-' }}
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column :label="$t('common.actions')" width="100" fixed="right">
-                <template #default="{ $index }">
-                    <el-button link size="small" @click="openEditOptionDialog($index)">
-                        <el-icon><Edit /></el-icon>
-                    </el-button>
-                    <el-button link size="small" type="danger" @click="removeOption($index)">
-                        <el-icon><Delete /></el-icon>
-                    </el-button>
-                </template>
-            </el-table-column>
-        </el-table>
-        <div v-if="filteredOptions.length > 0" class="pagination-bar">
-            <span class="total">{{ $t('common.totalPrefix') }} {{ filteredOptions.length }} {{ $t('common.itemsSuffix') }}</span>
-        </div>
-    </el-dialog>
-
-    <!-- 添加/编辑选项对话框 -->
-    <el-dialog v-model="showOptionEditDialog" :title="optionEditIndex === null ? $t('common.add') : $t('common.edit')" width="600">
+    <!-- 添加/编辑选项对话框（内嵌） -->
+    <el-dialog v-model="showOptionEditDialog" :title="optionEditIndex === null ? $t('common.add') : $t('common.edit')" width="600" append-to-body>
         <el-form ref="optionFormRef" :model="optionForm" :rules="optionFormRules" label-position="top">
             <el-row :gutter="16">
                 <el-col :span="12">
@@ -168,12 +175,7 @@
                     :placeholder="$t('admin.memberCatalogs.addUrlPlaceholder')"
                     style="width:100%"
                 >
-                    <el-option
-                        v-for="url in optionForm.url"
-                        :key="url"
-                        :label="url"
-                        :value="url"
-                    />
+                    <el-option v-for="url in optionForm.url" :key="url" :label="url" :value="url" />
                 </el-select>
                 <div style="font-size:12px;color:#909399;margin-top:4px">{{ $t('admin.memberCatalogs.urlHint') }}</div>
             </el-form-item>
@@ -205,21 +207,17 @@ const toggling = ref(null)
 
 const parental_presets = ref([])
 
-// 编辑对话框（开关行）
+// 编辑对话框（通用）
 const showEditDialog = ref(false)
-const editIndex = ref(null)
-const editForm = reactive({ name: '', desc: '', icon: '', enabled: true })
+const editingRow = ref(null)
+const editTitle = ref('')
+const editForm = reactive({ name: '', desc: '', icon: '', enabled: true, _isMulti: false })
 const formRef = ref(null)
 
-// 选项管理对话框
-const showOptionsDialog = ref(false)
-const optionsDialogTitle = ref('')
-const editingOptionsRow = ref(null)
+// 选项管理（内嵌在编辑对话框）
 const optionFilter = ref('')
-
-// 选项编辑对话框
-const showOptionEditDialog = ref(false)
 const optionEditIndex = ref(null)
+const showOptionEditDialog = ref(false)
 const optionForm = reactive({ name: '', category: 'website', desc: '', icon: '🌐', url: [] })
 const optionFormRef = ref(null)
 const optionFormRules = {
@@ -228,11 +226,13 @@ const optionFormRules = {
 
 const totalItems = computed(() => parental_presets.value.length)
 
+// 选项过滤
 const filteredOptions = computed(() => {
-    const src = editingOptionsRow.value?.options || []
-    if (!optionFilter.value) return src
+    const row = editingRow.value
+    if (!row?.options) return []
+    if (!optionFilter.value) return row.options
     const kw = optionFilter.value.toLowerCase()
-    return src.filter((row) => row.name?.toLowerCase().includes(kw))
+    return row.options.filter((o) => o.name?.toLowerCase().includes(kw))
 })
 
 const categoryLabel = (cat) => {
@@ -253,20 +253,27 @@ const fetchCatalogs = async () => {
     }
 }
 
-// 编辑开关行
-const openEditDialog = (index) => {
-    editIndex.value = index
-    const row = parental_presets.value[index]
-    Object.assign(editForm, { name: row.name, desc: row.desc || '', icon: row.icon || '', enabled: !!row.enabled })
+// 打开编辑弹窗（switch 和 multi 共用）
+const openEditDialog = (row, index) => {
+    editingRow.value = row
+    optionFilter.value = ''
+    const isMulti = row.field_type === 'multi'
+    Object.assign(editForm, {
+        name: row.name || '',
+        desc: row.desc || '',
+        icon: row.icon || '',
+        enabled: !!row.enabled,
+        _isMulti: isMulti,
+    })
+    editTitle.value = isMulti ? `${t('common.edit')} - ${row.name}` : t('common.edit')
     showEditDialog.value = true
 }
 
 const handleEditSave = async () => {
-    const valid = await formRef.value?.validate().catch(() => false)
-    if (!valid) return
+    const row = editingRow.value
+    if (!row) return
     saving.value = true
     try {
-        const row = parental_presets.value[editIndex.value]
         row.desc = editForm.desc
         row.icon = editForm.icon
         row.enabled = editForm.enabled
@@ -277,14 +284,7 @@ const handleEditSave = async () => {
     }
 }
 
-// 管理多选选项
-const openOptionsDialog = (row) => {
-    editingOptionsRow.value = row
-    optionsDialogTitle.value = row.name
-    optionFilter.value = ''
-    showOptionsDialog.value = true
-}
-
+// 选项增删改
 const openAddOptionDialog = () => {
     optionEditIndex.value = null
     Object.assign(optionForm, { name: '', category: 'website', desc: '', icon: '🌐', url: [] })
@@ -293,7 +293,7 @@ const openAddOptionDialog = () => {
 
 const openEditOptionDialog = (index) => {
     optionEditIndex.value = index
-    const opt = editingOptionsRow.value.options[index]
+    const opt = editingRow.value.options[index]
     Object.assign(optionForm, {
         name: opt.name || '',
         category: opt.category || 'website',
@@ -318,9 +318,9 @@ const handleOptionSave = async () => {
             enabled: true,
         }
         if (optionEditIndex.value === null) {
-            editingOptionsRow.value.options.push(payload)
+            editingRow.value.options.push(payload)
         } else {
-            editingOptionsRow.value.options.splice(optionEditIndex.value, 1, payload)
+            editingRow.value.options.splice(optionEditIndex.value, 1, payload)
         }
         showOptionEditDialog.value = false
         await saveToServer()
@@ -330,11 +330,10 @@ const handleOptionSave = async () => {
 }
 
 const removeOption = (index) => {
-    editingOptionsRow.value.options.splice(index, 1)
+    editingRow.value.options.splice(index, 1)
     saveToServer()
 }
 
-// 开关切换
 const handleToggle = async (row, val) => {
     toggling.value = row.key
     row.enabled = val
@@ -385,21 +384,24 @@ onMounted(fetchCatalogs)
     color: #909399;
     margin: 0 0 16px;
 }
-.toolbar {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
+.options-section {
+    margin-top: 8px;
 }
-.pagination-bar {
+.options-header {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 12px;
+    justify-content: space-between;
+    margin-bottom: 12px;
 }
-.pagination-bar .total {
-    font-size: 13px;
-    color: #909399;
+.options-header h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #303133;
+    margin: 0;
+}
+.options-toolbar {
+    display: flex;
+    gap: 8px;
 }
 .empty {
     padding: 40px 0;

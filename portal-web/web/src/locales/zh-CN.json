@@ -1375,6 +1375,8 @@
       "multiSelect": "多选",
       "details": "详情",
       "viewOptions": "查看选项 ({count} 项)",
+      "hasOptions": "{count} 个选项",
+      "optionList": "选项列表",
       "addUrlPlaceholder": "添加网址后按回车",
       "urlHint": "每个网址需包含域名，例如：example.com"
     },

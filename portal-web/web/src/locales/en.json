@@ -1379,6 +1379,8 @@
       "multiSelect": "Multi-Select",
       "details": "Details",
       "viewOptions": "View Options ({count})",
+      "hasOptions": "{count} options",
+      "optionList": "Options",
       "addUrlPlaceholder": "Add URL and press Enter",
       "urlHint": "Each URL must include the domain, e.g. example.com"
     },
