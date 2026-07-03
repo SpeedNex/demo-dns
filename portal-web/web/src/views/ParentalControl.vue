@@ -103,12 +103,22 @@
                         <div v-if="opt.desc" style="font-size:0.9em;opacity:0.5;margin-top:2px">{{ opt.desc }}</div>
                     </div>
                     <el-button
+                        v-if="!opt._active"
                         size="small"
                         type="primary"
                         style="font-weight:bold;font-size:12px;text-transform:uppercase;flex-shrink:0;margin-left:12px"
                         @click="addBlockedItem(opt)"
                     >
                         {{ $t('parental.add') }}
+                    </el-button>
+                    <el-button
+                        v-else
+                        size="small"
+                        type="danger"
+                        style="font-weight:bold;font-size:12px;text-transform:uppercase;flex-shrink:0;margin-left:12px"
+                        @click="removeBlockedItem(opt)"
+                    >
+                        {{ $t('parental.remove') }}
                     </el-button>
                 </div>
                 <div v-if="availableOptions.length === 0" class="empty-picker">
@@ -187,7 +197,7 @@ const appOptions = ref([])
 const blockedItems = computed(() => appOptions.value.filter((p) => p._active))
 
 // 可用于添加的选项（未拦截的）
-const availableOptions = computed(() => appOptions.value.filter((p) => !p._active))
+const availableOptions = computed(() => appOptions.value)
 
 const getCategoryName = (key) => {
     if (!key) return ''
