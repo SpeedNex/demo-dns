@@ -299,6 +299,8 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 		youtubeRestrictedEnabled := false
 		blockBypassEnabled := false
 		if pc != nil && pc.Parental != nil {
+			log.Printf("[家长调试] profile=%s 读取parental设置 safe_search=%v block_bypass=%v youtube_restricted=%v",
+				profileUID, pc.Parental["safe_search"], pc.Parental["block_bypass"], pc.Parental["youtube_restricted_mode"])
 			if v, ok := pc.Parental["safe_search"]; ok {
 				if b, ok := v.(bool); ok {
 					safeSearchEnabled = b
@@ -314,6 +316,10 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 					blockBypassEnabled = b
 				}
 			}
+		} else if pc == nil {
+			log.Printf("[家长调试] profile=%s profileConfigLoader返回nil", profileUID)
+		} else {
+			log.Printf("[家长调试] profile=%s Parental为nil", profileUID)
 		}
 
 		// 从 Profile 读取 block_response 模式

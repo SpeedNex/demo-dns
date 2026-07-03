@@ -235,6 +235,8 @@ func (prl *ProfileResolutionLayer) Resolve(ctx *ResolutionContext) *matching.Dec
 
 	// Block Bypass: when enabled, block known VPN, proxy, Tor and encrypted DNS domains.
 	if ctx.BlockBypassEnabled && decision.Action == "ALLOW" {
+		log.Printf("[家长调试] profile=%s domain=%s 检查block_bypass Enabled=true Action=%s",
+			ctx.ProfileUID, ctx.Domain, decision.Action)
 		if CheckBlockBypassDomain(ctx.Domain) {
 			log.Printf("[家长] profile=%s domain=%s 类型=block_bypass 已拦截",
 				ctx.ProfileUID, ctx.Domain)
@@ -244,6 +246,8 @@ func (prl *ProfileResolutionLayer) Resolve(ctx *ResolutionContext) *matching.Dec
 				Category: "parental",
 			}
 		}
+		log.Printf("[家长调试] profile=%s domain=%s block_bypass 域名不匹配",
+			ctx.ProfileUID, ctx.Domain)
 	}
 
 	log.Printf("[查询] profile=%s device=%s domain=%s action=%s reason=%s",
