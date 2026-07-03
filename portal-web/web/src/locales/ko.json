@@ -1270,14 +1270,12 @@
       "desc": "특정 웹사이트, 앱 및 게임에 대한 접근을 제한합니다",
       "presets": "프리셋",
       "presetsDesc": "자녀 보호를 위한 웹사이트, 앱 및 게임 프리셋",
-      "categories": "카테고리",
-      "categoriesDesc": "자녀 보호 카테고리 카탈로그",
       "status": "상태",
       "enabled": "활성화"
     },
     "memberCatalogs": {
       "title": "멤버 측 전략 구성",
-      "desc": "보안 전략, 프라이버시 차단 목록, 자녀 보호 프리셋과 카테고리 카탈로그",
+      "desc": "보안 전략, 프라이버시 차단 목록, 자녀 보호 프리셋",
       "tabBlockList": "차단 목록",
       "tabDeviceModels": "디바이스 모델",
       "tabBlocklists": "프라이버시 차단 목록",
@@ -1288,7 +1286,6 @@
       "deviceModels": "디바이스 모델",
       "blocklists": "프라이버시 차단 목록",
       "presets": "웹사이트 / 앱 / 게임 프리셋",
-      "categories": "카테고리",
       "rulesTitle": "구성 목록",
       "save": "카탈로그 저장",
       "saved": "카탈로그가 저장되었습니다",
