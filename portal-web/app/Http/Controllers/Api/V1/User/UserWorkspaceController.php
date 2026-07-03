@@ -54,12 +54,15 @@ final class UserWorkspaceController
      */
     public function ruleCategories(Request $request): JsonResponse
     {
-        $group = $request->input('group', 'family');
-
-        $categories = RuleCategory::query()
+        $query = RuleCategory::query()
             ->where('enabled', true)
-            ->where('group', $group)
-            ->orderBy('sort_order')
+            ->orderBy('sort_order');
+
+        if ($group = $request->input('group')) {
+            $query->where('group', $group);
+        }
+
+        $categories = $query
             ->get(['code', 'name', 'name_en', 'description', 'icon', 'color'])
             ->map(fn (RuleCategory $c): array => [
                 'key' => $c->code,

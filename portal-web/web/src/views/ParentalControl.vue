@@ -336,7 +336,7 @@ onMounted(async () => {
 
     // 从 rule-categories 获取家长监护分类目录
     try {
-        const categoryResponse = await client.get('/user/rule-categories', { params: { group: 'family' } })
+        const categoryResponse = await client.get('/user/rule-categories')
         const categories = categoryResponse.data?.data || []
         if (Array.isArray(categories) && categories.length > 0) {
             categoryPresets.value = categories
