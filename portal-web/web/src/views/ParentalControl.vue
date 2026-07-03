@@ -81,11 +81,12 @@
                     <div v-for="item in safeSearchItems" :key="item.key" class="blocklist-card">
                         <div class="blocklist-header">
                             <div class="blocklist-info">
-                                <h4 class="blocklist-name">{{ $t(item.label) }}</h4>
+                                <span v-if="item.icon" class="safe-search-icon">{{ item.icon }}</span>
+                                <h4 class="blocklist-name">{{ item.label }}</h4>
                             </div>
                             <el-switch v-model="form[item.key]" />
                         </div>
-                        <p class="blocklist-desc">{{ $t(item.desc) }}</p>
+                        <p class="blocklist-desc">{{ item.desc }}</p>
                     </div>
                 </div>
             </div>
@@ -133,7 +134,6 @@ import { useI18n } from 'vue-i18n'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
 import { useCurrentProfile } from '@/composables/useCurrentProfile'
-import parentalApps from '@/config/parental-apps'
 
 const { t, locale } = useI18n()
 const { currentProfileId } = useCurrentProfile()
@@ -233,12 +233,7 @@ const safeSearchFormKeyMap = {
     youtube_restricted: 'youtube_restricted_mode',
     block_bypass: 'block_bypass',
 }
-const safeSearchFallbackItems = [
-    { key: 'safe_search', label: 'parental.safeSearch.safeSearch', desc: 'parental.safeSearch.safeSearchDesc' },
-    { key: 'youtube_restricted_mode', label: 'parental.safeSearch.youtubeRestricted', desc: 'parental.safeSearch.youtubeRestrictedDesc' },
-    { key: 'block_bypass', label: 'parental.safeSearch.blockBypass', desc: 'parental.safeSearch.blockBypassDesc' },
-]
-const safeSearchItems = ref([...safeSearchFallbackItems])
+const safeSearchItems = ref([])
 
 const handleSave = async (forceData = null) => {
     if (!currentProfileId.value) return
@@ -299,20 +294,29 @@ onMounted(async () => {
         const catalogResponse = await client.get('/user/catalogs')
         const catalogs = catalogResponse.data?.data || {}
         if (Array.isArray(catalogs.parental_presets) && catalogs.parental_presets.length > 0) {
-            presets.value = catalogs.parental_presets
-            // 从 parental_presets 中提取安全搜索项（safe_search、youtube_restricted、block_bypass）
+            const allPresets = catalogs.parental_presets
+            // 安全搜索项的 key
             const safeSearchKeys = Object.keys(safeSearchFormKeyMap)
-            const found = catalogs.parental_presets.filter((p) => safeSearchKeys.includes(p.key))
+            // 提取安全搜索项
+            const found = allPresets.filter((p) => safeSearchKeys.includes(p.key))
             if (found.length > 0) {
                 safeSearchItems.value = found.map((p) => ({
                     key: safeSearchFormKeyMap[p.key] || p.key,
                     label: p.name,
                     desc: p.desc,
+                    icon: p.icon,
                 }))
             }
+            // 应用/网站/游戏项（排除安全搜索项）
+            presets.value = allPresets.filter((p) => !safeSearchKeys.includes(p.key))
         }
-        if (Array.isArray(catalogs.parental_categories) && catalogs.parental_categories.length > 0) {
-            categoryPresets.value = catalogs.parental_categories
+    } catch {}
+    // 从 rule-categories 获取家长监护分类目录
+    try {
+        const categoryResponse = await client.get('/user/rule-categories', { params: { group: 'family' } })
+        const categories = categoryResponse.data?.data || []
+        if (Array.isArray(categories) && categories.length > 0) {
+            categoryPresets.value = categories
         }
     } catch {}
     await fetchData()
@@ -340,6 +344,7 @@ onMounted(async () => {
 .blocklist-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
 .blocklist-info { display: flex; align-items: center; gap: 8px; }
 .blocklist-name { font-size: 14px; font-weight: 600; color: var(--color-text); margin: 0; }
+.safe-search-icon { font-size: 18px; }
 .blocklist-desc { font-size: 13px; color: var(--color-text-muted); margin: 0; line-height: 1.5; }
 .picker-item {
     display: flex;

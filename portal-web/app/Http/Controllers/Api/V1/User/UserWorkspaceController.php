@@ -9,6 +9,7 @@ use App\Domain\Profile\UserWorkspaceService;
 use App\Domain\Billing\PaymentService;
 use App\Models\Profile;
 use App\Models\ProfileRule;
+use App\Models\RuleCategory;
 use App\Models\RuleSource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -45,6 +46,32 @@ final class UserWorkspaceController
             ->toArray();
 
         return response()->json(['data' => $sources]);
+    }
+
+    /**
+     * 获取规则分类（用于家长监护分类目录）
+     * GET /user/rule-categories?group=family
+     */
+    public function ruleCategories(Request $request): JsonResponse
+    {
+        $group = $request->input('group', 'family');
+
+        $categories = RuleCategory::query()
+            ->where('enabled', true)
+            ->where('group', $group)
+            ->orderBy('sort_order')
+            ->get(['code', 'name', 'name_en', 'description', 'icon', 'color'])
+            ->map(fn (RuleCategory $c): array => [
+                'key' => $c->code,
+                'name' => $c->name,
+                'name_en' => $c->name_en,
+                'desc' => $c->description,
+                'icon' => $c->icon,
+                'color' => $c->color,
+            ])
+            ->toArray();
+
+        return response()->json(['data' => $categories]);
     }
 
     public function security(Request $request): JsonResponse

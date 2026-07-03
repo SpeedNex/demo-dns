@@ -89,7 +89,7 @@
             <!-- 家长监护 Tab -->
             <el-tab-pane name="parental">
                 <template #label>
-                    <span>{{ $t('admin.memberCatalogs.tabParental') }} · {{ catalogs.parental_presets.length + catalogs.parental_categories.length }}</span>
+                    <span>{{ $t('admin.memberCatalogs.tabParental') }} · {{ catalogs.parental_presets.length }}</span>
                 </template>
                 <div class="parental-section">
                     <h4>{{ $t('admin.memberCatalogs.presets') }}</h4>
@@ -124,41 +124,6 @@
                     <div v-if="filteredRows('parental_presets').length > presetsPerPage" class="pagination-bar">
                         <span class="total">{{ $t('common.totalPrefix') }} {{ filteredRows('parental_presets').length }} {{ $t('common.itemsSuffix') }}</span>
                         <el-pagination v-model:current-page="presetsPage" v-model:page-size="presetsPerPage" :page-sizes="[10, 20, 50]" :total="filteredRows('parental_presets').length" layout="sizes, prev, pager, next" background size="small" />
-                    </div>
-                </div>
-                <div class="parental-section">
-                    <h4>{{ $t('admin.memberCatalogs.categories') }}</h4>
-                    <div class="toolbar">
-                        <el-input v-model="categoryFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 240px" @keyup.enter="categoriesPage = 1">
-                            <template #prefix><el-icon><Search /></el-icon></template>
-                        </el-input>
-                        <el-button type="primary" @click="openAddDialog('parental_categories')"><el-icon><Plus /></el-icon>{{ $t('common.add') }}</el-button>
-                    </div>
-                    <el-table :data="pagedRows('parental_categories')" stripe size="small">
-                        <template #empty><div class="empty">{{ $t('dashboard.noData') }}</div></template>
-                        <el-table-column :label="$t('admin.memberCatalogs.code')" prop="key" min-width="140" />
-                        <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="160" />
-                        <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="200" show-overflow-tooltip />
-                        <el-table-column :label="$t('admin.memberCatalogs.fieldType')" width="110" align="center">
-                            <template #default="{ row }">
-                                <el-tag size="small" :type="getFieldTypeTag(row.field_type)" effect="plain">{{ getFieldTypeLabel(row.field_type) }}</el-tag>
-                            </template>
-                        </el-table-column>
-                        <el-table-column :label="$t('admin.memberCatalogs.status')" width="100" align="center">
-                            <template #default="{ row }">
-                                <el-switch v-model="row.enabled" @change="toggleRow('parental_categories', row)" />
-                            </template>
-                        </el-table-column>
-                        <el-table-column :label="$t('common.actions')" width="140" fixed="right">
-                            <template #default="{ $index }">
-                                <el-button link size="small" @click="openEditDialog('parental_categories', $index)"><el-icon><Edit /></el-icon></el-button>
-                                <el-button link size="small" type="danger" @click="removeRow('parental_categories', $index)"><el-icon><Delete /></el-icon></el-button>
-                            </template>
-                        </el-table-column>
-                    </el-table>
-                    <div v-if="filteredRows('parental_categories').length > categoriesPerPage" class="pagination-bar">
-                        <span class="total">{{ $t('common.totalPrefix') }} {{ filteredRows('parental_categories').length }} {{ $t('common.itemsSuffix') }}</span>
-                        <el-pagination v-model:current-page="categoriesPage" v-model:page-size="categoriesPerPage" :page-sizes="[10, 20, 50]" :total="filteredRows('parental_categories').length" layout="sizes, prev, pager, next" background size="small" />
                     </div>
                 </div>
             </el-tab-pane>
@@ -283,24 +248,20 @@ const catalogs = reactive({
     device_models: [],
     privacy_blocklists: [],
     parental_presets: [],
-    parental_categories: [],
 })
 
-// 4 个列表 tab 各自的分页 state
+// 3 个列表 tab 各自的分页 state
 const deviceModelsPage = ref(1)
 const deviceModelsPerPage = ref(10)
 const blocklistsPage = ref(1)
 const blocklistsPerPage = ref(10)
 const presetsPage = ref(1)
 const presetsPerPage = ref(10)
-const categoriesPage = ref(1)
-const categoriesPerPage = ref(10)
 
-// 4 个列表 tab 各自的过滤条件
+// 3 个列表 tab 各自的过滤条件
 const deviceModelFilter = reactive({ name: '' })
 const blocklistFilter = reactive({ name: '' })
 const presetFilter = reactive({ name: '' })
-const categoryFilter = reactive({ name: '' })
 
 // 行编辑 dialog
 const showRowDialog = ref(false)
@@ -364,13 +325,11 @@ const fieldsPerTab = {
     device_models: ['key', 'name', 'desc', 'field_type', 'enabled', 'system'],
     privacy_blocklists: ['key', 'name', 'desc', 'field_type', 'days_ago', 'enabled', 'system'],
     parental_presets: ['name', 'key', 'icon', 'category', 'field_type', 'desc', 'enabled', 'url', 'system'],
-    parental_categories: ['key', 'name', 'desc', 'field_type', 'enabled'],
 }
 const createDefaults = {
     device_models: () => ({ key: '', name: '', desc: '', field_type: 'switch', enabled: true, system: false }),
     privacy_blocklists: () => ({ key: '', name: '', desc: '', field_type: 'switch', days_ago: 0, enabled: true, system: false, devices: [] }),
     parental_presets: () => ({ name: '', key: '', icon: '', category: 'website', field_type: 'switch', desc: '', enabled: true, url: '', system: false }),
-    parental_categories: () => ({ key: '', name: '', desc: '', field_type: 'multi', enabled: true }),
 }
 
 const hasField = (key) => fieldsPerTab[editingTab.value]?.includes(key) ?? false
@@ -379,7 +338,6 @@ const totalItems = computed(() =>
     catalogs.device_models.length
     + catalogs.privacy_blocklists.length
     + catalogs.parental_presets.length
-    + catalogs.parental_categories.length
 )
 
 const formatNumber = (n) => {
@@ -392,13 +350,11 @@ const filterMap = {
     device_models: deviceModelFilter,
     privacy_blocklists: blocklistFilter,
     parental_presets: presetFilter,
-    parental_categories: categoryFilter,
 }
 const pageMap = {
     device_models: { page: deviceModelsPage, perPage: deviceModelsPerPage },
     privacy_blocklists: { page: blocklistsPage, perPage: blocklistsPerPage },
     parental_presets: { page: presetsPage, perPage: presetsPerPage },
-    parental_categories: { page: categoriesPage, perPage: categoriesPerPage },
 }
 
 const filteredRows = (key) => {
@@ -420,7 +376,6 @@ const pagedRows = (key) => {
 watch(() => deviceModelFilter.name, () => { deviceModelsPage.value = 1 })
 watch(() => blocklistFilter.name, () => { blocklistsPage.value = 1 })
 watch(() => presetFilter.name, () => { presetsPage.value = 1 })
-watch(() => categoryFilter.name, () => { categoriesPage.value = 1 })
 
 const fetchAll = async () => {
     await fetchCatalogs()

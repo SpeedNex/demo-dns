@@ -30,7 +30,6 @@ final class MemberCatalogService
             'device_models' => $this->normalizeItems($stored['device_models'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled', 'system']),
             'privacy_blocklists' => $this->normalizeItems($stored['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'field_type', 'days_ago', 'enabled', 'system', 'devices']),
             'parental_presets' => $this->normalizeItems($stored['parental_presets'] ?? [], ['name', 'key', 'icon', 'category', 'field_type', 'desc', 'enabled', 'url', 'system']),
-            'parental_categories' => $this->normalizeItems($stored['parental_categories'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled']),
         ];
 
         // 确保每组所有项都有 field_type 默认值
@@ -38,7 +37,6 @@ final class MemberCatalogService
             'device_models' => 'switch',
             'privacy_blocklists' => 'switch',
             'parental_presets' => 'switch',
-            'parental_categories' => 'multi',
         ];
         foreach ($defaultFieldTypes as $group => $defaultType) {
             foreach ($result[$group] as &$item) {
@@ -48,6 +46,14 @@ final class MemberCatalogService
             }
             unset($item);
         }
+
+        // 特殊处理：deep_tracking_protection 必须是 multi 类型（多选设备）
+        foreach ($result['privacy_blocklists'] as &$item) {
+            if (($item['key'] ?? '') === 'deep_tracking_protection') {
+                $item['field_type'] = 'multi';
+            }
+        }
+        unset($item);
 
         return $result;
     }
@@ -109,7 +115,6 @@ final class MemberCatalogService
             'device_models' => $this->normalizeItems($payload['device_models'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled', 'system']),
             'privacy_blocklists' => $this->normalizeItems($payload['privacy_blocklists'] ?? [], ['key', 'name', 'desc', 'field_type', 'days_ago', 'enabled', 'system', 'devices']),
             'parental_presets' => $this->normalizeItems($payload['parental_presets'] ?? [], ['name', 'key', 'icon', 'category', 'field_type', 'desc', 'enabled', 'url', 'system']),
-            'parental_categories' => $this->normalizeItems($payload['parental_categories'] ?? [], ['key', 'name', 'desc', 'field_type', 'enabled']),
         ];
 
         SystemConfig::query()->updateOrCreate(
@@ -216,15 +221,63 @@ final class MemberCatalogService
                     ['key' => 'roku', 'name' => 'Roku', 'icon' => '📺', 'enabled' => true],
                     ['key' => 'sonos', 'name' => 'Sonos', 'icon' => '🔊', 'enabled' => true],
                 ]],
-                ['key' => 'disguised_trackers', 'name' => '拦截伪装过的第三方跟踪器', 'desc' => '拦截伪装成第一方资源的第三方跟踪器，这些跟踪器试图绕过常规跟踪保护。', 'field_type' => 'switch', 'days_ago' => 0, 'enabled' => true, 'system' => true],
-                ['key' => 'allow_marketing_links', 'name' => '允许营销和跟踪链接', 'desc' => '允许部分已知包含跟踪参数的营销链接正常访问，同时保留对恶意域名的拦截。', 'field_type' => 'switch', 'days_ago' => 0, 'enabled' => false, 'system' => true],
+                ['key' => 'disguised_trackers', 'name' => '拦截伪装过的第三方跟踪器', 'desc' => '自动检测并拦截为了避开 ITP 等隐私保护而伪装成第一方的第三方跟踪器。', 'field_type' => 'switch', 'days_ago' => 0, 'enabled' => true, 'system' => true],
+                ['key' => 'allow_marketing_links', 'name' => '允许营销和跟踪链接', 'desc' => '允许在购物网站、电子邮件或搜索结果中常见的营销或跟踪域名。通常只有在手动点击后才能触发这些链接。您的 IP 地址将自动对这些网站隐藏，以保护您的隐私。', 'field_type' => 'switch', 'days_ago' => 0, 'enabled' => false, 'system' => true],
             ],
             'parental_presets' => [
+                // 功能类
                 ['key' => 'safe_search', 'name' => '安全搜索', 'icon' => '🔍', 'category' => 'website', 'desc' => '在主流搜索引擎上过滤掉含有色情内容的搜索结果，包括图像和视频。如果有搜索引擎不支持此功能，则整个搜索引擎都将被拦截。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
                 ['key' => 'youtube_restricted', 'name' => 'YouTube 受限模式', 'icon' => '📺', 'category' => 'website', 'desc' => '过滤掉 YouTube 上的成人视频，并阻止嵌入的成人视频在其他网站上观看。这也将隐藏所有评论。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
                 ['key' => 'block_bypass', 'name' => '阻止绕过', 'icon' => '🛡️', 'category' => 'website', 'desc' => '阻止用户通过代理或 VPN 绕过家长监护设置。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                // 社交网站
+                ['key' => 'tiktok', 'name' => 'TikTok/抖音', 'icon' => '🎵', 'category' => 'website', 'desc' => '短视频社交平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'instagram', 'name' => 'Instagram', 'icon' => '📷', 'category' => 'app', 'desc' => '图片和视频分享社交平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'snapchat', 'name' => 'Snapchat', 'icon' => '👻', 'category' => 'app', 'desc' => '即时通讯和短视频应用', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'facebook', 'name' => 'Facebook', 'icon' => '👤', 'category' => 'website', 'desc' => '社交网络平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'twitter', 'name' => 'Twitter/X', 'icon' => '🐦', 'category' => 'website', 'desc' => '社交媒体平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'reddit', 'name' => 'Reddit', 'icon' => '🔴', 'category' => 'website', 'desc' => '社交新闻和讨论平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'tumblr', 'name' => 'Tumblr', 'icon' => '📝', 'category' => 'website', 'desc' => '轻博客社交平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'pinterest', 'name' => 'Pinterest', 'icon' => '📌', 'category' => 'website', 'desc' => '图片分享和发现平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'bereal', 'name' => 'BeReal', 'icon' => '📸', 'category' => 'app', 'desc' => '真实生活分享应用', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'mastodon', 'name' => 'Mastodon', 'icon' => '🐘', 'category' => 'app', 'desc' => '去中心化社交网络', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'vk', 'name' => 'VK', 'icon' => '💬', 'category' => 'website', 'desc' => '俄罗斯社交网络平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                // 即时通讯
+                ['key' => 'telegram', 'name' => 'Telegram', 'icon' => '✈️', 'category' => 'app', 'desc' => '加密即时通讯应用', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'whatsapp', 'name' => 'WhatsApp', 'icon' => '💚', 'category' => 'app', 'desc' => '即时通讯应用', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'signal', 'name' => 'Signal', 'icon' => '🔒', 'category' => 'app', 'desc' => '加密隐私通讯应用', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'discord', 'name' => 'Discord', 'icon' => '🎮', 'category' => 'app', 'desc' => '游戏社区和语音聊天平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'messenger', 'name' => 'Messenger', 'icon' => '💭', 'category' => 'app', 'desc' => 'Facebook 即时通讯', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'skype', 'name' => 'Skype', 'icon' => '📞', 'category' => 'app', 'desc' => '视频通话和即时通讯', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'googlechat', 'name' => 'Google Chat', 'icon' => '🟢', 'category' => 'app', 'desc' => 'Google 企业通讯工具', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'zoom', 'name' => 'Zoom', 'icon' => '📹', 'category' => 'app', 'desc' => '视频会议平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'tinder', 'name' => 'Tinder', 'icon' => '🔥', 'category' => 'app', 'desc' => '交友约会应用', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                // 视频/流媒体
+                ['key' => 'youtube', 'name' => 'YouTube', 'icon' => '▶️', 'category' => 'website', 'desc' => '视频分享平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'twitch', 'name' => 'Twitch', 'icon' => '🟣', 'category' => 'website', 'desc' => '游戏直播平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'dailymotion', 'name' => 'Dailymotion', 'icon' => '🎬', 'category' => 'website', 'desc' => '视频分享平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'vimeo', 'name' => 'Vimeo', 'icon' => '🎥', 'category' => 'website', 'desc' => '专业视频平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'netflix', 'name' => 'Netflix', 'icon' => '🎬', 'category' => 'website', 'desc' => '流媒体视频平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'hulu', 'name' => 'Hulu', 'icon' => '📺', 'category' => 'website', 'desc' => '美国流媒体平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'disneyplus', 'name' => 'Disney+', 'icon' => '🏰', 'category' => 'website', 'desc' => '迪士尼流媒体平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'primevideo', 'name' => 'Prime Video', 'icon' => '📦', 'category' => 'website', 'desc' => '亚马逊流媒体平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'hbomax', 'name' => 'HBO Max', 'icon' => '🎭', 'category' => 'website', 'desc' => '华纳流媒体平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'spotify', 'name' => 'Spotify', 'icon' => '🎵', 'category' => 'website', 'desc' => '音乐流媒体平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                // 游戏
+                ['key' => 'roblox', 'name' => 'Roblox', 'icon' => '🎮', 'category' => 'game', 'desc' => '在线游戏平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'fortnite', 'name' => 'Fortnite', 'icon' => '🏗️', 'category' => 'game', 'desc' => '堡垒之夜游戏', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'leagueoflegends', 'name' => 'League of Legends', 'icon' => '⚔️', 'category' => 'game', 'desc' => '英雄联盟游戏', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'minecraft', 'name' => 'Minecraft', 'icon' => '⛏️', 'category' => 'game', 'desc' => '我的世界游戏', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'blizzard', 'name' => 'Blizzard', 'icon' => '❄️', 'category' => 'game', 'desc' => '暴雪游戏平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'steam', 'name' => 'Steam', 'icon' => '🎲', 'category' => 'game', 'desc' => 'Valve 游戏平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'xboxlive', 'name' => 'Xbox Live', 'icon' => '🟢', 'category' => 'game', 'desc' => '微软游戏服务', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'playstation', 'name' => 'PlayStation Network', 'icon' => '🔵', 'category' => 'game', 'desc' => '索尼游戏服务', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                // 其他
+                ['key' => '9gag', 'name' => '9GAG', 'icon' => '😂', 'category' => 'website', 'desc' => '搞笑图片和视频平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'imgur', 'name' => 'Imgur', 'icon' => '🖼️', 'category' => 'website', 'desc' => '图片分享平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'ebay', 'name' => 'eBay', 'icon' => '🛒', 'category' => 'website', 'desc' => '在线拍卖和购物平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'amazon', 'name' => 'Amazon', 'icon' => '📦', 'category' => 'website', 'desc' => '在线购物平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'chatgpt', 'name' => 'ChatGPT', 'icon' => '🤖', 'category' => 'website', 'desc' => 'AI 对话平台', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
             ],
-            'parental_categories' => [],
         ];
     }
 }

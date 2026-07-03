@@ -429,53 +429,6 @@
                         </div>
                     </el-card>
 
-                    <!-- 家长分类 -->
-                    <el-card shadow="never" class="policy-card">
-                        <template #header>
-                            <div class="rules-head">
-                                <div class="card-header">
-                                    <el-icon><Grid /></el-icon>
-                                    <strong>{{ $t('admin.memberCatalogs.categories') }}</strong>
-                                </div>
-                                <div class="rules-filters">
-                                    <el-input v-model="categoryFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="fetchCatalogs" />
-                                    <el-button @click="fetchCatalogs">{{ $t('common.search') }}</el-button>
-                                    <el-button type="primary" @click="openAddDialog('parental_categories')">{{ $t('common.add') }}</el-button>
-                                </div>
-                            </div>
-                        </template>
-                        <el-table :data="pagedRows('parental_categories')" stripe>
-                            <template #empty>
-                                <div class="empty-state">
-                                    <el-icon class="empty-icon"><Grid /></el-icon>
-                                    <p class="empty-title">{{ $t('dashboard.noData') }}</p>
-                                </div>
-                            </template>
-                            <el-table-column :label="$t('admin.memberCatalogs.id')" prop="key" min-width="160" show-overflow-tooltip />
-                            <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="160" show-overflow-tooltip />
-                            <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="320" show-overflow-tooltip />
-                            <el-table-column :label="$t('common.actions')" width="160" fixed="right">
-                                <template #default="{ $index }">
-                                    <el-button text type="primary" @click="openEditDialog('parental_categories', $index)">{{ $t('common.edit') }}</el-button>
-                                    <el-button text type="danger" @click="removeRow('parental_categories', $index)">{{ $t('common.delete') }}</el-button>
-                                </template>
-                            </el-table-column>
-                        </el-table>
-                        <div class="pagination-bar">
-                            <div class="pagination-total">
-                                {{ $t('common.totalPrefix') }} <strong>{{ filteredRows('parental_categories').length }}</strong> {{ $t('common.itemsSuffix') }}
-                            </div>
-                            <el-pagination
-                                v-model:current-page="categoriesPage"
-                                v-model:page-size="categoriesPerPage"
-                                :page-sizes="[10, 20, 50, 100]"
-                                :total="filteredRows('parental_categories').length"
-                                layout="sizes, prev, pager, next"
-                                background
-                                size="small"
-                            />
-                        </div>
-                    </el-card>
                 </div>
             </el-tab-pane>
         </el-tabs>
@@ -578,20 +531,17 @@ const catalogs = reactive({
     device_models: [],
     privacy_blocklists: [],
     parental_presets: [],
-    parental_categories: [],
 })
 
 // 分页 state
 const deviceModelsPage = ref(1); const deviceModelsPerPage = ref(10)
 const blocklistsPage = ref(1); const blocklistsPerPage = ref(10)
 const presetsPage = ref(1); const presetsPerPage = ref(10)
-const categoriesPage = ref(1); const categoriesPerPage = ref(10)
 
 // 过滤
 const deviceModelFilter = reactive({ name: '' })
 const blocklistFilter = reactive({ name: '' })
 const presetFilter = reactive({ name: '' })
-const categoryFilter = reactive({ name: '' })
 
 // 行编辑
 const showRowDialog = ref(false)
@@ -604,13 +554,11 @@ const fieldsPerTab = {
     device_models: ['id', 'name', 'desc', 'icon', 'color'],
     privacy_blocklists: ['key', 'name', 'desc', 'entries', 'days_ago'],
     parental_presets: ['name', 'icon', 'category'],
-    parental_categories: ['key', 'name', 'desc'],
 }
 const createDefaults = {
     device_models: () => ({ id: '', name: '', desc: '', icon: '', color: '' }),
     privacy_blocklists: () => ({ key: '', name: '', desc: '', entries: 0, days_ago: 0 }),
     parental_presets: () => ({ name: '', icon: '', category: 'website' }),
-    parental_categories: () => ({ key: '', name: '', desc: '' }),
 }
 
 const hasField = (key) => fieldsPerTab[editingTab.value]?.includes(key) ?? false
@@ -619,20 +567,17 @@ const totalItems = computed(() =>
     catalogs.device_models.length
     + catalogs.privacy_blocklists.length
     + catalogs.parental_presets.length
-    + catalogs.parental_categories.length
 )
 
 const filterMap = {
     device_models: deviceModelFilter,
     privacy_blocklists: blocklistFilter,
     parental_presets: presetFilter,
-    parental_categories: categoryFilter,
 }
 const pageMap = {
     device_models: { page: deviceModelsPage, perPage: deviceModelsPerPage },
     privacy_blocklists: { page: blocklistsPage, perPage: blocklistsPerPage },
     parental_presets: { page: presetsPage, perPage: presetsPerPage },
-    parental_categories: { page: categoriesPage, perPage: categoriesPerPage },
 }
 
 const filteredRows = (key) => {

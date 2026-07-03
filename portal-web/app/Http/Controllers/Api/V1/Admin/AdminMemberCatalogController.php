@@ -50,11 +50,6 @@ final class AdminMemberCatalogController
             'parental_presets.*.category' => ['nullable', Rule::in(['website', 'app', 'game'])],
             'parental_presets.*.enabled' => 'nullable|boolean',
             'parental_presets.*.url' => 'nullable|string|max:500',
-            'parental_categories' => 'required|array',
-            'parental_categories.*.key' => 'nullable|string|max:60',
-            'parental_categories.*.name' => 'nullable|string|max:120',
-            'parental_categories.*.desc' => 'nullable|string|max:255',
-            'parental_categories.*.enabled' => 'nullable|boolean',
         ]);
 
         $payload = $this->catalogs->update($validated, $request->user()?->admin_id);
