@@ -91,7 +91,7 @@ final class MemberCatalogService
                 foreach ($fields as $field) {
                     $value = $item[$field] ?? null;
                     if (in_array($field, ['enabled', 'system'], true)) {
-                        $normalized[$field] = (bool) $value;
+                        $normalized[$field] = (bool) ($value ?? false);
                     } elseif ($field === 'devices' && is_array($value)) {
                         $normalized[$field] = $this->normalizeDevices($value);
                     } else {
@@ -131,12 +131,14 @@ final class MemberCatalogService
     {
         return collect($devices)
             ->filter(fn ($d) => is_array($d) && ! empty($d['key']))
-            ->map(fn ($d) => [
-                'key' => (string) $d['key'],
-                'name' => (string) ($d['name'] ?? $d['key']),
-                'icon' => (string) ($d['icon'] ?? '📱'),
-                'enabled' => (bool) ($d['enabled' ?? true),
-            ])
+            ->map(function (array $d): array {
+                return [
+                    'key' => (string) ($d['key'] ?? ''),
+                    'name' => (string) ($d['name'] ?? $d['key'] ?? ''),
+                    'icon' => (string) ($d['icon'] ?? '📱'),
+                    'enabled' => (bool) ($d['enabled'] ?? true),
+                ];
+            })
             ->values()
             ->all();
     }
