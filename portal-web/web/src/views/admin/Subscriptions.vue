@@ -115,8 +115,12 @@
             </el-table-column>
             <el-table-column :label="$t('admin.finance.autoRenew')" min-width="100" align="center">
                 <template #default="{ row }">
-                    <el-tag v-if="row.auto_renew" type="success" size="small">{{ $t('common.yes') }}</el-tag>
-                    <el-tag v-else type="info" size="small">{{ $t('common.no') }}</el-tag>
+                    <el-switch
+                        :model-value="row.auto_renew"
+                        :loading="operatingId === row.id"
+                        :disabled="row.status !== 'active'"
+                        @change="(val) => handleAutoRenewChange(row, val)"
+                    />
                 </template>
             </el-table-column>
             <el-table-column :label="$t('admin.finance.currentPeriodEnd')" min-width="180">
@@ -134,25 +138,9 @@
                     {{ row.created_at ? new Date(row.created_at).toLocaleString() : '-' }}
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.finance.actions')" width="280" fixed="right">
+            <el-table-column :label="$t('admin.finance.actions')" width="180" fixed="right">
                 <template #default="{ row }">
                     <el-button size="small" text type="primary" @click="showDetail(row)">{{ $t('common.detail') }}</el-button>
-                    <el-button
-                        v-if="row.status === 'active' && !row.cancel_at_period_end"
-                        size="small"
-                        text
-                        type="danger"
-                        :loading="operatingId === row.id"
-                        @click="handleAdminCancel(row)"
-                    >{{ $t('admin.finance.cancelSubscription') }}</el-button>
-                    <el-button
-                        v-if="row.status === 'active' && row.cancel_at_period_end"
-                        size="small"
-                        text
-                        type="success"
-                        :loading="operatingId === row.id"
-                        @click="handleAdminResume(row)"
-                    >{{ $t('admin.finance.resumeSubscription') }}</el-button>
                     <el-button size="small" text type="danger" :loading="operatingId === row.id" @click="handleDelete(row.id)">
                         <el-icon><Delete /></el-icon>
                     </el-button>
@@ -346,6 +334,20 @@ const handleAdminCancel = async (row) => {
         await client.post(`/admin/finance/subscriptions/${row.id}/cancel`)
         ElMessage.success(t('admin.finance.cancelSuccess'))
         await fetchSubscriptions()
+    } catch {
+        ElMessage.error(t('admin.finance.operationFailed'))
+    } finally {
+        operatingId.value = null
+    }
+}
+
+const handleAutoRenewChange = async (row, val) => {
+    operatingId.value = row.id
+    try {
+        await client.post(`/admin/finance/subscriptions/${row.id}/auto-renew`, { auto_renew: val })
+        row.auto_renew = val
+        row.cancel_at_period_end = !val
+        ElMessage.success(val ? t('admin.finance.resumeSuccess') : t('admin.finance.cancelSuccess'))
     } catch {
         ElMessage.error(t('admin.finance.operationFailed'))
     } finally {

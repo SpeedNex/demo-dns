@@ -430,6 +430,9 @@ func (a *Agent) loadProfileIntoEngine(profileID string, data json.RawMessage, ve
 			a.resolutionLayer.LoadSecurityConfig(p.ProfileID, secMap)
 		}
 
+		// 写入内存缓存，确保 GetProfileConfig 能读到最新配置
+		a.pCache.SetToMemory(profileID, data, version)
+
 		// 记录版本到 localProfiles（供心跳上报）
 		a.mu.Lock()
 		a.localProfiles[profileID] = version

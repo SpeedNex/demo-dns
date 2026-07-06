@@ -29,6 +29,7 @@ Route::middleware('permission:admin.finance.read')->group(function (): void {
 Route::middleware('permission:admin.finance.write')->group(function (): void {
     Route::post('finance/subscriptions/{id}/cancel', [AdminFinanceController::class, 'subscriptionCancel']);
     Route::post('finance/subscriptions/{id}/resume', [AdminFinanceController::class, 'subscriptionResume']);
+    Route::post('finance/subscriptions/{id}/auto-renew', [AdminFinanceController::class, 'subscriptionAutoRenew']);
     Route::delete('finance/subscriptions/{id}', [AdminFinanceController::class, 'subscriptionDestroy']);
     Route::post('finance/subscriptions/batch-destroy', [AdminFinanceController::class, 'subscriptionBatchDestroy']);
     Route::delete('finance/bills/{id}', [AdminFinanceController::class, 'billDestroy']);

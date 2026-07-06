@@ -2,6 +2,18 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-07-06 — /admin/subscriptions 自动续费改为开关 + payment-flows 文案与空值兜底
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-06 | code | 后端新增 `POST /admin/finance/subscriptions/{id}/auto-renew` 接口，校验 `auto_renew` 布尔值，同步设置 `cancel_at_period_end`（保持两个字段语义一致：auto_renew=true ⇔ cancel_at_period_end=false） | portal-web/app/Http/Controllers/Api/V1/Admin/AdminFinanceController.php | ok |
+| 2026-07-06 | code | 路由注册：使用 `admin.finance.write` 中间件，复用现有权限 | portal-web/routes/v1/admin/billing.php | ok |
+| 2026-07-06 | code | 前端"自动续费"列由 `el-tag` 改为 `el-switch` 开关，点击直接调后端接口切换 `auto_renew`；仅 active 状态可切换 | portal-web/web/src/views/admin/Subscriptions.vue | ok |
+| 2026-07-06 | code | 移除操作列中重复的"取消续费/恢复续费"按钮（功能已被 switch 覆盖，避免与 auto_renew 语义错位），操作列宽度从 280 收紧到 180 | portal-web/web/src/views/admin/Subscriptions.vue | ok |
+| 2026-07-06 | code | 新增 `handleAutoRenewChange(row, val)` 方法，乐观更新本地 row 状态，复用 `operatingId` 防抖 | portal-web/web/src/views/admin/Subscriptions.vue | ok |
+| 2026-07-06 | code | payment-flows 列表 status='created' 文案从"已创建"改为"待支付"（三语同步：zh-CN 待支付 / en Awaiting Payment / ko 결제 대기） | portal-web/web/src/locales/{zh-CN,en,ko}.json | ok |
+| 2026-07-06 | code | payment-flows 列表 subscription_no 列由 `prop` 绑死改为 slot 模板，值为 null 时显示 `-` 兜底（避免空订阅记录整格空白） | portal-web/web/src/views/admin/PaymentFlows.vue | ok |
+
 ## 2026-07-03 — 写死设备导入后台 + /user/privacy 设备多选改为从后台拉取
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |

@@ -303,6 +303,31 @@ final class AdminFinanceController
         ]);
     }
 
+    /** POST /admin/finance/subscriptions/{id}/auto-renew */
+    public function subscriptionAutoRenew(Request $request, string $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'auto_renew' => 'required|boolean',
+        ]);
+
+        $sub = \App\Models\Subscription::findOrFail($id);
+        $autoRenew = (bool) $validated['auto_renew'];
+
+        $sub->update([
+            'auto_renew' => $autoRenew,
+            'cancel_at_period_end' => ! $autoRenew,
+            'updated_at' => now(),
+        ]);
+
+        return response()->json([
+            'data' => [
+                'id' => $sub->id,
+                'auto_renew' => $autoRenew,
+                'cancel_at_period_end' => ! $autoRenew,
+            ],
+        ]);
+    }
+
     /** POST /admin/finance/subscriptions/{id}/resume */
     public function subscriptionResume(string $id): JsonResponse
     {

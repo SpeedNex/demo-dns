@@ -1834,7 +1834,7 @@
       "userEmail": "User Email",
       "paymentFlows": "Payment Flows",
       "paymentFlowsDesc": "View all payment transactions",
-      "paymentStatusCreated": "Created",
+      "paymentStatusCreated": "Awaiting Payment",
       "paymentStatusProcessing": "Processing",
       "paymentStatusSucceeded": "Succeeded",
       "paymentStatusFailed": "Failed",

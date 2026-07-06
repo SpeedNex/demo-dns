@@ -108,7 +108,11 @@
           <span>{{ row.user_name || row.user_email || '-' }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="subscription_no" :label="$t('admin.finance.subscriptionNo')" min-width="170" show-overflow-tooltip />
+      <el-table-column :label="$t('admin.finance.subscriptionNo')" min-width="170" show-overflow-tooltip>
+        <template #default="{ row }">
+          <span>{{ row.subscription_no || '-' }}</span>
+        </template>
+      </el-table-column>
       <el-table-column :label="$t('admin.finance.planCode')" min-width="120">
         <template #default="{ row }">
           <el-tag size="small" effect="plain">{{ getPlanName(row.plan_code) }}</el-tag>
