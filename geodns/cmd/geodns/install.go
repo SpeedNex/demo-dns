@@ -64,7 +64,7 @@ func runInstall(args []string) error {
 	fs.StringVar(&opts.Token, "token", "", "Node token issued by console")
 	fs.StringVar(&opts.ConfigPath, "config", "", "Output geodns config.yaml path (default: <install-dir>/configs/config.yaml)")
 	fs.StringVar(&opts.APIKeyPath, "api-key", "", "Output api_key file path (default: <install-dir>/configs/api_key)")
-	fs.StringVar(&opts.ListenAddr, "listen-addr", ":5354", "HTTP listen address")
+	fs.StringVar(&opts.ListenAddr, "listen-addr", ":15354", "HTTP listen address")
 	fs.StringVar(&opts.DNSAddr, "dns-addr", ":53", "DNS listen address")
 	fs.StringVar(&opts.HealthToken, "health-token", "", "Internal health-view token (shared with portal-web)")
 	// 2026-06-22: --force 已废弃（install 始终覆盖配置），保留以兼容旧脚本，忽略即可。
@@ -427,7 +427,7 @@ func checkGeodnsPortConflicts(cfg *config.Config) error {
 		return nil
 	}
 
-	// 把 ":5354" / "0.0.0.0:5354" / "[::]:5354" 形式展开为 IPv4/IPv6 多个具体地址
+	// 把 ":15354" / "0.0.0.0:15354" / "[::]:15354" 形式展开为 IPv4/IPv6 多个具体地址
 	expandAddrs := func(addr string) []string {
 		switch {
 		case strings.HasPrefix(addr, ":") && !strings.HasPrefix(addr, "[::]"):

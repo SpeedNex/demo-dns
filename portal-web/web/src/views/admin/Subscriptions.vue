@@ -123,12 +123,22 @@
                     />
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.finance.currentPeriodEnd')" min-width="180">
+            <el-table-column min-width="180">
+                <template #header>
+                    <el-tooltip :content="$t('admin.finance.currentPeriodEndTip')" placement="top">
+                        <span>{{ $t('admin.finance.currentPeriodEnd') }}</span>
+                    </el-tooltip>
+                </template>
                 <template #default="{ row }">
                     {{ row.current_period_end ? new Date(row.current_period_end).toLocaleString() : '-' }}
                 </template>
             </el-table-column>
-            <el-table-column :label="$t('admin.finance.expiredAt')" min-width="180">
+            <el-table-column min-width="180">
+                <template #header>
+                    <el-tooltip :content="$t('admin.finance.expiredAtTip')" placement="top">
+                        <span>{{ $t('admin.finance.expiredAt') }}</span>
+                    </el-tooltip>
+                </template>
                 <template #default="{ row }">
                     {{ row.expired_at ? new Date(row.expired_at).toLocaleString() : '-' }}
                 </template>
@@ -178,7 +188,12 @@
             <el-descriptions-item :label="$t('admin.finance.cancelledAt')">
                 {{ selectedSub.cancelled_at ? new Date(selectedSub.cancelled_at).toLocaleString() : '-' }}
             </el-descriptions-item>
-            <el-descriptions-item :label="$t('admin.finance.expiredAt')">
+            <el-descriptions-item>
+                <template #label>
+                    <el-tooltip :content="$t('admin.finance.expiredAtTip')" placement="top">
+                        <span>{{ $t('admin.finance.expiredAt') }}</span>
+                    </el-tooltip>
+                </template>
                 {{ selectedSub.expired_at ? new Date(selectedSub.expired_at).toLocaleString() : '-' }}
             </el-descriptions-item>
             <el-descriptions-item :label="$t('admin.finance.createdAt')">

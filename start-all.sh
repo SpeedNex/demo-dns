@@ -4,7 +4,7 @@
 #   1) portal-web        Laravel API  :8081  + Vite :5173
 #   2) dns-resolver      Go           DoH:8444  UDP/TCP:5355
 #   3) dns-resolver-2    Go           DoH:8445  UDP/TCP:5356 (若 server-node2.yaml 存在)
-#   3) geodns            Go           :5354
+#   3) geodns            Go           :15354
 #
 # 用法:
 #   ./start-all.sh           # 启动所有端
@@ -32,7 +32,7 @@ PORT_RESOLVER_UDP=53
 PORT_RESOLVER_TCP=53
 PORT_RESOLVER_DOT=853
 PORT_RESOLVER_DoQ=784
-PORT_GEODNS=5354
+PORT_GEODNS=15354
 
 ALL_PORTS=(
     "${PORT_PORTAL_API}" "${PORT_PORTAL_WEB}"

@@ -68,7 +68,7 @@
             <el-table-column prop="status" :label="$t('admin.teams.status')" width="100">
                 <template #default="{ row }">
                     <el-tag :type="row.status === 'active' ? 'success' : 'danger'" size="small">
-                        {{ row.status }}
+                        {{ teamStatusLabel(row.status) }}
                     </el-tag>
                 </template>
             </el-table-column>
@@ -163,6 +163,13 @@ const fetchTeams = async () => {
     } finally {
         loading.value = false
     }
+}
+
+// 2026-07-06: Team 状态多语言（active/inactive → 启用/停用）
+const teamStatusLabel = (status) => {
+    if (!status) return '-'
+    const map = t('admin.teams.statusMap') || {}
+    return map[status] || status
 }
 
 const handleReset = () => {

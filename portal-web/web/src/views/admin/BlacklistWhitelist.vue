@@ -145,7 +145,8 @@ const onTypeChange = () => {
 const deleteRule = async (id) => {
     try {
         await ElMessageBox.confirm(t('admin.blacklistWhitelist.confirmDelete'), t('common.confirm'), { type: 'warning' })
-        await client.delete(`/admin/member-catalogs/rules/${id}`)
+        // 修复 2026-07-06 #18：路由真实路径是 /admin/member-rules/{id}，与 /admin/member-catalogs/rules/{id} 不同
+        await client.delete(`/admin/member-rules/${id}`)
         ElMessage.success(t('common.deleted'))
         fetchAll()
     } catch (err) {
@@ -164,7 +165,7 @@ const batchDelete = async () => {
             { type: 'warning' }
         )
         const ids = selectedRows.value.map(r => r.id)
-        await client.post('/admin/member-catalogs/rules/batch-delete', { ids })
+        await client.post('/admin/member-rules/batch-destroy', { ids })
         ElMessage.success(t('common.deleted'))
         selectedRows.value = []
         fetchAll()

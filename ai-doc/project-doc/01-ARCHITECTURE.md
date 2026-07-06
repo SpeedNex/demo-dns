@@ -74,7 +74,7 @@ GeoDNS 的职责是**入口寻址**，不是每次 DNS 递归查询的中间代�
 |---|---|---|---|
 | `portal-web` | Laravel + Vue 3 | 会员控制台 + 总后台(含原 console 域:节点管理、心跳、配置版本、发布任务、ACK、健康视图、规则库、系统配置、节点侧审计、GeoDNS 映射) | Public / User / Admin / Node / Internal API |
 | `dns-resolver` | Go | DNS 协议接入、规则匹配、缓存、日志、心跳、配置热加载 | DNS / Node HTTP(指向 `portal-web`) |
-| `geodns` | Go | 地域调度、权重路由、健康摘除、灰度;从 `portal-web` 拉健康视图 | Health View / Selector HTTP API (:5354) |
+| `geodns` | Go | 地域调度、权重路由、健康摘除、灰度;从 `portal-web` 拉健康视图 | Health View / Selector HTTP API (:15354) |
 
 > `portal-web(原 console 域)/` 目录在仓库中仅保留 `web/src/views/Layout.vue` 一个占位文件,所有 Admin / Node / Internal 控制器与 middleware 整段并入 `portal-web`,路由路径已从 `/api/v1/agent/*` 更新为 `/api/v1/node/*`;
 

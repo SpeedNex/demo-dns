@@ -4,7 +4,7 @@
 
 ## 1. 节点选择 HTTP API
 
-- **端口**：5354（HTTP API）
+- **端口**：15354（HTTP API）
 - **协议**：HTTP（非 DNS 协议）
 - **功能**：
   - 实时接入调度 —— 为 DoQ 和 DoT 客户端选择最优 Resolver
@@ -101,7 +101,7 @@ POST /debug/reload
 
 ```yaml
 server:
-  listen_addr: ":5354"
+  listen_addr: ":15354"
 
 console:
   health_view_url: "http://portal-web:8081/api/v1/internal/geodns/health-view"

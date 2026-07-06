@@ -18,7 +18,7 @@ class TaskExecution extends Model
         'id',
         'publish_task_id',
         'node_id',
-        'profile_version',
+        'config_version',
         'status',
         'checksum',
         'error_code',

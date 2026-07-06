@@ -1,5 +1,5 @@
 server:
-  listen_addr: ":5354"
+  listen_addr: ":15354"
   # DNS 监听地址。配置后启用 DNS 协议服务，通过标准 DNS A/AAAA 查询返回 resolver IP。
   # 设置为 "disabled" 或空则禁用 DNS 服务器。
   listen_dns_addr: ":53"

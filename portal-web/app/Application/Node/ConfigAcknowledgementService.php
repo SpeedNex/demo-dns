@@ -51,14 +51,39 @@ final class ConfigAcknowledgementService
         $task = PublishTask::withCount([
             'executions as applied_count' => fn ($query) => $query->where('status', 'applied'),
             'executions as failed_count' => fn ($query) => $query->where('status', 'failed'),
+            'executions as pending_count' => fn ($query) => $query->whereIn('status', ['pending', 'sent']),
         ])->find($execution->publish_task_id);
 
         if ($task !== null) {
+            $target = (int) $task->target_node_count;
+            $applied = (int) $task->applied_count;
+            $failed = (int) $task->failed_count;
+            $pending = (int) $task->pending_count;
+
+            // 修复 2026-07-06 #14：按 target/applied/failed/pending 决定状态。
+            // 原逻辑：只要没有 failed_count，第一个节点 applied 后任务就可能被标记为 succeeded，
+            // 即使还有大量 pending 节点。后台发布中心显示"成功"但实际很多节点未应用。
+            $newStatus = $task->status;
+            if ($pending > 0) {
+                $newStatus = 'running';
+            } elseif ($applied >= $target && $target > 0) {
+                $newStatus = $failed > 0 ? 'partial' : 'succeeded';
+            } elseif ($applied === 0 && $failed >= $target) {
+                $newStatus = 'failed';
+            } elseif ($failed > 0) {
+                $newStatus = 'partial';
+            } else {
+                $newStatus = 'running';
+            }
+
+            // 仅当所有节点均已 ACK（applied + failed == target）才置 completed_at；否则说明还有 pending
+            $allAcked = $target > 0 && ($applied + $failed) >= $target;
+
             $task->update([
-                'status' => $task->failed_count > 0 ? 'partial' : 'succeeded',
-                'applied_node_count' => $task->applied_count,
-                'failed_node_count' => $task->failed_count,
-                'completed_at' => now(),
+                'status' => $newStatus,
+                'applied_node_count' => $applied,
+                'failed_node_count' => $failed,
+                'completed_at' => $allAcked ? now() : null,
             ]);
         }
 

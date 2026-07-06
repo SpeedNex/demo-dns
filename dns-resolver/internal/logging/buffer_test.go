@@ -35,7 +35,9 @@ func TestFlushSendsQueryLogBatch(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"data":{"received_count":1}}`))
+		// 与生产 portal-web QueryLogIngestService::accept() 真实响应一致：
+		// 必须含 accepted=true；resolver 严格校验 ACK，否则视为失败保留 buffer。
+		_, _ = w.Write([]byte(`{"data":{"accepted":true,"batch_id":"batch_1","received_count":1,"duplicate":false,"content_sha256":"sha256:abc","ack":{"ack_id":"ack_1","stored_count":1,"checksum":"sha256:abc","confirmed_at":"2026-07-06T00:00:00Z"}}}`))
 	}))
 	defer server.Close()
 

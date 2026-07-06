@@ -27,7 +27,7 @@ log_err()   { printf "${C_RED}[ERROR]${C_RESET} %s\n" "$*" >&2; }
 log_title() { printf "\n${C_BOLD}== %s ==${C_RESET}\n" "$*"; }
 
 # 目标端口（与 start-all.sh 的 ALL_PORTS 保持一致）
-TARGET_PORTS=(8081 5173 8443 53 5354)
+TARGET_PORTS=(8081 5173 8443 53 15354)
 
 # 取一个 PID 的进程组 ID（macOS BSD ps / Linux procps 通用）
 get_pgid() {

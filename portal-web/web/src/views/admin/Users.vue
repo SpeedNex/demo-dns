@@ -99,7 +99,7 @@
             </el-table-column>
             <el-table-column prop="plan_code" :label="$t('admin.usersPage.plan')" width="100">
                 <template #default="{ row }">
-                    <el-tag size="small" type="info" effect="plain">{{ row.plan_code || 'free' }}</el-tag>
+                    <el-tag size="small" type="info" effect="plain">{{ planLabel(row.plan_code) }}</el-tag>
                 </template>
             </el-table-column>
             <el-table-column :label="$t('admin.usersPage.created')" width="120">
@@ -172,6 +172,13 @@ const statusLabel = (status) => {
     if (status === 'suspended') return t('admin.usersPage.disabled')
     if (status === 'closed') return t('admin.usersPage.closed')
     return status || '-'
+}
+
+// 2026-07-06: 套餐代码多语言（free/pro/team/enterprise → 免费/专业/团队/企业）
+const planLabel = (code) => {
+    if (!code) return t('admin.usersPage.planFree')
+    const map = t('admin.usersPage.planLabelMap') || {}
+    return map[code] || code
 }
 
 const users = ref([])

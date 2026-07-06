@@ -86,7 +86,7 @@
                 <el-table-column :label="t('admin.plans.drawer.columns.status')" width="90">
                     <template #default="{ row }">
                         <el-tag :type="row.status === 'active' ? 'success' : 'info'" size="small">
-                            {{ row.status }}
+                            {{ statusLabel(row.status) }}
                         </el-tag>
                     </template>
                 </el-table-column>

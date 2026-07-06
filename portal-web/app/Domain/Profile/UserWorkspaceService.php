@@ -62,6 +62,22 @@ final class UserWorkspaceService
     ) {
     }
 
+    private ?array $lastAutoPublishStatus = null;
+
+    /**
+     * Merge the most recent autoPublish() result into a payload so callers
+     * (and the frontend) can distinguish "saved to DB" from "actually
+     * published to Resolver".
+     */
+    private function withPublishStatus(array $payload): array
+    {
+        $payload['publish_status'] = $this->lastAutoPublishStatus['success'] ?? false;
+        if (! ($this->lastAutoPublishStatus['success'] ?? false)) {
+            $payload['publish_error'] = $this->lastAutoPublishStatus['error'] ?? 'unknown';
+        }
+        return $payload;
+    }
+
     public function primaryProfile(string $userId): Profile
     {
         $profile = Profile::where('user_id', $userId)->orderBy('created_at')->first();
@@ -144,7 +160,7 @@ final class UserWorkspaceService
 
         $this->autoPublish($profile);
 
-        return $this->securityPayload($profile->fresh());
+        return $this->withPublishStatus($this->securityPayload($profile->fresh()));
     }
 
     public function getPrivacy(string $userId, ?string $profileId = null): array
@@ -164,7 +180,7 @@ final class UserWorkspaceService
 
         $this->autoPublish($profile);
 
-        return $this->privacyPayload($profile->fresh());
+        return $this->withPublishStatus($this->privacyPayload($profile->fresh()));
     }
 
     public function getParental(string $userId, ?string $profileId = null): array
@@ -185,7 +201,7 @@ final class UserWorkspaceService
 
         $this->autoPublish($profile);
 
-        return $this->parentalPayload($profile->fresh());
+        return $this->withPublishStatus($this->parentalPayload($profile->fresh()));
     }
 
     public function getSettings(string $userId, ?string $profileId = null): array
@@ -282,10 +298,10 @@ final class UserWorkspaceService
 
         $this->autoPublish($profile);
 
-        return [
+        return $this->withPublishStatus([
             'id' => $ruleId,
             'deleted' => true,
-        ];
+        ]);
     }
 
     /**
@@ -319,11 +335,11 @@ final class UserWorkspaceService
 
         $this->autoPublish($profile);
 
-        return [
+        return $this->withPublishStatus([
             'requested' => count($ruleIds),
             'deleted' => $deletedCount,
             'not_found' => $notFound,
-        ];
+        ]);
     }
 
     public function analytics(string $userId, ?string $profileId = null): array
@@ -769,9 +785,12 @@ final class UserWorkspaceService
     /**
      * 自动发布 Profile 配置。
      * 当规则或设置变更后自动触发，无需用户手动发布。
+     *
+     * @return array{success: bool, config_version?: int, error?: string}
      */
-    public function autoPublish(Profile $profile): void
+    public function autoPublish(Profile $profile): array
     {
+        $this->lastAutoPublishStatus = null;
         try {
             $publishService = new ProfilePublishService(
                 new ProfileConfigBuilder(),
@@ -867,12 +886,22 @@ final class UserWorkspaceService
                 'profile_id' => $profile->profile_id,
                 'result' => $result,
             ]);
+
+            $this->lastAutoPublishStatus = [
+                'success' => true,
+                'config_version' => (int) ($result['config_version'] ?? 0),
+            ];
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('AutoPublish failed', [
                 'profile_id' => $profile->profile_id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+            $this->lastAutoPublishStatus = [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
         }
+        return $this->lastAutoPublishStatus;
     }
 }

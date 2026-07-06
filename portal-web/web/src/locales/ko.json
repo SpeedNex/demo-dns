@@ -916,6 +916,8 @@
       "desc": "DNS 쿼리 로그 조회 및 분석, 다차원 필터 및 내보내기 지원",
       "searchDomain": "도메인 키워드 입력",
       "action": "조회 유형",
+      "type": "유형",
+      "protocol": "프로토콜",
       "all": "전체 유형",
       "allowed": "허용",
       "blocked": "차단",
@@ -1039,9 +1041,10 @@
       "acknowledgeFailed": "인지 실패",
       "total": "총계",
       "deleteFailed": "삭제 실패",
-      "batchDeleteSuccess": "Batch delete successful",
-      "all": "全部",
-      "emptyDesc": "시스템 경고가 여기에 표시됩니다."
+      "batchDeleteSuccess": "일괄 삭제 성공",
+      "all": "전체",
+      "emptyDesc": "시스템 경고가 여기에 표시됩니다.",
+      "code": "코드"
     },
     "nodes": {
       "title": "DNS 노드",
@@ -1181,6 +1184,8 @@
       "desc": "지역 트래픽 스케줄링",
       "nodeMapping": "노드 매핑",
       "schedulerId": "스케줄러 ID",
+      "schedulerAlias": "스케줄러 별칭",
+      "schedulerAliasPlaceholder": "선택사항, 비워두면 {region}-Scheduler 자동 생성",
       "id": "ID",
       "nodeId": "노드 ID",
       "nodeName": "노드 이름",
@@ -1385,7 +1390,14 @@
       "merchantId": "가맹점 ID",
       "merchantKey": "가맹점 키",
       "webhookSecret": "Webhook Secret",
-      "callbackUrl": "콜백 URL"
+      "callbackUrl": "콜백 URL",
+      "paymentMethodsLabel": "활성화된 결제 수단",
+      "paymentMethods": {
+        "card": "신용카드",
+        "wechat_pay": "WeChat Pay",
+        "alipay": "Alipay"
+      },
+      "paymentHint": "사용자는 여기서 활성화된 Stripe 결제 수단으로만 결제할 수 있습니다."
     },
     "auditLogs": {
       "title": "관리자 작업 로그",
@@ -1436,6 +1448,30 @@
       },
       "actor": "행위자",
       "resourceType": "리소스 유형",
+      "targetTypesMap": {
+        "user": "사용자",
+        "profile": "프로필",
+        "subscription": "구독",
+        "plan": "요금제",
+        "node": "노드",
+        "resolver_node": "해석 노드",
+        "rule": "규칙",
+        "rule_source": "규칙 소스",
+        "bill": "청구서",
+        "invoice": "송장",
+        "payment": "결제",
+        "refund": "환불",
+        "admin": "관리자",
+        "role": "역할",
+        "permission": "권한",
+        "config": "설정",
+        "audit_log": "감사 로그",
+        "finance": "재무",
+        "team": "팀",
+        "domain": "도메인",
+        "system": "시스템",
+        "other": "기타"
+      },
       "resourceId": "리소스 ID",
       "ip": "IP",
       "time": "시간",
@@ -1504,7 +1540,8 @@
       "notePlaceholder": "선택적 비고",
       "actions": "작업",
       "required": "필수",
-      "confirmDelete": "이 지역을 삭제하시겠습니까?"
+      "confirmDelete": "이 지역을 삭제하시겠습니까?",
+      "emptyHint": "우측 상단 \"지역 추가\"를 클릭하여 첫 번째 지역을 만드세요."
     },
     "billing": {
       "title": "청구 센터",
@@ -1679,8 +1716,10 @@
       "startedAt": "시작 시간",
       "currentPeriodStart": "현재 기간 시작",
       "currentPeriodEnd": "현재 기간 종료",
+      "currentPeriodEndTip": "다음 자동 갱신 또는 다운그레이드 예정 시간. Free 요금제는 비어 있음",
       "cancelledAt": "취소 시간",
-      "expiredAt": "만료 시간",
+      "expiredAt": "실제 만료 시간",
+      "expiredAtTip": "구독이 실제로 만료된 시간. expired/cancelled 상태일 때만 값이 있음",
       "cancelSubscription": "구독 취소",
       "resumeSubscription": "구독 재개",
       "cancelSuccess": "구독이 취소되었습니다",
@@ -1729,6 +1768,7 @@
       "roleCode": "역할 코드",
       "roleName": "역할 이름",
       "rolePermissions": "역할 권한",
+      "systemTag": "시스템",
       "selectRole": "권한을 보려면 역할을 선택하세요",
       "admins": "관리자",
       "username": "사용자 이름",
@@ -1797,8 +1837,29 @@
       "noData": "회원 정책 없음",
       "searchPlaceholder": "UID / 이메일 검색"
     },
+    "profilePublish": {
+      "title": "프로필 게시 관리",
+      "desc": "모든 프로필 구성과 게시 상태를 확인",
+      "searchPlaceholder": "프로필 이름 또는 UID 검색",
+      "profileUid": "Profile UID",
+      "profileName": "프로필 이름",
+      "owner": "소유자",
+      "status": "상태",
+      "version": "버전",
+      "published": "게시됨",
+      "publishedAt": "게시 시간",
+      "createdAt": "생성 시간",
+      "action": "작업",
+      "publish": "게시",
+      "publishSuccess": "게시 성공",
+      "publishFailed": "게시 실패",
+      "publishAll": "전체 일괄 게시",
+      "loadFailed": "로드 실패",
+      "emptyText": "데이터 없음"
+    },
     "rules": {
       "title": "규칙 항목",
+      "desc": "규칙 소스에서 동기화된 도메인 항목을 검색하고, 소스/카테고리별로 필터링",
       "sourcePlaceholder": "규칙 소스로 필터",
       "categoryPlaceholder": "카테고리로 필터",
       "catMalware": "맬웨어",
@@ -1897,7 +1958,10 @@
       "catGambling": "도박",
       "catSocial": "소셜 미디어",
       "catGaming": "게임",
-      "importSuccess": "정책을 성공적으로 가져왔습니다"
+      "importSuccess": "정책을 성공적으로 가져왔습니다",
+      "rebindHint": "DNS 재바인딩 보호는 로컬 IP(127.0.0.0/8, ::1, 사설망)로 해석되는 응답을 차단하여 로컬 기기 탈취를 방지합니다",
+      "contentFiltering": "콘텐츠 필터링",
+      "advanced": "고급 보호"
     },
     "securityData": {
       "title": "보안 데이터",
@@ -1933,6 +1997,16 @@
       "version": "버전",
       "message": "메시지",
       "status": "상태",
+      "statusMap": {
+        "queued": "대기 중",
+        "running": "실행 중",
+        "succeeded": "성공",
+        "failed": "실패",
+        "partial": "일부 성공",
+        "cancelled": "취소됨",
+        "canceled": "취소됨",
+        "unknown": "알 수 없음"
+      },
       "nodes": "노드 진행률",
       "retry": "재시도",
       "queuedAt": "대기 시작 시간",
@@ -1968,6 +2042,10 @@
       "owner": "소유자",
       "memberCount": "멤버 수",
       "status": "상태",
+      "statusMap": {
+        "active": "활성화됨",
+        "inactive": "비활성화됨"
+      },
       "created": "생성일",
       "actions": "작업",
       "all": "전체",
@@ -1977,7 +2055,12 @@
       "enabled": "활성화됨",
       "operationFailed": "작업 실패",
       "noData": "팀이 없습니다",
-      "searchPlaceholder": "팀 이름/식별자 검색"
+      "searchPlaceholder": "팀 이름/식별자 검색",
+      "membersDrawerTitle": "팀 멤버",
+      "memberName": "멤버",
+      "memberEmail": "이메일",
+      "memberRole": "역할",
+      "memberJoinedAt": "가입일"
     },
     "admin": "Admin",
     "basicConfig": {
@@ -2115,6 +2198,7 @@
     "required": "필수",
     "loadFailed": "로드 실패",
     "saveFailed": "저장 실패",
+    "publishFailed": "저장되었지만 DNS 규칙이 Resolver에 게시에 실패했습니다",
     "deleteSuccess": "삭제되었습니다",
     "deleteFailed": "삭제 실패",
     "clear": "비우기",

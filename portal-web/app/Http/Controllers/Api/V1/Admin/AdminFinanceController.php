@@ -195,12 +195,17 @@ final class AdminFinanceController
         if (! empty($validated['status'])) {
             $query->where('pt.status', $validated['status']);
         }
+        if (($validated['type'] ?? '') === 'refund') {
+            $query->where('pt.status', 'refunded');
+        } elseif (($validated['type'] ?? '') === 'payment') {
+            $query->whereIn('pt.status', ['created', 'processing', 'succeeded', 'failed']);
+        }
 
         $total = (clone $query)->count();
         $items = $query->forPage($page, $perPage)->get()->map(function ($row): array {
             $rawPayload = json_decode((string) ($row->raw_payload ?? '{}'), true);
             $paymentMethod = $rawPayload['payment_method'] ?? null;
-            $type = in_array($row->status, ['refunded']) ? 'refund' : 'payment';
+            $type = in_array($row->status, ['created', 'processing', 'succeeded', 'failed'], true) ? 'payment' : 'refund';
 
             return [
                 'id' => (int) $row->id,
@@ -241,6 +246,7 @@ final class AdminFinanceController
         $validated = $request->validate([
             'user_id' => 'nullable|string',
             'status' => 'nullable|string',
+            'type' => 'nullable|string|in:payment,refund',
             'limit' => 'nullable|integer|min:1|max:1000',
         ]);
 
@@ -262,9 +268,14 @@ final class AdminFinanceController
         if (! empty($validated['status'])) {
             $query->where('pt.status', $validated['status']);
         }
+        if (($validated['type'] ?? '') === 'refund') {
+            $query->where('pt.status', 'refunded');
+        } elseif (($validated['type'] ?? '') === 'payment') {
+            $query->where('pt.status', '<>', 'refunded');
+        }
 
         $items = $query->limit((int) ($validated['limit'] ?? 1000))->get()->map(function ($row): array {
-            $type = in_array($row->status, ['refunded']) ? 'refund' : 'payment';
+            $type = in_array($row->status, ['created', 'processing', 'succeeded', 'failed'], true) ? 'payment' : 'refund';
             return [
                 'id' => (int) $row->id,
                 'user_id' => (int) $row->user_id,

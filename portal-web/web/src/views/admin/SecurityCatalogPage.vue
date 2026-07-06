@@ -403,7 +403,7 @@
                             </el-table-column>
                             <el-table-column :label="$t('admin.memberCatalogs.category')" min-width="140">
                                 <template #default="{ row }">
-                                    <el-tag size="small" effect="light">{{ row.category }}</el-tag>
+                                    <el-tag size="small" effect="light">{{ categoryLabel(row.category) }}</el-tag>
                                 </template>
                             </el-table-column>
                             <el-table-column :label="$t('common.actions')" width="160" fixed="right">
@@ -613,6 +613,13 @@ const fetchPolicies = async () => {
     } finally {
         loading.value = false
     }
+}
+
+// 2026-07-06: 安全目录分类多语言（parental/social/ad/tracker/malware → 家长/社交/广告/追踪/恶意）
+const categoryLabel = (category) => {
+    if (!category) return '-'
+    const map = t('admin.securityCatalogPage.categoryMap') || {}
+    return map[category] || category
 }
 
 const handleSaveAll = async () => {

@@ -35,7 +35,7 @@ COPY --from=builder /out/${SERVICE} /usr/local/bin/${SERVICE}
 
 USER nonroot:nonroot
 
-EXPOSE 53 853 8443 5354
+EXPOSE 53 853 8443 15354
 
 # Distroless has no shell, so the healthcheck is a tiny self-contained Go
 # binary. For now we use the standard liveness pattern of exec'ing the

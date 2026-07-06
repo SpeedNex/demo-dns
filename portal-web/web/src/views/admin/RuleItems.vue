@@ -186,7 +186,7 @@ const handleDelete = async (row) => {
 const handleBatchDelete = async () => {
     try {
         const ids = selected.value.map(r => r.id)
-        const { data } = await client.post('/admin/rules/items/batch-delete', { ids })
+        const { data } = await client.post('/admin/rules/items/batch-destroy', { ids })
         ElMessage.success(t('admin.rules.batchDeleteSuccess', { count: data.deleted ?? ids.length }))
         await fetchItems()
     } catch (err) {

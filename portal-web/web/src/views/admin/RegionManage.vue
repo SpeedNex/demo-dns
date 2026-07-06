@@ -19,7 +19,7 @@
                 <div class="empty-state">
                     <el-icon class="empty-icon"><Location /></el-icon>
                     <p class="empty-title">{{ $t('dashboard.noData') }}</p>
-                    <p class="empty-desc">点击右上角「添加区域」添加第一条区域记录。</p>
+                    <p class="empty-desc">{{ $t('admin.regionManage.emptyHint') }}</p>
                 </div>
             </template>
             <el-table-column prop="id" label="ID" width="80" />

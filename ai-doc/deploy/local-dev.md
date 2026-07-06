@@ -25,7 +25,7 @@ cd ocer-dns
 portal-web (会员 + 总后台) : http://localhost:5173
 dns-resolver DoH           : https://localhost:8443/dns-query
 dns-resolver UDP/TCP       : 127.0.0.1:53
-geodns                     : http://localhost:5354
+geodns                     : http://localhost:15354
 ```
 
 查看日志：
@@ -152,7 +152,7 @@ PORT_PORTAL_API=8081
 PORT_PORTAL_WEB=5173
 PORT_RESOLVER_DOH=8443
 PORT_RESOLVER_UDP=53
-PORT_GEODNS=5354
+PORT_GEODNS=15354
 
 ALL_PORTS=(
     "${PORT_PORTAL_API}" "${PORT_PORTAL_WEB}"
@@ -320,7 +320,7 @@ esac
 | portal-web (Web) | 5173 | Vite 开发服务器 |
 | dns-resolver (DoH) | 8443 | DNS-over-HTTPS |
 | dns-resolver (UDP/TCP) | 53 | 标准 DNS 端口（需 root） |
-| geodns | 5354 | GeoDNS 服务 |
+| geodns | 15354 | GeoDNS 服务 |
 
 ### 前端访问地址
 

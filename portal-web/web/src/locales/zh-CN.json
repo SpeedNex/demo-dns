@@ -968,7 +968,11 @@
       "batchDeleteConfirm": "确定删除选中的 {count} 条日志？",
       "batchDeleted": "已删除 {count} 条",
       "batchDeleteFailed": "批量删除失败",
-      "oldDataWarning": "选中的日志均为旧数据，无法逐条删除（仅支持一键清空）"
+      "oldDataWarning": "选中的日志均为旧数据，无法逐条删除（仅支持一键清空）",
+      "type": "类型",
+      "protocol": "协议",
+      "node": "节点",
+      "client": "客户端"
     },
     "alerts": "告警中心",
     "users": "用户管理",
@@ -1095,6 +1099,13 @@
       "name": "用户名",
       "role": "角色",
       "plan": "套餐",
+      "planFree": "免费",
+      "planLabelMap": {
+        "free": "免费",
+        "pro": "专业",
+        "team": "团队",
+        "enterprise": "企业"
+      },
       "created": "创建时间",
       "actions": "操作",
       "noData": "暂无用户",
@@ -1157,7 +1168,8 @@
       "acknowledgeFailed": "确认失败",
       "batchDeleteSuccess": "批量删除成功",
       "deleteFailed": "删除失败",
-      "edit": "编辑"
+      "edit": "编辑",
+      "code": "编码"
     },
     "publishes": {
       "title": "发布任务",
@@ -1291,8 +1303,7 @@
         "domain_list": "域名列表",
         "adblock": "广告拦截",
         "hosts": "Hosts 文件",
-        "rpz": "响应策略区",
-        "ruleTypeFallback": "未知类型"
+        "rpz": "响应策略区"
       }
     },
     "parentalControl": {
@@ -1395,6 +1406,13 @@
       "redis": "Redis",
       "clickhouse": "ClickHouse",
       "payment": "支付接口",
+      "paymentMethodsLabel": "启用支付方式",
+      "paymentMethods": {
+        "card": "信用卡",
+        "wechat_pay": "微信",
+        "alipay": "支付宝"
+      },
+      "paymentHint": "用户支付订单时只能选择这里启用的 Stripe 支付方式。",
       "mailServer": "邮箱服务器",
       "stripe": "Stripe",
       "stripeMode": "运行模式",
@@ -1496,6 +1514,30 @@
       },
       "actor": "操作者",
       "resourceType": "资源类型",
+      "targetTypesMap": {
+        "user": "用户",
+        "profile": "Profile",
+        "subscription": "订阅",
+        "plan": "套餐",
+        "node": "节点",
+        "resolver_node": "解析节点",
+        "rule": "规则",
+        "rule_source": "规则源",
+        "bill": "账单",
+        "invoice": "发票",
+        "payment": "支付",
+        "refund": "退款",
+        "admin": "管理员",
+        "role": "角色",
+        "permission": "权限",
+        "config": "配置",
+        "audit_log": "审计日志",
+        "finance": "财务",
+        "team": "团队",
+        "domain": "域名",
+        "system": "系统",
+        "other": "其他"
+      },
       "resourceId": "资源 ID",
       "ip": "IP 地址",
       "time": "时间",
@@ -1568,7 +1610,8 @@
       "notePlaceholder": "可选备注",
       "actions": "操作",
       "required": "此项为必填",
-      "confirmDelete": "确定删除此区域？"
+      "confirmDelete": "确定删除此区域？",
+      "emptyHint": "点击右上角「添加区域」添加第一条区域记录。"
     },
     "billing": {
       "title": "计费中心",
@@ -1820,8 +1863,10 @@
       "startedAt": "开始时间",
       "currentPeriodStart": "当前周期开始",
       "currentPeriodEnd": "当前周期结束",
+      "currentPeriodEndTip": "下次自动续费或降级的计划时间，Free 套餐为空",
       "cancelledAt": "取消时间",
-      "expiredAt": "过期时间",
+      "expiredAt": "实际过期时间",
+      "expiredAtTip": "订阅实际已过期的时间，仅 expired/cancelled 状态时有值",
       "cancelSubscription": "取消续费",
       "resumeSubscription": "恢复续费",
       "cancelSuccess": "已取消续费",
@@ -1870,6 +1915,7 @@
       "roleCode": "角色代码",
       "roleName": "角色名称",
       "rolePermissions": "角色权限",
+      "systemTag": "系统",
       "selectRole": "请选择一个角色查看权限",
       "admins": "管理员列表",
       "username": "用户名",
@@ -2040,7 +2086,13 @@
       "confirmBatchDelete": "确定删除选中的 {count} 个规则源？",
       "batchDeleted": "已删除 {count} 个规则源",
       "batchSynced": "已同步 {count} 个规则源",
-      "emptyDesc2": "点击右上角的「创建规则源」添加您的第一个规则源。"
+      "emptyDesc2": "点击右上角的「创建规则源」添加您的第一个规则源。",
+      "ruleType": {
+        "domain_list": "域名列表",
+        "adblock": "广告拦截",
+        "hosts": "Hosts 文件",
+        "rpz": "响应策略区"
+      }
     },
     "protectionPolicies": {
       "title": "防护策略",
@@ -2077,7 +2129,10 @@
       "catGambling": "赌博",
       "catSocial": "社交媒体",
       "catGaming": "游戏",
-      "importSuccess": "策略导入成功"
+      "importSuccess": "策略导入成功",
+      "rebindHint": "DNS 重新绑定保护会拒绝解析到本地 IP（127.0.0.0/8、::1、私网等）的响应，避免内网设备被劫持",
+      "contentFiltering": "内容过滤",
+      "advanced": "高级防护"
     },
     "securityData": {
       "title": "安全数据",
@@ -2113,6 +2168,16 @@
       "version": "版本",
       "message": "消息",
       "status": "状态",
+      "statusMap": {
+        "queued": "排队中",
+        "running": "运行中",
+        "succeeded": "成功",
+        "failed": "失败",
+        "partial": "部分成功",
+        "cancelled": "已取消",
+        "canceled": "已取消",
+        "unknown": "未知"
+      },
       "nodes": "节点进度",
       "retry": "重试",
       "queuedAt": "排队时间",
@@ -2141,6 +2206,19 @@
       "noData": "暂无黑白名单规则",
       "searchPlaceholder": "搜索域名 / 会员"
     },
+    "securityCatalogPage": {
+      "categoryMap": {
+        "parental": "家长监护",
+        "social": "社交",
+        "ad": "广告",
+        "tracker": "追踪器",
+        "malware": "恶意软件"
+      }
+    },
+    "regions": {
+      "title": "区域管理",
+      "emptyHint": "点击右上角「添加区域」添加第一条区域记录。"
+    },
     "teams": {
       "title": "团队管理",
       "name": "团队名称",
@@ -2148,6 +2226,10 @@
       "owner": "所有者",
       "memberCount": "成员数",
       "status": "状态",
+      "statusMap": {
+        "active": "已启用",
+        "inactive": "已停用"
+      },
       "created": "创建时间",
       "actions": "操作",
       "all": "全部",
@@ -2298,6 +2380,7 @@
     "required": "此项为必填",
     "loadFailed": "加载失败",
     "saveFailed": "保存失败",
+    "publishFailed": "已保存，但 DNS 规则未发布到 Resolver",
     "deleteFailed": "删除失败",
     "created": "已创建",
     "updated": "已更新",

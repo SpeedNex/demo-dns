@@ -27,7 +27,7 @@
                 <el-table-column prop="description" :label="$t('admin.rbac.description')" min-width="200" show-overflow-tooltip />
                 <el-table-column :label="$t('admin.rbac.rolePermissions')" width="120" align="center">
                     <template #default="{ row }">
-                        <el-tag v-if="row.is_system" size="small" type="info">系统</el-tag>
+                        <el-tag v-if="row.is_system" size="small" type="info">{{ $t('admin.rbac.systemTag') }}</el-tag>
                         <el-tag v-else size="small" type="success">{{ row.permission_count || 0 }}</el-tag>
                     </template>
                 </el-table-column>

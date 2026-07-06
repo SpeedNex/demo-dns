@@ -36,6 +36,17 @@
         <el-option value="failed" :label="$t('admin.finance.paymentStatusFailed')" />
         <el-option value="refunded" :label="$t('admin.finance.paymentStatusRefunded')" />
       </el-select>
+      <el-select
+        v-model="filterType"
+        size="small"
+        style="width:140px"
+        clearable
+        :placeholder="$t('admin.finance.type')"
+        @change="fetchData"
+      >
+        <el-option value="payment" :label="$t('admin.finance.paymentTypePayment')" />
+        <el-option value="refund" :label="$t('admin.finance.paymentTypeRefund')" />
+      </el-select>
       <el-button size="small" type="primary" @click="fetchData">
         <el-icon class="el-icon--left"><Search /></el-icon>
         <span>{{ $t('common.search') }}</span>
@@ -215,6 +226,7 @@ const fetchData = async () => {
     const params = { page: page.value, per_page: perPage.value }
     if (filterUserId.value) params.user_id = filterUserId.value
     if (filterStatus.value) params.status = filterStatus.value
+    if (filterType.value) params.type = filterType.value
     const { data } = await client.get('/admin/finance/payment-flows', { params })
     items.value = data.data ?? []
     meta.value = data.meta ?? null
@@ -275,6 +287,7 @@ const handleExport = async () => {
     const params = {}
     if (filterUserId.value) params.user_id = filterUserId.value
     if (filterStatus.value) params.status = filterStatus.value
+    if (filterType.value) params.type = filterType.value
     const response = await client.get('/admin/finance/payment-flows/export', { params, responseType: 'blob' })
     const url = window.URL.createObjectURL(new Blob([response.data]))
     const link = document.createElement('a')

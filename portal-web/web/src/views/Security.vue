@@ -37,6 +37,7 @@ import { useI18n } from 'vue-i18n'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
 import { useCurrentProfile } from '@/composables/useCurrentProfile'
+import { warnIfPublishFailed } from '@/composables/usePublishStatus'
 
 const { t } = useI18n()
 const { currentProfileId } = useCurrentProfile()

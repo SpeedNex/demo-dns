@@ -51,7 +51,7 @@
                 <el-table-column prop="status" :label="$t('admin.profilePublish.status')" width="100" align="center">
                     <template #default="{ row }">
                         <el-tag :type="row.status === 'active' ? 'success' : 'info'" size="small">
-                            {{ row.status }}
+                            {{ profileStatusLabel(row.status) }}
                         </el-tag>
                     </template>
                 </el-table-column>
@@ -79,6 +79,7 @@
                             type="primary"
                             size="small"
                             :loading="row.publishing"
+                            :disabled="row.publishing || row.has_published_config"
                             @click="handlePublish(row)"
                         >
                             {{ $t('admin.profilePublish.publish') }}
@@ -145,6 +146,13 @@ const loadProfiles = async () => {
     } finally {
         loading.value = false
     }
+}
+
+// 2026-07-06: Profile 状态多语言（active/disabled/archived → 启用/停用/已归档）
+const profileStatusLabel = (status) => {
+    if (!status) return '-'
+    const map = t('admin.profilePublish.statusMap') || {}
+    return map[status] || status
 }
 
 const handlePublish = async (row) => {

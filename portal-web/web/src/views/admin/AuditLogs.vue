@@ -144,6 +144,13 @@ const actionLabel = (action) => {
     return action
 }
 
+// 2026-07-06: target_type 资源类型多语言（user/profile/subscription → 用户/Profile/订阅）
+const targetTypeLabel = (tt) => {
+    if (!tt) return '-'
+    const map = t('admin.auditLogs.targetTypesMap') || {}
+    return map[tt] || tt
+}
+
 const actionTagType = (action) => {
     if (!action) return 'info'
     const s = String(action).toLowerCase()

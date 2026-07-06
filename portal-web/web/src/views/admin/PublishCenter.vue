@@ -60,7 +60,7 @@
                 <el-table-column :label="$t('admin.publishCenter.status')" width="120">
                     <template #default="{ row }">
                         <el-tag size="small" :type="statusType(row.status)" effect="light">
-                            {{ row.status }}
+                            {{ statusLabel(row.status) }}
                         </el-tag>
                     </template>
                 </el-table-column>
@@ -119,6 +119,13 @@ const statusType = (s) => {
     if (s === 'failed') return 'danger'
     if (s === 'running') return 'warning'
     return 'info'
+}
+
+// 2026-07-06: 状态字段多语言（queued/running/succeeded/failed → 排队中/运行中/成功/失败）
+const statusLabel = (s) => {
+    if (!s) return '-'
+    const map = t('admin.publishCenter.statusMap') || {}
+    return map[s] || s
 }
 
 const nodePercentage = (row) => {

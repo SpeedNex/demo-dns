@@ -147,11 +147,18 @@ type AckResponse struct {
 	BatchID       string `json:"batch_id"`
 	ReceivedCount int    `json:"received_count"`
 	Ack           struct {
-		AckID        string `json:"ack_id"`
-		StoredCount  int    `json:"stored_count"`
-		Checksum     string `json:"checksum"`
-		ConfirmedAt  string `json:"confirmed_at"`
+		AckID       string `json:"ack_id"`
+		StoredCount int    `json:"stored_count"`
+		Checksum    string `json:"checksum"`
+		ConfirmedAt string `json:"confirmed_at"`
 	} `json:"ack"`
+}
+
+// dataEnvelope 是 portal-web 一些接口使用的 `{data: {...}}` 包装结构。
+// 修复 2026-07-06 #13：portal-web QueryLogController 当前返回 `{data:{accepted:true,...}}`，
+// 而非 buffer.go 期望的顶层结构。需要同时兼容两种形态，并要求 ACK accepted=true 才视为成功。
+type dataEnvelope struct {
+	Data AckResponse `json:"data"`
 }
 
 func (b *Buffer) sendBatch(batch []LogEntry) error {
@@ -193,11 +200,19 @@ func (b *Buffer) sendBatch(batch []LogEntry) error {
 	}
 
 	// P0 修复: 解析显式 ACK 回执，确认 buffer 可安全删除
+	// 修复 2026-07-06 #13：必须确认 accepted=true；并兼容 `{data:{...}}` 包装结构。
+	// 原代码即使未解析到 ACK，只要 HTTP 200 就认为成功，导致本地 buffer 被错误删除、日志丢失。
 	var ack AckResponse
-	if err := json.Unmarshal(respBody, &ack); err == nil && ack.Accepted {
-		log.Printf("[日志] ACK 确认 ack_id=%s stored=%d checksum=%s",
-			ack.Ack.AckID, ack.Ack.StoredCount, ack.Ack.Checksum)
+	if err := json.Unmarshal(respBody, &ack); err != nil || !ack.Accepted {
+		// 回退尝试 `{data:{...}}` 包装结构
+		var wrapped dataEnvelope
+		if err2 := json.Unmarshal(respBody, &wrapped); err2 != nil || !wrapped.Data.Accepted {
+			return fmt.Errorf("ack not accepted: raw=%s", string(respBody))
+		}
+		ack = wrapped.Data
 	}
+	log.Printf("[日志] ACK 确认 ack_id=%s stored=%d checksum=%s",
+		ack.Ack.AckID, ack.Ack.StoredCount, ack.Ack.Checksum)
 
 	return nil
 }

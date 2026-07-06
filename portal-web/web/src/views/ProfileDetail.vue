@@ -288,7 +288,8 @@ const handleAddRule = async () => {
     if (!valid) return
     ruleSaving.value = true
     try {
-        await client.post(`/user/profiles/${route.params.id}/rules`, ruleForm.value)
+        const res = await client.post(`/user/profiles/${route.params.id}/rules`, ruleForm.value)
+        warnIfPublishFailed(res)
         ElMessage.success(t('profileDetail.ruleAdded'))
         showAddRuleDialog.value = false
         ruleForm.value = { domain: '', match_type: 'exact', list_type: 'block' }
@@ -321,9 +322,10 @@ const handleEditRuleSave = async () => {
     if (!valid) return
     editRuleSaving.value = true
     try {
-        await client.put(`/user/profiles/${editRuleForm.value.profile_id || route.params.id}/rules/${editRuleForm.value.id}`, {
+        const res = await client.put(`/user/profiles/${editRuleForm.value.profile_id || route.params.id}/rules/${editRuleForm.value.id}`, {
             domain: editRuleForm.value.domain, match_type: editRuleForm.value.match_type, enabled: editRuleForm.value.enabled,
         })
+        warnIfPublishFailed(res)
         ElMessage.success(t('common.saved'))
         showEditRuleDialog.value = false
         await fetchData()

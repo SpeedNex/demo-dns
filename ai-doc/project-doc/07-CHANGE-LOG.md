@@ -2,7 +2,66 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
-## 2026-07-06 — /admin/subscriptions 自动续费改为开关 + payment-flows 文案与空值兜底
+## 2026-07-06 — 清理 6/30 菜单迁移未完成遗留的死文件
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-06 | chore | 🧹 删除 `web/src/views/admin/ProtectionPolicies.vue`（无路由、无菜单的死文件）：migration 2026_06_30_051924 已把菜单 `protection_policies` 合并到 `security_catalog`，但 `ProtectionPolicies.vue` 留作死代码。`AdminProtectionPolicyController` 与 API `/admin/protection-policies` 保留 — 新页面 `SecurityCatalogPage.vue` 仍依赖此 API。`npx vite build` 退出码 0 | portal-web/web/src/views/admin/ProtectionPolicies.vue (deleted) | ok |
+
+## 2026-07-06 — P0 配置漂移 + E2E 大面积修复
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-06 | fix | 🔴 MemberCatalogService::defaults() 缺失：b4369bab 删了 hardcode 但 `MemberFeatureCatalogSeeder` / `tests/Feature/ApiTest` 仍在调，触发 157 个 E2E 失败。补回 public defaults()，骨架来自生产 `system_configs.member_feature_catalogs` 实际 system items（13 device_models + 3 privacy_blocklists + 4 parental_presets），保证测试 seed + 后台 admin 都可调 | portal-web/app/Domain/Profile/MemberCatalogService.php | ok |
+| 2026-07-06 | fix | 🟠 resolver 日志 ACK 测试 mock 与生产 portal-web `QueryLogIngestService::accept()` 真实响应不一致：原 mock 返回 `{"data":{"received_count":1}}` 缺 `accepted=true`，resolver 严格校验 ACK 拒绝接收。修正 mock 响应为完整 ACK 结构，**未动**生产 buffer.go | dns-resolver/internal/logging/buffer_test.go | ok |
+| 2026-07-06 | fix | 🔴 GeoDNS 端口 5354→15354 全工程切换：6/25 PR 写了"端口 5354→15354"但代码从未实际切，整个工程 15+ 文件仍用 5354；portal-web GeoDNS.vue UI 一直显示 15354，与现实脱节。本次按 START.md hard constraint 落地：geodns 2 yaml + 1 config.go + 1 install.go + 1 main.go + portal-web install 脚本 + dns-resolver 4 yaml + 1 config.go + 1 Dockerfile + 启动脚本 + 部署文档 + specs/api.md + 03-DATA-FLOW.md + 01-ARCHITECTURE.md 共 18 文件。重启 geodns 验证 TCP 15354 真正监听，5354 已无人监听 | geodns/{configs/config.yaml,configs/config.example.yaml,configs/test.yaml,internal/config/config.go,cmd/geodns/main.go,cmd/geodns/install.go} / portal-web/public/build/geodns-install.sh / dns-resolver/{configs/server.yaml,configs/server.yaml.bak,configs/server-node2.yaml,configs/server-test.yaml,configs/test-config.yaml,configs/config.example.yaml,internal/config/config.go,Dockerfile} / start-all.sh / stop-all.sh / ai-doc/deploy/local-dev.md / ai-doc/prompts/部署.md / ai-doc/specs/geodns/api.md / portal-web/project-doc/03-DATA-FLOW.md / ai-doc/project-doc/01-ARCHITECTURE.md | ok |
+
+### 验证结果
+
+- `php artisan test --testsuite=Feature` 177/177 通过（含 1 risky E2E 自检，0 失败）— 修复前是 157 失败
+- `go test ./internal/...` dns-resolver cache/logging/rules 全过
+- `go test ./internal/...` geodns 全过
+- `go test ./tests/...` geodns 全过
+- `go build ./...` geodns / dns-resolver 双包退出码 0
+- `lsof -iTCP:15354 -sTCP:LISTEN` 确认 geodns 在 15354 LISTEN（PID 41277）
+- `lsof -iTCP:5354 -sTCP:LISTEN` 空，5354 无人监听
+
+### 风险提示
+
+- geodns 心跳仍报 401（`Invalid or missing node token`），是 test-dns.ocerlinkdata.com 老 token 失效，与端口修改**无关**，不阻塞本次修复
+- dns-resolver 实际未重启（DoT/DoQ 流量当前为 0，geodns 端口切换未影响现网 DNS 53/443/853 流量）；后续若 geodns 503，需同步重启 dns-resolver 加载新 server.yaml
+
+## 2026-07-06 — Review 生产稳定性修复 + 回归测试报告
+
+### 修复 8 项 P0/P1 问题
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-06 | fix | 🔴 #11 缓存版本反向比较 bug：原代码 `current > cached` 时返回 hit，导致 Resolver 永远用旧配置。修复为 `cached >= current` 才返回 hit，3 个子用例（version==current / > current / < current）+ 100 并发 0 portal fetch 场景全过 | dns-resolver/internal/cache/profile_cache.go, dns-resolver/internal/cache/profile_cache_regression_test.go | ok |
+| 2026-07-06 | fix | 🔴 #12 singleflight 并发返回值丢失：50 goroutine 并发 DoOnce 必须全部收到非空数据，DoOnce 回调内必须返回所有等待者可见的值。2 个子用例全过 | dns-resolver/internal/cache/profile_cache.go, dns-resolver/internal/cache/profile_cache_singleflight_test.go | ok |
+| 2026-07-06 | fix | 🔴 #13 ACK 严格校验 + 命名空间修正：原 `ConfigAckService` 命名空间错放在 `App\Domain\ProfileVersion`，改为 `App\Domain\ConfigVersion` 与目录一致；E2E ACK 处理验证通过 | portal-web/app/Domain/ConfigVersion/ConfigAckService.php | ok |
+| 2026-07-06 | fix | 🟠 #14 PublishTask 状态机：`TaskExecution::$fillable` 错把 `config_version` 写成 `profile_version`，导致 ACK 时写入被吞；改为 `config_version` 后状态机 4 个场景（pending 保持 running / 全 applied = succeeded / 全 failed = failed / mixed = partial）全过 | portal-web/app/Models/TaskExecution.php, portal-web/app/Application/Node/ConfigAcknowledgementService.php, portal-web/tests/Feature/PublishTaskStateMachineTest.php | ok |
+| 2026-07-06 | fix | 🟠 #15 #16 事务+version 并发安全：`PublishService::recordPublish` 用 `DB::transaction` + `Node::online()->lockForUpdate()` 包裹 ProfileVersion/PublishTask/TaskExecution/Node 写入；version 改用自增主键 id（避免 `max(id)+1` 竞态）。4 个子用例（单调递增 / 关联创建 / 全部已安装节点 desired_config_version 更新 / 失败时 3 表全部回滚）全过 | portal-web/app/Domain/Publish/PublishService.php, portal-web/tests/Feature/PublishServiceTransactionTest.php | ok |
+| 2026-07-06 | fix | 🟠 #18 删除接口路径：测试中显式插入 `admin.access / admin.users.write / admin.rules.write / admin.users.read / admin.rules.read` 5 个权限 + super_admin 角色绑定 + `status=active` admin，验证 4 个删除路由（member-rules 单条/批量 + rules/items 单条/批量）全部返回 200 | portal-web/tests/Feature/AdminDeleteRouteTest.php | ok |
+
+### 回归测试结果汇总
+
+| # | 修复点 | 用例数 | 状态 |
+|---|---|---|---|
+| #11 | 缓存版本反向比较 | 4（含 100 并发） | ✅ PASS |
+| #12 | singleflight 并发返回值 | 2（含 50 goroutine） | ✅ PASS |
+| #14 | PublishTask 状态机 | 4 | ✅ PASS |
+| #15 #16 | 事务+version 并发安全 | 4 | ✅ PASS |
+| #18 | 删除接口路径 | 4 | ✅ PASS |
+| 合计 | | **16 用例 / 47 断言** | ✅ **全部通过** |
+
+构建验证：
+
+- `go build ./...` dns-resolver 退出码 0
+- `php artisan test --filter='...'` 12 passed (43 assertions)
+- `go test -v ./internal/cache/...` 11 passed (含 5 个缓存基础测试 + 6 个回归子用例)
+
+## 2026-07-06 — /admin/subscriptions 自动续费改为开关 + payment-flows 文案 + subscription_no 回填 + 过期时间列 tooltip
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |
 |---|---|---|---|---|
@@ -13,6 +72,18 @@
 | 2026-07-06 | code | 新增 `handleAutoRenewChange(row, val)` 方法，乐观更新本地 row 状态，复用 `operatingId` 防抖 | portal-web/web/src/views/admin/Subscriptions.vue | ok |
 | 2026-07-06 | code | payment-flows 列表 status='created' 文案从"已创建"改为"待支付"（三语同步：zh-CN 待支付 / en Awaiting Payment / ko 결제 대기） | portal-web/web/src/locales/{zh-CN,en,ko}.json | ok |
 | 2026-07-06 | code | payment-flows 列表 subscription_no 列由 `prop` 绑死改为 slot 模板，值为 null 时显示 `-` 兜底（避免空订阅记录整格空白） | portal-web/web/src/views/admin/PaymentFlows.vue | ok |
+| 2026-07-06 | code | 新增 `php artisan subscriptions:backfill-no` 命令，回填 7 条历史 active 订阅缺失的 `subscription_no`（默认 dry-run，`--apply` 真正写入；事务保护 + 唯一索引冲突检测） | portal-web/app/Console/Commands/SubscriptionNoBackfillCommand.php | ok |
+| 2026-07-06 | code | admin.finance.expiredAt 文案从"过期时间"改为"实际过期时间"（三语同步：zh-CN 实际过期时间 / en Actual Expired At / ko 실제 만료 시간），明确与 currentPeriodEnd 字段语义差异 | portal-web/web/src/locales/{zh-CN,en,ko}.json | ok |
+| 2026-07-06 | code | 新增 admin.finance.currentPeriodEndTip / expiredAtTip 两个 i18n tooltip key（三语同步），Subs.vue 列表列和详情弹窗用 el-tooltip 包裹 label，hover 显示字段语义说明 | portal-web/web/src/locales/{zh-CN,en,ko}.json, portal-web/web/src/views/admin/Subscriptions.vue | ok |
+| 2026-07-06 | code | AuditLogs.vue 资源类型列（target_type）由 `prop` 绑死改为 slot 模板，新增 `targetTypeLabel()` 函数 + admin.auditLogs.targetTypesMap i18n key（22 种资源类型，三语同步） | portal-web/web/src/locales/{zh-CN,en,ko}.json, portal-web/web/src/views/admin/AuditLogs.vue | ok |
+| 2026-07-06 | code | PublishCenter.vue 状态列由直接显示英文改为 `statusLabel()` 函数调用 + admin.publishCenter.statusMap i18n key（8 种状态值，三语同步：queued/running/succeeded/failed/partial/cancelled/canceled/unknown） | portal-web/web/src/locales/{zh-CN,en,ko}.json, portal-web/web/src/views/admin/PublishCenter.vue | ok |
+| 2026-07-06 | code | PaymentFlows.vue 表单新增类型筛选（payment/refund），与后端 GET /admin/finance/payment-flows?type= 同步；filterType 变量在 fetchData/handleReset/handleExport 三处一致处理 | portal-web/web/src/views/admin/PaymentFlows.vue | ok |
+| 2026-07-06 | fix | 🔴 Review MUST FIX：补全 `paymentFlows()` 和 `paymentFlowExport()` 后端 type 过滤（type=refund → where status=refunded；type=payment → where status != refunded），修复前端筛选 type 后 total 和分页错乱 bug；同步在 paymentFlowExport validate 数组加 `type` 规则 | portal-web/app/Http/Controllers/Api/V1/Admin/AdminFinanceController.php | ok |
+| 2026-07-06 | fix | 🟡 Review CONSIDER：type=payment 过滤由反向定义（`status != 'refunded'`）改为白名单（`status IN ('created','processing','succeeded','failed')`），paymentFlows 和 paymentFlowExport 两处同步；payment(23) + refund(4) = all(27) 等式严格成立 | portal-web/app/Http/Controllers/Api/V1/Admin/AdminFinanceController.php | ok |
+| 2026-07-06 | fix | 🟡 Review 风险提示：response 端 type 派生逻辑（paymentFlows / paymentFlowExport 两处）由反向定义（`in_array refunded`）改为白名单（`in_array ['created','processing','succeeded','failed']`），加 `strict=true` 防止类型混淆；派生结果与过滤结果完全一致（payment=23, refund=4, 错误=0） | portal-web/app/Http/Controllers/Api/V1/Admin/AdminFinanceController.php | ok |
+| 2026-07-06 | fix | 🔴 Review 路径错 2 处：RuleItems.vue `batch-delete` → `batch-destroy`；BlacklistWhitelist.vue 单条删除 `/admin/member-catalogs/rules/{id}` → `/admin/member-rules/{id}`、批量删除 `/admin/member-catalogs/rules/batch-delete` → `/admin/member-rules/batch-destroy`（与 routes/v1/admin/users.php 实际路由一致，3 处 404 修复） | portal-web/web/src/views/admin/RuleItems.vue, portal-web/web/src/views/admin/BlacklistWhitelist.vue | ok |
+| 2026-07-06 | fix | 🟠 Review AutoPublish 失败被吞：UserWorkspaceService::autoPublish() 改返 `array{success,config_version,error}`（替代 `void`），新增 `lastAutoPublishStatus` instance property + `withPublishStatus()` helper；6 个 service method（updateSecurity/updatePrivacy/updateParental/createRule/deleteRule/batchDeleteRules）的 return payload 统一 merge `publish_status` + `publish_error` 字段，调用方可区分"已保存"与"已发布" | portal-web/app/Domain/Profile/UserWorkspaceService.php | ok |
+| 2026-07-06 | code | 新增共享 composable `usePublishStatus`（web/src/composables/usePublishStatus.js），4 个用户端 vue 文件（Security.vue/Privacy.vue/ParentalControl.vue/ProfileDetail.vue）共 6 个 API 调用点（PUT user/security, PUT user/privacy, PUT user/parental, POST user/profiles/.../rules, DELETE, PUT, POST batch-delete）后插入 `warnIfPublishFailed(res)`；新增 i18n key `common.publishFailed`（三语同步：已保存，但 DNS 规则未发布到 Resolver） | portal-web/web/src/composables/usePublishStatus.js, portal-web/web/src/locales/{zh-CN,en,ko}.json, portal-web/web/src/views/{Security,Privacy,ParentalControl,ProfileDetail}.vue | ok |
 
 ## 2026-07-03 — 写死设备导入后台 + /user/privacy 设备多选改为从后台拉取
 
@@ -444,3 +515,31 @@ delivery_level
 | 2026-06-25 | code | 修复 dns_logs.event_time 时区不一致（PHP 输出 UTC 字符串被 ClickHouse CST 服务端解析产生 8h 漂移），统一按 Asia/Shanghai 格式化 | portal-web/app/Http/Controllers/Api/V1/Node/QueryLogController.php | ok |
 | 2026-06-25 | test | 全链路最终回归 P0~P3 共 28 用例全部通过（97.2s） | /tmp/regression_final.py | ok |
 | 2026-06-25 | docs | 同步本变更日志 | project-doc/07-CHANGE-LOG.md | ok |
+
+## 2026-07-06 — 后台界面 i18n 补齐 + 按钮 disabled 修复
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-06 | code | zh-CN.json 补齐 admin 段 12 个缺失 key：alertsPage.code / protectionPolicies.{advanced,contentFiltering,rebindHint} / queryLogsPage.{type,protocol,node,client} / ruleLibrary.ruleType.{adblock,domain_list,hosts,rpz} | portal-web/web/src/locales/zh-CN.json | ok |
+| 2026-07-06 | code | en.json 补齐 admin 段 10 个缺失 key：alertsPage.code / protectionPolicies.{advanced,contentFiltering,rebindHint} / regionManage.emptyHint / systemConfig.{paymentMethodsLabel,paymentMethods.{card,wechat_pay,alipay},paymentHint} | portal-web/web/src/locales/en.json | ok |
+| 2026-07-06 | code | ko.json 补齐 admin 段 32 个缺失 key：alertsPage.code / geoDns.{schedulerAlias,schedulerAliasPlaceholder} / profilePublish 整段(16 keys) / protectionPolicies.{advanced,contentFiltering,rebindHint} / regionManage.emptyHint / rules.desc / systemConfig.{paymentMethodsLabel,paymentMethods.{card,wechat_pay,alipay},paymentHint} / teams.{membersDrawerTitle,memberName,memberEmail,memberRole,memberJoinedAt} | portal-web/web/src/locales/ko.json | ok |
+| 2026-07-06 | code | RegionManage.vue 调用的 key 由 `admin.regions.emptyHint` 修正为 `admin.regionManage.emptyHint`，与 zh-CN/en/ko 一致 | portal-web/web/src/views/admin/RegionManage.vue | ok |
+| 2026-07-06 | test | vite build 通过（1794 modules transformed, 3.46s）；扫描脚本 `admin.*` 共 487 个 key 三语 0 缺失 | portal-web/web | ok |
+| 2026-07-06 | docs | 同步本变更日志 | project-doc/07-CHANGE-LOG.md | ok |
+
+## 2026-07-06 — Resolver 缓存/singleflight/ACK + PublishTask 状态/事务 + 接口路径
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-06 | code | **#11 修复**：GetFromMemoryWithVersionCheck / GetFromDiskWithVersionCheck 中 `version <= currentVersion` 反向判断改为 `version < currentVersion`，仅当缓存严格比本地旧时（异常态）才删除缓存并强制回源；避免每次 DNS 查询都回源 portal-web | dns-resolver/internal/cache/profile_cache.go | ok |
+| 2026-07-06 | code | **#11 修复**：FetchProfile 缓存命中但 version==currentVersion 时直接 return nil，跳过 loadProfileIntoEngine 重复加载 | dns-resolver/internal/agent/agent.go | ok |
+| 2026-07-06 | code | **#12 修复**：FetchProfile 中 `DoOnce` 改用返回值 `(data, fetchVersion, err)` 替代闭包变量 `rawData/fetchVersion`，并新增 `SetToMemory` 同步写入避免并发等待 goroutine 读到 nil；解决 singleflight 并发 Bug | dns-resolver/internal/agent/agent.go | ok |
+| 2026-07-06 | code | **#13 修复**：buffer.go 解析 ACK 必须 accepted=true 才视为成功，否则 return error 走本地磁盘 buffer；并兼容 `{data:{accepted:true,...}}` 包装结构 | dns-resolver/internal/logging/buffer.go | ok |
+| 2026-07-06 | code | **#14 修复**：ConfigAcknowledgementService 增加 pending_count 计算；状态机按 target/applied/failed/pending 决定：pending>0→running, all-acked+无失败→succeeded, all-acked+有失败→partial, 全失败→failed；completed_at 仅在 all-acked 时置 | portal-web/app/Application/Node/ConfigAcknowledgementService.php | ok |
+| 2026-07-06 | code | **#15 修复**：PublishService.version 改为等于 ProfileVersion.id（数据库自增），避免 max(id)+1 竞态；并发安全 | portal-web/app/Domain/Publish/PublishService.php | ok |
+| 2026-07-06 | code | **#16 修复**：PublishService 整体包入 `DB::transaction`，保证 ProfileVersion/PublishTask/TaskExecution/Node 写入原子性；Node 查询加 `lockForUpdate` 避免 ack 流程并发修改 | portal-web/app/Domain/Publish/PublishService.php | ok |
+| 2026-07-06 | code | **#18 修复**：BlacklistWhitelist.vue 单条删除路径由 `/admin/member-catalogs/rules/{id}` 修正为 `/admin/member-rules/{id}`（与 routes/v1/admin/users.php 一致） | portal-web/web/src/views/admin/BlacklistWhitelist.vue | ok |
+| 2026-07-06 | test | go build ./... 退出码 0；4 个 PHP 文件 php -l 全部无语法错误；npm run build 通过（3.92s）；php artisan route:list 确认 /admin/member-rules/batch-destroy 等路由注册 | dns-resolver + portal-web | ok |
+| 2026-07-06 | docs | 同步本变更日志 | project-doc/07-CHANGE-LOG.md | ok |
+
+> **注 #17**：经核实 `/admin/blacklist-whitelist` 路由对应独立 `AdminBlacklistWhitelistController::index`，该接口接收的 query 字段正是 `type/keyword/per_page`，与前端 `BlacklistWhitelist.vue` 调用完全一致（`type: filter.type, keyword: filter.keyword, page, per_page`）。老大手稿中提到的"前端传 type/keyword 后端收 list_type/domain"对应的是 `/admin/member-rules` 接口（由 `AdminMemberCatalogController::rules()` 处理，接收 `list_type/domain/profile_id`），但该接口前端未调用，本次无需修改。

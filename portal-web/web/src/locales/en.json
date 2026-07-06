@@ -985,6 +985,13 @@
       "role": "Role",
       "status": "Status",
       "plan": "Plan",
+      "planFree": "Free",
+      "planLabelMap": {
+        "free": "Free",
+        "pro": "Pro",
+        "team": "Team",
+        "enterprise": "Enterprise"
+      },
       "created": "Created",
       "actions": "Actions",
       "edit": "Edit",
@@ -1073,7 +1080,8 @@
       "batchDeleteSuccess": "Batch delete successful",
       "deleteFailed": "Delete failed",
       "all": "All",
-      "emptyDesc": "System alerts will be displayed here."
+      "emptyDesc": "System alerts will be displayed here.",
+      "code": "Code"
     },
     "nodes": {
       "title": "DNS Nodes",
@@ -1424,7 +1432,14 @@
       "smtpUsername": "SMTP Username",
       "smtpPassword": "SMTP Password",
       "fromAddress": "From Address",
-      "fromName": "From Name"
+      "fromName": "From Name",
+      "paymentMethodsLabel": "Enabled Payment Methods",
+      "paymentMethods": {
+        "card": "Credit Card",
+        "wechat_pay": "WeChat Pay",
+        "alipay": "Alipay"
+      },
+      "paymentHint": "Users can only pay with the Stripe payment methods enabled here."
     },
     "basicConfig": {
       "title": "Basic Settings",
@@ -1500,6 +1515,30 @@
       },
       "actor": "Actor",
       "resourceType": "Resource Type",
+      "targetTypesMap": {
+        "user": "User",
+        "profile": "Profile",
+        "subscription": "Subscription",
+        "plan": "Plan",
+        "node": "Node",
+        "resolver_node": "Resolver Node",
+        "rule": "Rule",
+        "rule_source": "Rule Source",
+        "bill": "Bill",
+        "invoice": "Invoice",
+        "payment": "Payment",
+        "refund": "Refund",
+        "admin": "Admin",
+        "role": "Role",
+        "permission": "Permission",
+        "config": "Config",
+        "audit_log": "Audit Log",
+        "finance": "Finance",
+        "team": "Team",
+        "domain": "Domain",
+        "system": "System",
+        "other": "Other"
+      },
       "resourceId": "Resource ID",
       "ip": "IP",
       "time": "Time",
@@ -1572,7 +1611,8 @@
       "notePlaceholder": "Optional note",
       "actions": "Actions",
       "required": "Required",
-      "confirmDelete": "Delete this region?"
+      "confirmDelete": "Delete this region?",
+      "emptyHint": "Click \"Add Region\" in the top right to create your first region record."
     },
     "billing": {
       "title": "Billing Center",
@@ -1824,8 +1864,10 @@
       "startedAt": "Started At",
       "currentPeriodStart": "Current Period Start",
       "currentPeriodEnd": "Current Period End",
+      "currentPeriodEndTip": "Scheduled time for next auto-renewal or downgrade. Empty for Free plan.",
       "cancelledAt": "Cancelled At",
-      "expiredAt": "Expired At",
+      "expiredAt": "Actual Expired At",
+      "expiredAtTip": "The time the subscription actually expired. Only populated when status is expired/cancelled.",
       "cancelSubscription": "Cancel",
       "resumeSubscription": "Resume",
       "cancelSuccess": "Subscription cancelled",
@@ -1874,6 +1916,7 @@
       "roleCode": "Role Code",
       "roleName": "Role Name",
       "rolePermissions": "Role Permissions",
+      "systemTag": "System",
       "selectRole": "Select a role to view permissions",
       "admins": "Admins",
       "username": "Username",
@@ -2049,7 +2092,10 @@
       "catGambling": "Gambling",
       "catSocial": "Social Media",
       "catGaming": "Gaming",
-      "importSuccess": "Policies imported successfully"
+      "importSuccess": "Policies imported successfully",
+      "rebindHint": "DNS rebinding protection blocks responses that resolve to local IPs (127.0.0.0/8, ::1, private ranges) to prevent local device hijacking",
+      "contentFiltering": "Content Filtering",
+      "advanced": "Advanced Protection"
     },
     "securityData": {
       "title": "Security Data",
@@ -2085,6 +2131,16 @@
       "version": "Version",
       "message": "Message",
       "status": "Status",
+      "statusMap": {
+        "queued": "Queued",
+        "running": "Running",
+        "succeeded": "Succeeded",
+        "failed": "Failed",
+        "partial": "Partial",
+        "cancelled": "Cancelled",
+        "canceled": "Cancelled",
+        "unknown": "Unknown"
+      },
       "nodes": "Node Progress",
       "retry": "Retry",
       "queuedAt": "Queued At",
@@ -2120,6 +2176,10 @@
       "owner": "Owner",
       "memberCount": "Members",
       "status": "Status",
+      "statusMap": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
       "created": "Created",
       "actions": "Actions",
       "all": "All",
@@ -2262,6 +2322,7 @@
     "required": "Required",
     "loadFailed": "Failed to load",
     "saveFailed": "Failed to save",
+    "publishFailed": "Saved, but DNS rules were not published to Resolver",
     "deleteSuccess": "Deleted successfully",
     "deleteFailed": "Failed to delete",
     "clear": "Clear",

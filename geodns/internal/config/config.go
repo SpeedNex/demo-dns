@@ -142,7 +142,7 @@ func Load(path string) (*Config, error) {
 	}
 
 	if cfg.Server.ListenAddr == "" {
-		cfg.Server.ListenAddr = ":5354"
+		cfg.Server.ListenAddr = ":15354"
 	}
 	return cfg, nil
 }

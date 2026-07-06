@@ -161,6 +161,7 @@ import { useI18n } from 'vue-i18n'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
 import { useCurrentProfile } from '@/composables/useCurrentProfile'
+import { warnIfPublishFailed } from '@/composables/usePublishStatus'
 
 const { t, locale } = useI18n()
 const { currentProfileId } = useCurrentProfile()
@@ -258,7 +259,8 @@ const handleSave = async () => {
             blocked_categories: [...blockedCategories.value],
             profile_id: currentProfileId.value,
         }
-        await client.put('/user/parental', data)
+        const res = await client.put('/user/parental', data)
+        warnIfPublishFailed(res)
     } catch {
         ElMessage.error(t('common.saveFailed'))
     } finally {

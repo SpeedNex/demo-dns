@@ -207,7 +207,7 @@ func Default() *Config {
 		},
 		Upstream: []string{"1.1.1.1", "8.8.8.8"},
 		GeoDNS: GeoDNSConfig{
-			Endpoint:          "http://127.0.0.1:5354",
+			Endpoint:          "http://127.0.0.1:15354",
 			RequestTimeoutSec: 3,
 		},
 		Cache: DNSCacheConfig{

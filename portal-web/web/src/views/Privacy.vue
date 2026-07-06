@@ -209,6 +209,7 @@ import { useI18n } from 'vue-i18n'
 import client from '@/api/client'
 import Layout from '@/components/Layout.vue'
 import { useCurrentProfile } from '@/composables/useCurrentProfile'
+import { warnIfPublishFailed } from '@/composables/usePublishStatus'
 
 const { t, locale } = useI18n()
 const { currentProfileId } = useCurrentProfile()
@@ -278,7 +279,8 @@ const savePrivacy = async () => {
     if (saveTimer) { clearTimeout(saveTimer); saveTimer = null }
     saving.value = true
     try {
-        await client.put('/user/privacy', { ...form, profile_id: currentProfileId.value })
+        const res = await client.put('/user/privacy', { ...form, profile_id: currentProfileId.value })
+        warnIfPublishFailed(res)
     } catch {
         ElMessage.error(t('common.saveFailed'))
     } finally {

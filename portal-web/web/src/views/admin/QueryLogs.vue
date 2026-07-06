@@ -131,13 +131,13 @@
 </el-tag>
                 </template>
             </el-table-column>
-            <el-table-column label="类型" width="100">
+            <el-table-column :label="$t('admin.queryLogsPage.type')" width="100">
                 <template #default="{ row }">
                     <el-tag v-if="row.query_type" type="info" effect="light" size="small">{{ row.query_type }}</el-tag>
                     <span v-else style="color:#94a3b8">-</span>
                 </template>
             </el-table-column>
-            <el-table-column label="协议" width="100">
+            <el-table-column :label="$t('admin.queryLogsPage.protocol')" width="100">
                 <template #default="{ row }">
                     <el-tag v-if="row.protocol" type="warning" effect="light" size="small">{{ row.protocol?.toUpperCase() }}</el-tag>
                     <span v-else style="color:#94a3b8">-</span>

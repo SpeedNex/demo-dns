@@ -87,7 +87,7 @@ install flags:
   --token TOKEN          Node token issued by console
   --node-id ID           Node ID assigned by console
   --config PATH          Output config path (default: configs/config.yaml)
-  --listen-addr ADDR     HTTP listen address (default: :5354)
+  --listen-addr ADDR     HTTP listen address (default: :15354)
   --dns-addr ADDR        DNS listen address (default: :53)
   --health-token TOKEN   Internal health-view token (shared with portal-web)
   --install-dir DIR      Base dir for configs/ and api_key

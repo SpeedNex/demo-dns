@@ -228,6 +228,7 @@ func (a *Agent) pullGlobalConfig() {
 // FetchProfile 按 Profile ID 拉取配置，经过 Memory → Disk → Portal 三级回源。
 // 被三个协议 server 在查询未命中时调用。
 // 2026-06-29: 增强版本检查，内存/磁盘命中时同步检查版本是否过期。
+// 2026-07-06 修复 #11 #12：缓存版本与本地一致时不再强制回源；singleflight 闭包变量改为使用返回值，避免并发场景下 rawData/fetchVersion 未赋值。
 func (a *Agent) FetchProfile(profileID string) error {
 	profileID = strings.TrimSpace(profileID)
 	if len(profileID) < 4 {
@@ -241,19 +242,26 @@ func (a *Agent) FetchProfile(profileID string) error {
 
 	// 1. 检查内存缓存（带版本检查）
 	if data, version, ok := a.pCache.GetFromMemoryWithVersionCheck(profileID, currentVersion); ok {
+		// 修复 #11：缓存版本与本地一致时无需重新加载，直接返回
+		if version <= currentVersion {
+			return nil
+		}
 		return a.loadProfileIntoEngine(profileID, data, version)
 	}
 
 	// 2. 检查磁盘缓存（带版本检查）
 	if data, version, ok := a.pCache.GetFromDiskWithVersionCheck(profileID, currentVersion); ok {
 		a.pCache.SetToMemory(profileID, data, version)
+		if version <= currentVersion {
+			return nil
+		}
 		return a.loadProfileIntoEngine(profileID, data, version)
 	}
 
 	// 3. 回源 Portal（SingleFlight 防击穿）
-	var rawData json.RawMessage
-	var fetchVersion int64
-	_, _, err := a.pCache.DoOnce(profileID, func() (json.RawMessage, int64, error) {
+	// 修复 #12：使用 DoOnce 的返回值而非闭包变量；只有真正执行 fn 的 goroutine 会拿到原始返回值，
+	// 等待 singleflight 的 goroutine 也会拿到共享的 (data, version, err)，避免出现 rawData=nil 的并发 Bug。
+	data, fetchVersion, err := a.pCache.DoOnce(profileID, func() (json.RawMessage, int64, error) {
 		path := fmt.Sprintf("/api/v1/node/dns-resolver/profiles/%s", profileID)
 		resp, fetchErr := a.doNodeRequest(http.MethodGet, path, nil)
 		if fetchErr != nil {
@@ -292,16 +300,20 @@ func (a *Agent) FetchProfile(profileID string) error {
 			log.Printf("[缓存] 写入磁盘 profile=%s err=%v", profileID, diskErr)
 		}
 
-		rawData = dataEnv.Data
-		fetchVersion = profileMeta.Version
+		// 同步写入内存缓存，避免并发等待的 goroutine 读取到 nil
+		a.pCache.SetToMemory(profileID, dataEnv.Data, profileMeta.Version)
+
 		return dataEnv.Data, profileMeta.Version, nil
 	})
 	if err != nil {
 		return err
 	}
 
-	// 4. 从内存缓存读取（刚写入 DoOnce）并加载到引擎
-	return a.loadProfileIntoEngine(profileID, rawData, fetchVersion)
+	// 4. 加载到引擎（修复 #11：与本地一致时跳过重复加载）
+	if fetchVersion <= currentVersion {
+		return nil
+	}
+	return a.loadProfileIntoEngine(profileID, data, fetchVersion)
 }
 
 // loadProfileIntoEngine 将缓存的 Profile 数据加载到引擎并记录版本。

@@ -29,7 +29,7 @@ set -euo pipefail
 SERVER=""
 TOKEN=""
 NODE_ID=""
-LISTEN_ADDR=":5354"
+LISTEN_ADDR=":15354"
 DNS_ADDR=":53"
 INSTALL_DIR="/usr/local/bin"   # binary install dir
 GEODNS_HOME="${GEODNS_HOME:-/usr/local/etc/geodns}"  # 2026-06-22: configs 落点
@@ -50,7 +50,7 @@ Required:
   --node-id    Node code
 
 Options:
-  --listen-addr    HTTP listen address (default: :5354)
+  --listen-addr    HTTP listen address (default: :15354)
   --dns-addr       DNS listen address (default: :53)
   --install-dir    Binary install dir (default: /usr/local/bin)
   --home           Config + api_key home dir (default: \$GEODNS_HOME or /usr/local/etc/geodns)

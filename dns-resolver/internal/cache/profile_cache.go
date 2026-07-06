@@ -89,17 +89,19 @@ func (pc *ProfileCache) GetFromMemory(profileID string) (json.RawMessage, int64,
 }
 
 // GetFromMemoryWithVersionCheck 从内存缓存读取 Profile，并在命中的同时检查版本是否过期。
-// 如果传入的 currentVersion >= 缓存版本，返回缓存数据；否则返回 false，强制回源拉取新版本。
+// 修复 2026-07-06 #11：缓存版本与本地已加载版本一致时不应被判定为过期，避免每次 DNS 查询都回源 portal-web。
+// 仅当缓存版本严格小于本地已加载版本（异常：本地比缓存新）时才视为不可用。
 func (pc *ProfileCache) GetFromMemoryWithVersionCheck(profileID string, currentVersion int64) (json.RawMessage, int64, bool) {
 	data, version, ok := pc.GetFromMemory(profileID)
 	if !ok {
 		return nil, 0, false
 	}
-	// 版本检查：缓存版本小于等于当前版本，说明缓存已过期，需要回源
-	if version <= currentVersion {
+	// 版本检查：仅当缓存版本严格小于本地已加载版本（异常状态）时，才删除缓存并强制回源
+	if version < currentVersion {
 		pc.RemoveFromMemory(profileID)
 		return nil, 0, false
 	}
+	// version >= currentVersion 视为命中（version == currentVersion 表示已加载完成；version > currentVersion 表示有新版本可用）
 	return data, version, true
 }
 
@@ -213,14 +215,14 @@ func (pc *ProfileCache) GetFromDisk(profileID string) (json.RawMessage, int64, b
 }
 
 // GetFromDiskWithVersionCheck 从磁盘缓存读取 Profile，并在命中的同时检查版本是否过期。
-// 如果传入的 currentVersion >= 缓存版本，返回缓存数据；否则返回 false，强制回源拉取新版本。
+// 修复 2026-07-06 #11：与 GetFromMemoryWithVersionCheck 保持一致——缓存版本与本地一致时不应被判定为过期。
 func (pc *ProfileCache) GetFromDiskWithVersionCheck(profileID string, currentVersion int64) (json.RawMessage, int64, bool) {
 	data, version, ok := pc.GetFromDisk(profileID)
 	if !ok {
 		return nil, 0, false
 	}
-	// 版本检查：缓存版本小于等于当前版本，说明缓存已过期，需要回源
-	if version <= currentVersion {
+	// 版本检查：仅当缓存版本严格小于本地已加载版本时，才删除磁盘缓存并强制回源
+	if version < currentVersion {
 		pc.RemoveFromDisk(profileID)
 		return nil, 0, false
 	}

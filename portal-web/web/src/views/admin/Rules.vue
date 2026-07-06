@@ -77,7 +77,7 @@
                     <el-button size="small" text type="primary" @click="openEditDialog(row)">
                         <el-icon><Edit /></el-icon>
                     </el-button>
-                    <el-button size="small" text type="primary" plain :loading="syncing === row.id" @click="handleSync(row.id)">
+                    <el-button size="small" text type="primary" plain :loading="syncing === row.id" :disabled="syncing === row.id" @click="handleSync(row.id)">
                         <el-icon><Refresh /></el-icon>
                     </el-button>
                     <el-button size="small" text type="danger" @click="handleDelete(row.id)">

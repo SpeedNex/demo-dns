@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\ProfileVersion;
+namespace App\Domain\ConfigVersion;
 
 final class ConfigAckService
 {
