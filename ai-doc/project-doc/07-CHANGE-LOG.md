@@ -2,6 +2,20 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-07-06 — Dashboard 页面新增设备 IP 绑定显示与更换功能
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-06 | code | 后端 API 扩展支持 source_ip 更新：UserWorkspaceController 验证规则新增 `source_ip`，UserWorkspaceService::updateDevice 支持更新 `source_ip` 并清除 `ip_hash` | portal-web/app/Http/Controllers/Api/V1/User/UserWorkspaceController.php, portal-web/app/Domain/Profile/UserWorkspaceService.php | ok |
+| 2026-07-06 | code | Dashboard 新增设备 IP 绑定显示区域 + el-dialog 更换绑定对话框，用户可选择设备并输入绑定 IP | portal-web/web/src/views/Dashboard.vue | ok |
+| 2026-07-06 | i18n | 新增 11 个 dashboard i18n keys（deviceIpBinding/changeBinding/changeDeviceIp/selectDevice/bindIp/bind/cancel/bindFormRequired/bindSuccess/bindFailed） | portal-web/web/src/locales/zh-CN.json, en.json, ko.json | ok |
+
+### 验证结果
+
+- `npx vite build` 退出码 0
+- PHP 语法检查通过
+- i18n JSON 合法性检查通过
+
 ## 2026-07-06 — Dashboard 页面新增 DNS IPv4 地址显示
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |

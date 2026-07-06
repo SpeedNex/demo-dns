@@ -218,7 +218,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
@@ -235,6 +235,14 @@ const endpoints = ref({ profile_id: '', doh: '', dot: '', doq: '', doq_url: '', 
 const topVisited = ref([])
 const topBlocked = ref([])
 const devices = ref([])
+const showBindDialog = ref(false)
+const bindForm = ref({ deviceId: '', sourceIp: '' })
+
+// 计算当前绑定的设备 IP（优先显示明文 IP）
+const boundDeviceIp = computed(() => {
+    const boundDevice = devices.value.find(d => d.source_ip && d.source_ip !== 'hashed')
+    return boundDevice?.source_ip || ''
+})
 
 function formatNumber(n) {
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M'
@@ -289,6 +297,29 @@ const fetchData = async () => {
     }
 
     // 预留：未来可添加其他数据获取
+}
+
+// 更换设备 IP 绑定
+async function handleBindIp() {
+    if (!bindForm.value.deviceId || !bindForm.value.sourceIp) {
+        ElMessage.warning(t('dashboard.bindFormRequired'))
+        return
+    }
+
+    try {
+        const { data } = await client.put(`/user/devices/${bindForm.value.deviceId}`, {
+            source_ip: bindForm.value.sourceIp,
+        })
+        ElMessage.success(t('dashboard.bindSuccess'))
+        showBindDialog.value = false
+        // 重新获取设备列表
+        const { data: devicesData } = await client.get('/user/devices')
+        devices.value = devicesData.data ?? []
+        // 清空表单
+        bindForm.value = { deviceId: '', sourceIp: '' }
+    } catch (err) {
+        ElMessage.error(t('dashboard.bindFailed'))
+    }
 }
 
 onMounted(fetchData)
@@ -553,6 +584,24 @@ watch(currentProfileId, fetchData)
 }
 .copy-btn:hover {
     background: var(--color-primary-hover, #1d4ed8);
+}
+.change-btn {
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid var(--color-border, #e2e8f0);
+    background: #fff;
+    color: var(--color-text, #0f172a);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    margin-left: 8px;
+}
+.change-btn:hover {
+    background: var(--color-bg-hover, #f1f5f9);
+    border-color: var(--color-primary, #2563eb);
 }
 
 /* ========== Domain List ========== */
