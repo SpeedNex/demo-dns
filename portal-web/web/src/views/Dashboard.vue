@@ -42,8 +42,50 @@
                                 <button class="copy-btn" @click="copyText(endpoints.dot)">{{ $t('dashboard.copy') }}</button>
                             </div>
                         </div>
+
+                        <!-- DNS Server IP -->
+                        <div class="endpoint-row-item">
+                            <div class="endpoint-label">{{ $t('dashboard.endpointIpv4') }}</div>
+                            <div class="code-row">
+                                <div class="code">{{ endpoints.ipv4[0] || endpoints.server_ip || '—' }}</div>
+                                <button class="copy-btn" @click="copyText(endpoints.ipv4[0] || endpoints.server_ip)">{{ $t('dashboard.copy') }}</button>
+                            </div>
+                        </div>
+
+                        <!-- Device IP Binding -->
+                        <div class="endpoint-row-item">
+                            <div class="endpoint-label">{{ $t('dashboard.deviceIpBinding') }}</div>
+                            <div class="code-row">
+                                <div class="code">{{ boundDeviceIp || '—' }}</div>
+                                <button class="copy-btn" @click="copyText(boundDeviceIp)">{{ $t('dashboard.copy') }}</button>
+                                <button class="change-btn" @click="showBindDialog = true">{{ $t('dashboard.changeBinding') }}</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Device IP Binding Dialog -->
+                <el-dialog v-model="showBindDialog" :title="$t('dashboard.changeDeviceIp')" width="400px">
+                    <el-form :model="bindForm" label-width="100px">
+                        <el-form-item :label="$t('dashboard.selectDevice')">
+                            <el-select v-model="bindForm.deviceId" placeholder="Select device" style="width: 100%">
+                                <el-option
+                                    v-for="device in devices"
+                                    :key="device.id"
+                                    :label="device.name || device.id"
+                                    :value="device.id"
+                                />
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item :label="$t('dashboard.bindIp')">
+                            <el-input v-model="bindForm.sourceIp" placeholder="e.g. 192.168.1.100" />
+                        </el-form-item>
+                    </el-form>
+                    <template #footer>
+                        <el-button @click="showBindDialog = false">{{ $t('dashboard.cancel') }}</el-button>
+                        <el-button type="primary" @click="handleBindIp">{{ $t('dashboard.bind') }}</el-button>
+                    </template>
+                </el-dialog>
 
                 <!-- Top Domains in Left Column -->
                 <div class="card section-gap">

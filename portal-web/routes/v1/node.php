@@ -46,8 +46,9 @@ Route::prefix('node')->middleware(['api.log'])->group(function (): void {
     });
 
     Route::prefix('geodns')->group(function (): void {
-        Route::post('register', [GeoDnsRegisterController::class, 'register'])->middleware(['node.token']);
-        Route::post('heartbeat', [GeoDnsHeartbeatController::class, 'store'])->middleware(['node.token']);
+        // 2026-07-06: geodns 节点鉴权走独立 token 系统（dns_geodns_tokens），不再复用 resolver token
+        Route::post('register', [GeoDnsRegisterController::class, 'register'])->middleware(['geodns.token']);
+        Route::post('heartbeat', [GeoDnsHeartbeatController::class, 'store'])->middleware(['geodns.token']);
     });
 
     // === 业务接口（用 api_key 鉴权） ===

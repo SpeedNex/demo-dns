@@ -2,6 +2,17 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-07-06 — Dashboard 页面新增 DNS IPv4 地址显示
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-06 | code | Dashboard DNS Endpoints 卡片新增 IPv4 地址显示（绑定 IP），用户可直接看到分配的 DNS 服务器 IP | portal-web/web/src/views/Dashboard.vue | ok |
+
+### 验证结果
+
+- `npx vite build` 退出码 0
+- i18n key `dashboard.endpointIpv4` 已存在于 zh-CN/en/ko 三语
+
 ## 2026-07-06 — 清理 6/30 菜单迁移未完成遗留的死文件
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |

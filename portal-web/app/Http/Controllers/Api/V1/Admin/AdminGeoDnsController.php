@@ -6,8 +6,8 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Models\AdminAuditLog;
 use App\Models\DnsGeodns;
+use App\Models\GeoDnsToken;
 use App\Models\Node;
-use App\Models\NodeToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -264,34 +264,22 @@ final class AdminGeoDnsController
             'expires_in_days' => 'integer|min:1|max:3650',
         ]);
 
-        // 生成部署令牌，关联到 geodns 专用 Node（不存在则创建）
-        $node = Node::query()->firstOrCreate(
-            ['node_code' => $geodns->node_code],
-            [
-                'node_alias' => $geodns->node_alias ?? $geodns->node_code,
-                'region' => $geodns->region,
-                'install_status' => 'pending',
-                'current_config_version' => 0,
-                'desired_config_version' => 1,
-            ],
-        );
-
-        $result = NodeToken::createForNode(
-            $node,
+        // 2026-07-06: 改用独立 dns_geodns_tokens 表，不再 firstOrCreate 伪造 resolver node
+        $result = GeoDnsToken::createForGeodns(
+            $geodns,
             isset($validated['expires_in_days']) ? (int) $validated['expires_in_days'] : 365,
             $actorId
         );
 
-        AdminAuditLog::record('geo_dns.token_issue', 'node_token', (string) $node->id, [
+        AdminAuditLog::record('geo_dns.token_issue', 'geodns_token', (string) $geodns->id, [
             'geo_dns_id' => $geodns->id,
             'node_code' => $geodns->node_code,
         ], $actorId !== null ? (string) $actorId : null, null, $request->ip(), $request->userAgent());
 
         return response()->json([
             'data' => [
-                'api_key' => $result['token'],
-                'hmac_secret' => $result['hmac_secret'] ?? '',
-                'node_id' => $node->node_code,
+                'api_key' => $result['api_key'],
+                'node_id' => $geodns->node_code,
                 'expires_at' => optional($result['expires_at'])?->toIso8601String(),
             ],
         ], 201)

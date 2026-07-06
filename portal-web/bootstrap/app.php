@@ -27,6 +27,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'node.token' => \App\Http\Middleware\AuthenticateNodeToken::class,
             'node.api_key' => \App\Http\Middleware\AuthenticateNodeApiKey::class,
             'node.hmac' => \App\Http\Middleware\VerifyRequestSignature::class,
+            // 2026-07-06: GeoDNS 节点 token 鉴权（独立于 dns-resolver）
+            'geodns.token' => \App\Http\Middleware\AuthenticateGeoDnsToken::class,
             'shared.token' => \App\Http\Middleware\RequireSharedToken::class,
             'user.only' => \App\Http\Middleware\UserOnly::class,
             'admin.only' => \App\Http\Middleware\AdminOnly::class,

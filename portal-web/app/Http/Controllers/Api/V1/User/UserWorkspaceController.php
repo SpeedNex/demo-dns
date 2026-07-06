@@ -514,7 +514,8 @@ final class UserWorkspaceController
     public function updateDevice(Request $request, string $deviceId): JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:100',
+            'name' => 'sometimes|string|max:100',
+            'source_ip' => 'sometimes|ip|max:45',
         ]);
 
         return response()->json(['data' => $this->workspace->updateDevice($request->user()->uid, $deviceId, $validated)]);

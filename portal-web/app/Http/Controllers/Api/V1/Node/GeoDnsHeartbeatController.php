@@ -9,43 +9,37 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * GeoDNS 调度器心跳上报（2026-06-23 新增）
+ * GeoDNS 安装节点心跳上报（2026-07-06 重构）
  *
- * 与 resolver 节点心跳（HeartbeatController）不同：
- *   - 鉴权：node.token（node_token 表），非 node.api_key
- *   - 更新表：dns_geodns.last_heartbeat_at，非 dns_resolver_nodes
- *
- * 关联方式：token → resolver_node → region → geodns_node
+ * 业务语义：geodns 进程装在 resolver 节点上。
+ *   - 鉴权：geodns.token（独立于 resolver，2026-07-06 拆分）
+ *   - 状态归属：dns_resolver_nodes（出现在 /admin/nodes 页面）
+ *   - 同时同步 dns_geodns 调度器配置（按 region）
  */
 final class GeoDnsHeartbeatController
 {
     public function store(Request $request): JsonResponse
     {
-        /** @var \App\Models\Node|null $resolverNode */
-        $resolverNode = $request->attributes->get('node');
-        if ($resolverNode === null || empty($resolverNode->region)) {
+        /** @var \App\Models\Node|null $node */
+        $node = $request->attributes->get('geodns_node');
+        if ($node === null) {
             return response()->json([
-                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'invalid token or missing region'],
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'invalid or missing geodns token'],
             ], 401);
         }
 
-        // 通过 region 匹配对应的 geodns 调度器
-        $geodns = DnsGeodns::query()
-            ->where('region', $resolverNode->region)
-            ->first();
-
-        if ($geodns === null) {
-            return response()->json([
-                'error' => ['code' => 'NOT_FOUND', 'message' => 'no geodns found for region: ' . $resolverNode->region],
-            ], 404);
-        }
-
         $now = now();
-        $geodns->forceFill(['last_heartbeat_at' => $now])->saveQuietly();
+        $node->forceFill(['last_heartbeat_at' => $now])->saveQuietly();
+
+        // 同步 dns_geodns 调度器心跳（按 region 匹配）
+        $geodns = DnsGeodns::query()->where('region', $node->region)->first();
+        if ($geodns !== null) {
+            $geodns->forceFill(['last_heartbeat_at' => $now])->saveQuietly();
+        }
 
         return response()->json([
             'data' => [
-                'node_code' => $geodns->node_code,
+                'node_code' => $node->node_code,
                 'last_heartbeat_at' => $now->toIso8601String(),
             ],
         ]);

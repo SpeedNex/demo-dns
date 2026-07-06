@@ -515,15 +515,26 @@ final class UserWorkspaceService
             ->where('id', $deviceId)
             ->firstOrFail();
 
-        $device->update([
-            'name' => $payload['name'] ?? $device->name,
-        ]);
+        $updateData = [];
+
+        if (isset($payload['name'])) {
+            $updateData['name'] = $payload['name'];
+        }
+
+        if (isset($payload['source_ip'])) {
+            $updateData['source_ip'] = $payload['source_ip'];
+            $updateData['ip_hash'] = null; // 清除 hash，使用明文 IP
+        }
+
+        if (!empty($updateData)) {
+            $device->update($updateData);
+        }
 
         return [
             'id' => $device->id,
             'name' => $device->name,
             'device_type' => $device->protocol,
-            'source_ip' => $device->ip_hash ? 'hashed' : null,
+            'source_ip' => $device->ip_hash ? 'hashed' : $device->source_ip,
             'last_seen_at' => optional($device->last_seen_at)?->toIso8601String(),
         ];
     }

@@ -15,11 +15,11 @@ Route::prefix('internal')->middleware(['api.log', 'shared.token:internal'])->gro
     Route::get('query-logs', [QueryLogReadController::class, 'logs']);
     Route::get('query-analytics', [QueryLogReadController::class, 'analytics']);
 
-    // 2026-06-22 fix: geodns health-view 改用 node.token 鉴权。
-    // 历史设计：与 portal-web 共享 INTERNAL_SHARED_TOKEN，但 geodns install 时
-    // 实际拿的是 node token（注册前还没有 api_key），两个 token 不一致导致 401。
-    // 改用 node.token 中间件后，geodns 直接用 install 时的 node token 鉴权即可。
+    // 2026-07-06 fix: geodns health-view 改用 geodns.token 鉴权（dns_geodns_tokens）。
+    // 2026-06-22 迁移：从 INTERNAL_SHARED_TOKEN 改为 node.token
+    // 2026-07-06 迁移：从 node.token（dns_resolver_node_tokens）改为 geodns.token（dns_geodns_tokens）
+    // 原因：geodns 是独立实体，不走 resolver 的 token 系统
     Route::get('geodns/health-view', [HealthViewController::class, 'show'])
-        ->middleware('node.token')
+        ->middleware('geodns.token')
         ->withoutMiddleware('shared.token:internal');
 });
