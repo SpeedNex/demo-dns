@@ -193,6 +193,7 @@
     "bindSuccess": "绑定成功",
     "bindFailed": "绑定失败",
     "privacyProtected": "隐私保护（已哈希）",
+    "deviceHashedTip": "该设备已启用隐私保护，IP 地址已被哈希处理，无法更换绑定",
     "dnsOverTls": "DNS-over-TLS",
     "ipv4Dns": "IPv4 DNS",
     "copy": "复制",

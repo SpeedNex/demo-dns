@@ -193,6 +193,7 @@
     "bindSuccess": "Binding successful",
     "bindFailed": "Binding failed",
     "privacyProtected": "Privacy Protected (Hashed)",
+    "deviceHashedTip": "This device has privacy protection enabled, IP address is hashed and cannot be changed",
     "dnsOverTls": "DNS-over-TLS",
     "ipv4Dns": "IPv4 DNS",
     "copy": "Copy",

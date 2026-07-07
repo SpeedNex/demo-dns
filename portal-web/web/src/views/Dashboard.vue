@@ -78,12 +78,25 @@
                             </el-select>
                         </el-form-item>
                         <el-form-item :label="$t('dashboard.bindIp')">
-                            <el-input v-model="bindForm.sourceIp" placeholder="e.g. 192.168.1.100" />
+                            <el-input 
+                                v-model="bindForm.sourceIp" 
+                                placeholder="e.g. 192.168.1.100"
+                                :disabled="bindDeviceHashed"
+                            />
+                            <div v-if="bindDeviceHashed" class="el-form-item__tip">
+                                {{ $t('dashboard.deviceHashedTip') }}
+                            </div>
                         </el-form-item>
                     </el-form>
                     <template #footer>
                         <el-button @click="showBindDialog = false">{{ $t('dashboard.cancel') }}</el-button>
-                        <el-button type="primary" @click="handleBindIp">{{ $t('dashboard.bind') }}</el-button>
+                        <el-button 
+                            type="primary" 
+                            @click="handleBindIp"
+                            :disabled="bindDeviceHashed"
+                        >
+                            {{ $t('dashboard.bind') }}
+                        </el-button>
                     </template>
                 </el-dialog>
 
@@ -237,6 +250,7 @@ const topBlocked = ref([])
 const devices = ref([])
 const showBindDialog = ref(false)
 const bindForm = ref({ deviceId: '', sourceIp: '' })
+const bindDeviceHashed = ref(false) // 标记选择的设备是否为隐私保护
 
 // 计算当前绑定的设备 IP（优先显示明文 IP，其次显示"隐私保护"）
 const boundDeviceIp = computed(() => {
@@ -244,6 +258,26 @@ const boundDeviceIp = computed(() => {
     if (!boundDevice) return ''
     if (boundDevice.source_ip === 'hashed') return t('dashboard.privacyProtected')
     return boundDevice.source_ip
+})
+
+// 监听设备选择变化，自动填充 IP
+watch(() => bindForm.value.deviceId, (newDeviceId) => {
+    const selectedDevice = devices.value.find(d => d.id === newDeviceId)
+    if (!selectedDevice) {
+        bindForm.value.sourceIp = ''
+        bindDeviceHashed.value = false
+        return
+    }
+    
+    if (selectedDevice.source_ip === 'hashed') {
+        // 隐私保护设备，不允许更换
+        bindForm.value.sourceIp = ''
+        bindDeviceHashed.value = true
+    } else {
+        // 自动填充当前 IP
+        bindForm.value.sourceIp = selectedDevice.source_ip || ''
+        bindDeviceHashed.value = false
+    }
 })
 
 function formatNumber(n) {
