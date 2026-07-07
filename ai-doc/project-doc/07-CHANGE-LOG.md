@@ -2,6 +2,31 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-07-07 — 删除整个 SecurityCatalogPage 页面
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-07 | code | 删除前端 Vue 文件 SecurityCatalogPage.vue | portal-web/web/src/views/admin/SecurityCatalogPage.vue (deleted) | ok |
+| 2026-07-07 | code | 删除路由配置：import AdminSecurityCatalogPage 和 route security-catalog | portal-web/web/src/router/index.js#L35, #L114 | ok |
+| 2026-07-07 | code | 删除数据库菜单记录：admin_menu_rule 表中 menu_key=security_catalog | portal-web DB admin_menu_rule 表 | ok |
+| 2026-07-07 | test | 前端构建成功：npx vite build 1792 modules transformed | portal-web/web | ok |
+| 2026-07-07 | ops | 生产环境部署：上传 dist + 清理缓存 | 103.86.44.194 | ok |
+
+### 删除原因
+
+用户要求删除整个 `/admin/security-catalog` 页面，"安全防护"配置功能不再需要。
+
+### 保留内容
+
+- **后端 API `/admin/protection-policies`** 保留：可能其他模块仍在使用
+- **AdminProtectionPolicyController** 保留：避免破坏现有功能
+
+### 验证结果
+
+- 前端构建成功（1792 modules，减少 2 个模块）
+- 生产环境部署成功
+- 数据库菜单删除确认
+
 ## 2026-07-07 — 清理 SecurityCatalogPage device_models 数据库条目
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |

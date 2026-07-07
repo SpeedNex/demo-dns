@@ -32,7 +32,6 @@ import AdminRuleItems from '@/views/admin/RuleItems.vue'
 import AdminRuleCategories from '@/views/admin/RuleCategories.vue'
 import AdminSecurityData from '@/views/admin/SecurityData.vue'
 import AdminSecurityDataItem from '@/views/admin/SecurityDataItem.vue'
-import AdminSecurityCatalogPage from '@/views/admin/SecurityCatalogPage.vue'
 import AdminMemberCatalogs from '@/views/admin/MemberCatalogs.vue'
 import AdminPublishCenter from '@/views/admin/PublishCenter.vue'
 import AdminSystemConfig from '@/views/admin/SystemConfig.vue'
@@ -111,7 +110,6 @@ const routes = [
             { path: 'rule-categories', name: 'AdminRuleCategories', component: AdminRuleCategories },
             { path: 'security-data', name: 'AdminSecurityData', component: AdminSecurityData },
             { path: 'security-data/:group', name: 'AdminSecurityDataItem', component: AdminSecurityDataItem },
-            { path: 'security-catalog', name: 'AdminProtectionPolicies', component: AdminSecurityCatalogPage },
             { path: 'publish-center', name: 'AdminPublishCenter', component: AdminPublishCenter },
             { path: 'query-logs', name: 'AdminQueryLogs', component: AdminQueryLogs },
             { path: 'alerts', name: 'AdminAlerts', component: AdminAlerts },
