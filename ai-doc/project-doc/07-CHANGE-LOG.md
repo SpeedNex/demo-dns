@@ -2,6 +2,26 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-07-07 — 清理 SecurityCatalogPage device_models 数据库条目
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-07 | code | MemberCatalogService::defaults() device_models 删除已实现功能条目：DNS 重新绑定、IDN 同构、误植域名、DGA、动态 DNS、停放域名、特定 TLD、挖矿病毒 | portal-web/app/Domain/Profile/MemberCatalogService.php#L26-L35 | ok |
+| 2026-07-07 | code | 生产数据库 member_feature_catalogs 更新：只保留 5 条核心条目（威胁情报、AI 威胁检测、Google 安全浏览、拦截新注册域名、拦截儿童色情内容） | portal-web DB system_configs 表 | ok |
+| 2026-07-07 | ops | 生产服务器缓存清理：php artisan cache:clear / config:clear / route:clear / view:clear | 103.86.44.194 | ok |
+
+### 删除原因
+
+用户反馈 `/admin/security-catalog` 页面的"设备型号"表仍显示 13 条历史条目，但部分功能已实现或无用：
+- **已实现功能**：Resolver 已在 Engine 中实现（DNS 重新绑定、IDN 同构、误植域名、DGA、动态 DNS、特定 TLD），无需 UI 开关
+- **无用功能**：停放域名、挖矿病毒等功能未规划实现
+- **保留功能**：威胁情报、AI 威胁检测、Google 安全浏览、拦截新注册域名、拦截儿童色情内容（近期新增功能）
+
+### 验证结果
+
+- DB 查询确认 device_models count: 5
+- API 验证 5 条：threat_intel, ai_threat_detection, google_safe_browsing, block_newly_registered, block_csam
+
 ## 2026-07-06 — 实现威胁检测 API 功能（完整链路）
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |
