@@ -2,6 +2,25 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-07-06 — SecurityCatalogPage 删除已实现/未实现功能选项
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-06 | code | 删除模板中已实现功能：DNS 重绑定、IDN 同构、误植域名、DGA、动态 DNS、TLD、新注册域名、停放域名 | portal-web/web/src/views/admin/SecurityCatalogPage.vue | ok |
+| 2026-07-06 | code | 删除模板中未实现功能：AI 威胁检测、Google 安全浏览 | portal-web/web/src/views/admin/SecurityCatalogPage.vue | ok |
+| 2026-07-06 | code | 删除分类屏蔽选项：恶意软件、钓鱼、C2、挖矿病毒（通过威胁情报源管理） | portal-web/web/src/views/admin/SecurityCatalogPage.vue | ok |
+| 2026-07-06 | code | 清理 script：删除 whitelistText ref，form 仅保留 threat_intel 字段，简化 fetchPolicies/handleSaveAll | portal-web/web/src/views/admin/SecurityCatalogPage.vue | ok |
+
+### 删除原因
+
+- **已实现功能**：Resolver 已实现（DNS重绑定、IDN同构、误植域名、DGA、动态DNS、TLD），UI 选项重复
+- **未实现功能**：Resolver 无实现（AI检测、Google安全浏览、新注册域名、停放域名）
+- **分类屏蔽**：通过 `/admin/rule-sources` 威胁情报源管理，不再需要单独开关
+
+### 验证结果
+
+- `npx vite build` 退出码 0
+
 ## 2026-07-06 — 删除 SecurityCatalogPage 隐私防护和家长控制 tab
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |

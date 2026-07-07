@@ -45,166 +45,6 @@
                                     <el-switch v-model="form.threat_intel" />
                                 </div>
                             </el-form-item>
-                            <el-form-item>
-                                <div class="setting-row">
-                                    <div class="setting-info">
-                                        <span class="setting-label">{{ $t('security.aiDetection') }}</span>
-                                        <span class="setting-desc">{{ $t('security.aiDetectionDesc') }}</span>
-                                    </div>
-                                    <el-switch v-model="form.ai_threat_detection" />
-                                </div>
-                            </el-form-item>
-                            <el-form-item>
-                                <div class="setting-row">
-                                    <div class="setting-info">
-                                        <span class="setting-label">{{ $t('security.googleSafeBrowsing') }}</span>
-                                        <span class="setting-desc">{{ $t('security.googleSafeBrowsingDesc') }}</span>
-                                    </div>
-                                    <el-switch v-model="form.google_safe_browsing" />
-                                </div>
-                            </el-form-item>
-
-                            <!-- DNS 防护 -->
-                            <el-divider content-position="left">{{ $t('admin.protectionPolicies.dnsSecurity') }}</el-divider>
-                            <el-form-item>
-                                <div class="setting-row">
-                                    <div class="setting-info">
-                                        <span class="setting-label">{{ $t('security.dnsRebind') }}</span>
-                                        <span class="setting-desc">{{ $t('security.dnsRebindDesc') }}</span>
-                                    </div>
-                                    <el-switch v-model="form.dns_rebind" />
-                                </div>
-                            </el-form-item>
-                            <el-form-item v-if="form.dns_rebind" class="sub-form-item">
-                                <el-form-item :label="$t('admin.protectionPolicies.dnsRebindWhitelist')">
-                                    <el-input
-                                        v-model="whitelistText"
-                                        type="textarea"
-                                        :rows="3"
-                                        :placeholder="$t('admin.protectionPolicies.dnsRebindWhitelistPlaceholder')"
-                                    />
-                                    <div class="form-hint">{{ $t('admin.protectionPolicies.rebindHint') }}</div>
-                                </el-form-item>
-                            </el-form-item>
-                            <el-form-item>
-                                <div class="setting-row">
-                                    <div class="setting-info">
-                                        <span class="setting-label">{{ $t('security.idnHomo') }}</span>
-                                        <span class="setting-desc">{{ $t('security.idnHomoDesc') }}</span>
-                                    </div>
-                                    <el-switch v-model="form.idn_homograph" />
-                                </div>
-                            </el-form-item>
-                            <el-form-item>
-                                <div class="setting-row">
-                                    <div class="setting-info">
-                                        <span class="setting-label">{{ $t('security.typoSquat') }}</span>
-                                        <span class="setting-desc">{{ $t('security.typoSquatDesc') }}</span>
-                                    </div>
-                                    <el-switch v-model="form.typo_squatting" />
-                                </div>
-                            </el-form-item>
-                            <el-form-item v-if="form.typo_squatting" class="sub-form-item">
-                                <el-form-item :label="$t('admin.protectionPolicies.typoThreshold')">
-                                    <el-input-number v-model="form.typo_threshold" :min="1" :max="2" />
-                                    <span class="form-hint">{{ $t('admin.protectionPolicies.typoThresholdHint') }}</span>
-                                </el-form-item>
-                            </el-form-item>
-                            <el-form-item>
-                                <div class="setting-row">
-                                    <div class="setting-info">
-                                        <span class="setting-label">{{ $t('security.dga') }}</span>
-                                        <span class="setting-desc">{{ $t('security.dgaDesc') }}</span>
-                                    </div>
-                                    <el-switch v-model="form.dga_protection" />
-                                </div>
-                            </el-form-item>
-                            <el-form-item v-if="form.dga_protection" class="sub-form-item">
-                                <el-form-item :label="$t('admin.protectionPolicies.dgaEntropy')">
-                                    <el-input-number v-model="form.dga_entropy_threshold" :min="3.0" :max="5.5" :step="0.1" />
-                                </el-form-item>
-                                <el-form-item :label="$t('admin.protectionPolicies.dgaDigitRatio')">
-                                    <el-input-number v-model="form.dga_digit_ratio" :min="0" :max="1" :step="0.1" />
-                                </el-form-item>
-                            </el-form-item>
-
-                            <!-- 分类屏蔽 -->
-                            <el-divider content-position="left">{{ $t('admin.protectionPolicies.contentFiltering') }}</el-divider>
-                            <el-form-item>
-                                <div class="setting-row">
-                                    <div class="setting-info">
-                                        <span class="setting-label">{{ $t('security.blockMalware') }}</span>
-                                        <span class="setting-desc">{{ $t('security.blockMalwareDesc') }}</span>
-                                    </div>
-                                    <el-switch v-model="form.block_malware" />
-                                </div>
-                            </el-form-item>
-                            <el-form-item>
-                                <div class="setting-row">
-                                    <div class="setting-info">
-                                        <span class="setting-label">{{ $t('security.blockPhishing') }}</span>
-                                        <span class="setting-desc">{{ $t('security.blockPhishingDesc') }}</span>
-                                    </div>
-                                    <el-switch v-model="form.block_phishing" />
-                                </div>
-                            </el-form-item>
-                            <el-form-item>
-                                <div class="setting-row">
-                                    <div class="setting-info">
-                                        <span class="setting-label">{{ $t('security.blockC2') }}</span>
-                                        <span class="setting-desc">{{ $t('security.blockC2Desc') }}</span>
-                                    </div>
-                                    <el-switch v-model="form.block_command_and_control" />
-                                </div>
-                            </el-form-item>
-                            <el-form-item>
-                                <div class="setting-row">
-                                    <div class="setting-info">
-                                        <span class="setting-label">{{ $t('security.blockCryptojacking') }}</span>
-                                        <span class="setting-desc">{{ $t('security.blockCryptojackingDesc') }}</span>
-                                    </div>
-                                    <el-switch v-model="form.block_cryptojacking" />
-                                </div>
-                            </el-form-item>
-
-                            <!-- 高级防护 -->
-                            <el-divider content-position="left">{{ $t('admin.protectionPolicies.advanced') }}</el-divider>
-                            <el-form-item>
-                                <div class="setting-row">
-                                    <div class="setting-info">
-                                        <span class="setting-label">{{ $t('security.newDomains') }}</span>
-                                        <span class="setting-desc">{{ $t('security.newDomainsDesc') }}</span>
-                                    </div>
-                                    <el-switch v-model="form.block_new_domains" />
-                                </div>
-                            </el-form-item>
-                            <el-form-item>
-                                <div class="setting-row">
-                                    <div class="setting-info">
-                                        <span class="setting-label">{{ $t('security.blockTld') }}</span>
-                                        <span class="setting-desc">{{ $t('security.blockTldDesc') }}</span>
-                                    </div>
-                                    <el-switch v-model="form.block_tld" />
-                                </div>
-                            </el-form-item>
-                            <el-form-item>
-                                <div class="setting-row">
-                                    <div class="setting-info">
-                                        <span class="setting-label">{{ $t('security.dynamicDns') }}</span>
-                                        <span class="setting-desc">{{ $t('security.dynamicDnsDesc') }}</span>
-                                    </div>
-                                    <el-switch v-model="form.block_dynamic_dns" />
-                                </div>
-                            </el-form-item>
-                            <el-form-item>
-                                <div class="setting-row">
-                                    <div class="setting-info">
-                                        <span class="setting-label">{{ $t('security.parkedDomains') }}</span>
-                                        <span class="setting-desc">{{ $t('security.parkedDomainsDesc') }}</span>
-                                    </div>
-                                    <el-switch v-model="form.block_parked_domains" />
-                                </div>
-                            </el-form-item>
                         </el-form>
                     </el-card>
 
@@ -335,31 +175,12 @@ const { t } = useI18n()
 
 const loading = ref(false)
 const saving = ref(false)
-const whitelistText = ref('')
 const fileInput = ref(null)
 const activeTab = ref('security')
 
 // ===== 防护策略 form =====
 const form = reactive({
     threat_intel: true,
-    ai_threat_detection: false,
-    google_safe_browsing: true,
-    block_malware: true,
-    block_phishing: true,
-    block_command_and_control: true,
-    block_cryptojacking: true,
-    dns_rebind: true,
-    idn_homograph: true,
-    typo_squatting: true,
-    dga_protection: true,
-    block_new_domains: true,
-    block_dynamic_dns: false,
-    block_parked_domains: true,
-    block_tld: false,
-    dns_rebind_whitelist: ['localhost', '*.local'],
-    dga_entropy_threshold: 4.2,
-    dga_digit_ratio: 0.6,
-    typo_threshold: 1,
 })
 
 // ===== Member Catalogs =====
@@ -422,7 +243,6 @@ const fetchPolicies = async () => {
         const { data } = await client.get('/admin/protection-policies')
         const cfg = data.data || {}
         Object.assign(form, cfg)
-        whitelistText.value = (cfg.dns_rebind_whitelist || []).join('\n')
     } catch {
         ElMessage.error(t('common.loadFailed'))
     } finally {
@@ -433,11 +253,7 @@ const fetchPolicies = async () => {
 const handleSaveAll = async () => {
     saving.value = true
     try {
-        const payload = { ...form }
-        if (whitelistText.value) {
-            payload.dns_rebind_whitelist = whitelistText.value.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean)
-        }
-        await client.put('/admin/protection-policies', payload)
+        await client.put('/admin/protection-policies', form)
         ElMessage.success(t('common.saveSuccess') || 'Saved')
     } catch (err) {
         ElMessage.error(err.response?.data?.error?.message || t('common.saveFailed') || 'Save failed')
