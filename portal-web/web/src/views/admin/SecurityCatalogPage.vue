@@ -269,168 +269,6 @@
                     </el-card>
                 </div>
             </el-tab-pane>
-
-            <!-- ========== 隐私防护 ========== -->
-            <el-tab-pane :label="$t('admin.protectionPolicies.privacy')" name="privacy">
-                <div v-loading="loading" class="policies-container">
-                    <!-- 防护策略 -->
-                    <el-card shadow="never" class="policy-card">
-                        <template #header>
-                            <div class="card-header">
-                                <el-icon><View /></el-icon>
-                                <span>{{ $t('admin.protectionPolicies.privacy') }}</span>
-                            </div>
-                        </template>
-                        <el-form label-position="left" class="policy-form">
-                            <el-form-item>
-                                <div class="setting-row">
-                                    <div class="setting-info">
-                                        <span class="setting-label">{{ $t('privacy.blocklists.thirdPartyTracking') }}</span>
-                                        <span class="setting-desc">{{ $t('privacy.blocklists.thirdPartyTrackingDesc') }}</span>
-                                    </div>
-                                    <el-switch v-model="form.block_disguised_trackers" />
-                                </div>
-                            </el-form-item>
-                        </el-form>
-                    </el-card>
-
-                    <!-- 隐私拦截列表 -->
-                    <el-card shadow="never" class="policy-card">
-                        <template #header>
-                            <div class="rules-head">
-                                <div class="card-header">
-                                    <el-icon><Grid /></el-icon>
-                                    <strong>{{ $t('admin.memberCatalogs.blocklists') }}</strong>
-                                </div>
-                                <div class="rules-filters">
-                                    <el-input v-model="blocklistFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="fetchCatalogs" />
-                                    <el-button @click="fetchCatalogs">{{ $t('common.search') }}</el-button>
-                                    <el-button type="primary" @click="openAddDialog('privacy_blocklists')">{{ $t('common.add') }}</el-button>
-                                </div>
-                            </div>
-                        </template>
-                        <el-table :data="pagedRows('privacy_blocklists')" stripe>
-                            <template #empty>
-                                <div class="empty-state">
-                                    <el-icon class="empty-icon"><Grid /></el-icon>
-                                    <p class="empty-title">{{ $t('dashboard.noData') }}</p>
-                                </div>
-                            </template>
-                            <el-table-column :label="$t('admin.memberCatalogs.id')" prop="key" min-width="160" show-overflow-tooltip />
-                            <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="160" show-overflow-tooltip />
-                            <el-table-column :label="$t('admin.memberCatalogs.description')" prop="desc" min-width="280" show-overflow-tooltip />
-                            <el-table-column :label="$t('admin.memberCatalogs.entries')" prop="entries" min-width="120" align="right" />
-                            <el-table-column :label="$t('admin.memberCatalogs.updatedDays')" prop="days_ago" min-width="120" align="right" />
-                            <el-table-column :label="$t('common.actions')" width="160" fixed="right">
-                                <template #default="{ $index }">
-                                    <el-button text type="primary" @click="openEditDialog('privacy_blocklists', $index)">{{ $t('common.edit') }}</el-button>
-                                    <el-button text type="danger" @click="removeRow('privacy_blocklists', $index)">{{ $t('common.delete') }}</el-button>
-                                </template>
-                            </el-table-column>
-                        </el-table>
-                        <div class="pagination-bar">
-                            <div class="pagination-total">
-                                {{ $t('common.totalPrefix') }} <strong>{{ filteredRows('privacy_blocklists').length }}</strong> {{ $t('common.itemsSuffix') }}
-                            </div>
-                            <el-pagination
-                                v-model:current-page="blocklistsPage"
-                                v-model:page-size="blocklistsPerPage"
-                                :page-sizes="[10, 20, 50, 100]"
-                                :total="filteredRows('privacy_blocklists').length"
-                                layout="sizes, prev, pager, next"
-                                background
-                                size="small"
-                            />
-                        </div>
-                    </el-card>
-                </div>
-            </el-tab-pane>
-
-            <!-- ========== 家长控制 ========== -->
-            <el-tab-pane :label="$t('admin.protectionPolicies.family')" name="parental">
-                <div v-loading="loading" class="policies-container">
-                    <!-- 防护策略 -->
-                    <el-card shadow="never" class="policy-card">
-                        <template #header>
-                            <div class="card-header">
-                                <el-icon><User /></el-icon>
-                                <span>{{ $t('admin.protectionPolicies.family') }}</span>
-                            </div>
-                        </template>
-                        <el-form label-position="left" class="policy-form">
-                            <el-form-item>
-                                <div class="setting-row">
-                                    <div class="setting-info">
-                                        <span class="setting-label">{{ $t('security.childAbuse') }}</span>
-                                        <span class="setting-desc">{{ $t('security.childAbuseDesc') }}</span>
-                                    </div>
-                                    <el-switch v-model="form.child_abuse" />
-                                </div>
-                            </el-form-item>
-                        </el-form>
-                    </el-card>
-
-                    <!-- 家长预设 -->
-                    <el-card shadow="never" class="policy-card">
-                        <template #header>
-                            <div class="rules-head">
-                                <div class="card-header">
-                                    <el-icon><Grid /></el-icon>
-                                    <strong>{{ $t('admin.memberCatalogs.presets') }}</strong>
-                                </div>
-                                <div class="rules-filters">
-                                    <el-input v-model="presetFilter.name" :placeholder="$t('admin.memberCatalogs.searchName')" clearable style="width: 220px" @keyup.enter="fetchCatalogs" />
-                                    <el-button @click="fetchCatalogs">{{ $t('common.search') }}</el-button>
-                                    <el-button type="primary" @click="openAddDialog('parental_presets')">{{ $t('common.add') }}</el-button>
-                                </div>
-                            </div>
-                        </template>
-                        <el-table :data="pagedRows('parental_presets')" stripe>
-                            <template #empty>
-                                <div class="empty-state">
-                                    <el-icon class="empty-icon"><Grid /></el-icon>
-                                    <p class="empty-title">{{ $t('dashboard.noData') }}</p>
-                                </div>
-                            </template>
-                            <el-table-column :label="$t('admin.memberCatalogs.name')" prop="name" min-width="160" show-overflow-tooltip />
-                            <el-table-column :label="$t('admin.memberCatalogs.icon')" min-width="320" show-overflow-tooltip>
-                                <template #default="{ row }">
-                                    <div class="icon-cell">
-                                        <el-image v-if="row.icon" :src="row.icon" style="width:24px;height:24px;border-radius:4px" fit="cover" />
-                                        <span class="cell-sub">{{ row.icon || '-' }}</span>
-                                    </div>
-                                </template>
-                            </el-table-column>
-                            <el-table-column :label="$t('admin.memberCatalogs.category')" min-width="140">
-                                <template #default="{ row }">
-                                    <el-tag size="small" effect="light">{{ categoryLabel(row.category) }}</el-tag>
-                                </template>
-                            </el-table-column>
-                            <el-table-column :label="$t('common.actions')" width="160" fixed="right">
-                                <template #default="{ $index }">
-                                    <el-button text type="primary" @click="openEditDialog('parental_presets', $index)">{{ $t('common.edit') }}</el-button>
-                                    <el-button text type="danger" @click="removeRow('parental_presets', $index)">{{ $t('common.delete') }}</el-button>
-                                </template>
-                            </el-table-column>
-                        </el-table>
-                        <div class="pagination-bar">
-                            <div class="pagination-total">
-                                {{ $t('common.totalPrefix') }} <strong>{{ filteredRows('parental_presets').length }}</strong> {{ $t('common.itemsSuffix') }}
-                            </div>
-                            <el-pagination
-                                v-model:current-page="presetsPage"
-                                v-model:page-size="presetsPerPage"
-                                :page-sizes="[10, 20, 50, 100]"
-                                :total="filteredRows('parental_presets').length"
-                                layout="sizes, prev, pager, next"
-                                background
-                                size="small"
-                            />
-                        </div>
-                    </el-card>
-
-                </div>
-            </el-tab-pane>
         </el-tabs>
     </ListPage>
 
@@ -489,7 +327,7 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { Download, Upload, Check, Lock, View, User, Grid } from '@element-plus/icons-vue'
+import { Download, Upload, Check, Lock, Grid } from '@element-plus/icons-vue'
 import client from '@/api/client'
 import ListPage from '@/components/ListPage.vue'
 
@@ -518,8 +356,6 @@ const form = reactive({
     block_dynamic_dns: false,
     block_parked_domains: true,
     block_tld: false,
-    child_abuse: true,
-    block_disguised_trackers: true,
     dns_rebind_whitelist: ['localhost', '*.local'],
     dga_entropy_threshold: 4.2,
     dga_digit_ratio: 0.6,
@@ -529,19 +365,13 @@ const form = reactive({
 // ===== Member Catalogs =====
 const catalogs = reactive({
     device_models: [],
-    privacy_blocklists: [],
-    parental_presets: [],
 })
 
 // 分页 state
 const deviceModelsPage = ref(1); const deviceModelsPerPage = ref(10)
-const blocklistsPage = ref(1); const blocklistsPerPage = ref(10)
-const presetsPage = ref(1); const presetsPerPage = ref(10)
 
 // 过滤
 const deviceModelFilter = reactive({ name: '' })
-const blocklistFilter = reactive({ name: '' })
-const presetFilter = reactive({ name: '' })
 
 // 行编辑
 const showRowDialog = ref(false)
@@ -552,32 +382,20 @@ const rowForm = reactive({})
 
 const fieldsPerTab = {
     device_models: ['id', 'name', 'desc', 'icon', 'color'],
-    privacy_blocklists: ['key', 'name', 'desc', 'entries', 'days_ago'],
-    parental_presets: ['name', 'icon', 'category'],
 }
 const createDefaults = {
     device_models: () => ({ id: '', name: '', desc: '', icon: '', color: '' }),
-    privacy_blocklists: () => ({ key: '', name: '', desc: '', entries: 0, days_ago: 0 }),
-    parental_presets: () => ({ name: '', icon: '', category: 'website' }),
 }
 
 const hasField = (key) => fieldsPerTab[editingTab.value]?.includes(key) ?? false
 
-const totalItems = computed(() =>
-    catalogs.device_models.length
-    + catalogs.privacy_blocklists.length
-    + catalogs.parental_presets.length
-)
+const totalItems = computed(() => catalogs.device_models.length)
 
 const filterMap = {
     device_models: deviceModelFilter,
-    privacy_blocklists: blocklistFilter,
-    parental_presets: presetFilter,
 }
 const pageMap = {
     device_models: { page: deviceModelsPage, perPage: deviceModelsPerPage },
-    privacy_blocklists: { page: blocklistsPage, perPage: blocklistsPerPage },
-    parental_presets: { page: presetsPage, perPage: presetsPerPage },
 }
 
 const filteredRows = (key) => {
@@ -596,9 +414,6 @@ const pagedRows = (key) => {
 }
 
 watch(() => deviceModelFilter.name, () => { deviceModelsPage.value = 1 })
-watch(() => blocklistFilter.name, () => { blocklistsPage.value = 1 })
-watch(() => presetFilter.name, () => { presetsPage.value = 1 })
-watch(() => categoryFilter.name, () => { categoriesPage.value = 1 })
 
 // ===== 防护策略 API =====
 const fetchPolicies = async () => {
@@ -613,13 +428,6 @@ const fetchPolicies = async () => {
     } finally {
         loading.value = false
     }
-}
-
-// 2026-07-06: 安全目录分类多语言（parental/social/ad/tracker/malware → 家长/社交/广告/追踪/恶意）
-const categoryLabel = (category) => {
-    if (!category) return '-'
-    const map = t('admin.securityCatalogPage.categoryMap') || {}
-    return map[category] || category
 }
 
 const handleSaveAll = async () => {

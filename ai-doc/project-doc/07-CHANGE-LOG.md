@@ -2,6 +2,17 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-07-06 — 删除 SecurityCatalogPage 隐私防护和家长控制 tab
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-06 | code | SecurityCatalogPage.vue 删除隐私防护和家长控制两个 el-tab-pane，仅保留安全防护 tab | portal-web/web/src/views/admin/SecurityCatalogPage.vue | ok |
+| 2026-07-06 | code | 清理 script 部分：删除 catalogs.privacy_blocklists/parental_presets、分页/过滤变量、fieldsPerTab/createDefaults、categoryLabel 函数 | portal-web/web/src/views/admin/SecurityCatalogPage.vue | ok |
+
+### 验证结果
+
+- `npx vite build` 退出码 0
+
 ## 2026-07-06 — Dashboard 页面新增设备 IP 绑定显示与更换功能
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |
