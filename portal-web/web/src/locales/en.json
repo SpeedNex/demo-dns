@@ -192,6 +192,7 @@
     "bindFormRequired": "Please select device and enter IP",
     "bindSuccess": "Binding successful",
     "bindFailed": "Binding failed",
+    "privacyProtected": "Privacy Protected (Hashed)",
     "dnsOverTls": "DNS-over-TLS",
     "ipv4Dns": "IPv4 DNS",
     "copy": "Copy",

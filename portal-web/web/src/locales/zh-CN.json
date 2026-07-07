@@ -192,6 +192,7 @@
     "bindFormRequired": "请选择设备并输入 IP",
     "bindSuccess": "绑定成功",
     "bindFailed": "绑定失败",
+    "privacyProtected": "隐私保护（已哈希）",
     "dnsOverTls": "DNS-over-TLS",
     "ipv4Dns": "IPv4 DNS",
     "copy": "复制",

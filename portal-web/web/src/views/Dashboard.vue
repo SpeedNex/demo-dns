@@ -238,10 +238,12 @@ const devices = ref([])
 const showBindDialog = ref(false)
 const bindForm = ref({ deviceId: '', sourceIp: '' })
 
-// 计算当前绑定的设备 IP（优先显示明文 IP）
+// 计算当前绑定的设备 IP（优先显示明文 IP，其次显示"隐私保护"）
 const boundDeviceIp = computed(() => {
-    const boundDevice = devices.value.find(d => d.source_ip && d.source_ip !== 'hashed')
-    return boundDevice?.source_ip || ''
+    const boundDevice = devices.value.find(d => d.source_ip)
+    if (!boundDevice) return ''
+    if (boundDevice.source_ip === 'hashed') return t('dashboard.privacyProtected')
+    return boundDevice.source_ip
 })
 
 function formatNumber(n) {
