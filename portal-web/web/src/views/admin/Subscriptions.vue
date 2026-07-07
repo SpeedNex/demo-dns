@@ -123,6 +123,13 @@
                     />
                 </template>
             </el-table-column>
+            <el-table-column :label="$t('admin.finance.renewStatus')" min-width="120" align="center">
+                <template #default="{ row }">
+                    <el-tag :type="row.cancel_at_period_end ? 'warning' : 'success'" size="small" effect="light">
+                        {{ row.cancel_at_period_end ? $t('admin.finance.cancelledAtPeriodEnd') : $t('admin.finance.renewing') }}
+                    </el-tag>
+                </template>
+            </el-table-column>
             <el-table-column min-width="180">
                 <template #header>
                     <el-tooltip :content="$t('admin.finance.currentPeriodEndTip')" placement="top">
