@@ -23,6 +23,7 @@ import (
 
 	"ocer-dns/dns-resolver/internal/cache"
 	"ocer-dns/dns-resolver/internal/config"
+	"ocer-dns/dns-resolver/internal/externalthreat"
 	"ocer-dns/dns-resolver/internal/matching"
 	"ocer-dns/dns-resolver/internal/metrics"
 	"ocer-dns/dns-resolver/internal/resolver"
@@ -48,6 +49,9 @@ type Agent struct {
 	metrics         *metrics.Metrics
 	client          *http.Client
 	pCache          *cache.ProfileCache
+
+	// 2026-07-06: 威胁检测客户端
+	threatClient    *externalthreat.Client
 
 	mu             sync.RWMutex
 	cred           Credentials
@@ -221,6 +225,29 @@ func (a *Agent) pullGlobalConfig() {
 	a.mu.Lock()
 	a.globalVersion = gc.Version
 	a.mu.Unlock()
+
+	// 2026-07-06: 初始化威胁检测客户端
+	if gc.ThreatDetection != nil {
+		threatCfg := &externalthreat.Config{
+			GoogleSafebrowsingAPIKey: gc.ThreatDetection.GoogleSafebrowsingAPIKey,
+			WhoisxmlAPIKey:           gc.ThreatDetection.WhoisxmlAPIKey,
+			NewlyRegisteredDays:      gc.ThreatDetection.NewlyRegisteredDays,
+			ParkedDomainListURL:      gc.ThreatDetection.ParkedDomainListURL,
+			AiThreatAPIURL:           gc.ThreatDetection.AiThreatAPIURL,
+			AiThreatAPIKey:           gc.ThreatDetection.AiThreatAPIKey,
+		}
+
+		if a.threatClient == nil {
+			a.threatClient = externalthreat.NewClient(threatCfg)
+			log.Printf("[威胁检测] 已初始化威胁检测客户端")
+		} else {
+			a.threatClient.UpdateConfig(threatCfg)
+			log.Printf("[威胁检测] 已更新威胁检测配置")
+		}
+
+		// 异步同步新注册域名和停放域名列表
+		go a.syncThreatData()
+	}
 
 	log.Printf("[配置] 已应用 version=%d upstreams=%d", gc.Version, len(gc.Upstreams))
 }
@@ -731,4 +758,33 @@ func (a *Agent) LookupDeviceByIP(sourceIP string) (profileID string, deviceID st
 		return "", "", false
 	}
 	return entry.ProfileID, entry.DeviceID, true
+}
+
+// syncThreatData 同步新注册域名和停放域名列表。
+// 2026-07-06: 新增威胁检测数据同步方法。
+func (a *Agent) syncThreatData() {
+	if a.threatClient == nil {
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// 同步新注册域名
+	if err := a.threatClient.SyncNewlyRegisteredDomains(ctx); err != nil {
+		log.Printf("[威胁检测] 同步新注册域名失败: %v", err)
+	}
+
+	// 同步停放域名列表
+	if err := a.threatClient.SyncParkedDomains(ctx); err != nil {
+		log.Printf("[威胁检测] 同步停放域名列表失败: %v", err)
+	}
+}
+
+// GetThreatClient 获取威胁检测客户端，供 Engine 使用。
+// 2026-07-06: 新增威胁检测客户端访问方法。
+func (a *Agent) GetThreatClient() *externalthreat.Client {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.threatClient
 }

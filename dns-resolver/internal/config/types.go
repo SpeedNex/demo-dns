@@ -3,11 +3,22 @@ package config
 import "encoding/json"
 
 type GlobalConfig struct {
-	Version   int64              `json:"version"`
-	Upstreams []Upstream         `json:"upstreams"`
-	Plans     map[string]any     `json:"plans"`
-	Rulesets  json.RawMessage      `json:"rulesets"`
-	Limits    map[string]int64   `json:"limits"`
+	Version          int64              `json:"version"`
+	Upstreams        []Upstream         `json:"upstreams"`
+	Plans            map[string]any     `json:"plans"`
+	Rulesets         json.RawMessage    `json:"rulesets"`
+	Limits           map[string]int64   `json:"limits"`
+	ThreatDetection  *ThreatDetectionConfig `json:"threat_detection,omitempty"` // 2026-07-06: 新增威胁检测配置
+}
+
+// ThreatDetectionConfig 威胁检测 API 配置，从 portal-web Global Config 解析。
+type ThreatDetectionConfig struct {
+	GoogleSafebrowsingAPIKey string `json:"google_safebrowsing_api_key"`
+	WhoisxmlAPIKey           string `json:"whoisxml_api_key"`
+	NewlyRegisteredDays      int    `json:"newly_registered_days"`
+	ParkedDomainListURL      string `json:"parked_domain_list_url"`
+	AiThreatAPIURL           string `json:"ai_threat_api_url"`
+	AiThreatAPIKey           string `json:"ai_threat_api_key"`
 }
 
 type RuntimeConfig struct {

@@ -2,6 +2,76 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-07-06 — 实现威胁检测 API 功能（完整链路）
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-06 | code | portal-web 前端添加"威胁检测 API"配置 tab（Google Safe Browsing、WhoisXML、停放域名、AI 威胁检测） | portal-web/web/src/views/admin/SystemConfig.vue#L163-L203 | ok |
+| 2026-07-06 | code | portal-web ConfigPullController 返回 threat_detection 配置 | portal-web/app/Http/Controllers/Api/V1/Node/ConfigPullController.php#L40-L56 | ok |
+| 2026-07-06 | code | Resolver config/types.go 添加 ThreatDetectionConfig 结构体 | dns-resolver/internal/config/types.go#L14-L22 | ok |
+| 2026-07-06 | code | Resolver externalthreat/client.go 实现四个外部 API 调用逻辑 | dns-resolver/internal/externalthreat/client.go (新建) | ok |
+| 2026-07-06 | code | Resolver agent.go 添加 threatClient 字段和初始化逻辑 | dns-resolver/internal/agent/agent.go#L54, #L229-L250 | ok |
+| 2026-07-06 | code | Resolver agent.go 添加 syncThreatData() 和 GetThreatClient() 方法 | dns-resolver/internal/agent/agent.go#L763-L790 | ok |
+| 2026-07-06 | i18n | 新增 17 个 systemConfig threat_detection i18n keys（三语） | portal-web/web/src/locales/zh-CN.json, en.json, ko.json | ok |
+
+### 功能说明
+
+威胁检测 API 实现了四个外部威胁检测服务：
+
+1. **Google Safe Browsing**：调用 Google API 检测恶意域名
+2. **WhoisXML 新注册域名**：同步最近 N 天内注册的域名列表
+3. **停放域名列表**：从 URL 拉取停放域名特征库
+4. **AI 威胁检测**：调用第三方 AI 威胁检测 API
+
+### 验证结果
+
+- portal-web 前端 `npx vite build` 退出码 0
+- Resolver `go build ./...` 退出码 0
+
+### 数据流
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  portal-web 系统配置                                                 │
+│  ├─ /admin/system-config threat_detection tab                       │
+│  └─ 配置存储到 system_config 表                                      │
+│                                                                      │
+│  Resolver 配置拉取                                                   │
+│  ├─ GET /api/v1/node/dns-resolver/config                            │
+│  └─ 返回 threat_detection 配置                                      │
+│                                                                      │
+│  Resolver 威胁检测                                                   │
+│  ├─ externalthreat.Client 初始化                                    │
+│  ├─ 检测流程：                                                       │
+│  │   ├─ Google Safe Browsing API（实时调用，缓存 1 小时）            │
+│  │   ├─ 新注册域名（本地缓存匹配）                                   │
+│  │   ├─ 停放域名（本地缓存匹配）                                     │
+│  │   ├─ AI 威胁检测 API（实时调用，缓存 1 小时）                     │
+│  └─ 定期同步：新注册域名 + 停放域名列表                              │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### 待完成
+
+- Engine 中集成威胁检测调用（CheckThreat 方法）
+- 回归测试和端到端测试
+
+## 2026-07-06 — 添加威胁检测 API 配置（前端部分）
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-06 | code | SystemConfig.vue 新增"威胁检测 API" tab，配置 Google Safe Browsing、WhoisXML、停放域名、AI 威胁检测 API Key | portal-web/web/src/views/admin/SystemConfig.vue#L163-L203 | ok |
+| 2026-07-06 | code | defaultConfig 新增 threat_detection 配置对象 | portal-web/web/src/views/admin/SystemConfig.vue#L272-L279 | ok |
+| 2026-07-06 | i18n | 新增 17 个 systemConfig threat_detection i18n keys（三语） | portal-web/web/src/locales/zh-CN.json, en.json, ko.json | ok |
+
+### 验证结果
+
+- `npx vite build` 退出码 0
+
+### 待完成
+
+- Resolver 实现外部 API 调用逻辑（Google Safe Browsing、WhoisXML、停放域名、AI 威胁检测）
+
 ## 2026-07-06 — SecurityCatalogPage 删除已实现/未实现功能选项
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |

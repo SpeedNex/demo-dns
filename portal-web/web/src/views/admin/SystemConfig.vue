@@ -159,6 +159,48 @@
                     </el-form>
                 </div>
             </el-tab-pane>
+
+            <!-- 威胁检测 API 配置 -->
+            <el-tab-pane :label="$t('admin.systemConfig.threatDetectionApi') || '威胁检测 API'" name="threat_detection">
+                <div style="max-width:600px">
+                    <el-form label-position="left" label-width="180px">
+                        <!-- Google 安全浏览 -->
+                        <el-divider content-position="left">Google 安全浏览</el-divider>
+                        <el-form-item :label="$t('admin.systemConfig.googleSafebrowsingKey')">
+                            <el-input v-model="config.threat_detection.google_safebrowsing_api_key" type="password" show-password placeholder="API Key" />
+                            <span class="form-hint">{{ $t('admin.systemConfig.googleSafebrowsingHint') }}</span>
+                        </el-form-item>
+
+                        <!-- 新注册域名检测 -->
+                        <el-divider content-position="left">{{ $t('admin.systemConfig.newlyRegisteredDomains') }}</el-divider>
+                        <el-form-item :label="$t('admin.systemConfig.whoisxmlApiKey')">
+                            <el-input v-model="config.threat_detection.whoisxml_api_key" type="password" show-password placeholder="API Key" />
+                            <span class="form-hint">{{ $t('admin.systemConfig.whoisxmlHint') }}</span>
+                        </el-form-item>
+                        <el-form-item :label="$t('admin.systemConfig.newlyRegisteredDays')">
+                            <el-input-number v-model="config.threat_detection.newly_registered_days" :min="1" :max="365" />
+                            <span class="form-hint">{{ $t('admin.systemConfig.newlyRegisteredDaysHint') }}</span>
+                        </el-form-item>
+
+                        <!-- 停放域名检测 -->
+                        <el-divider content-position="left">{{ $t('admin.systemConfig.parkedDomains') }}</el-divider>
+                        <el-form-item :label="$t('admin.systemConfig.parkedDomainListUrl')">
+                            <el-input v-model="config.threat_detection.parked_domain_list_url" placeholder="https://example.com/parked-domains.txt" />
+                            <span class="form-hint">{{ $t('admin.systemConfig.parkedDomainListHint') }}</span>
+                        </el-form-item>
+
+                        <!-- AI 威胁检测 -->
+                        <el-divider content-position="left">{{ $t('admin.systemConfig.aiThreatDetection') }}</el-divider>
+                        <el-form-item :label="$t('admin.systemConfig.aiThreatApiUrl')">
+                            <el-input v-model="config.threat_detection.ai_threat_api_url" placeholder="https://api.example.com/threat/check" />
+                            <span class="form-hint">{{ $t('admin.systemConfig.aiThreatApiHint') }}</span>
+                        </el-form-item>
+                        <el-form-item :label="$t('admin.systemConfig.aiThreatApiKey')">
+                            <el-input v-model="config.threat_detection.ai_threat_api_key" type="password" show-password placeholder="API Key" />
+                        </el-form-item>
+                    </el-form>
+                </div>
+            </el-tab-pane>
         </el-tabs>
 
         <div style="margin-top:24px">
@@ -226,6 +268,14 @@ const defaultConfig = {
         smtp_password: '',
         from_address: 'noreply@example.com',
         from_name: SITE_NAME,
+    },
+    threat_detection: {
+        google_safebrowsing_api_key: '',
+        whoisxml_api_key: '',
+        newly_registered_days: 30,
+        parked_domain_list_url: '',
+        ai_threat_api_url: '',
+        ai_threat_api_key: '',
     },
 }
 

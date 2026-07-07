@@ -37,6 +37,9 @@ final class ConfigPullController
             ],
         ]);
 
+        // 2026-07-06: 添加威胁检测 API 配置
+        $threatDetection = $this->getThreatDetectionConfig();
+
         $data = [
             // 2026-06-30: Global Profile 版本单独维护，target_scope=global
             'version' => (int) (DB::table('profile_versions')
@@ -49,6 +52,7 @@ final class ConfigPullController
                 'max_qps'        => (int) config('dns.max_qps', 1000),
                 'rate_limit_rps' => (int) config('dns.rate_limit_rps', 100),
             ],
+            'threat_detection' => $threatDetection,
         ];
 
         // 2026-06-27: 为 Global Config 补充 checksum 和 generated_at，
@@ -161,5 +165,44 @@ final class ConfigPullController
             'protocol' => 'udp',
             'timeout'  => '1500ms',
         ];
+    }
+
+    /**
+     * 获取威胁检测 API 配置（从 system_configs 表读取）。
+     *
+     * 2026-07-06: 新增威胁检测配置，供 Resolver 调用外部 API 使用。
+     *
+     * @return array<string, mixed>
+     */
+    private function getThreatDetectionConfig(): array
+    {
+        $config = DB::table('system_configs')
+            ->where('config_key', 'threat_detection')
+            ->value('config_value');
+
+        if (!$config) {
+            return [
+                'google_safebrowsing_api_key' => '',
+                'whoisxml_api_key' => '',
+                'newly_registered_days' => 30,
+                'parked_domain_list_url' => '',
+                'ai_threat_api_url' => '',
+                'ai_threat_api_key' => '',
+            ];
+        }
+
+        $decoded = json_decode($config, true);
+        if (!is_array($decoded)) {
+            return [
+                'google_safebrowsing_api_key' => '',
+                'whoisxml_api_key' => '',
+                'newly_registered_days' => 30,
+                'parked_domain_list_url' => '',
+                'ai_threat_api_url' => '',
+                'ai_threat_api_key' => '',
+            ];
+        }
+
+        return $decoded;
     }
 }
