@@ -430,42 +430,34 @@ final class UserWorkspaceService
     public function dnsEndpoints(string $userId, ?string $profileId = null): array
     {
         $profile = $this->resolveProfile($userId, $profileId);
+        // 2026-07-07: 优先使用 dns.ocerlinkdata.com（GeoDNS调度）
         $domain = $this->getDnsDomain();
         // V2.2: 使用 profile_id（6位 hex 字符串）作为 DNS 路由 key
         $shortId = $profile->profile_id;
 
-        // 每个 Profile 稳定绑定一个在线 resolver IPv4，避免一个方案展示多个服务器。
-        // 2026-06-22: 单一事实源 — nodes.status 列已 drop，用 install_status + last_heartbeat_at 阈值即时算"在线"。
-        $threshold = (int) env('NODE_HEARTBEAT_STALE_SECONDS', 90);
-        $onlineIps = DB::table('resolver_nodes')
-            ->where('install_status', 'installed')
-            ->whereNotNull('last_heartbeat_at')
-            ->where('last_heartbeat_at', '>', now()->subSeconds($threshold))
-            ->whereNotNull('public_ipv4')
-            ->where('public_ipv4', '!=', '')
-            ->orderBy('id')
-            ->pluck('public_ipv4')
-            ->map(fn ($ip) => trim($ip))
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
-        $boundIpv4 = null;
-        if ($onlineIps !== []) {
-            $boundIpv4 = $onlineIps[hexdec(substr(hash('crc32b', (string) $shortId), 0, 8)) % count($onlineIps)];
-        }
-
+        // 2026-07-07: GeoDNS调度架构 - 所有协议通过 GeoDNS 域名解析调度
+        // - DoH: https://dns.ocerlinkdata.com/64a8d5 → DNS查询返回Resolver IP → 直连Resolver
+        // - DoT/DoQ: 64a8d5.dns.ocerlinkdata.com → DNS查询返回Resolver IP → 直连Resolver
+        // - 备用：dns1.ocerlinkdata.com（直连Resolver，兼容旧格式）
         $host = sprintf('%s.%s', $shortId, $domain);
+
+        // 2026-07-07: 兼容旧格式 dns1.ocerlinkdata.com（保留直连Resolver能力）
+        $legacyDomain = 'dns1.ocerlinkdata.com';
+        $legacyHost = sprintf('%s.%s', $shortId, $legacyDomain);
 
         return [
             'profile_id' => $shortId,
+            // 新格式：通过GeoDNS调度（推荐）
             'doh' => sprintf('https://%s/%s', $domain, $shortId),
             'dot' => $host,
             'doq' => $host,
             'doq_url' => sprintf('quic://%s:853', $host),
-            'ipv6' => [sprintf('2606:%s:%s::53', substr($shortId, 0, 2), substr($shortId, 2, 4))],
-            'ipv4' => $boundIpv4 ? [$boundIpv4] : [],
-            'server_ip' => $boundIpv4,
+            // 备用：直连Resolver（兼容旧格式）
+            'doh_legacy' => sprintf('https://%s/%s', $legacyDomain, $shortId),
+            'dot_legacy' => $legacyHost,
+            'doq_legacy' => $legacyHost,
+            'server_domain' => $domain,  // GeoDNS域名（推荐）
+            'server_domain_legacy' => $legacyDomain,  // 直连Resolver域名（备用）
         ];
     }
 

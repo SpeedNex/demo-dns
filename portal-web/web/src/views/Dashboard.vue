@@ -43,12 +43,12 @@
                             </div>
                         </div>
 
-                        <!-- DNS Server IP -->
+                        <!-- DNS Server Domain -->
                         <div class="endpoint-row-item">
-                            <div class="endpoint-label">{{ $t('dashboard.endpointIpv4') }}</div>
+                            <div class="endpoint-label">{{ $t('dashboard.serverDomain') }}</div>
                             <div class="code-row">
-                                <div class="code">{{ endpoints.ipv4[0] || endpoints.server_ip || '—' }}</div>
-                                <button class="copy-btn" @click="copyText(endpoints.ipv4[0] || endpoints.server_ip)">{{ $t('dashboard.copy') }}</button>
+                                <div class="code">{{ endpoints.server_domain || '—' }}</div>
+                                <button class="copy-btn" @click="copyText(endpoints.server_domain)">{{ $t('dashboard.copy') }}</button>
                             </div>
                         </div>
 
@@ -244,7 +244,7 @@ const { t } = useI18n()
 const route = useRoute()
 const { currentProfileId } = useCurrentProfile()
 
-const endpoints = ref({ profile_id: '', doh: '', dot: '', doq: '', doq_url: '', ipv4: [], ipv6: [] })
+const endpoints = ref({ profile_id: '', doh: '', dot: '', doq: '', doq_url: '', server_domain: '', server_domain_legacy: '' })
 const topVisited = ref([])
 const topBlocked = ref([])
 const devices = ref([])
@@ -304,13 +304,18 @@ const fetchData = async () => {
         const ep = data.data || {}
         endpoints.value = {
             profile_id: ep.profile_id || '',
+            // 新格式：GeoDNS调度（推荐）
             doh: ep.doh || '',
             dot: ep.dot || '',
             doq: ep.doq || '',
             doq_url: ep.doq_url || '',
-            server_ip: ep.server_ip || '',
-            ipv4: Array.isArray(ep.ipv4) ? ep.ipv4 : [],
-            ipv6: Array.isArray(ep.ipv6) ? ep.ipv6 : [],
+            // 备用：直连Resolver（兼容旧格式）
+            doh_legacy: ep.doh_legacy || '',
+            dot_legacy: ep.dot_legacy || '',
+            doq_legacy: ep.doq_legacy || '',
+            // 域名显示
+            server_domain: ep.server_domain || '',
+            server_domain_legacy: ep.server_domain_legacy || '',
         }
     } catch {
         // Endpoints optional

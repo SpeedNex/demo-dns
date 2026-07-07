@@ -182,6 +182,8 @@
     "endpointIpv6": "IPv6",
     "endpointIpv4": "DNS 服务器（绑定 IP）",
     "endpointIpv4Hint": "绑定 IP 后使用",
+    "serverDomain": "DNS 服务器域名",
+    "serverDomainHint": "GeoDNS 调度域名",
     "deviceIpBinding": "设备 IP 绑定",
     "changeBinding": "更换绑定",
     "changeDeviceIp": "更换设备 IP 绑定",

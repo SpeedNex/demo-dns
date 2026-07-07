@@ -182,6 +182,8 @@
     "endpointIpv6": "IPv6",
     "endpointIpv4": "DNS Servers (Bound IP)",
     "endpointIpv4Hint": "After IP binding",
+    "serverDomain": "DNS Server Domain",
+    "serverDomainHint": "GeoDNS routing domain",
     "deviceIpBinding": "Device IP Binding",
     "changeBinding": "Change Binding",
     "changeDeviceIp": "Change Device IP Binding",

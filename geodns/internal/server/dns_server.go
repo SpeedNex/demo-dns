@@ -186,12 +186,20 @@ func (s *DNSServer) handleRequest(w dns.ResponseWriter, r *dns.Msg) {
 }
 
 // isServedDomain 检查查询的域名是否是我们服务的域名。
+// 2026-07-07: 支持两种匹配模式
+// 1. 精确匹配：dns.ocerlinkdata.com（用于 DoH URL 域名）
+// 2. 子域名匹配：*.dns.ocerlinkdata.com（用于 DoT/DoQ SNI 域名，如 64a8d5.dns.ocerlinkdata.com）
 func (s *DNSServer) isServedDomain(qname string) bool {
 	if s.serveDomain == "" {
 		// 未配置则服务所有域名
 		return true
 	}
-	return strings.EqualFold(qname, s.serveDomain) || strings.HasSuffix(strings.ToLower(qname), "."+strings.ToLower(s.serveDomain))
+	// 精确匹配：dns.ocerlinkdata.com
+	if strings.EqualFold(qname, s.serveDomain) {
+		return true
+	}
+	// 子域名匹配：64a8d5.dns.ocerlinkdata.com
+	return strings.HasSuffix(strings.ToLower(qname), "."+strings.ToLower(s.serveDomain))
 }
 
 // resolveRegion 根据客户端地址解析 region。
