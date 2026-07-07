@@ -2,6 +2,37 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-07-07 — 恢复 MemberCatalogService 安全防护功能条目
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-07 | fix | MemberCatalogService::defaults() 恢复完整功能条目：DNS 重新绑定、IDN 同构、误植域名、DGA、挖矿病毒、动态 DNS、停放域名、特定 TLD、恶意软件、钓鱼攻击 | portal-web/app/Domain/Profile/MemberCatalogService.php#L30-L45 | ok |
+| 2026-07-07 | code | 生产数据库 member_feature_catalogs 更新：恢复 15 条安全防护功能 | portal-web DB system_configs 表 | ok |
+| 2026-07-07 | ops | 生产服务器缓存清理：php artisan cache:clear / config:clear | 103.86.44.194 | ok |
+
+### 恢复原因
+
+用户反馈 `/admin/member-catalogs` 页面的"安全防护" tab 功能被误删，需要恢复完整的安全防护功能列表。
+
+### 恢复内容
+
+恢复 10 条已删除功能：
+- DNS 重新绑定攻击保护 (dns_rebinding)
+- IDN 同构攻击保护 (idn_homograph)
+- 误植域名保护 (typosquatting)
+- 域名生成算法保护 (dga)
+- 挖矿病毒保护 (anti_mining)
+- 拦截动态 DNS (block_dynamic_dns)
+- 拦截停放域名 (block_parked_domains)
+- 拦截特定顶级域名 (block_specific_tld)
+- 拦截恶意软件 (block_malware)
+- 拦截钓鱼攻击 (block_phishing)
+
+### 验证结果
+
+- DB 查询确认 device_models count: 15
+- API 验证 15 条完整功能列表
+
 ## 2026-07-07 — 删除整个 SecurityCatalogPage 页面
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |
