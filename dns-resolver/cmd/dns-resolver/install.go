@@ -540,12 +540,25 @@ func readAPIKeyFile(path string) string {
 // =============================================================================
 
 // provisionCertbot 安装 certbot 并用 standalone 模式申请 Let's Encrypt 证书。
-// 成功后将 dns-resolver 配置更新为 doh:443 + tls 证书路径，并停用 Caddy（如存在）。
+// 成功后将 dns-resolver 配置更新为 doh:443 + tls 证书路径，并停用占用 80 端口的服务。
 // certbot 临时使用 :80 完成 http-01 挑战，完成后立即释放端口。
 // 错误直接返回，调用方负责红字打印并终止 install。
+//
+// 2026-07-08 改进：
+//   - 检查 :80 端口占用，自动停止占用服务（Caddy / Nginx / Apache 等）
+//   - 对比上次申请的域名，域名变更时重新申请证书
+//   - 申请失败时保留旧证书继续用，不阻塞 install
 func provisionCertbot(cfg *config.Config, configPath, domain string) error {
 	if domain == "" {
 		return nil
+	}
+
+	// 0. 检查域名是否与上次申请的相同，如果相同且证书存在则跳过
+	certDir := fmt.Sprintf("/etc/letsencrypt/live/%s", domain)
+	if _, statErr := os.Stat(certDir + "/fullchain.pem"); statErr == nil {
+		fmt.Printf("  ✔ 证书已存在且域名匹配 %s，跳过申请\n", domain)
+		cfg.Listen.DoH = 443
+		return writeConfigAtomic(configPath, cfg)
 	}
 
 	// 1. 安装 certbot
@@ -560,13 +573,23 @@ func provisionCertbot(cfg *config.Config, configPath, domain string) error {
 		fmt.Println("  ✔ certbot installed")
 	}
 
-	// 2. 停止 Caddy（如运行中）释放 :80 / :443
+	// 2. 释放 :80 端口：停止 Caddy / Nginx / Apache 等已知服务
 	if _, sysErr := exec.LookPath("systemctl"); sysErr == nil {
-		_ = exec.Command("systemctl", "stop", "caddy").Run()
-		_ = exec.Command("systemctl", "disable", "caddy").Run()
+		services := []string{"caddy", "nginx", "apache2", "httpd", "lighttpd"}
+		for _, svc := range services {
+			_ = exec.Command("systemctl", "stop", svc).Run()
+		}
+	}
+	// 额外检查：用 ss 查找占用 0.0.0.0:80 的进程并 kill
+	if out, err := exec.Command("sh", "-c", "ss -tlnp | grep ':80 ' | grep -oP 'pid=\\K[0-9]+'").Output(); err == nil {
+		for _, pid := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+			if pid != "" {
+				_ = exec.Command("kill", pid).Run()
+			}
+		}
 	}
 
-	// 3. 申请证书（失败直接返回，不兜底自签名）
+	// 3. 申请证书（失败直接返回，不阻塞 install）
 	fmt.Printf("  certbot: requesting certificate for %s...\n", domain)
 	certCmd := exec.Command("certbot", "certonly", "--standalone",
 		"-d", domain,
@@ -577,21 +600,22 @@ func provisionCertbot(cfg *config.Config, configPath, domain string) error {
 	certCmd.Stdout = os.Stdout
 	certCmd.Stderr = os.Stderr
 	if err := certCmd.Run(); err != nil {
-		return fmt.Errorf("%scertbot 证书申请失败: %v%s\n"+
-			"  ⚠ 请确认域名 %s 的 DNS A 记录已指向本机公网 IP\n"+
-			"  ⚠ 本机 :80 端口未被占用", redFg, err, resetSty, domain)
+		// 申请失败不阻塞 install，打印警告后继续（使用旧证书或自签名兜底）
+		fmt.Printf("%s⚠ certbot 证书申请失败: %v%s\n", redFg, err, resetSty)
+		fmt.Printf("  ⚠ 请确认域名 %s 的 DNS A 记录已指向本机公网 IP\n", domain)
+		fmt.Printf("  ⚠ 本机 :80 端口未被占用\n")
+		fmt.Printf("  ⚠ 节点将继续使用已有证书或自签名兜底\n")
+		return nil
 	}
 
-	// 4. 获取证书路径
-	certDir := fmt.Sprintf("/etc/letsencrypt/live/%s", domain)
+	// 4. 验证证书目录存在
 	if _, statErr := os.Stat(certDir); statErr != nil {
-		return fmt.Errorf("%scertbot 证书目录 %s 未找到%s: %w", redFg, certDir, resetSty, statErr)
+		fmt.Printf("%s⚠ certbot 证书目录 %s 未找到%s: %w\n", redFg, certDir, resetSty, statErr)
+		return nil
 	}
 
 	// 5. 更新配置：doh → 443，不写 tls_cert_file，由 LoadTLSConfig 自动查找
 	cfg.Listen.DoH = 443
-	// 不写入 tls_cert_file/tls_key_file，自动查找逻辑会按 SNI 匹配证书路径
-
 	if err := writeConfigAtomic(configPath, cfg); err != nil {
 		return fmt.Errorf("%s更新配置失败%s: %w", redFg, resetSty, err)
 	}
