@@ -14,29 +14,31 @@ final class AdminRuleItemController
 {
     public function index(Request $request): JsonResponse
     {
-        $query = DB::table('rule_items');
+        $query = DB::table('rule_items')
+            ->leftJoin('rule_sources', 'rule_items.rule_source_id', '=', 'rule_sources.id')
+            ->select('rule_items.*', 'rule_sources.name as rule_source_name');
 
         if ($request->filled('rule_source_id')) {
-            $query->where('rule_source_id', (int) $request->input('rule_source_id'));
+            $query->where('rule_items.rule_source_id', (int) $request->input('rule_source_id'));
         }
 
         if ($category = $request->input('category')) {
-            $query->where('category', $category);
+            $query->where('rule_items.category', $category);
         }
 
         if ($action = $request->input('action')) {
-            $query->where('action', $action);
+            $query->where('rule_items.action', $action);
         }
 
         if ($search = trim((string) $request->input('search', ''))) {
-            $query->where('domain', 'like', "%{$search}%");
+            $query->where('rule_items.domain', 'like', "%{$search}%");
         }
 
         $perPage = (int) $request->input('per_page', 50);
         $page = (int) $request->input('page', 1);
 
         $total = (clone $query)->count();
-        $items = $query->orderByDesc('id')->paginate($perPage, ['*'], 'page', $page)->toArray();
+        $items = $query->orderByDesc('rule_items.id')->paginate($perPage, ['*'], 'page', $page)->toArray();
 
         return response()->json([
             'data' => $items['data'],

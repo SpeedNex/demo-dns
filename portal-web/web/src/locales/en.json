@@ -2056,6 +2056,7 @@
       "batchDelete": "Batch Delete",
       "emptyDesc": "No rule items match the current filters.",
       "domain": "Domain",
+      "source": "Rule Source",
       "category": "Category",
       "action": "Action",
       "tag": "Tag",

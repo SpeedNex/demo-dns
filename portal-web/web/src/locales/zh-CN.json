@@ -2055,6 +2055,7 @@
       "batchDelete": "批量删除",
       "emptyDesc": "暂无匹配的规则条目。",
       "domain": "域名",
+      "source": "规则库",
       "category": "分类",
       "action": "动作",
       "tag": "标签",

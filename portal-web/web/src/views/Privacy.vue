@@ -89,7 +89,7 @@
             </div>
 
             <!-- 第三方跟踪 -->
-            <div class="section">
+            <div v-if="showDisguisedTrackers" class="section">
                 <div class="setting-row">
                     <div class="setting-info">
                         <span class="setting-label">{{ $t('privacy.blocklists.thirdPartyTracking') }}</span>
@@ -100,7 +100,7 @@
             </div>
 
             <!-- 允许营销链接 -->
-            <div class="section">
+            <div v-if="showAllowMarketingLinks" class="section">
                 <div class="setting-row">
                     <div class="setting-info">
                         <span class="setting-label">{{ $t('privacy.special.allowMarketing') }}</span>
@@ -238,6 +238,18 @@ const form = reactive({
 const blocklistLoaded = ref(false)
 
 const availableBlocklists = ref([])
+const privacyCatalogItems = ref([])
+
+// 后台 member-catalogs 可控制隐私开关项的显示
+const showDisguisedTrackers = computed(() => {
+    const item = privacyCatalogItems.value.find(p => p.key === 'disguised_trackers')
+    return !item || item.enabled !== false
+})
+
+const showAllowMarketingLinks = computed(() => {
+    const item = privacyCatalogItems.value.find(p => p.key === 'allow_marketing_links')
+    return !item || item.enabled !== false
+})
 
 const filteredAvailableBlocklists = computed(() => {
     if (!blocklistSearch.value) return availableBlocklists.value
@@ -371,6 +383,7 @@ const fetchData = async () => {
         // 设备多选选项：从后台 member_feature_catalogs.privacy_blocklists[deep_tracking_protection].devices 拉取
         // 仅保留 enabled=true 的项，admin 后台可控制哪些设备对用户可见
         const privacyBlocklists = catalogsRes.data?.data?.privacy_blocklists || []
+        privacyCatalogItems.value = privacyBlocklists
         const deepTrackingItem = privacyBlocklists.find((it) => it.key === 'deep_tracking_protection')
         devices.value = Array.isArray(deepTrackingItem?.devices)
             ? deepTrackingItem.devices.filter((d) => d && d.key && d.enabled !== false)

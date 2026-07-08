@@ -80,7 +80,8 @@
                 </div>
             </template>
             <el-table-column type="selection" width="48" />
-            <el-table-column prop="domain" :label="$t('admin.rules.domain')" min-width="240" show-overflow-tooltip />
+            <el-table-column prop="domain" :label="$t('admin.rules.domain')" min-width="220" show-overflow-tooltip />
+            <el-table-column prop="rule_source_name" :label="$t('admin.rules.source')" min-width="160" show-overflow-tooltip />
             <el-table-column prop="category" :label="$t('admin.rules.category')" width="140">
                 <template #default="{ row }">
                     <el-tag size="small" effect="plain">
