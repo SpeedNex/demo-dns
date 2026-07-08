@@ -1,0 +1,37 @@
+# ============================================================================
+# GeoDNS 节点配置（独立服务，负责 Anycast 边缘调度 + DoH/UDP 接入）
+# ============================================================================
+#
+# 启动：systemctl start geodns
+#
+# 数据来源：
+#   - 节点健康视图（NodeHealthViewService 生成，30 秒 TTL）
+#   - 配置版本号 ↔ resolver 心跳上报/下发通道同步
+#
+# 鉴权：
+#   - 发往 portal-web 的 register / heartbeat / health-view fetch 都用同一个 bearer <api_key>
+#   - portal-web 用 geodns.token 中间件校验该 token
+#   - token 同时写入 portal-web 数据库 dns_geodns_tokens 表中 sha256(api_key) 的 hash
+#   - 2026-07-06 从 resolver 的 node.token 系统拆出来，独立生命周期
+
+node:
+  code: so5ohuw3tf        # 写死 = "节点 ID"，对应 portal-web 数据库 dns_geodns.node_code
+  listen: "0.0.0.0:53"    # 同时监听 TCP+UDP
+  cache_size: 10000
+  default_ttl: 30
+
+health_view:
+  # portal-web 健康视图地址。默认使用域名，若 DNS 解析异常可在环境变量中覆盖：
+  #   GEODNS_HEALTH_VIEW_URL=https://<portal-ip>/api/v1/internal/geodns/health-view
+  # 同时确保 /etc/hosts 中有对应条目，避免 DNS 死锁。
+  url: https://test-dns.ocerlinkdata.com/api/v1/internal/geodns/health-view
+  auth_header: "Authorization"
+  auth_token: "Bearer yqocGak1lHgEdeIUeB2qHtxUoQAJlG5F8j0wUbES"
+  refresh_interval: 15 * second
+  timeout: 5 * second
+  fallback_path: /var/lib/geodns/health_view_cache.json
+
+portal_api:
+  register_url: https://test-dns.ocerlinkdata.com/api/v1/node/geodns/register
+  heartbeat_url: https://test-dns.ocerlinkdata.com/api/v1/node/geodns/heartbeat
+  auth_token: "Bearer yqocGak1lHgEdeIUeB2qHtxUoQAJlG5F8j0wUbES"

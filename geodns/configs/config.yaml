@@ -10,6 +10,11 @@ routing:
     # 2026-07-07: GeoDNS 服务域名（用于 DoH/DoT/DoQ 的 DNS 解析调度）
     # 对此域名的 A/AAAA 查询将返回 Resolver IP
     serve_domain: dns.ocerlinkdata.com
+    # 2026-07-08: GeoIP 数据库路径（MaxMind GeoLite2-Country.mmdb）
+    # 留空则禁用 GeoIP 客户端识别，调度退化为全局模式
+    # 推荐使用 Loyalsoldier 镜像（免 License Key，含中国精确数据）：
+    #   https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-without-asn.mmdb
+    geoip_db_path: /var/lib/geodns/GeoLite2-Country.mmdb
 node:
     token: yqocGak1lHgEdeIUeB2qHtxUoQAJlG5F8j0wUbES
     node_id: phqval3wur

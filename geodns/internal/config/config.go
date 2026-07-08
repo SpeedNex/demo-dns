@@ -24,11 +24,14 @@ type ServerConfig struct {
 
 type RoutingConfig struct {
 	GlobalFallbackRegion string   `yaml:"global_fallback_region"`
-	AllowedRegions      []string `yaml:"allowed_regions,omitempty"`
-	OverloadThreshold   float64  `yaml:"overload_threshold,omitempty"`
+	AllowedRegions       []string `yaml:"allowed_regions,omitempty"`
+	OverloadThreshold    float64  `yaml:"overload_threshold,omitempty"`
 	// ServeDomain 是 GeoDNS 服务的域名，对此域名的 A/AAAA 查询返回 resolver IP。
 	// 为空则响应所有域名。
-	ServeDomain         string   `yaml:"serve_domain,omitempty"`
+	ServeDomain string `yaml:"serve_domain,omitempty"`
+	// GeoIPDBPath 是 MaxMind GeoLite2-Country.mmdb 文件路径。
+	// 留空则禁用 GeoIP 识别，regionFromIP() 永远返回 global。
+	GeoIPDBPath string `yaml:"geoip_db_path,omitempty"`
 }
 
 // NodeConfig 节点鉴权配置。
@@ -128,6 +131,12 @@ func (c *Config) DNSListenAddr() string {
 // 为空则响应所有域名。
 func (c *Config) ServeDomain() string {
 	return c.Routing.ServeDomain
+}
+
+// GeoIPDBPath 返回 GeoIP 数据库文件路径。
+// 留空则禁用 GeoIP 客户端识别，调度退化为全局模式。
+func (c *Config) GeoIPDBPath() string {
+	return c.Routing.GeoIPDBPath
 }
 
 func Load(path string) (*Config, error) {

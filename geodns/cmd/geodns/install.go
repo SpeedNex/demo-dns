@@ -43,6 +43,8 @@ type installOptions struct {
 	Start bool
 	// 2026-06-22: 自定义 systemd unit 路径,留空使用默认 /etc/systemd/system/geodns.service
 	SystemdUnit string
+	// 2026-07-08: GeoIP 数据库路径（MaxMind GeoLite2-Country.mmdb）
+	GeoIPDBPath string
 }
 
 // runInstall 实现 `geodns install` 子命令：
@@ -78,6 +80,8 @@ func runInstall(args []string) error {
 	startFlag := fs.Bool("start", false, "After install, automatically start the node (systemd preferred, fallback to nohup)")
 	noStartFlag := fs.Bool("no-start", false, "Disable auto-start even if --start is set (alias for safety in scripts)")
 	fs.StringVar(&opts.SystemdUnit, "systemd-unit", "", "systemd unit file path (default: /etc/systemd/system/geodns.service)")
+	// 2026-07-08 NEW: --geoip-db-path 指定 MaxMind GeoLite2-Country.mmdb 路径
+	fs.StringVar(&opts.GeoIPDBPath, "geoip-db-path", "/var/lib/geodns/GeoLite2-Country.mmdb", "Path to MaxMind GeoLite2-Country.mmdb (empty to disable GeoIP)")
 
 	if err := fs.Parse(args); err != nil {
 		return err
@@ -364,6 +368,7 @@ func buildGeodnsConfig(opts *installOptions) *config.Config {
 		},
 		Routing: config.RoutingConfig{
 			GlobalFallbackRegion: "global",
+			GeoIPDBPath:          opts.GeoIPDBPath,
 		},
 		Node: config.NodeConfig{
 			Token:  opts.Token,

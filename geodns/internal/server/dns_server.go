@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/miekg/dns"
+	"github.com/oschwald/geoip2-golang"
 
 	"ocer-dns/geodns/internal/config"
 	"ocer-dns/geodns/internal/healthview"
@@ -28,16 +29,32 @@ type DNSServer struct {
 	// 对此域名的 A/AAAA 查询将返回 resolver IP
 	serveDomain string
 
+	// geoDB 是 MaxMind GeoIP2 数据库 Reader，用于根据客户端 IP 识别国家/地区。
+	// 留空则禁用 GeoIP 识别，调度退化为全局模式。
+	geoDB *geoip2.Reader
+
 	server   *dns.Server
 	quitChan chan struct{}
 }
 
 // NewDNSServer 创建一个新的 DNS 服务器实例。
 func NewDNSServer(cfg *config.Config, r *router.Router) *DNSServer {
+	var geoDB *geoip2.Reader
+	if cfg.GeoIPDBPath() != "" {
+		db, err := geoip2.Open(cfg.GeoIPDBPath())
+		if err != nil {
+			log.Printf("geodns/dns: failed to open GeoIP database %s: %v (GeoIP disabled)", cfg.GeoIPDBPath(), err)
+		} else {
+			log.Printf("geodns/dns: GeoIP database loaded: %s", cfg.GeoIPDBPath())
+			geoDB = db
+		}
+	}
+
 	return &DNSServer{
 		cfg:         cfg,
 		router:      r,
 		serveDomain: cfg.ServeDomain(),
+		geoDB:       geoDB,
 		quitChan:    make(chan struct{}),
 	}
 }
@@ -222,54 +239,44 @@ func (s *DNSServer) resolveRegion(clientAddr string, r *dns.Msg) string {
 	return s.regionFromIP(host)
 }
 
-// regionFromIP 简单的 IP 到 region 映射。
-// 生产环境应使用 MaxMind GeoIP2 等地理库。
+// regionFromIP 根据客户端 IP 解析 region。
+// 使用 MaxMind GeoIP2 数据库识别国家 ISO 代码（如 CN/JP/US），
+// 与 portal-web resolver_nodes.region 字段直接对齐。
+// 未配置 GeoIP 数据库时返回 "global"。
 func (s *DNSServer) regionFromIP(ipStr string) string {
 	ip := net.ParseIP(ipStr)
 	if ip == nil {
-		return "global"
+		return s.cfg.GlobalFallback()
 	}
 
-	// 私有IP → 根据配置返回默认region
+	// 私有IP → 根据配置返回默认 region
 	if ip.IsPrivate() || ip.IsLoopback() {
 		return s.cfg.GlobalFallback()
 	}
 
-	// 简化的 IP 段映射（生产环境应使用 GeoIP 库）
-	// 这里使用 healthview 中已有的节点 region 信息做简单匹配
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	if len(s.view.Nodes) == 0 {
-		return "global"
+	// 未配置 GeoIP 数据库 → 退化到全局模式
+	if s.geoDB == nil {
+		return s.cfg.GlobalFallback()
 	}
 
-	// TODO: 实现基于 GeoIP 的精确匹配
-	// 暂时返回第一个节点的 region（简化实现）
-	return "global"
+	// 查询 GeoIP2 数据库，获取国家 ISO 代码
+	record, err := s.geoDB.Country(ip)
+	if err != nil {
+		log.Printf("geodns/dns: GeoIP lookup failed for %s: %v", ipStr, err)
+		return s.cfg.GlobalFallback()
+	}
+
+	isoCode := record.Country.IsoCode
+	if isoCode == "" {
+		return s.cfg.GlobalFallback()
+	}
+
+	return isoCode
 }
 
-// RegionFromHealthView 根据健康视图中的节点 region 分布推断客户端 region。
-// 这是一个简化实现，生产环境建议使用GeoIP库。
-func (s *DNSServer) RegionFromHealthView() string {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	regionCount := make(map[string]int)
-	for _, node := range s.view.Nodes {
-		if node.Status == "online" && node.Region != "" {
-			regionCount[node.Region]++
-		}
+// Close 释放 GeoIP 数据库资源。
+func (s *DNSServer) Close() {
+	if s.geoDB != nil {
+		s.geoDB.Close()
 	}
-
-	// 返回节点最多的 region
-	bestRegion := "global"
-	bestCount := 0
-	for region, count := range regionCount {
-		if count > bestCount {
-			bestCount = count
-			bestRegion = region
-		}
-	}
-	return bestRegion
 }
