@@ -325,8 +325,8 @@ onMounted(async () => {
         const catalogResponse = await client.get('/user/catalogs')
         const catalogs = catalogResponse.data?.data || {}
         if (Array.isArray(catalogs.parental_presets) && catalogs.parental_presets.length > 0) {
-            // 提取安全搜索项 (switch 类型)
-            const safeItems = catalogs.parental_presets.filter((p) => p.field_type === 'switch')
+            // 提取 enabled 的安全搜索项 (switch 类型)
+            const safeItems = catalogs.parental_presets.filter((p) => p.field_type === 'switch' && p.enabled !== false)
             safeSearchItems.value = safeItems.map((p) => ({
                 key: safeSearchFormKeyMap[p.key] || p.key,
                 label: p.name,
