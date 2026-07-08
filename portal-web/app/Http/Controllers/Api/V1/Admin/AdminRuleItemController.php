@@ -16,7 +16,8 @@ final class AdminRuleItemController
     {
         $query = DB::table('rule_items')
             ->leftJoin('rule_sources', 'rule_items.rule_source_id', '=', 'rule_sources.id')
-            ->select('rule_items.*', 'rule_sources.name as rule_source_name');
+            ->leftJoin('rule_categories', 'rule_items.category', '=', 'rule_categories.code')
+            ->select('rule_items.*', 'rule_sources.name as rule_source_name', 'rule_categories.name as category_name');
 
         if ($request->filled('rule_source_id')) {
             $query->where('rule_items.rule_source_id', (int) $request->input('rule_source_id'));

@@ -85,7 +85,7 @@
             <el-table-column prop="category" :label="$t('admin.rules.category')" width="140">
                 <template #default="{ row }">
                     <el-tag size="small" effect="plain">
-                        {{ $t(`admin.rules.cat${row.category ? row.category.charAt(0).toUpperCase() + row.category.slice(1).replace(/_([a-z])/g, (_, c) => c.toUpperCase()) : 'Default'}`, row.category || '-') }}
+                        {{ row.category_name || $t(`admin.rules.cat${row.category ? row.category.charAt(0).toUpperCase() + row.category.slice(1).replace(/_([a-z])/g, (_, c) => c.toUpperCase()) : 'Default'}`, row.category || '-') }}
                     </el-tag>
                 </template>
             </el-table-column>
