@@ -140,6 +140,14 @@ func (s *DNSServer) handleRequest(w dns.ResponseWriter, r *dns.Msg) {
 	qname := strings.TrimSuffix(question.Name, ".")
 	qtype := question.Qtype
 
+	// 对 CAA 查询返回空 NOERROR，避免 Let's Encrypt 等 CA 视为 SERVFAIL
+	// CAA 未配置时表示不限制签发 CA，符合默认预期
+	if qtype == dns.TypeCAA {
+		m.SetRcode(r, dns.RcodeSuccess)
+		w.WriteMsg(m)
+		return
+	}
+
 	// 只处理 A 和 AAAA 查询
 	if qtype != dns.TypeA && qtype != dns.TypeAAAA {
 		m.SetRcode(r, dns.RcodeNotImplemented)
