@@ -445,6 +445,15 @@ final class UserWorkspaceService
         $legacyDomain = 'dns1.ocerlinkdata.com';
         $legacyHost = sprintf('%s.%s', $shortId, $legacyDomain);
 
+        // 2026-07-08: 返回在线 GeoDNS 节点 IP，用于传统 DNS 服务器配置
+        $geoDnsNodes = DB::table('geodns')
+            ->whereIn('install_status', ['installed', 'online'])
+            ->whereNotNull('public_ipv4')
+            ->get(['public_ipv4', 'public_ipv6']);
+
+        $ipv4 = $geoDnsNodes->pluck('public_ipv4')->filter()->unique()->values()->all();
+        $ipv6 = $geoDnsNodes->pluck('public_ipv6')->filter()->unique()->values()->all();
+
         return [
             'profile_id' => $shortId,
             // 新格式：通过GeoDNS调度（推荐）
@@ -458,6 +467,8 @@ final class UserWorkspaceService
             'doq_legacy' => $legacyHost,
             'server_domain' => $domain,  // GeoDNS域名（推荐）
             'server_domain_legacy' => $legacyDomain,  // 直连Resolver域名（备用）
+            'ipv4' => $ipv4,  // GeoDNS IPv4（传统 DNS 服务器）
+            'ipv6' => $ipv6,  // GeoDNS IPv6（传统 DNS 服务器）
         ];
     }
 
