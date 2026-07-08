@@ -214,6 +214,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 	var decision *matching.Decision
 	firstSeen := true
 	clientAddr := remoteIPFromAddr(r.RemoteAddr).String()
+	logClientIP := clientAddr
 	var deviceUID string
 	var deviceType string
 
@@ -294,26 +295,32 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 			}
 		}
 
-		// 从 Profile 读取 safe_search 配置
+		// 从 Profile 读取 parental / privacy 配置
+		parentalEnabled := false
 		safeSearchEnabled := false
 		youtubeRestrictedEnabled := false
 		blockBypassEnabled := false
+		timeLimits := map[string]any{}
 		if pc != nil && pc.Parental != nil {
-			if v, ok := pc.Parental["safe_search"]; ok {
-				if b, ok := v.(bool); ok {
-					safeSearchEnabled = b
-				}
+			parentalEnabled = resolver.ToBool(pc.Parental["enabled"])
+			safeSearchEnabled = resolver.ToBool(pc.Parental["safe_search"])
+			youtubeRestrictedEnabled = resolver.ToBool(pc.Parental["youtube_restricted_mode"])
+			blockBypassEnabled = resolver.ToBool(pc.Parental["block_bypass"])
+			if tl, ok := pc.Parental["time_limits"].(map[string]any); ok {
+				timeLimits = tl
 			}
-			if v, ok := pc.Parental["youtube_restricted_mode"]; ok {
-				if b, ok := v.(bool); ok {
-					youtubeRestrictedEnabled = b
-				}
-			}
-			if v, ok := pc.Parental["block_bypass"]; ok {
-				if b, ok := v.(bool); ok {
-					blockBypassEnabled = b
-				}
-			}
+		}
+
+		anonymizeClientIP := false
+		deepTrackingDevices := []string{}
+		if pc != nil && pc.Privacy != nil {
+			anonymizeClientIP = resolver.ToBool(pc.Privacy["anonymize_client_ip"])
+			deepTrackingDevices = resolver.ToStringSlice(pc.Privacy["deep_tracking_devices"])
+		}
+
+		// 日志匿名化
+		if anonymizeClientIP {
+			logClientIP = resolver.AnonymizeIP(clientAddr)
 		}
 
 		// 从 Profile 读取 block_response 模式
@@ -327,9 +334,13 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 			ProfileUID:                profileUID,
 			DeviceUID:                 deviceUID,
 			DeviceType:                deviceType,
+			ParentalEnabled:           parentalEnabled,
 			SafeSearchEnabled:         safeSearchEnabled,
 			YouTubeRestrictedEnabled:  youtubeRestrictedEnabled,
 			BlockBypassEnabled:        blockBypassEnabled,
+			TimeLimits:                timeLimits,
+			AnonymizeClientIP:         anonymizeClientIP,
+			DeepTrackingDevices:       deepTrackingDevices,
 			ClientIP:                  remoteIPFromAddr(r.RemoteAddr),
 			Domain:                    domain,
 			QueryType:                 queryType,
@@ -367,7 +378,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 					Action:         "BLOCK",
 					Reason:         decision.Reason,
 					Category:       decision.Category,
-					ClientIP:       clientAddr,
+					ClientIP:       logClientIP,
 					QueryType:      queryType,
 					ResponseCode:   reply.Rcode,
 					ResponseTimeMs: elapsed,
@@ -416,7 +427,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 					Action:         "REWRITE",
 					Reason:         decision.Reason,
 					Category:       decision.Category,
-					ClientIP:       clientAddr,
+					ClientIP:       logClientIP,
 					QueryType:      queryType,
 					ResponseCode:   reply.Rcode,
 					ResponseTimeMs: elapsed,
@@ -462,7 +473,7 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 			Domain:         domain,
 			Action:         "ALLOW",
 			Reason:         "default",
-			ClientIP:       clientAddr,
+			ClientIP:       logClientIP,
 			QueryType:      queryType,
 			ResponseCode:   reply.Rcode,
 			ResponseTimeMs: elapsed,

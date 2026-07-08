@@ -161,12 +161,17 @@ func (s *Server) handleStream(stream *quic.Stream, remoteAddr string, profileUID
 	}
 
 	// ② 从 ProfileCache 读取 Profile 元数据，覆盖硬编码默认值
+	parentalEnabled := false
+	timeLimits := map[string]any{}
+	anonymizeClientIP := false
+	deepTrackingDevices := []string{}
 	if s.profileConfigLoader != nil {
 		if pc, err := s.profileConfigLoader(profileID); err == nil && pc != nil {
 			if pc.BlockResponse != "" {
 				blockResponse = pc.BlockResponse
 			}
 			if pc.Parental != nil {
+				parentalEnabled = resolver.ToBool(pc.Parental["enabled"])
 				if v, ok := pc.Parental["safe_search"].(bool); ok {
 					safeSearchEnabled = v
 				}
@@ -176,6 +181,13 @@ func (s *Server) handleStream(stream *quic.Stream, remoteAddr string, profileUID
 				if v, ok := pc.Parental["block_bypass"].(bool); ok {
 					blockBypassEnabled = v
 				}
+				if tl, ok := pc.Parental["time_limits"].(map[string]any); ok {
+					timeLimits = tl
+				}
+			}
+			if pc.Privacy != nil {
+				anonymizeClientIP = resolver.ToBool(pc.Privacy["anonymize_client_ip"])
+				deepTrackingDevices = resolver.ToStringSlice(pc.Privacy["deep_tracking_devices"])
 			}
 			if deviceID == "" && len(pc.Devices) > 0 {
 				srcIP := remoteHost(remoteAddr)
@@ -200,7 +212,7 @@ func (s *Server) handleStream(stream *quic.Stream, remoteAddr string, profileUID
 	}
 
 	// ③ 共享 pipeline
-	result := s.handler.Handle(req, remoteAddr, "doq", profileID, deviceID, "", blockResponse, safeSearchEnabled, youtubeRestrictedEnabled, blockBypassEnabled)
+	result := s.handler.Handle(req, remoteAddr, "doq", profileID, deviceID, "", blockResponse, safeSearchEnabled, youtubeRestrictedEnabled, blockBypassEnabled, parentalEnabled, timeLimits, anonymizeClientIP, deepTrackingDevices)
 
 	// ④ 写出响应
 	s.writeStream(stream, result.Reply)

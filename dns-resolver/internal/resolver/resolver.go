@@ -135,14 +135,26 @@ func (prl *ProfileResolutionLayer) GetDNSRebindConfig(profileID string) (enabled
 }
 
 // GetDisguisedTrackersConfig returns whether disguised tracker protection is enabled for a profile.
-func (prl *ProfileResolutionLayer) GetDisguisedTrackersConfig(profileID string) bool {
+// 当 deepTrackingDevices 非空时，仅在 deviceType 属于指定设备类型时才启用深度跟踪保护。
+func (prl *ProfileResolutionLayer) GetDisguisedTrackersConfig(profileID string, deviceType string, deepTrackingDevices []string) bool {
 	prl.mu.RLock()
 	defer prl.mu.RUnlock()
 	ps, ok := prl.security[profileID]
 	if !ok {
 		return false
 	}
-	return ps.BlockDisguisedTrackers
+	if !ps.BlockDisguisedTrackers {
+		return false
+	}
+	if len(deepTrackingDevices) == 0 {
+		return true
+	}
+	for _, dt := range deepTrackingDevices {
+		if strings.EqualFold(strings.TrimSpace(dt), deviceType) {
+			return true
+		}
+	}
+	return false
 }
 
 // Resolve runs the full resolution pipeline for a DNS query.
@@ -272,7 +284,9 @@ func (prl *ProfileResolutionLayer) Resolve(ctx *ResolutionContext) *matching.Dec
 }
 
 // Helper functions for type conversion
-func toBool(v any) bool {
+
+// ToBool converts a value to bool.
+func ToBool(v any) bool {
 	if v == nil {
 		return false
 	}
@@ -283,6 +297,35 @@ func toBool(v any) bool {
 		return val == "true" || val == "1"
 	}
 	return false
+}
+
+// ToStringSlice converts a value to a string slice.
+func ToStringSlice(v any) []string {
+	if v == nil {
+		return nil
+	}
+	switch val := v.(type) {
+	case []string:
+		return val
+	case string:
+		if val == "" {
+			return nil
+		}
+		return []string{val}
+	case []any:
+		out := make([]string, 0, len(val))
+		for _, item := range val {
+			if s, ok := item.(string); ok && s != "" {
+				out = append(out, s)
+			}
+		}
+		return out
+	}
+	return nil
+}
+
+func toBool(v any) bool {
+	return ToBool(v)
 }
 
 func toFloatOk(v any) (float64, bool) {
@@ -392,6 +435,87 @@ func ExtractDeviceFromHeaders(headers map[string]string) (deviceUID string, devi
 	deviceUID = headers["X-Device-ID"]
 	deviceType = headers["X-Device-Type"]
 	return
+}
+
+// withinTimeLimits 检查当前时间是否在家长控制允许的时间段内。
+// 支持 weekday_start/weekday_end 和 weekend_start/weekend_end。
+// 未配置或全天开放时返回 true。
+func withinTimeLimits(limits map[string]any) bool {
+	if len(limits) == 0 {
+		return true
+	}
+
+	now := time.Now()
+	weekday := now.Weekday()
+	isWeekend := weekday == time.Saturday || weekday == time.Sunday
+
+	startKey := "weekday_start"
+	endKey := "weekday_end"
+	if isWeekend {
+		startKey = "weekend_start"
+		endKey = "weekend_end"
+	}
+
+	startRaw, hasStart := limits[startKey]
+	endRaw, hasEnd := limits[endKey]
+	if !hasStart || !hasEnd {
+		return true
+	}
+
+	startStr := toString(startRaw)
+	endStr := toString(endRaw)
+	if startStr == "" || endStr == "" {
+		return true
+	}
+
+	start, err1 := time.Parse("15:04", startStr)
+	end, err2 := time.Parse("15:04", endStr)
+	if err1 != nil || err2 != nil {
+		return true
+	}
+
+	currentMinutes := now.Hour()*60 + now.Minute()
+	startMinutes := start.Hour()*60 + start.Minute()
+	endMinutes := end.Hour()*60 + end.Minute()
+
+	// 跨天情况（例如 22:00-06:00）
+	if endMinutes < startMinutes {
+		return currentMinutes >= startMinutes || currentMinutes <= endMinutes
+	}
+
+	return currentMinutes >= startMinutes && currentMinutes <= endMinutes
+}
+
+func toString(v any) string {
+	if v == nil {
+		return ""
+	}
+	switch val := v.(type) {
+	case string:
+		return val
+	case []byte:
+		return string(val)
+	}
+	return ""
+}
+
+// AnonymizeIP 返回匿名化后的 IP：IPv4 保留前 3 段（/24），IPv6 保留前 4 段（/64）。
+func AnonymizeIP(ip string) string {
+	parsed := net.ParseIP(ip)
+	if parsed == nil {
+		return ip
+	}
+
+	if parsed.To4() != nil {
+		parsed = parsed.To4()
+		parsed[3] = 0
+		return parsed.String() + "/24"
+	}
+
+	for i := 8; i < 16; i++ {
+		parsed[i] = 0
+	}
+	return parsed.String() + "/64"
 }
 
 // ExtractProfileFromSNI extracts the profile UID from a TLS SNI.

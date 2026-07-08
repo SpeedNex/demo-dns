@@ -85,6 +85,10 @@ func (h *Handler) Handle(
 	safeSearchEnabled bool,
 	youtubeRestrictedEnabled bool,
 	blockBypassEnabled bool,
+	parentalEnabled bool,
+	timeLimits map[string]any,
+	anonymizeClientIP bool,
+	deepTrackingDevices []string,
 ) *Result {
 	h.metrics.IncQueries()
 
@@ -111,6 +115,12 @@ func (h *Handler) Handle(
 	startedAt := time.Now()
 	clientIP := remoteHost(clientAddr)
 
+	// 日志匿名化：开启时只保留 /24 前缀（IPv4）或 /64 前缀（IPv6）
+	logClientIP := clientIP
+	if anonymizeClientIP {
+		logClientIP = AnonymizeIP(clientIP)
+	}
+
 	// ① 去重（best-effort，不影响正确性）
 	dedupKey := dedupFingerprint(clientIP, domain, queryType)
 	dedupCtx, dedupCancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
@@ -125,9 +135,14 @@ func (h *Handler) Handle(
 	decision := h.resolutionLayer.Resolve(&ResolutionContext{
 		ProfileUID:                profileID,
 		DeviceUID:                 deviceID,
+		DeviceType:                deviceType,
+		ParentalEnabled:           parentalEnabled,
 		SafeSearchEnabled:         safeSearchEnabled,
 		YouTubeRestrictedEnabled:  youtubeRestrictedEnabled,
 		BlockBypassEnabled:        blockBypassEnabled,
+		TimeLimits:                timeLimits,
+		AnonymizeClientIP:         anonymizeClientIP,
+		DeepTrackingDevices:       deepTrackingDevices,
 		ClientIP:                  net.ParseIP(clientIP),
 		Domain:                    domain,
 		QueryType:                 queryType,
@@ -139,7 +154,7 @@ func (h *Handler) Handle(
 		h.metrics.IncBlocked()
 		blockresponse.ApplyTo(reply, question, blockResponse)
 		if firstSeen {
-			h.appendLog(profileID, deviceID, deviceType, domain, "BLOCK", decision.Reason, decision.Category, clientIP, queryType, protocol, reply.Rcode, startedAt)
+			h.appendLog(profileID, deviceID, deviceType, domain, "BLOCK", decision.Reason, decision.Category, logClientIP, queryType, protocol, reply.Rcode, startedAt)
 		}
 		return &Result{
 			Reply: reply, Action: "BLOCK", Reason: decision.Reason, Category: decision.Category,
@@ -157,7 +172,7 @@ func (h *Handler) Handle(
 		}
 		h.metrics.IncAllowed()
 		if firstSeen {
-			h.appendLog(profileID, deviceID, deviceType, domain, "REWRITE", decision.Reason, decision.Category, clientIP, queryType, protocol, reply.Rcode, startedAt)
+			h.appendLog(profileID, deviceID, deviceType, domain, "REWRITE", decision.Reason, decision.Category, logClientIP, queryType, protocol, reply.Rcode, startedAt)
 		}
 		return &Result{
 			Reply: reply, Action: "REWRITE", Reason: decision.Reason, Category: decision.Category,
@@ -170,7 +185,7 @@ func (h *Handler) Handle(
 	if cached, ok := h.dnsCache.Get(context.Background(), cacheKey); ok {
 		h.metrics.IncAllowed()
 		if firstSeen {
-			h.appendLog(profileID, deviceID, deviceType, domain, "ALLOW", "cache_hit", "", clientIP, queryType, protocol, cached.Rcode, startedAt)
+			h.appendLog(profileID, deviceID, deviceType, domain, "ALLOW", "cache_hit", "", logClientIP, queryType, protocol, cached.Rcode, startedAt)
 		}
 		return &Result{
 			Reply: cached, Action: "ALLOW", Reason: "cache_hit",
@@ -187,7 +202,7 @@ func (h *Handler) Handle(
 		reply.Rcode = dns.RcodeServerFailure
 		h.metrics.IncErrors()
 		if firstSeen {
-			h.appendLog(profileID, deviceID, deviceType, domain, "ERROR", "upstream_timeout", "", clientIP, queryType, protocol, reply.Rcode, startedAt)
+			h.appendLog(profileID, deviceID, deviceType, domain, "ERROR", "upstream_timeout", "", logClientIP, queryType, protocol, reply.Rcode, startedAt)
 		}
 		return &Result{
 			Reply: reply, Action: "ERROR", Reason: "upstream_timeout",
@@ -207,7 +222,7 @@ func (h *Handler) Handle(
 					h.metrics.IncBlocked()
 					blockresponse.ApplyTo(reply, question, blockResponse)
 					if firstSeen {
-						h.appendLog(profileID, deviceID, deviceType, domain, "BLOCK", "dns_rebind", "security", clientIP, queryType, protocol, reply.Rcode, startedAt)
+						h.appendLog(profileID, deviceID, deviceType, domain, "BLOCK", "dns_rebind", "security", logClientIP, queryType, protocol, reply.Rcode, startedAt)
 					}
 					log.Printf("[安全] profile=%s domain=%s 类型=dns_rebind ip=%s 原因=%s",
 						profileID, domain, res.IP.String(), res.Reason)
@@ -223,7 +238,7 @@ func (h *Handler) Handle(
 					h.metrics.IncBlocked()
 					blockresponse.ApplyTo(reply, question, blockResponse)
 					if firstSeen {
-						h.appendLog(profileID, deviceID, deviceType, domain, "BLOCK", "dns_rebind", "security", clientIP, queryType, protocol, reply.Rcode, startedAt)
+						h.appendLog(profileID, deviceID, deviceType, domain, "BLOCK", "dns_rebind", "security", logClientIP, queryType, protocol, reply.Rcode, startedAt)
 					}
 					log.Printf("[安全] profile=%s domain=%s 类型=dns_rebind ip=%s 原因=%s",
 						profileID, domain, res.IP.String(), res.Reason)
@@ -238,7 +253,7 @@ func (h *Handler) Handle(
 
 	// ⑥ CNAME Tracker 后置检测：检查上游响应中的 CNAME 记录是否指向已知跟踪服务。
 	// 对应 UI 中的"拦截伪装过的第三方跟踪器"功能。
-	cnameTrackerEnabled := h.resolutionLayer.GetDisguisedTrackersConfig(profileID)
+	cnameTrackerEnabled := h.resolutionLayer.GetDisguisedTrackersConfig(profileID, deviceType, deepTrackingDevices)
 	if cnameTrackerEnabled && upstreamReply != nil {
 		for _, rr := range upstreamReply.Answer {
 			if cname, ok := rr.(*dns.CNAME); ok {
@@ -247,7 +262,7 @@ func (h *Handler) Handle(
 					h.metrics.IncBlocked()
 					blockresponse.ApplyTo(reply, question, blockResponse)
 					if firstSeen {
-						h.appendLog(profileID, deviceID, deviceType, domain, "BLOCK", "cname_tracker", "privacy", clientIP, queryType, protocol, reply.Rcode, startedAt)
+						h.appendLog(profileID, deviceID, deviceType, domain, "BLOCK", "cname_tracker", "privacy", logClientIP, queryType, protocol, reply.Rcode, startedAt)
 					}
 					log.Printf("[安全] profile=%s domain=%s 类型=cname_tracker cname=%s provider=%s",
 						profileID, domain, res.CNAME, res.Provider)
@@ -262,7 +277,7 @@ func (h *Handler) Handle(
 
 	h.metrics.IncAllowed()
 	if firstSeen {
-		h.appendLog(profileID, deviceID, deviceType, domain, "ALLOW", "default", "", clientIP, queryType, protocol, upstreamReply.Rcode, startedAt)
+		h.appendLog(profileID, deviceID, deviceType, domain, "ALLOW", "default", "", logClientIP, queryType, protocol, upstreamReply.Rcode, startedAt)
 	}
 	return &Result{
 		Reply: upstreamReply, Action: "ALLOW", Reason: "default",

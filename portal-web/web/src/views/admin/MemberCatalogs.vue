@@ -37,7 +37,7 @@
                     <el-table-column :label="$t('common.actions')" width="140" fixed="right">
                         <template #default="{ row, $index }">
                             <el-button link size="small" @click="openEditDialog('device_models', $index)"><el-icon><Edit /></el-icon></el-button>
-                            <el-button v-if="!row.system" link size="small" type="danger" @click="removeRow('device_models', $index)"><el-icon><Delete /></el-icon></el-button>
+                            <el-button v-if="!row.system" link size="small" type="danger" @click="removeRow('device_models', row)"><el-icon><Delete /></el-icon></el-button>
                         </template>
                     </el-table-column>
                 </el-table>
@@ -76,7 +76,7 @@
                     <el-table-column :label="$t('common.actions')" width="140" fixed="right">
                         <template #default="{ row, $index }">
                             <el-button link size="small" @click="openEditDialog('privacy_blocklists', $index)"><el-icon><Edit /></el-icon></el-button>
-                            <el-button v-if="!row.system" link size="small" type="danger" @click="removeRow('privacy_blocklists', $index)"><el-icon><Delete /></el-icon></el-button>
+                            <el-button v-if="!row.system" link size="small" type="danger" @click="removeRow('privacy_blocklists', row)"><el-icon><Delete /></el-icon></el-button>
                         </template>
                     </el-table-column>
                 </el-table>
@@ -117,7 +117,7 @@
                         <el-table-column :label="$t('common.actions')" width="140" fixed="right">
                             <template #default="{ row, $index }">
                                 <el-button link size="small" @click="openEditDialog('parental_presets', $index)"><el-icon><Edit /></el-icon></el-button>
-                                <el-button v-if="!row.system" link size="small" type="danger" @click="removeRow('parental_presets', $index)"><el-icon><Delete /></el-icon></el-button>
+                                <el-button v-if="!row.system" link size="small" type="danger" @click="removeRow('parental_presets', row)"><el-icon><Delete /></el-icon></el-button>
                             </template>
                         </el-table-column>
                     </el-table>
@@ -498,8 +498,19 @@ const fetchCatalogs = async () => {
     }
 }
 
-const removeRow = (key, index) => {
-    catalogs[key].splice(index, 1)
+const removeRow = async (key, row) => {
+    if (!row || !row.key) return
+    const realIndex = catalogs[key].findIndex((item) => item.key === row.key)
+    if (realIndex === -1) return
+
+    const removed = catalogs[key].splice(realIndex, 1)[0]
+    try {
+        await client.put('/admin/member-catalogs', catalogs)
+        ElMessage.success(t('admin.memberCatalogs.saved'))
+    } catch (error) {
+        catalogs[key].splice(realIndex, 0, removed)
+        ElMessage.error(error.response?.data?.message || t('admin.memberCatalogs.saveFailed'))
+    }
 }
 
 // 开关切换后自动保存
