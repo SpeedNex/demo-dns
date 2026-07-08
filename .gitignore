@@ -19,6 +19,7 @@
 /portal-web/.phpunit.result.cache
 /*.key
 /.envrc
+/.trae/
 portal-web/web/node_modules
 # 日志文件不提交
 /logs/
