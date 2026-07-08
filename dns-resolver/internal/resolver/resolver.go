@@ -213,40 +213,54 @@ func (prl *ProfileResolutionLayer) Resolve(ctx *ResolutionContext) *matching.Dec
 		}
 	}
 
-	// UI.md #44: SafeSearch enforcement.  When the profile has SafeSearch
-	// enabled (encoded as profile.Parental["safe_search"] == true) and the
-	// domain is a supported search engine, swap the A record target to
-	// the safe endpoint.  We piggy-back on Decision.Category so the
-	// caller can apply a REWRITE in a later step without touching
-	// the existing path here.
-	if ctx.SafeSearchEnabled {
-		if redirect, ok := SafeSearchRedirect(ctx.Domain); ok {
-			decision.Action = "REWRITE"
-			decision.Reason = "safesearch"
-			decision.Category = redirect
-		}
-	}
-
-	// YouTube Restricted Mode: independent from SafeSearch.
-	// When youtube_restricted_mode is enabled, rewrite YouTube to restrictmoderate.
-	// This runs after SafeSearch so it takes effect even when safe_search is off.
-	if ctx.YouTubeRestrictedEnabled && decision.Action == "ALLOW" {
-		if redirect, ok := YouTubeRestrictedRedirect(ctx.Domain); ok {
-			decision.Action = "REWRITE"
-			decision.Reason = "youtube_restricted"
-			decision.Category = redirect
-		}
-	}
-
-	// Block Bypass: when enabled, block known VPN, proxy, Tor and encrypted DNS domains.
-	if ctx.BlockBypassEnabled && decision.Action == "ALLOW" {
-		if CheckBlockBypassDomain(ctx.Domain) {
-			log.Printf("[家长] profile=%s domain=%s 类型=block_bypass 已拦截",
+	// UI.md #44: SafeSearch / YouTube Restricted / Block Bypass 都属于家长控制，
+	// 只有在 parental 总开关开启时才生效。
+	if ctx.ParentalEnabled {
+		// 时间限制检查：当前时间不在允许范围内时直接拦截（仍允许白名单放行）
+		if !withinTimeLimits(ctx.TimeLimits) {
+			log.Printf("[家长] profile=%s domain=%s 类型=time_limits 已拦截",
 				ctx.ProfileUID, ctx.Domain)
 			return &matching.Decision{
 				Action:   "BLOCK",
-				Reason:   "block_bypass",
+				Reason:   "time_limits",
 				Category: "parental",
+			}
+		}
+
+		// SafeSearch enforcement. When the profile has SafeSearch
+		// enabled and the domain is a supported search engine, swap the A record target to
+		// the safe endpoint. We piggy-back on Decision.Category so the
+		// caller can apply a REWRITE in a later step without touching
+		// the existing path here.
+		if ctx.SafeSearchEnabled {
+			if redirect, ok := SafeSearchRedirect(ctx.Domain); ok {
+				decision.Action = "REWRITE"
+				decision.Reason = "safesearch"
+				decision.Category = redirect
+			}
+		}
+
+		// YouTube Restricted Mode: independent from SafeSearch.
+		// When youtube_restricted_mode is enabled, rewrite YouTube to restrictmoderate.
+		// This runs after SafeSearch so it takes effect even when safe_search is off.
+		if ctx.YouTubeRestrictedEnabled && decision.Action == "ALLOW" {
+			if redirect, ok := YouTubeRestrictedRedirect(ctx.Domain); ok {
+				decision.Action = "REWRITE"
+				decision.Reason = "youtube_restricted"
+				decision.Category = redirect
+			}
+		}
+
+		// Block Bypass: when enabled, block known VPN, proxy, Tor and encrypted DNS domains.
+		if ctx.BlockBypassEnabled && decision.Action == "ALLOW" {
+			if CheckBlockBypassDomain(ctx.Domain) {
+				log.Printf("[家长] profile=%s domain=%s 类型=block_bypass 已拦截",
+					ctx.ProfileUID, ctx.Domain)
+				return &matching.Decision{
+					Action:   "BLOCK",
+					Reason:   "block_bypass",
+					Category: "parental",
+				}
 			}
 		}
 	}
