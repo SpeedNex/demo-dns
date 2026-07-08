@@ -25,23 +25,25 @@ final class MemberCatalogService
      */
     public function defaults(): array
     {
+        // 安全功能 key 必须与 dns-resolver internal/resolver/resolver.go 中
+        // LoadSecurityConfig 读取的 key 保持一致，否则前端开关无法控制 resolver。
         return [
             'device_models' => [
                 ['key' => 'threat_intel', 'name' => '威胁情报', 'desc' => '使用威胁情报源来阻断已知恶意域名。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
                 ['key' => 'ai_threat_detection', 'name' => 'AI 威胁检测', 'desc' => '使用人工智能检测并阻断新兴威胁。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
                 ['key' => 'google_safe_browsing', 'name' => 'Google 安全浏览', 'desc' => '使用 Google 安全浏览来拦截流氓软件和诈骗网站，该技术每天检查数十亿个链接并识别不安全的网站。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
-                ['key' => 'dns_rebinding', 'name' => 'DNS 重新绑定攻击保护', 'desc' => '拦截包含本地 IP 地址的 DNS 查询结果，防止黑客通过互联网操纵本地设备。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'dns_rebind', 'name' => 'DNS 重新绑定攻击保护', 'desc' => '拦截包含本地 IP 地址的 DNS 查询结果，防止黑客通过互联网操纵本地设备。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
                 ['key' => 'idn_homograph', 'name' => 'IDN 同构攻击保护', 'desc' => '阻断视觉上与合法域名相似的国际化域名。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
-                ['key' => 'typosquatting', 'name' => '误植域名保护', 'desc' => '拦截热门网站的拼写错误域名，这些域名常被用于钓鱼攻击。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
-                ['key' => 'dga', 'name' => '域名生成算法（DGA）保护', 'desc' => '域名生成算法（DGA）生成的域名通常被用于各种流氓软件或病毒。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
-                ['key' => 'anti_mining', 'name' => '挖矿病毒保护', 'desc' => '防止未经授权使用你的设备来开采加密货币。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'typo_squatting', 'name' => '误植域名保护', 'desc' => '拦截热门网站的拼写错误域名，这些域名常被用于钓鱼攻击。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'dga_protection', 'name' => '域名生成算法（DGA）保护', 'desc' => '域名生成算法（DGA）生成的域名通常被用于各种流氓软件或病毒。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'block_cryptojacking', 'name' => '挖矿病毒保护', 'desc' => '防止未经授权使用你的设备来开采加密货币。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
                 ['key' => 'block_dynamic_dns', 'name' => '拦截动态 DNS', 'desc' => '拦截动态 DNS 服务，这些服务常被攻击者用于维持对受 compromise 系统的访问。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
                 ['key' => 'block_parked_domains', 'name' => '拦截停放域名', 'desc' => '拦截停放域名，这些域名不托管合法内容。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
-                ['key' => 'block_specific_tld', 'name' => '拦截特定顶级域名', 'desc' => '拦截通常与恶意活动相关联的整个顶级域名。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
-                ['key' => 'block_newly_registered', 'name' => '拦截新注册域名', 'desc' => '拦截最近 30 天内注册的域名，这些域名常被用于恶意目的。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'block_tld', 'name' => '拦截特定顶级域名', 'desc' => '拦截通常与恶意活动相关联的整个顶级域名。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'block_new_domains', 'name' => '拦截新注册域名', 'desc' => '拦截最近 30 天内注册的域名，这些域名常被用于恶意目的。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
                 ['key' => 'block_malware', 'name' => '拦截恶意软件', 'desc' => '阻断已知恶意软件分发域名', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
                 ['key' => 'block_phishing', 'name' => '拦截钓鱼攻击', 'desc' => '阻断钓鱼和凭证窃取网站', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
-                ['key' => 'block_csam', 'name' => '拦截儿童色情内容', 'desc' => '拦截儿童色情内容。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
+                ['key' => 'child_abuse', 'name' => '拦截儿童色情内容', 'desc' => '拦截儿童色情内容。', 'field_type' => 'switch', 'enabled' => true, 'system' => true],
             ],
             'privacy_blocklists' => [
                 ['key' => 'deep_tracking_protection', 'name' => '深度跟踪保护', 'desc' => '屏蔽深度跟踪请求', 'field_type' => 'multi', 'days_ago' => 7, 'enabled' => true, 'system' => true, 'devices' => []],
