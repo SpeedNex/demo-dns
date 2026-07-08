@@ -245,9 +245,9 @@ const defaultConfig = {
     },
     clickhouse: {
         host: '127.0.0.1',
-        port: 9000,
-        database: 'default',
-        username: 'default',
+        port: 8123,
+        database: 'ocer_dns',
+        username: 'ocer',
         password: '',
         max_execution_time: 30,
     },
