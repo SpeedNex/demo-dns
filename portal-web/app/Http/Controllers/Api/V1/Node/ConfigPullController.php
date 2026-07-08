@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * Resolver 配置拉取控制器。
  *
- * 架构：Global Config + Lazy Profile
+ * 架构：Cross-Scope Version + Lazy Profile
  *   - GET /config           → 公共运行参数（upstreams / plans / rulesets）
  *   - GET /profiles/{id}    → 单个 Profile 配置（按需拉取）
  *   - POST /profiles/check  → 批量版本检查
@@ -41,9 +41,9 @@ final class ConfigPullController
         $threatDetection = $this->getThreatDetectionConfig();
 
         $data = [
-            // 2026-06-30: Global Profile 版本单独维护，target_scope=global
+            // 2026-07-08: 跨所有 target_scope 取最大 version，
+            // 让 resolver 能同时感知 profile-only 发布和 global 配置发布。
             'version' => (int) (DB::table('profile_versions')
-                ->where('target_scope', 'global')
                 ->max('version') ?? 1),
             'upstreams' => [$this->defaultUpstream()],
             'plans'     => $plans,
