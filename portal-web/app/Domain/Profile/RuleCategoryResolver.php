@@ -58,11 +58,17 @@ final class RuleCategoryResolver
                 continue;
             }
 
-            // item.category 优先（细分分类，例如 malware/phishing/tracker/adult）
-            // 回退到 source.category（粗粒度，security/privacy/parental/custom）
+            // source_category='custom' 时直接跳过：自定义源（如 AdGuard/OISD 整体导入）
+            // 不应按 item 级 category（social/ads 等）注入到 profile，否则会塞入十几万无关域名
+            $sourceCat = trim((string) ($row->source_category ?? 'default'));
+            if ($sourceCat === 'custom') {
+                continue;
+            }
+
+            // 非 custom 源：item.category 优先（细分分类），回退到 source.category
             $itemCat = trim((string) ($row->category ?? 'default'));
             if ($itemCat === '' || $itemCat === 'default') {
-                $itemCat = trim((string) ($row->source_category ?? 'default'));
+                $itemCat = $sourceCat;
             }
 
             if ($itemCat === '' || $itemCat === 'default' || $itemCat === 'custom') {
