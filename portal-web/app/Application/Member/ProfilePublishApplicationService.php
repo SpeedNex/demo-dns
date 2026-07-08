@@ -343,6 +343,7 @@ final class ProfilePublishApplicationService
                 ->join('rule_sources', 'rule_items.rule_source_id', '=', 'rule_sources.id')
                 ->where('rule_sources.enabled', true)
                 ->where('rule_items.action', 'block')
+                ->where('rule_sources.category', '<>', 'custom')
                 ->whereIn('rule_items.category', $categoryKeys)
                 ->select(['rule_items.domain', 'rule_items.category'])
                 ->get();

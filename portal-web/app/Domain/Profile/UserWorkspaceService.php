@@ -826,6 +826,7 @@ final class UserWorkspaceService
 
             // 2026-06-27: 将 blocked_categories 从 parental_settings 转换为 category:parental 规则。
             // 从 rule_items 表中查找对应分类的域名，加入到 $rules 中供 Resolver 引擎加载。
+            // 仅加载非 custom 源（自定义整体导入源 item 级 category 不可信，避免 config_json 膨胀）
             $parentalSettings = $featureSettings['parental'] ?? [];
             $blockedCategories = $parentalSettings['blocked_categories'] ?? [];
             if (!empty($blockedCategories) && is_array($blockedCategories)) {
@@ -834,6 +835,12 @@ final class UserWorkspaceService
                 if (!empty($categoryKeys)) {
                     $categoryRules = \App\Models\RuleItem::whereIn('category', $categoryKeys)
                         ->where('action', 'block')
+                        ->whereNotExists(function ($query) {
+                            $query->select(DB::raw(1))
+                                ->from('rule_sources')
+                                ->whereColumn('rule_sources.id', 'rule_items.rule_source_id')
+                                ->where('rule_sources.category', 'custom');
+                        })
                         ->get(['domain', 'category'])
                         ->map(fn ($item) => [
                             'list_type' => 'category:parental:' . $item->category,
