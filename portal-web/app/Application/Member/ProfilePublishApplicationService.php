@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Member;
 
+use App\Domain\Profile\DomainNormalizer;
 use App\Domain\Profile\ProfileConfigBuilder;
 use App\Domain\Profile\ProfilePublishService;
 use App\Domain\Profile\RuleCategoryResolver;
@@ -46,34 +47,91 @@ final class ProfilePublishApplicationService
         }
         $parentalSettings = is_array($parentalSettings) ? $parentalSettings : [];
 
-        // 将 parental blocked_items 转换为规则（因为 resolver 只从 rules 列表加载域名规则）
+        // 将 parental blocked_items 转换为规则（resolver 只从 rules 列表加载域名规则）
         $blockedItems = $parentalSettings['blocked_items'] ?? [];
         if (! empty($blockedItems) && is_array($blockedItems)) {
             foreach ($blockedItems as $item) {
-                $name = $item['name'] ?? '';
-                if (empty($name)) {
-                    continue;
+                $urls = $this->normalizeUrls($item['url'] ?? null);
+                if ($urls === []) {
+                    // 兼容旧数据：没有 url 时从 name 兜底提取
+                    $name = $item['name'] ?? '';
+                    if (empty($name)) {
+                        continue;
+                    }
+                    $base = preg_replace('/[^a-zA-Z0-9.-]/', '', explode('/', $name)[0]);
+                    if (empty($base)) {
+                        continue;
+                    }
+                    $domain = strtolower($base);
+                    if (! str_contains($domain, '.')) {
+                        $domain .= '.com';
+                    }
+                    $urls = [$domain];
                 }
 
-                // 提取纯英文字符作为域名基础（例如 "TikTok/抖音" → "tiktok"）
-                $base = preg_replace('/[^a-zA-Z0-9.-]/', '', explode('/', $name)[0]);
-                if (empty($base)) {
-                    continue;
+                foreach ($urls as $domain) {
+                    $domain = DomainNormalizer::normalize($domain);
+                    if ($domain === '') {
+                        continue;
+                    }
+                    $rules[] = [
+                        'list_type' => 'blocklist',
+                        'match_type' => 'suffix',
+                        'domain' => $domain,
+                        'normalized_domain' => $domain,
+                        'action' => 'block',
+                        'category' => 'parental',
+                        'enabled' => true,
+                    ];
                 }
-                $domain = strtolower($base);
-                if (! str_contains($domain, '.')) {
-                    $domain .= '.com';
-                }
+            }
+        }
 
-                $rules[] = [
-                    'list_type' => 'blocklist',
-                    'match_type' => 'suffix',
-                    'domain' => $domain,
-                    'normalized_domain' => $domain,
-                    'action' => 'block',
-                    'category' => 'parental',
-                    'enabled' => true,
-                ];
+        // 将 parental blocked_categories 转换为 category:parental:{key} 规则
+        $blockedCategories = $parentalSettings['blocked_categories'] ?? [];
+        if (! empty($blockedCategories) && is_array($blockedCategories)) {
+            $categoryKeys = [];
+            foreach ($blockedCategories as $cat) {
+                $key = is_array($cat) ? ($cat['key'] ?? '') : (string) $cat;
+                if ($key !== '') {
+                    $categoryKeys[] = $key;
+                }
+            }
+            $rules = array_merge($rules, $this->buildCategoryRules($categoryKeys, 'parental'));
+        }
+
+        // 根据 parental 开关动态加载分类规则
+        if (! empty($parental['enabled'])) {
+            $parentalCategoryKeys = [];
+            if (! empty($parental['block_adult_content'])) {
+                $parentalCategoryKeys[] = 'adult';
+            }
+            if (! empty($parental['block_gambling']) || ! empty($parental['block_gambling_basic'])) {
+                $parentalCategoryKeys[] = 'gambling';
+            }
+            if ($parentalCategoryKeys !== []) {
+                $rules = array_merge($rules, $this->buildCategoryRules($parentalCategoryKeys, 'parental'));
+            }
+        }
+
+        // 根据 privacy 开关动态加载分类规则
+        if (! empty($privacy['enabled'])) {
+            $privacyCategoryKeys = [];
+            if (! empty($privacy['block_trackers'])) {
+                $privacyCategoryKeys[] = 'tracker';
+            }
+            if (! empty($privacy['block_analytics'])) {
+                $privacyCategoryKeys[] = 'analytics';
+            }
+            if (! empty($privacy['block_telemetry'])) {
+                $privacyCategoryKeys[] = 'telemetry';
+            }
+            // 允许营销链接 = false 时拦截营销类域名
+            if (empty($privacy['allow_marketing_links'])) {
+                $privacyCategoryKeys[] = 'marketing';
+            }
+            if ($privacyCategoryKeys !== []) {
+                $rules = array_merge($rules, $this->buildCategoryRules($privacyCategoryKeys, 'privacy'));
             }
         }
 
@@ -214,6 +272,132 @@ final class ProfilePublishApplicationService
 
             return $publishResult;
         });
+    }
+
+    /**
+     * 将 url 字段标准化为域名数组（支持字符串或数组，自动从 URL 中提取 host）。
+     *
+     * @param mixed $urls
+     * @return array<int, string>
+     */
+    private function normalizeUrls(mixed $urls): array
+    {
+        if ($urls === null || $urls === '' || $urls === []) {
+            return [];
+        }
+
+        if (is_string($urls)) {
+            $urls = [$urls];
+        }
+
+        if (! is_array($urls)) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($urls as $url) {
+            $url = trim((string) $url);
+            if ($url === '') {
+                continue;
+            }
+
+            // 去掉协议前缀和路径，只保留 host
+            if (str_contains($url, '://')) {
+                $parsed = parse_url($url);
+                if (is_array($parsed) && ! empty($parsed['host'])) {
+                    $url = $parsed['host'];
+                }
+            }
+
+            // 去掉可能的通配符前缀
+            $url = ltrim($url, '*.');
+
+            try {
+                $normalized = DomainNormalizer::normalize($url);
+                if ($normalized !== '') {
+                    $result[] = $normalized;
+                }
+            } catch (\Throwable) {
+                // 无效域名跳过
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * 根据分类 key 列表从 rule_items 读取域名，生成指定顶层桶的规则。
+     *
+     * @param array<int, string> $categoryKeys
+     * @param string $topLevel 'parental' | 'privacy'
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildCategoryRules(array $categoryKeys, string $topLevel): array
+    {
+        if ($categoryKeys === []) {
+            return [];
+        }
+
+        try {
+            $rows = DB::table('rule_items')
+                ->join('rule_sources', 'rule_items.rule_source_id', '=', 'rule_sources.id')
+                ->where('rule_sources.enabled', true)
+                ->where('rule_items.action', 'block')
+                ->whereIn('rule_items.category', $categoryKeys)
+                ->select(['rule_items.domain', 'rule_items.category'])
+                ->get();
+        } catch (\Throwable $e) {
+            Log::warning('buildCategoryRules failed', [
+                'categories' => $categoryKeys,
+                'top_level' => $topLevel,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [];
+        }
+
+        $out = [];
+        $seen = [];
+        foreach ($rows as $row) {
+            $domain = strtolower(trim((string) ($row->domain ?? '')));
+            $domain = preg_replace('/^\|\|/', '', $domain);
+            $domain = preg_replace('/\^$/', '', $domain);
+            $domain = trim($domain);
+
+            if ($domain === '' || strlen($domain) > 255) {
+                continue;
+            }
+
+            try {
+                $normalized = DomainNormalizer::normalize($domain);
+            } catch (\InvalidArgumentException) {
+                continue;
+            }
+
+            if ($normalized === '') {
+                continue;
+            }
+
+            // 去重，避免同一域名重复生成规则
+            $key = $topLevel . '|' . $row->category . '|' . $normalized;
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+
+            $out[] = [
+                'rule_id' => '',
+                'list_type' => 'category:' . $topLevel . ':' . $row->category,
+                'match_type' => 'suffix',
+                'domain' => $normalized,
+                'normalized_domain' => $normalized,
+                'action' => 'block',
+                'category' => $topLevel . ':' . $row->category,
+                'enabled' => true,
+            ];
+        }
+
+        return $out;
     }
 
     /**

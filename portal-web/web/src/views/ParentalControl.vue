@@ -42,7 +42,6 @@
                 </el-table>
 
                 <el-button size="small" style="margin-top:12px" @click="showItemPicker = true">
-                    <el-icon><Plus /></el-icon>
                     {{ $t('parental.addWebsiteAppGame') }}
                 </el-button>
             </div>

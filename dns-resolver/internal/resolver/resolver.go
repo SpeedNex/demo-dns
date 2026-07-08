@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"ocer-dns/dns-resolver/internal/matching"
 	"ocer-dns/dns-resolver/internal/rules"
@@ -16,9 +17,13 @@ type ResolutionContext struct {
 	ProfileUID                string
 	DeviceUID                 string
 	DeviceType                string
+	ParentalEnabled           bool
 	SafeSearchEnabled         bool
 	YouTubeRestrictedEnabled  bool
 	BlockBypassEnabled        bool
+	TimeLimits                map[string]any
+	AnonymizeClientIP         bool
+	DeepTrackingDevices       []string
 	ClientIP                  net.IP
 	Domain                    string
 	QueryType                 string
