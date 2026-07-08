@@ -142,9 +142,11 @@ func main() {
 	if err := cfg.Validate(); err != nil {
 		log.Fatalf("Invalid config: %v", err)
 	}
+	log.Printf("DEBUG: config validated")
 
 	// Initialize rule engine (8-level policy engine)
 	engine := matching.NewEngine()
+	log.Printf("DEBUG: engine created")
 
 	// Initialize Profile Resolution Layer
 	resolutionLayer := resolver.New(engine)
@@ -154,8 +156,9 @@ func main() {
 
 	// Initialize agent with console-issued credentials (no registration flow)
 	agt := agent.New(cfg, engine, resolutionLayer, metricsCollector)
+	log.Printf("DEBUG: agent created")
 
-	// 2026-06-24: 启动前强校验 — 凭据文件必须可读且非空。
+	// 2026-06-24: 启动时强校验 — 凭据文件必须可读且非空。
 	// api_key 已移出 yaml,改读 api_key_path 文件;文件缺失/空直接拒绝启动,
 	// 不让节点以空 token 跑起来再被 server 端 401 拒掉。
 	if bearer := agt.LoadBearer(); strings.TrimSpace(bearer) == "" {
@@ -187,9 +190,11 @@ func main() {
 			log.Printf("cache: close error: %v", err)
 		}
 	}()
+	log.Printf("DEBUG: caches created")
 
 	// Initialize local DNS response cache
 	dnsCache := dnscache.New(cfg.Cache.MaxSize, time.Duration(cfg.Cache.MaxTTL)*time.Second)
+	log.Printf("DEBUG: dnscache created")
 	if !cfg.Cache.Enabled {
 		dnsCache.SetEnabled(false)
 		log.Printf("dns_cache: disabled by config")
@@ -210,25 +215,31 @@ func main() {
 
 	// Start config sync loop (every 60s)
 	go agt.StartConfigSync(ctx, time.Duration(cfg.ControlPlane.ConfigPollInterval)*time.Second)
+	log.Printf("DEBUG: config sync started")
 
 	// Start reliable log flusher
 	go logBuffer.StartFlusher(ctx)
+	log.Printf("DEBUG: log flusher started")
 
 	// 节点健康由 (now - last_heartbeat_at) <= 阈值 的简单超时判断
 	// 不再在 resolver 启动时拉取 geodns 健康视图；geodns 自身从控制面获取
 	_ = ctx
 
 	// Initialize and start DoH server with resolver and metrics
+	log.Printf("DEBUG: creating doh server")
 	dohServer := doh.NewServer(cfg, engine, resolutionLayer, logBuffer, metricsCollector, queryCache, agt.FetchProfile)
 	dohServer.SetProfileConfigLoader(agt.GetProfileConfig)
+	log.Printf("DEBUG: doh server created")
 
 	// Create shared resolution handler for DNS and DoQ servers
 	resolverHandler := resolver.NewHandler(cfg, resolutionLayer, logBuffer, metricsCollector, queryCache, dnsCache)
 
 	// Initialize DNS server (UDP, TCP, DoT) with shared handler
+	log.Printf("DEBUG: creating dns server")
 	dnsServer := dnsserver.New(cfg, resolverHandler, metricsCollector, agt.FetchProfile)
 	dnsServer.SetProfileConfigLoader(agt.GetProfileConfig)
 	dnsServer.SetDeviceResolver(agt.LookupDeviceByIP)
+	log.Printf("DEBUG: dns server created")
 
 	// Create main mux and attach DoH handler
 	mainMux := http.NewServeMux()
@@ -279,6 +290,7 @@ func main() {
 	}
 
 	go func() {
+		log.Printf("DEBUG: doh listener goroutine started")
 		ln, err := net.Listen("tcp", httpServer.Addr)
 		if err != nil {
 			log.Fatalf("doh: failed to listen on %s: %v", httpServer.Addr, err)
@@ -293,6 +305,7 @@ func main() {
 	}()
 
 	go func() {
+		log.Printf("DEBUG: dns server goroutine started")
 		if err := dnsServer.Run(ctx); err != nil {
 			log.Fatalf("DNS server error: %v", err)
 		}
