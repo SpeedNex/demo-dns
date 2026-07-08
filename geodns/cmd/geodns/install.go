@@ -81,7 +81,7 @@ func runInstall(args []string) error {
 	noStartFlag := fs.Bool("no-start", false, "Disable auto-start even if --start is set (alias for safety in scripts)")
 	fs.StringVar(&opts.SystemdUnit, "systemd-unit", "", "systemd unit file path (default: /etc/systemd/system/geodns.service)")
 	// 2026-07-08 NEW: --geoip-db-path 指定 MaxMind GeoLite2-Country.mmdb 路径
-	fs.StringVar(&opts.GeoIPDBPath, "geoip-db-path", "/var/lib/geodns/GeoLite2-Country.mmdb", "Path to MaxMind GeoLite2-Country.mmdb (empty to disable GeoIP)")
+	fs.StringVar(&opts.GeoIPDBPath, "geoip-db-path", "data/GeoLite2-Country.mmdb", "Path to MaxMind GeoLite2-Country.mmdb (empty to disable GeoIP)")
 
 	if err := fs.Parse(args); err != nil {
 		return err

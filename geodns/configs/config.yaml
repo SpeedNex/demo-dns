@@ -12,9 +12,9 @@ routing:
     serve_domain: dns.ocerlinkdata.com
     # 2026-07-08: GeoIP 数据库路径（MaxMind GeoLite2-Country.mmdb）
     # 留空则禁用 GeoIP 客户端识别，调度退化为全局模式
-    # 推荐使用 Loyalsoldier 镜像（免 License Key，含中国精确数据）：
-    #   https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-without-asn.mmdb
-    geoip_db_path: /var/lib/geodns/GeoLite2-Country.mmdb
+    # 默认指向项目内 data/GeoLite2-Country.mmdb，随代码一起部署
+    # 生产环境可覆盖：GEODNS_GEOIP_DB_PATH=/path/to/file.mmdb
+    geoip_db_path: data/GeoLite2-Country.mmdb
 node:
     token: yqocGak1lHgEdeIUeB2qHtxUoQAJlG5F8j0wUbES
     node_id: phqval3wur

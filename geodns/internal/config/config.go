@@ -134,9 +134,16 @@ func (c *Config) ServeDomain() string {
 }
 
 // GeoIPDBPath 返回 GeoIP 数据库文件路径。
+// 优先级：环境变量 GEODNS_GEOIP_DB_PATH > 配置文件 > 默认值 "data/GeoLite2-Country.mmdb"。
 // 留空则禁用 GeoIP 客户端识别，调度退化为全局模式。
 func (c *Config) GeoIPDBPath() string {
-	return c.Routing.GeoIPDBPath
+	if env := os.Getenv("GEODNS_GEOIP_DB_PATH"); env != "" {
+		return env
+	}
+	if c.Routing.GeoIPDBPath != "" {
+		return c.Routing.GeoIPDBPath
+	}
+	return "data/GeoLite2-Country.mmdb"
 }
 
 func Load(path string) (*Config, error) {
