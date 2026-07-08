@@ -52,7 +52,13 @@ class ProfileVersion extends Model
         }
 
         if (empty($attributes['target_scope'])) {
-            $attributes['target_scope'] = isset($attributes['target_profile_id']) ? 'profile' : 'global';
+            // 优先复用模型现有 target_scope，避免 update() 时被错误覆盖为 'global'
+            $existing = $this->getAttribute('target_scope');
+            if (! empty($existing)) {
+                $attributes['target_scope'] = $existing;
+            } else {
+                $attributes['target_scope'] = isset($attributes['target_profile_id']) ? 'profile' : 'global';
+            }
         }
 
         return parent::fill($attributes);
