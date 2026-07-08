@@ -12,6 +12,7 @@ use App\Models\Profile;
 use App\Models\ProfileRule;
 use App\Models\SystemConfig;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -507,6 +508,7 @@ final class UserWorkspaceService
                 'device_id' => $device->device_uid,
                 'info' => trim(($device->device_type ?: $device->protocol ?: 'device') . ' ' . ($device->device_uid ?: '')),
                 'last_seen_at' => optional($device->last_seen_at)?->toIso8601String(),
+                'is_online' => $device->last_seen_at !== null && Carbon::parse($device->last_seen_at)->gt(now()->subMinutes(5)),
             ])
             ->all();
     }

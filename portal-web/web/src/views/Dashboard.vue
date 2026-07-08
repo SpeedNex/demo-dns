@@ -132,10 +132,10 @@
                         <div class="device-list">
                             <div v-for="device in devices.slice(0, 4)" :key="device.id" class="device-row">
                                 <div class="device-info">
-                                    <span class="device-status" :class="device.last_seen_at ? 'online' : 'offline'"></span>
+                                    <span class="device-status" :class="device.is_online ? 'online' : 'offline'"></span>
                                     <span class="device-name">{{ device.name || device.id }}</span>
                                 </div>
-                                <span class="device-status-text">{{ device.last_seen_at ? $t('devices.online') : $t('devices.offline') }}</span>
+                                <span class="device-status-text">{{ device.is_online ? $t('devices.online') : $t('devices.offline') }}</span>
                             </div>
                             <div v-if="!devices.length" class="device-row empty">
                                 <span>No devices</span>

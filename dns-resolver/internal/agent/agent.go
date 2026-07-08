@@ -385,7 +385,11 @@ func (a *Agent) loadProfileIntoEngine(profileID string, data json.RawMessage, ve
 						security["default"] = append(security["default"], d)
 					}
 				case "privacy":
-					adblockExact = append(adblockExact, d)
+					if r.MatchType == "wildcard" || r.MatchType == "suffix" {
+						adblockWild = append(adblockWild, d)
+					} else {
+						adblockExact = append(adblockExact, d)
+					}
 				case "parental":
 					if sub != "" {
 						parental[sub] = append(parental[sub], d)

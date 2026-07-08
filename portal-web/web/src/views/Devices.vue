@@ -41,7 +41,7 @@
                     <el-table-column prop="name" :label="$t('devices.name')" min-width="220" show-overflow-tooltip>
                         <template #default="{ row }">
                             <div style="display:flex;align-items:center;gap:8px">
-                                <el-icon :color="row.last_seen_at ? '#67c23a' : '#909399'" size="14"><Connection /></el-icon>
+                                <el-icon :color="row.is_online ? '#67c23a' : '#909399'" size="14"><Connection /></el-icon>
                                 <span>{{ row.name || row.id }}</span>
                             </div>
                         </template>
@@ -49,8 +49,8 @@
                     <el-table-column prop="info" :label="$t('devices.type')" min-width="180" show-overflow-tooltip />
                     <el-table-column :label="$t('devices.status')" width="100">
                         <template #default="{ row }">
-                            <el-tag :type="row.last_seen_at ? 'success' : 'info'" size="small">
-                                {{ row.last_seen_at ? $t('devices.online') : $t('devices.offline') }}
+                            <el-tag :type="row.is_online ? 'success' : 'info'" size="small">
+                                {{ row.is_online ? $t('devices.online') : $t('devices.offline') }}
                             </el-tag>
                         </template>
                     </el-table-column>

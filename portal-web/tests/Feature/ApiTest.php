@@ -55,11 +55,10 @@ class ApiTest extends TestCase
     {
         // Seed member feature catalog for dynamic validation rules
         $catalogService = new \App\Domain\Profile\MemberCatalogService();
-        SystemConfig::create([
-            'config_key' => \App\Domain\Profile\MemberCatalogService::CONFIG_KEY,
-            'config_value' => $catalogService->defaults(),
-            'description' => 'Member feature catalog',
-        ]);
+        SystemConfig::updateOrCreate(
+            ['config_key' => \App\Domain\Profile\MemberCatalogService::CONFIG_KEY],
+            ['config_value' => $catalogService->defaults(), 'description' => 'Member feature catalog']
+        );
 
         $user = User::create([
             'username' => 'test-user',
@@ -1575,17 +1574,18 @@ class ApiTest extends TestCase
 
     public function test_401_internal_geodns_health_view()
     {
-        // geodns health-view 使用 node.token 中间件鉴权，
-        // 需要创建 Node + NodeToken 并用 Bearer token 访问。
-        $node = Node::create([
-            'node_code' => 'nd_health_' . time(),
-            'node_name' => 'Health Test Node',
-            'region' => 'asia-east',
-            'public_ipv4' => '192.168.1.1',
+        // geodns health-view 使用 geodns.token 中间件鉴权，
+        // 需要创建 DnsGeodns + GeoDnsToken 并用 Bearer token 访问。
+        $geodns = \App\Models\DnsGeodns::create([
+            'node_code' => 'gd_health_' . time(),
+            'node_alias' => 'geo-test-1',
+            'region' => 'geodns-kr',
+            'public_ipv4' => '192.168.1.2',
             'install_status' => 'installed',
+            'weight' => 10,
         ]);
-        $issued = app(\App\Domain\Auth\NodeTokenService::class)->issueToken($node);
-        $response = $this->withHeaders(['Authorization' => 'Bearer ' . $issued['plain']])
+        $issued = \App\Models\GeoDnsToken::createForGeodns($geodns, 365);
+        $response = $this->withHeaders(['Authorization' => 'Bearer ' . $issued['api_key']])
             ->getJson('/api/v1/internal/geodns/health-view');
         $response->assertStatus(200);
     }
