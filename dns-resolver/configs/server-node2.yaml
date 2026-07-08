@@ -14,7 +14,7 @@ control_plane:
     api_key: ocnd_DgBW1NmRgVdMLKaVofYmN1gkpvvHZFLTsO9GStTg
     secret: hmk_nghi2usuotyntsgu955vcgkbu6s4dmbi
     node_id: 15
-    heartbeat_interval: 30
+    heartbeat_interval: 10
     config_poll_interval: 5
     profiles_path: ./configs
 upstream:

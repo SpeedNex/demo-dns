@@ -16,7 +16,7 @@ control_plane:
     endpoint: http://localhost:8081
     api_key: ak_bDtNnuMzTOEqdZclRpC41VYyDedseQ0X6lInFFLH
     node_id: 16
-    heartbeat_interval: 30
+    heartbeat_interval: 10
     config_poll_interval: 5
     profiles_path: ./configs
     api_key_path: /tmp/test-api-key

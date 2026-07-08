@@ -27,7 +27,7 @@ health_view:
   url: https://test-dns.ocerlinkdata.com/api/v1/internal/geodns/health-view
   auth_header: "Authorization"
   auth_token: "Bearer yqocGak1lHgEdeIUeB2qHtxUoQAJlG5F8j0wUbES"
-  refresh_interval: 15 * second
+  refresh_interval: 5 * second
   timeout: 5 * second
   fallback_path: /var/lib/geodns/health_view_cache.json
 

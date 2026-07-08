@@ -21,7 +21,7 @@ control_plane:
     api_key_path: "configs/api_key"  # 鉴权 token 文件路径（install 阶段写入）
     secret: hmk_ja0ixnpmnjzqura5cf7zmwfkgptipwmn
     node_id: 16
-    heartbeat_interval: 30
+    heartbeat_interval: 10
     config_poll_interval: 5
     profiles_path: ./configs
 upstream:

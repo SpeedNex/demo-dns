@@ -9,7 +9,7 @@ server:
   # 通过 X-Internal-Token 校验。容器化部署推荐用环境变量 GEODNS_INTERNAL_TOKEN
   # 注入，不要把 token 写进镜像。
   # console_health_token: "your-internal-shared-token"
-  refresh_interval: "15s"
+  refresh_interval: "5s"
 routing:
   global_fallback_region: "global"
   # serve_domain 是 GeoDNS 服务的域名。

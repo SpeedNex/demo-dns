@@ -22,7 +22,7 @@ control_plane:
     api_key: ak_test_key
     secret: sk_test_secret
     node_id: test-node-01
-    heartbeat_interval: 30
+    heartbeat_interval: 10
     config_poll_interval: 30
     request_timeout_seconds: 5
     profiles_path: ./data/profiles

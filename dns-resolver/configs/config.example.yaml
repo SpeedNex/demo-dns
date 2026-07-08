@@ -19,7 +19,7 @@ control_plane:
     api_key: ""                      # 已废弃，凭据统一走 api_key_path 文件
     api_key_path: "configs/api_key"  # 鉴权 token 文件路径（install 阶段写入）
     node_id: ""                      # 节点 ID（由 install 写入）
-    heartbeat_interval: 30           # 心跳间隔（秒）
+    heartbeat_interval: 10           # 心跳间隔（秒）
     config_poll_interval: 5          # 配置轮询间隔（分钟）
     profiles_path: "./data/profiles" # Profile 缓存目录
 upstream:
