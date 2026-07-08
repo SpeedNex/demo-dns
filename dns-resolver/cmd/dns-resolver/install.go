@@ -190,19 +190,18 @@ func runInstall(args []string) error {
 		}
 
 		// 自动安装 certbot 并申请 Let's Encrypt 证书，dns-resolver 直连 443
+		// ⚠ 2026-07-08: 证书是 DoH/DoT/DoQ 的硬前置，申请失败必须终止 install
 		if certErr := provisionCertbot(cfg, opts.ConfigPath, dnsDomain); certErr != nil {
-			fmt.Printf("%s⚠ 证书自动配置失败%s: %v（DoH/DoT/DoQ 将使用自签名证书兜底）\n", redFg, resetSty, certErr)
-		} else {
-			ensureCertbotRenewHook()
-			fmt.Println("✔ certbot: Let's Encrypt certificate configured")
+			return fmt.Errorf("证书自动配置失败: %w", certErr)
 		}
+		ensureCertbotRenewHook()
+		fmt.Println("✔ certbot: Let's Encrypt certificate configured")
 	} else {
 		fmt.Println("✔ console register: success (no dns_domain, skip certbot auto-setup)")
 	}
 
-	// 2026-06-29: 安装结束后，始终将证书路径指向 Let's Encrypt 标准位置。
-	// 即使本次 certbot 自动配置失败，只要之前签发过证书，仍能正确加载。
-	// 避免每次重装后 tls_cert_file/tls_key_file 被默认空值覆盖导致自签名证书。
+	// 2026-06-29 + 2026-07-08: certbot 成功后，始终将证书路径指向 Let's Encrypt 标准位置。
+	// 不再写 tls_cert_file/tls_key_file，由 LoadTLSConfig 自动查找。
 	if dnsDomain != "" {
 		certDir := fmt.Sprintf("/etc/letsencrypt/live/%s", dnsDomain)
 		if _, statErr := os.Stat(certDir + "/fullchain.pem"); statErr == nil {
@@ -547,7 +546,7 @@ func readAPIKeyFile(path string) string {
 // 2026-07-08 改进：
 //   - 检查 :80 端口占用，自动停止占用服务（Caddy / Nginx / Apache 等）
 //   - 对比上次申请的域名，域名变更时重新申请证书
-//   - 申请失败时保留旧证书继续用，不阻塞 install
+//   - 申请失败必须终止 install（证书是 DoH/DoT/DoQ 的硬前置，不允许自签名兜底）
 func provisionCertbot(cfg *config.Config, configPath, domain string) error {
 	if domain == "" {
 		return nil
@@ -589,7 +588,7 @@ func provisionCertbot(cfg *config.Config, configPath, domain string) error {
 		}
 	}
 
-	// 3. 申请证书（失败直接返回，不阻塞 install）
+	// 3. 申请证书（失败必须终止 install，不允许自签名兜底）
 	fmt.Printf("  certbot: requesting certificate for %s...\n", domain)
 	certCmd := exec.Command("certbot", "certonly", "--standalone",
 		"-d", domain,
@@ -600,18 +599,18 @@ func provisionCertbot(cfg *config.Config, configPath, domain string) error {
 	certCmd.Stdout = os.Stdout
 	certCmd.Stderr = os.Stderr
 	if err := certCmd.Run(); err != nil {
-		// 申请失败不阻塞 install，打印警告后继续（使用旧证书或自签名兜底）
-		fmt.Printf("%s⚠ certbot 证书申请失败: %v%s\n", redFg, err, resetSty)
-		fmt.Printf("  ⚠ 请确认域名 %s 的 DNS A 记录已指向本机公网 IP\n", domain)
-		fmt.Printf("  ⚠ 本机 :80 端口未被占用\n")
-		fmt.Printf("  ⚠ 节点将继续使用已有证书或自签名兜底\n")
-		return nil
+		// ⚠ 2026-07-08: 证书是 DoH/DoT/DoQ 的硬前置，申请失败必须终止 install
+		return fmt.Errorf("certbot 证书申请失败: %w\n"+
+			"  修复步骤:\n"+
+			"  1. 确认域名 %s 的 DNS A 记录已指向本机公网 IP（Let's Encrypt 会验证）\n"+
+			"  2. 确认本机 :80 端口未被其他进程占用（certbot standalone 模式需要）\n"+
+			"  3. 修复后重新运行 install（已写入的配置会保留）",
+			err, domain)
 	}
 
 	// 4. 验证证书目录存在
 	if _, statErr := os.Stat(certDir); statErr != nil {
-		fmt.Printf("%s⚠ certbot 证书目录 %s 未找到%s: %w\n", redFg, certDir, resetSty, statErr)
-		return nil
+		return fmt.Errorf("certbot 证书目录 %s 未找到: %w（DoH/DoT/DoQ 无法启动，必须使用有效证书）", certDir, statErr)
 	}
 
 	// 5. 更新配置：doh → 443，不写 tls_cert_file，由 LoadTLSConfig 自动查找
