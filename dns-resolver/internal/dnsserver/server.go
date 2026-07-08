@@ -159,12 +159,17 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg, proto string) {
 	safeSearchEnabled := false
 	youtubeRestrictedEnabled := false
 	blockBypassEnabled := false
+	parentalEnabled := false
+	timeLimits := map[string]any{}
+	anonymizeClientIP := false
+	deepTrackingDevices := []string{}
 	if profileUID != "" && s.profileConfigLoader != nil {
-		if pc, err := s.profileConfigLoader(profileUID); err == nil {
+		if pc, err := s.profileConfigLoader(profileUID); err == nil && pc != nil {
 			if pc.BlockResponse != "" {
 				blockResponse = pc.BlockResponse
 			}
 			if pc.Parental != nil {
+				parentalEnabled = resolver.ToBool(pc.Parental["enabled"])
 				if v, ok := pc.Parental["safe_search"]; ok {
 					if b, ok := v.(bool); ok && b {
 						safeSearchEnabled = true
@@ -180,6 +185,13 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg, proto string) {
 						blockBypassEnabled = true
 					}
 				}
+				if tl, ok := pc.Parental["time_limits"].(map[string]any); ok {
+					timeLimits = tl
+				}
+			}
+			if pc.Privacy != nil {
+				anonymizeClientIP = resolver.ToBool(pc.Privacy["anonymize_client_ip"])
+				deepTrackingDevices = resolver.ToStringSlice(pc.Privacy["deep_tracking_devices"])
 			}
 			// quota: quota_status == "exceeded" 时返回 REFUSED
 			if pc.Quota != nil {
@@ -197,7 +209,7 @@ func (s *Server) handleQuery(w dns.ResponseWriter, req *dns.Msg, proto string) {
 	}
 
 	// ④ 共享 pipeline：去重 → 规则判定 → DNS 缓存 → 上游转发 → 日志
-	result := s.handler.Handle(req, w.RemoteAddr().String(), proto, profileUID, deviceID, "", blockResponse, safeSearchEnabled, youtubeRestrictedEnabled, blockBypassEnabled)
+	result := s.handler.Handle(req, w.RemoteAddr().String(), proto, profileUID, deviceID, "", blockResponse, safeSearchEnabled, youtubeRestrictedEnabled, blockBypassEnabled, parentalEnabled, timeLimits, anonymizeClientIP, deepTrackingDevices)
 
 	// ⑤ 写出响应
 	_ = w.WriteMsg(result.Reply)
