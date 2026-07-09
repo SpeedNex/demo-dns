@@ -90,7 +90,7 @@ final class AdminUserController
             'username' => 'nullable|string|max:100',
             'name' => 'nullable|string|max:100',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
         if ($validator->fails() || $username === '') {
@@ -141,7 +141,7 @@ final class AdminUserController
             'username' => 'nullable|string|max:100',
             'name' => 'nullable|string|max:100',
             'email' => 'sometimes|email|unique:users,email,' . $userId . ',uid',
-            'password' => 'sometimes|string|min:8|confirmed',
+            'password' => 'sometimes|string|min:6|confirmed',
         ]);
 
         if ($validator->fails() || ($username !== null && $username === '')) {

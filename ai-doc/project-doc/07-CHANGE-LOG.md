@@ -2,6 +2,14 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-07-09 — /admin/users 密码最小长度从 8 位调整为 6 位
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-09 | fix | 后台用户管理 /admin/users 密码最小长度从 8 位调整为 6 位，支持 6 位纯数字密码：AdminUserController store/update 验证规则改为 min:6 | portal-web/app/Http/Controllers/Api/V1/Admin/AdminUserController.php | ok |
+| 2026-07-09 | fix | 后台用户管理 /admin/users 前端密码验证同步调整为 min:6 | portal-web/web/src/views/admin/Users.vue | ok |
+| 2026-07-09 | docs | i18n 三语（zh-CN/en/ko）passwordMinLength 提示文案从 8 位更新为 6 位 | portal-web/web/src/locales/zh-CN.json, en.json, ko.json | ok |
+
 ## 2026-07-09 — UI 优化：套餐选择页隐藏无效价格周期选项
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |

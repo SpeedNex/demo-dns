@@ -209,7 +209,7 @@ const rules = {
     ],
     password: [
         { required: true, message: t('admin.usersPage.passwordRequired') || 'Password is required', trigger: 'blur' },
-        { min: 8, message: t('admin.usersPage.passwordMinLength') || 'Password must be at least 8 characters', trigger: 'blur' },
+        { min: 6, message: t('admin.usersPage.passwordMinLength') || 'Password must be at least 6 characters', trigger: 'blur' },
     ],
     password_confirmation: [
         { required: true, message: t('admin.usersPage.confirmPasswordRequired') || 'Please confirm password', trigger: 'blur' },
