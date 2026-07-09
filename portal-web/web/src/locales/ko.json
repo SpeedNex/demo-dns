@@ -478,6 +478,7 @@
     "device": "기기",
     "profile": "프로필",
     "clientIp": "클라이언트 IP",
+    "clientIpHint": "개인 정보 보호가 활성화되어 해시값 표시",
     "noLogs": "로그를 찾을 수 없습니다",
     "logModeDisabled": "개인 정보 설정에서 로깅이 비활성화되었습니다.",
     "clearFilters": "필터 지우기",

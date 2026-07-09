@@ -488,6 +488,7 @@
     "device": "设备",
     "profile": "配置",
     "clientIp": "客户端 IP",
+    "clientIpHint": "隐私保护已开启，显示哈希值",
     "noLogs": "暂无日志",
     "logModeDisabled": "隐私设置中已禁用日志记录。",
     "clearFilters": "清空筛选",

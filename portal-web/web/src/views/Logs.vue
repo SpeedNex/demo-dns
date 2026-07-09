@@ -52,9 +52,17 @@
                 </el-table-column>
                 <el-table-column prop="device" :label="$t('logs.device')" width="150" />
                 <el-table-column prop="profile_name" :label="$t('logs.profile')" width="120" />
-                <el-table-column prop="client_ip" :label="$t('logs.clientIp')" width="180">
+                <el-table-column prop="client_ip" width="220">
+                    <template #header>
+                        <span>{{ $t('logs.clientIp') }}</span>
+                        <el-tooltip :content="$t('logs.clientIpHint')" placement="top">
+                            <span class="hint-icon">i</span>
+                        </el-tooltip>
+                    </template>
                     <template #default="{ row }">
-                        <span v-if="row.client_ip" class="client-ip">{{ row.client_ip }}</span>
+                        <el-tooltip v-if="row.client_ip" :content="row.client_ip" placement="top" :show-after="300">
+                            <span class="client-ip">{{ row.client_ip.substring(0, 12) }}...</span>
+                        </el-tooltip>
                         <span v-else class="text-muted">-</span>
                     </template>
                 </el-table-column>
@@ -241,6 +249,22 @@ watch(
     font-size: 13px;
     color: var(--color-text-muted);
     word-break: break-all;
+}
+.hint-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #94a3b8;
+    color: #fff;
+    font-size: 10px;
+    font-style: italic;
+    font-weight: 700;
+    margin-left: 4px;
+    cursor: help;
+    vertical-align: middle;
 }
 .text-muted {
     color: #cbd5e1;

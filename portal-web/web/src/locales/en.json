@@ -487,6 +487,7 @@
     "device": "Device",
     "profile": "Profile",
     "clientIp": "Client IP",
+    "clientIpHint": "Privacy protection enabled, showing hash",
     "noLogs": "No logs",
     "logModeDisabled": "Logging is disabled in Privacy settings.",
     "clearFilters": "Clear filters",
