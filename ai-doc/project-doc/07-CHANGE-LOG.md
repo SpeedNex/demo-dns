@@ -2,6 +2,90 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-07-09 — P1 修复：/user/account 配额显示异常
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-09 | fix | 修复 /user/account 页面配额显示 "0 / 300,000" 始终为 0 的问题：billing_periods 表中没有当前用户周期记录导致 queries_used 返回 0 | portal-web/app/Http/Controllers/Api/V1/User/UserWorkspaceController.php | ok |
+
+## 2026-07-09 — 准确性提升：全量文档与代码对齐
+
+### 1. 残留 dns-console-web 引用清理
+
+| 日期 | 类型 | 描述 | 涉及文件 | 涉及文档 | 状态 |
+|---|---|---|---|---|---|---|
+| 2026-07-09 | docs | 修复 6 处残留 dns-console-web 引用→portal-web(原 console 域) | 10-NEXTDNS-LITE-BILLING.md, openapi.yaml, billing.schema.json, billing-usage-batch.sample.json, rules/coding.md, clickhouse/tables.md | — | ok |
+
+### 2. data-schema.md 全量重写（对齐 65 个迁移文件）
+
+| 日期 | 类型 | 描述 | 涉及文件 | 涉及文档 | 状态 |
+|---|---|---|---|---|---|---|
+| 2026-07-09 | docs | 重写 data-schema.md：所有 uuid→bigint；profile_rules.list_type 值修正；devices 补充 13 个缺失字段；plans/subscriptions 对齐实际结构；team_members/invitations 字段名修正；删除不存在的 profile_feature_settings 表；新增 40+ 个表定义 | ai-doc/specs/portal-web/data-schema.md | — | ok |
+
+### 3. OpenAPI 路由同步修复：与实际路由对齐
+
+| 日期 | 类型 | 描述 | 涉及文件 | 涉及文档 | 状态 |
+|---|---|---|---|---|---|---|
+| 2026-07-09 | docs | 修复 openapi.yaml 路由与实际 php artisan route:list 不一致的问题（见下方详细清单） | ai-doc/contracts/openapi.yaml | — | ok |
+
+### 修复清单
+
+**路径修正：**
+- allowlist/blocklist：去掉 `/profiles/{profile_id}/` 前缀，改为 `/api/v1/user/allowlist`、`/api/v1/user/blocklist`
+- settings/security/privacy/parental：去掉 `/profiles/{profile_id}/` 前缀
+- `clone` → `copy`
+- `/api/v1/user/usage/quota` → `/api/v1/user/usage`
+- `/api/v1/user/profiles/{profile_id}/stats/top-domains` → `/api/v1/user/top-domains`
+- `/api/v1/user/profiles/{profile_id}/stats/timeseries` → `/api/v1/user/query-trend`
+- `/api/v1/user/subscription` → `/api/v1/user/subscriptions`
+- `/api/v1/user/subscription/checkout` → `/api/v1/user/subscriptions/{id}/checkout`
+- `/api/v1/admin/audit-logs` → `/api/v1/admin/console/audit-logs`
+- `/api/v1/admin/auth/login` → `/api/v1/admin/login`
+- `/api/v1/admin/users/{user_id}/{action}` → 拆分为 `/api/v1/admin/users/{user_id}/disable` 和 `/api/v1/admin/users/{user_id}/enable`
+- `/api/v1/admin/rules/{rule_id}/sync` → `/api/v1/admin/rules/{name}/sync`
+- PUT `/api/v1/user/api-keys/{key_id}` → 移除（只有 DELETE）
+- 移除 `/api/v1/user/api-keys/{key_id}/rotate`
+- 移除 `/api/v1/user/devices/{device_id}`、`/disable`、`/enable`
+- 团队路由：`/members/{member_id}` → `/members/{user_id}` + `/members/{user_id}/role`
+
+**移除不存在的路由：**
+- `/api/v1/user/invoices`、`/api/v1/user/payments`、`/api/v1/user/overview`
+- `/api/v1/user/profiles/{profile_id}/logs`、`/publishes`、`/publishes/{publish_id}`
+- `/api/v1/user/profiles/{profile_id}/rules/import`、`/rules/export`
+- `/api/v1/user/profiles/{profile_id}/settings/dns`
+- `/api/v1/user/profiles/{profile_id}/stats/summary`
+
+**补充缺失的路由：**
+- 批量操作：`/api/v1/user/allowlist/batch-delete`、`/blocklist/batch-delete`、`/profiles/batch-delete`、`/profiles/{profile_id}/rules/batch-delete`
+- 用户：`PUT /api/v1/user/email`、`GET /api/v1/user/catalogs`、`/rule-categories`、`/rule-sources`、`/payment-methods`、`/stripe-config`
+- 订阅：`GET /api/v1/user/subscriptions`、`/subscriptions/{id}`、`/subscriptions/{id}/cancel`、`/subscriptions/{id}/resume`
+- 支付：`POST /api/v1/user/payment-transactions/{id}/mock-success`、`GET /api/v1/user/payment-transactions/{id}/status`
+- 团队：`/teams/{team_id}/switch`、`/transfer-ownership`、`/invitations/batch-cancel`、`DELETE /invitations/{invitation_id}`
+- 节点：`POST /api/v1/node/dns-resolver/register`
+- 公共：`GET /api/v1/dns-config`、`GET /api/v1/build/{path}`
+- 管理员：`POST /api/v1/admin/login`
+
+## 2026-07-09 — 文档同步修复：代码与文档差异对齐
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-09 | doc | 修复 START.md：将错误的 `global_config_versions` 表名示例改为 `profile_versions` | ai-doc/START.md | ok |
+| 2026-07-09 | doc | 修复 01-ARCHITECTURE.md：更新表名 `config_versions` → `profile_versions`，更新节点表名 `nodes` → `resolver_nodes` | ai-doc/project-doc/01-ARCHITECTURE.md | ok |
+| 2026-07-09 | doc | 修复 02-MODULES.md：移除不存在的服务声明（ConfigBuildService、RuleLibraryService、AdminConsoleAuditService、SystemConfigService），补充实际存在的服务（ProfileConfigBuilder、RuleCategoryResolver、基础设施服务） | ai-doc/project-doc/02-MODULES.md | ok |
+| 2026-07-09 | doc | 修复 03-DATA-FLOW.md：更新表名 `config_versions` → `profile_versions` | ai-doc/project-doc/03-DATA-FLOW.md | ok |
+| 2026-07-09 | doc | 修复 04-FEATURES.md：添加威胁检测 API、设备 IP 绑定等新增功能 | ai-doc/project-doc/04-FEATURES.md | ok |
+| 2026-07-09 | doc | 修复 09-CLOSED-LOOP-AND-DATA-DESTINATIONS.md：更新表名 `config_versions` → `profile_versions`，更新节点表名 | ai-doc/project-doc/09-CLOSED-LOOP-AND-DATA-DESTINATIONS.md | ok |
+| 2026-07-09 | doc | 修复 rules/coding.md：更新表名 `config_versions` → `profile_versions`，更新域名描述 | ai-doc/rules/coding.md | ok |
+| 2026-07-09 | doc | 修复 specs/portal-web/data-schema.md：更新 console 域管理表列表 | ai-doc/specs/portal-web/data-schema.md | ok |
+| 2026-07-09 | doc | 修复 specs/portal-web/api.md：更新表名 `config_versions` → `profile_versions` | ai-doc/specs/portal-web/api.md | ok |
+| 2026-07-09 | doc | 修复 15-CONFIG-ARCHITECTURE.md：配置拉取间隔 5分钟→30秒，版本检查间隔 5分钟→2分钟 | ai-doc/project-doc/15-CONFIG-ARCHITECTURE.md | ok |
+| 2026-07-09 | doc | 修复 billing-finance.md：移除 dns-console-web 引用（3处），改为 portal-web(原 console 域) | ai-doc/specs/portal-web/billing-finance.md | ok |
+| 2026-07-09 | doc | 修复 nats/events.md：移除 dns-console-web 引用（7处），改为 portal-web(原 console 域) | ai-doc/specs/nats/events.md | ok |
+| 2026-07-09 | doc | 修复 geodns/data-model.md：移除 dns-console-web 引用，改为 portal-web(原 console 域) | ai-doc/specs/geodns/data-model.md | ok |
+| 2026-07-09 | doc | 修复 specs/portal-web/api.md：更新"当前实现映射"过时内容（2026-06-12→2026-07-09），用户 ID 格式 `usr_01H...`→整型 | ai-doc/specs/portal-web/api.md | ok |
+| 2026-07-09 | doc | 修复 data-schema.md：personal_access_tokens 字段对齐实际迁移文件（id bigint 非 uuid，token 非 token_hash，补充 abilities 字段） | ai-doc/specs/portal-web/data-schema.md | ok |
+| 2026-07-09 | doc | 修复 START.md：移除已删除目录引用（migrations/*, deploy/*） | ai-doc/START.md | ok |
+
 ## 2026-07-09 — P0 修复：前端 UI 审查问题（硬编码/验证/加载/确认/变量声明）
 
 | 日期 | 类型 | 描述 | 涉及文件 | 涉及文档 | 状态 |
@@ -478,7 +562,7 @@
 | D1 | 项目从 4 包缩减为 3 包;`portal-web` 内新增"原 console 域"子命名空间 | `01-ARCHITECTURE.md` §3, §13;`02-MODULES.md` §1, §2(整段替换) |
 | D2 | DNS 节点控制台功能(节点管理 / 心跳 / 配置版本 / 发布 / 查询日志接入 / 健康视图 / 规则库 / 系统配置 / 节点侧审计 / GeoDNS 映射)并入 `portal-web` 总后台;`portal-web` 后台新增对应 Admin SPA | `04-FEATURES.md` §1, §4;`05-PLANS.md` §8A 新增 Stage M |
 | D3 | `dns-resolver` / `geodns` 与控制面交互从 `dns-console-web` 改指向 `portal-web`;`dns-resolver` / `geodns` 的 Go 代码**零修改**,只改部署配置 | `03-DATA-FLOW.md` §3-§6;`specs/dns-resolver/protocol.md` §1 Endpoint 注释 |
-| D4 | 数据库合并:`nodes` / `node_tokens` / `node_heartbeats` / `config_versions` / `publish_tasks` / `task_executions` / `query_log_ingest_batches` / `geo_dns_mappings` / `rule_sources` / `system_config` / `admin_audit_logs` 全部并入 `portal-web` 现有 PostgreSQL `ocer_dns` 库 | `02-MODULES.md` §1.4 数据所有权矩阵;`migrations/postgresql/002_dns_console_web_mvp.sql` 迁移并入 `001_portal_web_mvp.sql` 同库 |
+| D4 | 数据库合并:`resolver_nodes` / `resolver_node_tokens` / `resolver_node_heartbeats` / `profile_versions` / `publish_tasks` / `task_executions` / `query_log_ingest_batches` / `geo_dns_mappings` / `rule_sources` / `system_config` / `admin_audit_logs` 全部并入 `portal-web` 现有 MySQL `dns_` 前缀库 | `02-MODULES.md` §1.4 数据所有权矩阵;迁移文件合并至 `portal-web/database/migrations/` |
 | D5 | 路由:portal-web 的 `routes/api.php` 合并三套(`/api/v1/admin/*` 全部 + `/api/v1/agent/*` + `/api/v1/internal/*`);沿用原 console 路径不变 | `specs/portal-web/api.md` 追加 §A, §B, §C;`specs/dns-console-web/api.md` 标注"已并入 portal-web 总后台" |
 | D6 | `audit_logs`(portal 写用户/计费审计)与 `admin_audit_logs`(原 console 写节点/发布审计)**仍为两张独立表**,不合并字段 | `02-MODULES.md` §1.4;`migrations/postgresql/001_portal_web_mvp.sql` |
 | D7 | 节点凭据由 `portal-web` 总后台的 `Admin/Node` 预签发,响应一次性返回,`portal-web` 仅存 hash;`/api/v1/admin/nodes` 鉴权沿用原 console shared token(`shared.token:admin`),**不**改用 Sanctum,行为 100% 一致 | `01-ARCHITECTURE.md` §6.2;`03-DATA-FLOW.md` §3 节点凭据来源段 |
