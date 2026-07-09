@@ -12,6 +12,7 @@ Route::post('logout', [AuthController::class, 'logout']);
 // 仪表盘 & 工作区
 Route::get('dashboard', [UserDashboardController::class, 'overview']);
 Route::get('dns-endpoints', [UserWorkspaceController::class, 'dnsEndpoints']);
+Route::get('my-ip', [UserWorkspaceController::class, 'myIp']);
 Route::get('top-domains', [UserWorkspaceController::class, 'topDomains']);
 Route::get('devices', [UserWorkspaceController::class, 'devices']);
 Route::get('analytics', [UserWorkspaceController::class, 'analytics']);

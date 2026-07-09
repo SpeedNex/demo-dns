@@ -542,4 +542,16 @@ final class UserWorkspaceController
     {
         return response()->json(['data' => $this->workspace->deleteDevice($request->user()->uid, $deviceId)]);
     }
+
+    /**
+     * Return the client's public IP as seen by the server.
+     */
+    public function myIp(Request $request): JsonResponse
+    {
+        return response()->json([
+            'data' => [
+                'ip' => $request->ip(),
+            ],
+        ]);
+    }
 }

@@ -61,6 +61,18 @@
                                 <button class="change-btn" @click="showBindDialog = true">{{ $t('dashboard.changeBinding') }}</button>
                             </div>
                         </div>
+
+                        <!-- Current Client Public IP -->
+                        <div class="endpoint-row-item">
+                            <div class="endpoint-label">
+                                {{ $t('dashboard.currentClientIp') }}
+                                <span class="endpoint-hint-inline">{{ $t('dashboard.currentClientIpHint') }}</span>
+                            </div>
+                            <div class="code-row">
+                                <div class="code">{{ clientPublicIp || '—' }}</div>
+                                <button class="copy-btn" @click="copyText(clientPublicIp)">{{ $t('dashboard.copy') }}</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -248,6 +260,7 @@ const endpoints = ref({ profile_id: '', doh: '', dot: '', doq: '', doq_url: '', 
 const topVisited = ref([])
 const topBlocked = ref([])
 const devices = ref([])
+const clientPublicIp = ref('')
 const showBindDialog = ref(false)
 const bindForm = ref({ deviceId: '', sourceIp: '' })
 const bindDeviceHashed = ref(false) // 标记选择的设备是否为隐私保护
@@ -337,7 +350,12 @@ const fetchData = async () => {
         devices.value = []
     }
 
-    // 预留：未来可添加其他数据获取
+    try {
+        const { data } = await client.get('/user/my-ip')
+        clientPublicIp.value = data.data?.ip || ''
+    } catch {
+        // ignore
+    }
 }
 
 // 更换设备 IP 绑定
@@ -577,6 +595,17 @@ watch(currentProfileId, fetchData)
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.endpoint-hint-inline {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 11px;
+    color: #94a3b8;
     margin-bottom: 6px;
 }
 .mt-6 { margin-top: 6px; }
