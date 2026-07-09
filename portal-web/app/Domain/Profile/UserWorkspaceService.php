@@ -475,6 +475,9 @@ final class UserWorkspaceService
         $ipv4 = $geoDnsNodes->pluck('public_ipv4')->filter()->unique()->values()->all();
         $ipv6 = $geoDnsNodes->pluck('public_ipv6')->filter()->unique()->values()->all();
 
+        // 主 GeoDNS IP（用于 Dashboard 显示）
+        $endpointIp = $ipv4[0] ?? null;
+
         return [
             'profile_id' => $shortId,
             // 新格式：通过GeoDNS调度（推荐）
@@ -490,6 +493,7 @@ final class UserWorkspaceService
             'server_domain_legacy' => $legacyDomain,  // 直连Resolver域名（备用）
             'ipv4' => $ipv4,  // GeoDNS IPv4（传统 DNS 服务器）
             'ipv6' => $ipv6,  // GeoDNS IPv6（传统 DNS 服务器）
+            'endpoint_ip' => $endpointIp,  // 主 GeoDNS 节点 IP（Dashboard 显示）
         ];
     }
 

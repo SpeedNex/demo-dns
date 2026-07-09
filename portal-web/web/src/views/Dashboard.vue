@@ -8,20 +8,19 @@
 
         <!-- Main Content Grid -->
         <section class="content-grid">
-            <!-- Left Column: Device Info -->
+            <!-- Left Column: Server Info -->
             <div class="left-col">
                 <div class="card">
                     <div class="card-header">
                         <h2>{{ $t('dashboard.deviceInfo') }}</h2>
                     </div>
                     <div class="card-body">
-                        <!-- Device IP Binding -->
+                        <!-- DNS Server IP (GeoDNS) -->
                         <div class="endpoint-row-item">
-                            <div class="endpoint-label">{{ $t('dashboard.deviceIpBinding') }}</div>
+                            <div class="endpoint-label">{{ $t('dashboard.dnsServerIp') }}</div>
                             <div class="code-row">
-                                <div class="code">{{ boundDeviceIp || '—' }}</div>
-                                <button class="copy-btn" @click="copyText(boundDeviceIp)">{{ $t('dashboard.copy') }}</button>
-                                <button class="change-btn" @click="showBindDialog = true">{{ $t('dashboard.changeBinding') }}</button>
+                                <div class="code">{{ geodnsIp || '—' }}</div>
+                                <button class="copy-btn" @click="copyText(geodnsIp)">{{ $t('dashboard.copy') }}</button>
                             </div>
                         </div>
 
@@ -38,42 +37,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Device IP Binding Dialog -->
-                <el-dialog v-model="showBindDialog" :title="$t('dashboard.changeDeviceIp')" width="400px">
-                    <el-form :model="bindForm" label-width="100px">
-                        <el-form-item :label="$t('dashboard.selectDevice')">
-                            <el-select v-model="bindForm.deviceId" placeholder="Select device" style="width: 100%">
-                                <el-option
-                                    v-for="device in devices"
-                                    :key="device.id"
-                                    :label="device.name || device.id"
-                                    :value="device.id"
-                                />
-                            </el-select>
-                        </el-form-item>
-                        <el-form-item :label="$t('dashboard.bindIp')">
-                            <el-input 
-                                v-model="bindForm.sourceIp" 
-                                placeholder="e.g. 192.168.1.100"
-                                :disabled="bindDeviceHashed"
-                            />
-                            <div v-if="bindDeviceHashed" class="el-form-item__tip">
-                                {{ $t('dashboard.deviceHashedTip') }}
-                            </div>
-                        </el-form-item>
-                    </el-form>
-                    <template #footer>
-                        <el-button @click="showBindDialog = false">{{ $t('dashboard.cancel') }}</el-button>
-                        <el-button 
-                            type="primary" 
-                            @click="handleBindIp"
-                            :disabled="bindDeviceHashed"
-                        >
-                            {{ $t('dashboard.bind') }}
-                        </el-button>
-                    </template>
-                </el-dialog>
 
                 <!-- Top Domains in Left Column -->
                 <div class="card section-gap">
@@ -97,7 +60,7 @@
 
             <!-- Right Column -->
             <aside class="right-col">
-                <!-- Devices Panel -->
+                <!-- Devices Panel (auto-discovered) -->
                 <div class="card">
                     <div class="card-header">
                         <h2>{{ $t('devices.title') || 'Devices' }}</h2>
@@ -109,11 +72,12 @@
                                 <div class="device-info">
                                     <span class="device-status" :class="device.is_online ? 'online' : 'offline'"></span>
                                     <span class="device-name">{{ device.name || device.id }}</span>
+                                    <span class="device-ip" v-if="device.public_ip && device.public_ip !== '—'">&middot; {{ device.public_ip }}</span>
                                 </div>
                                 <span class="device-status-text">{{ device.is_online ? $t('devices.online') : $t('devices.offline') }}</span>
                             </div>
                             <div v-if="!devices.length" class="device-row empty">
-                                <span>No devices</span>
+                                <span>{{ $t('dashboard.noDevices') }}</span>
                             </div>
                         </div>
                         <div class="card-footer-link">
@@ -206,7 +170,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
@@ -224,37 +188,7 @@ const topVisited = ref([])
 const topBlocked = ref([])
 const devices = ref([])
 const clientPublicIp = ref('')
-const showBindDialog = ref(false)
-const bindForm = ref({ deviceId: '', sourceIp: '' })
-const bindDeviceHashed = ref(false) // 标记选择的设备是否为隐私保护
-
-// 计算当前绑定的设备 IP（优先显示明文 IP，其次显示"隐私保护"）
-const boundDeviceIp = computed(() => {
-    const boundDevice = devices.value.find(d => d.source_ip)
-    if (!boundDevice) return ''
-    if (boundDevice.source_ip === 'hashed') return t('dashboard.privacyProtected')
-    return boundDevice.source_ip
-})
-
-// 监听设备选择变化，自动填充 IP
-watch(() => bindForm.value.deviceId, (newDeviceId) => {
-    const selectedDevice = devices.value.find(d => d.id === newDeviceId)
-    if (!selectedDevice) {
-        bindForm.value.sourceIp = ''
-        bindDeviceHashed.value = false
-        return
-    }
-    
-    if (selectedDevice.source_ip === 'hashed') {
-        // 隐私保护设备，不允许更换
-        bindForm.value.sourceIp = ''
-        bindDeviceHashed.value = true
-    } else {
-        // 自动填充当前 IP
-        bindForm.value.sourceIp = selectedDevice.source_ip || ''
-        bindDeviceHashed.value = false
-    }
-})
+const geodnsIp = ref('')
 
 function formatNumber(n) {
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M'
@@ -280,19 +214,18 @@ const fetchData = async () => {
         const ep = data.data || {}
         endpoints.value = {
             profile_id: ep.profile_id || '',
-            // 新格式：GeoDNS调度（推荐）
             doh: ep.doh || '',
             dot: ep.dot || '',
             doq: ep.doq || '',
             doq_url: ep.doq_url || '',
-            // 备用：直连Resolver（兼容旧格式）
             doh_legacy: ep.doh_legacy || '',
             dot_legacy: ep.dot_legacy || '',
             doq_legacy: ep.doq_legacy || '',
-            // 域名显示
             server_domain: ep.server_domain || '',
             server_domain_legacy: ep.server_domain_legacy || '',
         }
+        // GeoDNS 分配的 IP 地址
+        geodnsIp.value = ep.endpoint_ip || ep.server_ip || ep.server_domain || ''
     } catch {
         // Endpoints optional
     }
@@ -318,29 +251,6 @@ const fetchData = async () => {
         clientPublicIp.value = data.data?.ip || ''
     } catch {
         // ignore
-    }
-}
-
-// 更换设备 IP 绑定
-async function handleBindIp() {
-    if (!bindForm.value.deviceId || !bindForm.value.sourceIp) {
-        ElMessage.warning(t('dashboard.bindFormRequired'))
-        return
-    }
-
-    try {
-        const { data } = await client.put(`/user/devices/${bindForm.value.deviceId}`, {
-            source_ip: bindForm.value.sourceIp,
-        })
-        ElMessage.success(t('dashboard.bindSuccess'))
-        showBindDialog.value = false
-        // 重新获取设备列表
-        const { data: devicesData } = await client.get('/user/devices')
-        devices.value = devicesData.data ?? []
-        // 清空表单
-        bindForm.value = { deviceId: '', sourceIp: '' }
-    } catch (err) {
-        ElMessage.error(t('dashboard.bindFailed'))
     }
 }
 
@@ -418,32 +328,6 @@ watch(currentProfileId, fetchData)
     margin-top: 24px;
 }
 
-/* ========== Buttons ========== */
-.btn {
-    height: 36px;
-    padding: 0 14px;
-    border-radius: 10px;
-    border: 1px solid var(--color-border-light, #dbe3ef);
-    background: var(--color-surface, #fff);
-    color: var(--color-text-secondary, #334155);
-    font-weight: 700;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-}
-.btn:hover {
-    background: #f1f5f9;
-}
-.btn-primary {
-    background: var(--color-primary, #2563eb);
-    color: #fff;
-    border-color: var(--color-primary, #2563eb);
-}
-.btn-primary:hover {
-    background: var(--color-primary-hover, #1d4ed8);
-}
-
 /* ========== Badges ========== */
 .badge-active {
     display: inline-flex;
@@ -455,94 +339,14 @@ watch(currentProfileId, fetchData)
     font-size: 12px;
     font-weight: 800;
 }
-.badge-allow {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 10px;
-    border-radius: var(--radius-sm);
-    background: var(--color-success-bg, #f0fdf4);
-    color: var(--color-success, #16a34a);
-    font-size: 12px;
+.badge-endpoint {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    color: #fff;
+    font-size: 11px;
     font-weight: 700;
-}
-.badge-danger {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 10px;
-    border-radius: var(--radius-sm);
-    background: var(--color-danger-bg, #fef2f2);
-    color: var(--color-danger, #dc2626);
-    font-size: 12px;
-    font-weight: 700;
-}
-.badge-on {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 10px;
-    border-radius: var(--radius-sm);
-    background: var(--color-success-bg, #f0fdf4);
-    color: var(--color-success, #16a34a);
-    font-size: 12px;
-    font-weight: 700;
-}
-.badge-off {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 10px;
-    border-radius: var(--radius-sm);
-    background: var(--color-bg-secondary, #f8fafc);
-    color: var(--color-text-muted, #64748b);
-    font-size: 12px;
-    font-weight: 700;
-}
-
-/* ========== Actions ========== */
-.actions {
-    display: flex;
-    gap: 8px;
-}
-.small-btn {
-    padding: 6px 10px;
-    border-radius: 8px;
-    border: 1px solid var(--color-border-light, #dbe3ef);
-    background: var(--color-surface, #fff);
-    cursor: pointer;
-    color: var(--color-text-secondary, #475569);
-    font-weight: 700;
-    font-size: 12px;
-    transition: all 0.2s;
-}
-.small-btn:hover {
-    background: #f1f5f9;
-}
-
-/* ========== Device Grid ========== */
-.device-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-}
-.device {
-    padding: 18px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-xl);
-    background: var(--color-bg-secondary);
-}
-.device strong {
-    display: block;
-    margin-bottom: 8px;
-    color: var(--color-text, #0f172a);
-    font-size: 15px;
-}
-.device span {
-    color: var(--color-text-muted, #64748b);
-    font-size: 13px;
-}
-
-/* ========== Right Column ========== */
-.right-col {
-    display: grid;
-    gap: 24px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.3px;
 }
 
 /* ========== Endpoint Row Item ========== */
@@ -573,21 +377,12 @@ watch(currentProfileId, fetchData)
 }
 .mt-6 { margin-top: 6px; }
 
-/* ========== Badge Endpoint ========== */
-.badge-endpoint {
-    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 999px;
-    letter-spacing: 0.3px;
-}
-
+/* ========== Code Row ========== */
 .code-row {
     display: flex;
     gap: 10px;
     align-items: center;
+    margin-top: 8px;
 }
 .code {
     flex: 1;
@@ -617,24 +412,6 @@ watch(currentProfileId, fetchData)
 }
 .copy-btn:hover {
     background: var(--color-primary-hover, #1d4ed8);
-}
-.change-btn {
-    height: 36px;
-    padding: 0 14px;
-    border-radius: 10px;
-    border: 1px solid var(--color-border, #e2e8f0);
-    background: #fff;
-    color: var(--color-text, #0f172a);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.2s;
-    margin-left: 8px;
-}
-.change-btn:hover {
-    background: var(--color-bg-hover, #f1f5f9);
-    border-color: var(--color-primary, #2563eb);
 }
 
 /* ========== Domain List ========== */
@@ -714,6 +491,10 @@ watch(currentProfileId, fetchData)
 .device-name {
     color: var(--color-text, #0f172a);
     font-weight: 500;
+}
+.device-ip {
+    color: var(--color-text-muted, #64748b);
+    font-size: 12px;
 }
 .device-status-text {
     color: var(--color-text-muted, #64748b);
@@ -868,8 +649,7 @@ watch(currentProfileId, fetchData)
 
 /* ========== Responsive ========== */
 @media (max-width: 1080px) {
-    .content-grid,
-    .device-grid {
+    .content-grid {
         grid-template-columns: 1fr;
     }
 }
