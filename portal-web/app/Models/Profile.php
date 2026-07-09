@@ -19,7 +19,11 @@ class Profile extends BaseModel
     {
         do {
             $uid = substr(bin2hex(random_bytes(3)), 0, 6);
+            // 必须同时包含数字和字母（a-f），不能是纯数字或纯字母
             if (! ctype_xdigit($uid)) {
+                continue;
+            }
+            if (ctype_digit($uid) || ctype_alpha($uid)) {
                 continue;
             }
             $exists = self::where('profile_id', $uid)->exists();
