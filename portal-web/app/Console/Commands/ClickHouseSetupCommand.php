@@ -67,7 +67,8 @@ CREATE TABLE IF NOT EXISTS dns_logs (
     INDEX idx_domain domain TYPE bloom_filter(0.01) GRANULARITY 2,
     INDEX idx_client_ip client_ip TYPE bloom_filter(0.01) GRANULARITY 2,
     INDEX idx_action action TYPE set(100) GRANULARITY 2,
-    INDEX idx_profile profile_id TYPE bloom_filter(0.01) GRANULARITY 2
+    INDEX idx_profile profile_id TYPE bloom_filter(0.01) GRANULARITY 2,
+    INDEX idx_reason reason TYPE set(100) GRANULARITY 2
 ) ENGINE = MergeTree()
 PARTITION BY toYYYYMM(event_time)
 ORDER BY (event_time, profile_id)

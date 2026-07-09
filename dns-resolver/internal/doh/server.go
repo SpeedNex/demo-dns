@@ -160,12 +160,20 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 	// validator is wired.  Owner id is taken from the X-User-Id header
 	// (set by the DoH reverse proxy after JWT verification).  We do not
 	// modify the rest of the resolution pipeline.
+	//
+	// P1-7 修复：验证失败时返回 NX domain 而非 403，防止用户枚举攻击。
+	// 攻击者可通过 403 vs NXDOMAIN 的响应差异推断有效 profile ID。
 	if s.validator != nil && profileUID != "" {
 		userID := r.Header.Get("X-User-Id")
 		if err := s.validator.Validate(profileUID, userID); err != nil {
 			log.Printf("[DoH] profile验证失败 err=%v profile=%s user=%s", err, profileUID, userID)
 			s.metrics.IncErrors()
-			http.Error(w, "profile not authorized", http.StatusForbidden)
+			// 返回 NXDOMAIN 而非 403，与不存在域名响应一致
+			failReply := new(dns.Msg)
+			failReply.SetRcode(new(dns.Msg), dns.RcodeNameError)
+			packed, _ := failReply.Pack()
+			w.Header().Set("Content-Type", "application/dns-message")
+			w.Write(packed)
 			return
 		}
 	}
@@ -278,14 +286,15 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 			}
 		}
 		// Redis实时blocklist检查（弥补quota:check 5分钟窗口期的漏洞）
-		if !quotaExceeded && s.cache != nil && s.cache.IsQuotaExceeded(profileUID) {
-			quotaExceeded = true
-		}
-		if quotaExceeded {
-			log.Printf("[配额] profile=%s client=%s domain=%s 配额超限", profileUID, clientAddr, domain)
-			http.Error(w, "quota exceeded", http.StatusForbidden)
-			return
-		}
+	if !quotaExceeded && s.cache != nil && s.cache.IsQuotaExceeded(profileUID) {
+		quotaExceeded = true
+	}
+	if quotaExceeded {
+		log.Printf("[配额] profile=%s client=%s domain=%s 配额超限", profileUID, clientAddr, domain)
+		s.metrics.IncQuotaBlockHits()
+		http.Error(w, "quota exceeded", http.StatusForbidden)
+		return
+	}
 
 		// Extract device info from headers
 		deviceUID, deviceType = resolver.ExtractDeviceFromHeaders(map[string]string{

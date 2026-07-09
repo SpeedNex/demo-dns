@@ -9,6 +9,7 @@
 package cache
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -310,19 +311,42 @@ func (pc *ProfileCache) listDiskFiles() []string {
 
 // DoOnce 包装 singleflight.Group.Do，确保同一 Profile 仅回源一次。
 // fn 是回源拉取函数，返回 data 和 error。
+// P2-9 修复：内部添加 10s 超时，防止回源阻塞导致所有等待 goroutine 永久挂起。
 func (pc *ProfileCache) DoOnce(profileID string, fn func() (json.RawMessage, int64, error)) (json.RawMessage, int64, error) {
-	result, err, _ := pc.singleGroup.Do(profileID, func() (interface{}, error) {
-		data, version, err := fn()
-		if err != nil {
-			return nil, err
-		}
-		return &cacheResult{data: data, version: version}, nil
-	})
-	if err != nil {
-		return nil, 0, err
+	type result struct {
+		data    json.RawMessage
+		version int64
+		err     error
 	}
-	r := result.(*cacheResult)
-	return r.data, r.version, nil
+	ch := pc.singleGroup.DoChan(profileID, func() (interface{}, error) {
+		// 带超时的回源调用
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		res := make(chan result, 1)
+		go func() {
+			data, version, err := fn()
+			res <- result{data: data, version: version, err: err}
+		}()
+		select {
+		case r := <-res:
+			if r.err != nil {
+				return nil, r.err
+			}
+			return &cacheResult{data: r.data, version: r.version}, nil
+		case <-ctx.Done():
+			return nil, fmt.Errorf("fetch profile %s timeout: %w", profileID, ctx.Err())
+		}
+	})
+	select {
+	case r := <-ch:
+		if r.Err != nil {
+			return nil, 0, r.Err
+		}
+		if res, ok := r.Val.(*cacheResult); ok {
+			return res.data, res.version, nil
+		}
+		return nil, 0, fmt.Errorf("unexpected result type for profile %s", profileID)
+	}
 }
 
 type cacheResult struct {

@@ -79,7 +79,7 @@
                 <!-- Server Info: DNS Server IP + Current Client IP -->
                 <div class="card">
                     <div class="card-header">
-                        <h2>{{ $t('dashboard.deviceInfo') }}</h2>
+                        <h2>{{ $t('dashboard.boundIpTitle') }}</h2>
                     </div>
                     <div class="card-body">
                         <!-- DNS Server IP (GeoDNS) -->
@@ -131,35 +131,6 @@
                     </div>
                 </div>
 
-                <!-- Server Info: DNS Server IP + Current Client IP -->
-                <div class="card section-gap">
-                    <div class="card-header">
-                        <h2>{{ $t('dashboard.deviceInfo') }}</h2>
-                    </div>
-                    <div class="card-body">
-                        <!-- DNS Server IP (GeoDNS) -->
-                        <div class="endpoint-row-item">
-                            <div class="endpoint-label">{{ $t('dashboard.dnsServerIp') }}</div>
-                            <div class="code-row">
-                                <div class="code">{{ geodnsIp || '—' }}</div>
-                                <button class="copy-btn" @click="copyText(geodnsIp)">{{ $t('dashboard.copy') }}</button>
-                            </div>
-                        </div>
-
-                        <!-- Current Client Public IP -->
-                        <div class="endpoint-row-item">
-                            <div class="endpoint-label">
-                                {{ $t('dashboard.currentClientIp') }}
-                                <span class="endpoint-hint-inline">{{ $t('dashboard.currentClientIpHint') }}</span>
-                            </div>
-                            <div class="code-row">
-                                <div class="code">{{ clientPublicIp || '—' }}</div>
-                                <button class="copy-btn" @click="copyText(clientPublicIp)">{{ $t('dashboard.copy') }}</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Top Blocked Domains -->
                 <div class="card section-gap">
                     <div class="card-header">
@@ -181,7 +152,7 @@
             </aside>
         </section>
 
-        <!-- Google Chrome Setup Guide -->
+        <!-- Setup Guide: Chrome OS / Android tabs -->
         <section class="install-guide">
             <div class="card">
                 <div class="card-header">
@@ -195,47 +166,103 @@
                     </div>
                     <span class="guide-tag">{{ $t('dashboard.guideTag') }}</span>
                 </div>
+
+                <!-- Tabs -->
+                <div class="guide-tabs">
+                    <button
+                        class="guide-tab"
+                        :class="{ active: guideTab === 'chrome' }"
+                        @click="guideTab = 'chrome'"
+                    >{{ $t('dashboard.guideTabChromeOS') }}</button>
+                    <button
+                        class="guide-tab"
+                        :class="{ active: guideTab === 'android' }"
+                        @click="guideTab = 'android'"
+                    >{{ $t('dashboard.guideTabAndroid') }}</button>
+                </div>
+
                 <div class="card-body">
-                    <p class="guide-desc">{{ $t('dashboard.guideDesc') }}</p>
+                    <!-- Chrome OS tab -->
+                    <div v-if="guideTab === 'chrome'">
+                        <p class="guide-desc">{{ $t('dashboard.guideDesc') }}</p>
 
-                    <ol class="guide-steps">
-                        <li>
-                            <span class="step-no">1</span>
-                            <div class="step-body">
-                                <strong>{{ $t('dashboard.guideStep1Title') }}</strong>
-                                <span>{{ $t('dashboard.guideStep1Desc') }}</span>
-                            </div>
-                        </li>
-                        <li>
-                            <span class="step-no">2</span>
-                            <div class="step-body">
-                                <strong>{{ $t('dashboard.guideStep2Title') }}</strong>
-                                <span>{{ $t('dashboard.guideStep2Desc') }}</span>
-                            </div>
-                        </li>
-                        <li>
-                            <span class="step-no">3</span>
-                            <div class="step-body">
-                                <strong>{{ $t('dashboard.guideStep3Title') }}</strong>
-                                <span>{{ $t('dashboard.guideStep3Desc') }}</span>
-                                <div class="code-row guide-code">
-                                    <div class="code">{{ endpoints.doh || '—' }}</div>
-                                    <button class="copy-btn" @click="copyText(endpoints.doh)">{{ $t('dashboard.copy') }}</button>
+                        <ol class="guide-steps">
+                            <li>
+                                <span class="step-no">1</span>
+                                <div class="step-body">
+                                    <strong>{{ $t('dashboard.guideStep1Title') }}</strong>
+                                    <span>{{ $t('dashboard.guideStep1Desc') }}</span>
                                 </div>
-                            </div>
-                        </li>
-                        <li>
-                            <span class="step-no">4</span>
-                            <div class="step-body">
-                                <strong>{{ $t('dashboard.guideStep4Title') }}</strong>
-                                <span>{{ $t('dashboard.guideStep4Desc') }}</span>
-                            </div>
-                        </li>
-                    </ol>
+                            </li>
+                            <li>
+                                <span class="step-no">2</span>
+                                <div class="step-body">
+                                    <strong>{{ $t('dashboard.guideStep2Title') }}</strong>
+                                    <span>{{ $t('dashboard.guideStep2Desc') }}</span>
+                                </div>
+                            </li>
+                            <li>
+                                <span class="step-no">3</span>
+                                <div class="step-body">
+                                    <strong>{{ $t('dashboard.guideStep3Title') }}</strong>
+                                    <span>{{ $t('dashboard.guideStep3Desc') }}</span>
+                                    <div class="code-row guide-code">
+                                        <div class="code">{{ endpoints.doh || '—' }}</div>
+                                        <button class="copy-btn" @click="copyText(endpoints.doh)">{{ $t('dashboard.copy') }}</button>
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <span class="step-no">4</span>
+                                <div class="step-body">
+                                    <strong>{{ $t('dashboard.guideStep4Title') }}</strong>
+                                    <span>{{ $t('dashboard.guideStep4Desc') }}</span>
+                                </div>
+                            </li>
+                        </ol>
 
-                    <div class="guide-note">
-                        <span class="note-icon">i</span>
-                        <span>{{ $t('dashboard.guideNote') }}</span>
+                        <div class="guide-note">
+                            <span class="note-icon">i</span>
+                            <span>{{ $t('dashboard.guideNote') }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Android tab -->
+                    <div v-else>
+                        <p class="guide-desc">{{ $t('dashboard.guideAndroidTitle') }}</p>
+
+                        <ol class="guide-steps">
+                            <li>
+                                <span class="step-no">1</span>
+                                <div class="step-body">
+                                    <strong>{{ $t('dashboard.guideAndroidStep1Title') }}</strong>
+                                    <span>{{ $t('dashboard.guideAndroidStep1Desc') }}</span>
+                                </div>
+                            </li>
+                            <li>
+                                <span class="step-no">2</span>
+                                <div class="step-body">
+                                    <strong>{{ $t('dashboard.guideAndroidStep2Title') }}</strong>
+                                    <span>{{ $t('dashboard.guideAndroidStep2Desc') }}</span>
+                                </div>
+                            </li>
+                            <li>
+                                <span class="step-no">3</span>
+                                <div class="step-body">
+                                    <strong>{{ $t('dashboard.guideAndroidStep3Title') }}</strong>
+                                    <span>{{ $t('dashboard.guideAndroidStep3Desc') }}</span>
+                                    <div class="code-row guide-code">
+                                        <div class="code">{{ endpoints.dot || '—' }}</div>
+                                        <button class="copy-btn" @click="copyText(endpoints.dot)">{{ $t('dashboard.copy') }}</button>
+                                    </div>
+                                </div>
+                            </li>
+                        </ol>
+
+                        <div class="guide-note">
+                            <span class="note-icon">i</span>
+                            <span>{{ $t('dashboard.guideAndroidNote') }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -261,8 +288,9 @@ const endpoints = ref({ profile_id: '', doh: '', dot: '', doq: '', doq_url: '', 
 const topVisited = ref([])
 const topBlocked = ref([])
 const devices = ref([])
-const clientPublicIp = ref('')
 const geodnsIp = ref('')
+const clientPublicIp = ref('')
+const guideTab = ref('chrome')
 
 function formatNumber(n) {
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M'
@@ -640,6 +668,30 @@ watch(currentProfileId, fetchData)
     color: var(--color-info-text, #2563eb);
     font-size: 12px;
     font-weight: 700;
+}
+.guide-tabs {
+    display: flex;
+    gap: 0;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+.guide-tab {
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--color-text-muted, #64748b);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+.guide-tab:hover {
+    color: var(--color-text, #0f172a);
+}
+.guide-tab.active {
+    color: var(--color-primary, #2563eb);
+    border-bottom-color: var(--color-primary, #2563eb);
 }
 .guide-desc {
     color: var(--color-text-muted, #64748b);

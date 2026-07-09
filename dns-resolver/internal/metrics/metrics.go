@@ -14,6 +14,10 @@ type Metrics struct {
 	errorsTotal     atomic.Int64
 	activeProfiles  atomic.Int64
 	currentQPS      atomic.Int64
+	// P3-13 新增：日志缓冲区刷新失败计数（ClickHouse 写入失败）
+	logFlushFailed  atomic.Int64
+	// P3-13 新增：配额 blocklist 命中计数
+	quotaBlockHits  atomic.Int64
 }
 
 // New creates a new Metrics collector.
@@ -51,6 +55,16 @@ func (m *Metrics) SetQPS(qps int64) {
 	m.currentQPS.Store(qps)
 }
 
+// IncLogFlushFailed increments the log flush failure counter.
+func (m *Metrics) IncLogFlushFailed() {
+	m.logFlushFailed.Add(1)
+}
+
+// IncQuotaBlockHits increments the quota blocklist hit counter.
+func (m *Metrics) IncQuotaBlockHits() {
+	m.quotaBlockHits.Add(1)
+}
+
 // Snapshot returns a point-in-time snapshot of all metrics.
 func (m *Metrics) Snapshot() map[string]int64 {
 	return map[string]int64{
@@ -60,6 +74,8 @@ func (m *Metrics) Snapshot() map[string]int64 {
 		"errors_total":     m.errorsTotal.Load(),
 		"active_profiles":  m.activeProfiles.Load(),
 		"current_qps":      m.currentQPS.Load(),
+		"log_flush_failed": m.logFlushFailed.Load(),
+		"quota_block_hits": m.quotaBlockHits.Load(),
 	}
 }
 
@@ -92,5 +108,13 @@ func (m *Metrics) PrometheusHandler() http.HandlerFunc {
 		fmt.Fprintln(w, "# HELP dns_current_qps Current queries per second")
 		fmt.Fprintln(w, "# TYPE dns_current_qps gauge")
 		fmt.Fprintf(w, "dns_current_qps %d\n", snap["current_qps"])
+
+		fmt.Fprintln(w, "# HELP dns_log_flush_failed Total log flush failures")
+		fmt.Fprintln(w, "# TYPE dns_log_flush_failed counter")
+		fmt.Fprintf(w, "dns_log_flush_failed %d\n", snap["log_flush_failed"])
+
+		fmt.Fprintln(w, "# HELP dns_quota_block_hits Total quota blocklist hits")
+		fmt.Fprintln(w, "# TYPE dns_quota_block_hits counter")
+		fmt.Fprintf(w, "dns_quota_block_hits %d\n", snap["quota_block_hits"])
 	}
 }

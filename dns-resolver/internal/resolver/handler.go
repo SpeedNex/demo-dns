@@ -98,6 +98,7 @@ func (h *Handler) Handle(
 		reply.SetReply(req)
 		reply.Rcode = dns.RcodeRefused
 		h.metrics.IncErrors()
+		h.metrics.IncQuotaBlockHits()
 		return &Result{Reply: reply, Action: "REFUSED", Reason: "quota_exceeded", Rcode: dns.RcodeRefused}
 	}
 

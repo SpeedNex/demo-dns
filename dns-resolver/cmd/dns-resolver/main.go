@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -174,11 +175,14 @@ func main() {
 		cfg.Logging.MaxBufferSize,
 		10*time.Second,
 		logging.Credentials{
-			NodeID: cfg.ControlPlane.NodeID,
-			APIKey: agt.LoadBearer(),
+			NodeID:        cfg.ControlPlane.NodeID,
+			APIKey:        agt.LoadBearer(),
+			SigningSecret: loadSigningSecret(cfg.ControlPlane.APIKeyPath),
 		},
 		agt.MarkLogFlush,
 	)
+	// P3-13: 日志刷新失败时上报 metrics
+	logBuffer.SetOnFlushFailed(metricsCollector.IncLogFlushFailed)
 
 	// Initialize Redis cache (no-op when redis.enabled is false). The cache
 	// is shared by the DoH and the DNS servers for query-count dedup. We
@@ -367,4 +371,18 @@ func main() {
 	}
 
 	log.Println("Server exited gracefully")
+}
+
+// loadSigningSecret 2026-07-09: 从 api_key_path 同目录读取 signing_secret 文件。
+// 返回空字符串时，Append 不会计算 HMAC 签名（向后兼容未配置签名的节点）。
+func loadSigningSecret(apiKeyPath string) string {
+	if apiKeyPath == "" {
+		return ""
+	}
+	secretPath := filepath.Join(filepath.Dir(apiKeyPath), "signing_secret")
+	data, err := os.ReadFile(secretPath)
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(data))
 }

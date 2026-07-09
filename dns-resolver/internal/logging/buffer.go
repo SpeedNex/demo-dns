@@ -61,6 +61,8 @@ type Buffer struct {
 	onFlush  func(time.Time)
 	direct   DirectWriter // UI.md #46 — optional ClickHouse direct writer
 	usage    []UsageEvent // UI.md #47 — independent usage-event queue
+	// P3-13: 可选 metrics 回调，用于记录刷新失败
+	onFlushFailed func()
 }
 
 // NewBuffer 构造一个日志缓冲器，调用方必须传入已校验的控制面凭据。
@@ -95,11 +97,30 @@ func (b *Buffer) Append(entry LogEntry) {
 		return
 	}
 
+	// P2-10 修复：截断超长字段，防止日志缓冲区膨胀
+	// DNS 域名最大 255 字节，reason/category 限制 128 字节
+	if len(entry.Domain) > 255 {
+		entry.Domain = entry.Domain[:255]
+	}
+	if len(entry.Reason) > 128 {
+		entry.Reason = entry.Reason[:128]
+	}
+	if len(entry.Category) > 128 {
+		entry.Category = entry.Category[:128]
+	}
+	if len(entry.DeviceUID) > 64 {
+		entry.DeviceUID = entry.DeviceUID[:64]
+	}
+	if len(entry.DeviceType) > 32 {
+		entry.DeviceType = entry.DeviceType[:32]
+	}
+
 	// 2026-07-09: 计算设备数据 HMAC 签名，防止客户端伪造 device_uid
 	// 签名内容：device_uid|device_type|client_ip|profile_id
-	if b.cred.APIKey != "" {
+	// 密钥：Node 的 signing_secret
+	if b.cred.SigningSecret != "" {
 		data := entry.DeviceUID + "|" + entry.DeviceType + "|" + entry.ClientIP + "|" + entry.ProfileUID
-		h := hmac.New(sha256.New, []byte(b.cred.APIKey))
+		h := hmac.New(sha256.New, []byte(b.cred.SigningSecret))
 		h.Write([]byte(data))
 		entry.Signature = hex.EncodeToString(h.Sum(nil))
 	}
@@ -150,6 +171,9 @@ func (b *Buffer) Flush() {
 	if err := b.sendBatch(batch); err != nil {
 		log.Printf("[日志] 发送失败 err=%v 写入本地缓冲", err)
 		b.writeToDisk(batch)
+		if b.onFlushFailed != nil {
+			b.onFlushFailed()
+		}
 		return
 	}
 	log.Printf("[日志] 刷新发送成功 大小=%d", len(batch))
@@ -351,6 +375,10 @@ type UsageEvent struct {
 }
 
 func (b *Buffer) SetDirectWriter(w DirectWriter) { b.direct = w }
+
+// SetOnFlushFailed 2026-07-09: 设置刷新失败回调，用于监控指标上报。
+// 回调在 sendBatch 失败且已写入本地磁盘后由 Flush() 调用。
+func (b *Buffer) SetOnFlushFailed(fn func()) { b.onFlushFailed = fn }
 
 // FlushDirect is the additive CH write path.  The existing Flush() /
 // sendBatch() flow is untouched; this hook is for callers that want
