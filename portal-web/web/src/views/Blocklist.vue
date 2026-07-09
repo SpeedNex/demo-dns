@@ -40,7 +40,7 @@
 
         <el-dialog v-model="showDialog" :title="$t('blocklist.addDomain')" width="500">
             <el-form ref="formRef" :model="form" label-position="top">
-                <el-form-item :label="$t('blocklist.domain')" prop="domain" :rules="[{ required: true, message: $t('common.required') }]">
+                <el-form-item :label="$t('blocklist.domain')" prop="domain" :rules="[validateDomain]">
                     <el-input v-model="form.domain" :placeholder="$t('blocklist.placeholder')" />
                 </el-form-item>
                 <el-alert type="info" :closable="false" style="margin-top:-4px">
@@ -55,7 +55,7 @@
 
         <el-dialog v-model="showEditDialog" :title="$t('blocklist.editRule')" width="500">
             <el-form ref="editFormRef" :model="editForm" label-position="top">
-                <el-form-item :label="$t('blocklist.domain')" prop="domain" :rules="[{ required: true, message: $t('common.required') }]">
+                <el-form-item :label="$t('blocklist.domain')" prop="domain" :rules="[validateDomain]">
                     <el-input v-model="editForm.domain" />
                 </el-form-item>
                 <el-alert type="info" :closable="false" style="margin-top:-4px">
@@ -94,6 +94,19 @@ const formRef = ref(null)
 const editFormRef = ref(null)
 const form = ref({ domain: '' })
 const editForm = ref({ id: null, domain: '', enabled: true })
+
+// 2026-07-09: domain 格式校验，拒绝 http:// https:// 前缀
+const validateDomain = (rule, value, callback) => {
+    if (!value) {
+        callback(new Error(t('common.required')))
+        return
+    }
+    if (/^https?:\/\//i.test(value)) {
+        callback(new Error('请输入正确的格式'))
+        return
+    }
+    callback()
+}
 
 const fetchRules = async () => {
     try {

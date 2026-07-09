@@ -280,8 +280,18 @@ final class UserWorkspaceController
     public function createRule(Request $request, string $listType): JsonResponse
     {
         // 2026-06-22: match_type 不再必填，系统默认 suffix 匹配（覆盖子域名）
+        // 2026-07-09: 拒绝带 http:// https:// 前缀的 URL，仅允许纯域名
         $validated = $request->validate([
-            'domain' => 'required|string|max:255',
+            'domain' => [
+                'required',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) {
+                    if (preg_match('#^https?://#i', $value)) {
+                        $fail('请输入正确的格式');
+                    }
+                },
+            ],
             'match_type' => ['sometimes', Rule::in(['exact', 'suffix', 'wildcard'])],
         ]);
 
@@ -323,8 +333,17 @@ final class UserWorkspaceController
 
     public function updateRule(Request $request, string $listType, string $ruleId): JsonResponse
     {
+        // 2026-07-09: 拒绝带 http:// https:// 前缀的 URL，仅允许纯域名
         $validated = $request->validate([
-            'domain' => 'string|max:255',
+            'domain' => [
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) {
+                    if (preg_match('#^https?://#i', $value)) {
+                        $fail('请输入正确的格式');
+                    }
+                },
+            ],
             'match_type' => 'string|in:exact,suffix,wildcard',
             'enabled' => 'boolean',
         ]);

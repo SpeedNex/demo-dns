@@ -873,6 +873,22 @@ delivery_level
 
 > **注 #17**：经核实 `/admin/blacklist-whitelist` 路由对应独立 `AdminBlacklistWhitelistController::index`，该接口接收的 query 字段正是 `type/keyword/per_page`，与前端 `BlacklistWhitelist.vue` 调用完全一致（`type: filter.type, keyword: filter.keyword, page, per_page`）。老大手稿中提到的"前端传 type/keyword 后端收 list_type/domain"对应的是 `/admin/member-rules` 接口（由 `AdminMemberCatalogController::rules()` 处理，接收 `list_type/domain/profile_id`），但该接口前端未调用，本次无需修改。
 
+## 2026-07-09 — P1 修复：黑白名单拒绝带 http:// https:// 的 URL
+
+| 日期 | 类型 | 描述 | 涉及文件 | 涉及文档 | 状态 |
+|---|---|---|---|---|---|
+| 2026-07-09 | fix | 后端 createRule() / updateRule() 的 domain 校验加闭包拒绝 `http://` / `https://` 前缀（匹配 `^https?://`），命中即报"请输入正确的格式" | portal-web/app/Http/Controllers/Api/V1/User/UserWorkspaceController.php | — | ok |
+| 2026-07-09 | fix | 前端 Blocklist.vue 新增 + 编辑弹窗的 domain 表单项由 `[{ required: true }]` 改为 `[validateDomain]`，新增 `validateDomain` 校验函数（必填 + 拒绝 http/https 前缀） | portal-web/web/src/views/Blocklist.vue | — | ok |
+| 2026-07-09 | fix | 前端 Allowlist.vue 同步 Blocklist.vue 校验逻辑 | portal-web/web/src/views/Allowlist.vue | — | ok |
+
+### 验证
+
+- 前端：输入 `https://www.cnblogs.com` → 表单项红字"请输入正确的格式"，弹窗不关闭
+- 前端：输入 `ads.example.com` → 校验通过
+- 后端绕过测试：`POST /api/v1/user/blocklist` body `{"domain":"https://test.com"}` → 422 + `"请输入正确的格式"`
+- 后端正常：body `{"domain":"test.com","match_type":"suffix"}` → 201
+- 回归：admin/BlacklistWhitelist.vue 无 domain 输入，不涉及；删除/批量操作/正常域名新增编辑不受影响
+
 ## 2026-07-09 — AI 开发规范补齐：新增 2 个提示词 + 修正文档同步流程 + 修复旧文档引用
 
 ### 1. 新增 `prompts/frontend-review.md`（前端审查执行 wrapper）
