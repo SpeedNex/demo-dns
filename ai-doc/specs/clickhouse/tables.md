@@ -1,29 +1,130 @@
 # ClickHouse 日志表规格
 
-> ClickHouse 用于 DNS 查询日志和聚合分析。MVP 至少实现 `dns_logs`。财务计费用量的最终写入在 `portal-web` 的 `usage_records` / `usage_counters`，ClickHouse 只作为日志和分析库。
+> ClickHouse 用于 DNS 查询日志和用量事件记录。MVP 至少实现 `dns_logs` 和 `usage_events`。
+> 财务计费用量的最终写入在 `portal-web` 的 `usage_records` / `usage_counters`，ClickHouse 只作为日志和分析库。
 >
-> **容量规划**（批次大小、压缩格式、TTL、分区、扩容路径）见 [`capacity.md`](./capacity.md)；表结构变更前必须先读该文件第 12 节的容量变更审查清单。
+> **容量规划**（批次大小、压缩格式、TTL、分区、扩容路径）见 [`capacity.md`](./capacity.md)。
 
-## 1. 日志保留策略
+---
 
-套餐建议：
+## 实际部署的表结构（线上 ocer_dns 数据库）
 
-| plan | log_retention_days |
-|---|---:|
-| free | 7 |
-| pro | 90 |
-| enterprise | 365 |
+以下为线上实际部署的版本，通过 `SHOW CREATE TABLE` 获取。
 
-为了避免固定 TTL 与套餐冲突，日志行写入时必须带：
+### 1. usage_events（用量事件表）
 
-```text
-retention_days
-expires_at
+```sql
+CREATE TABLE ocer_dns.usage_events (
+    timestamp DateTime64(3),
+    user_id String,
+    profile_id UInt32,
+    device_id UInt64,
+    billing_category LowCardinality(String)
+) ENGINE = MergeTree()
+ORDER BY (user_id, profile_id, toDate(timestamp))
+SETTINGS index_granularity = 8192
 ```
 
-ClickHouse TTL 使用 `expires_at`。`expires_at` 由 log worker 根据 profile quota / plan 计算，resolver 不可信任为保留策略来源。
+**字段说明：**
 
-## 2. 原始日志表
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| timestamp | DateTime64(3) | 事件时间（毫秒精度） |
+| user_id | String | 用户 ID（字符串） |
+| profile_id | UInt32 | 配置档案 ID |
+| device_id | UInt64 | 设备 ID |
+| billing_category | LowCardinality(String) | 计费类别（如 query、block） |
+
+**写入方**：`portal-web` 的 `QueryLogController` 通过 `ClickHouseClient::insertJsonEachRow` 写入。
+**用途**：由 `UsageBillingService::fetchUsageEvents` 读取，`usage:aggregate` 定时任务汇总到 MySQL `usage_records`。
+
+**引擎说明**：
+- 使用 `MergeTree`（2026-07-09 由 `SummingMergeTree` 迁移而来）
+- `SummingMergeTree` 后台合并可能永不触发，导致 INSERT 返回 200 但 SELECT 看不到数据
+- `MergeTree` 写入后立即可見，聚合统计由 PHP 侧完成
+
+---
+
+### 2. dns_logs（DNS 查询日志表）
+
+```sql
+CREATE TABLE ocer_dns.dns_logs (
+    event_id String,
+    event_time DateTime64(3),
+    user_id String,
+    profile_id String,
+    device_id String,
+    node_id String,
+    domain String,
+    query_type LowCardinality(String),
+    action LowCardinality(String),
+    reason LowCardinality(String),
+    protocol LowCardinality(String),
+    client_ip String,
+    rcode UInt16,
+    latency_ms Float32,
+    INDEX idx_domain domain TYPE bloom_filter(0.01) GRANULARITY 2,
+    INDEX idx_client_ip client_ip TYPE bloom_filter(0.01) GRANULARITY 2,
+    INDEX idx_action action TYPE set(100) GRANULARITY 2,
+    INDEX idx_profile profile_id TYPE bloom_filter(0.01) GRANULARITY 2
+) ENGINE = MergeTree()
+PARTITION BY toYYYYMM(event_time)
+ORDER BY (event_time, profile_id)
+TTL event_time + toIntervalDay(90)
+SETTINGS index_granularity = 8192
+```
+
+**字段说明：**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| event_id | String | 事件唯一 ID（UUID，由 PHP 生成） |
+| event_time | DateTime64(3) | 查询时间（毫秒精度） |
+| user_id | String | 用户 ID |
+| profile_id | String | 配置档案 ID |
+| device_id | String | 设备 UID |
+| node_id | String | 节点 ID |
+| domain | String | 查询域名 |
+| query_type | LowCardinality(String) | 查询类型（A、AAAA、CNAME 等） |
+| action | LowCardinality(String) | 动作（BLOCK、ALLOW 等） |
+| reason | LowCardinality(String) | 拦截原因 |
+| protocol | LowCardinality(String) | 协议（UDP、TCP、DoH、DoT 等） |
+| client_ip | String | 客户端 IP（SHA-256 哈希） |
+| rcode | UInt16 | DNS 响应码 |
+| latency_ms | Float32 | 延迟（毫秒） |
+
+**索引说明**：
+- `idx_domain`：域名 bloom_filter 索引（加速域名查询）
+- `idx_client_ip`：客户端 IP bloom_filter 索引
+- `idx_action`：动作 set 索引（加速 action = 'BLOCK' 过滤）
+- `idx_profile`：档案 ID bloom_filter 索引
+
+**写入方**：`portal-web` 的 `QueryLogController` 通过 `ClickHouseClient::insertJsonEachRow` 写入。
+**TTL**：数据保留 90 天自动清理。
+
+---
+
+## 表初始化方式
+
+项目提供 `ClickHouseSetupCommand` 命令用于建表：
+
+```bash
+# 在 web 服务器上执行
+php artisan clickhouse:setup
+```
+
+该命令：
+- 使用 `CREATE TABLE IF NOT EXISTS`，幂等，可重复执行
+- 通过 `.env` 的 `CLICKHOUSE_HOST` 配置支持远程 ClickHouse
+- 实际部署的表结构保存在 `app/Console/Commands/ClickHouseSetupCommand.php`
+
+---
+
+## 设计规格（参考，未完全实现）
+
+以下为最初设计的完整规格，仅供未来扩展参考。
+
+### 设计版 dns_logs（与实际部署有差异）
 
 ```sql
 CREATE TABLE IF NOT EXISTS dns_logs (
@@ -63,76 +164,24 @@ TTL expires_at
 SETTINGS index_granularity = 8192;
 ```
 
-说明：
+**差异说明**：
 
-- `event_id` 由 resolver 生成，建议为 `node_id + batch_id + sequence` 的稳定 hash 或 ULID。
-- API 层仍必须使用 `batch_id + content_sha256` 幂等，ClickHouse 不承担唯一约束职责。
-- `ReplacingMergeTree` 只能降低重复行影响；财务用量必须以幂等 usage_records 为准。
+| 项目 | 设计规格 | 实际部署 |
+|------|----------|----------|
+| 引擎 | ReplacingMergeTree(inserted_at) | MergeTree |
+| 列数 | 27 列 | 14 列 |
+| team_id / rule_id / cache_hit 等 | 有 | 无 |
+| 索引 | 无 | 4 个 bloom_filter/set 索引 |
+| 默认 TTL | 由 expires_at 字段决定 | event_time + 90 天固定 |
 
-## 3. 常用查询
-
-```text
-profile_id + time range
-profile_id + action + time range
-profile_id + domain keyword/hash
-device_id + time range
-node_id + time range
-```
-
-## 4. 分钟用量聚合视图
-
-只保存可累加计数，避免把 `avg()` / `quantile()` 直接写入 `SummingMergeTree` 后长期合并不准确。
-
-```sql
-CREATE MATERIALIZED VIEW IF NOT EXISTS dns_minute_usage
-ENGINE = SummingMergeTree()
-PARTITION BY toYYYYMM(minute)
-ORDER BY (profile_id, minute)
-AS SELECT
-    toStartOfMinute(timestamp) AS minute,
-    profile_id,
-    user_id,
-    count() AS query_count,
-    sum(if(action = 'blocked', 1, 0)) AS blocked_count,
-    sum(cache_hit) AS cache_hit_count,
-    sum(latency_ms) AS latency_sum_ms
-FROM dns_logs
-GROUP BY minute, profile_id, user_id;
-```
-
-平均延迟查询时计算：
-
-```sql
-latency_avg_ms = latency_sum_ms / query_count
-```
-
-P95/P99 延迟后续使用 `AggregatingMergeTree + quantileTDigestState` 实现，不在 MVP 中用错误聚合替代。
-
-## 5. Top 域名视图
-
-```sql
-CREATE MATERIALIZED VIEW IF NOT EXISTS dns_daily_top_domains
-ENGINE = SummingMergeTree()
-PARTITION BY toYYYYMM(day)
-ORDER BY (profile_id, day, action, query_count)
-AS SELECT
-    toDate(timestamp) AS day,
-    profile_id,
-    domain,
-    action,
-    count() AS query_count
-FROM dns_logs
-GROUP BY day, profile_id, domain, action;
-
-## 6. 隐私要求
-
-- 默认不保存明文 client IP。
-- `client_ip_hash` 必须由 resolver 或 ingest 服务使用带 salt 的 hash 生成。
-- `domain` 属于敏感上网数据，应限制后台访问权限。
-- 用户删除账户后，应通过异步任务删除或匿名化其日志。
-- 导出日志必须写审计记录。
-
+---
 
 ## NextDNS Lite V1 边界
 
-ClickHouse 只存 DNS 查询日志、拦截日志和统计分析数据。ClickHouse 不保存订单、发票、支付、退款或账务流水，也不能直接生成 DNS 查询按量收费。V1 的 query count 由 dns-console-web usage worker 聚合后上报 portal-web，仅用于 Free quota、统计展示、风控和容量规划。
+ClickHouse 只存 DNS 查询日志和用量事件数据。ClickHouse **不保存**：
+
+- 订单、发票、支付、退款或账务流水
+- 用户账户信息（仅存 user_id 引用）
+- 配置档案详情（仅存 profile_id 引用）
+
+V1 的 query count 由 `portal-web` 的 usage worker 从 `usage_events` 聚合后上报 MySQL，仅用于 Free quota、统计展示、风控和容量规划。

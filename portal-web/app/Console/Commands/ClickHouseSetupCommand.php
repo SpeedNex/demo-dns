@@ -15,6 +15,8 @@ use Illuminate\Console\Command;
  *
  * Idempotent: uses CREATE TABLE IF NOT EXISTS, safe to re-run.
  * Works for both local and remote ClickHouse (config via .env CLICKHOUSE_HOST).
+ *
+ * 注意：以下表结构对齐线上实际部署的 schema（见 ai-doc/specs/clickhouse/tables.md §实际部署版本）。
  */
 class ClickHouseSetupCommand extends Command
 {
@@ -30,10 +32,9 @@ class ClickHouseSetupCommand extends Command
 
         $this->info('Creating ClickHouse tables...');
 
-        // 2026-07-09: usage_events 使用 MergeTree 引擎（替代 SummingMergeTree）。
-        // SummingMergeTree 后台合并可能永不触发，导致 INSERT 成功但数据不可见。
-        // MergeTree 写入后立即可见，配额统计由 PHP 侧 usage:aggregate 汇总。
-        $client->sendRaw(<<<SQL
+        // usage_events: MergeTree（原 SummingMergeTree 有数据不可见问题，已迁移）
+        // 用途：记录用户 DNS 查询用量事件，由 usage:aggregate 汇总到 MySQL usage_records
+        $client->sendRaw('', <<<SQL
 CREATE TABLE IF NOT EXISTS usage_events (
     timestamp DateTime64(3),
     user_id String,
@@ -46,24 +47,31 @@ SQL);
 
         $this->info('  ✓ usage_events');
 
-        $client->sendRaw(<<<SQL
+        // dns_logs: 实际部署版本（简化版，Resolver 上报的 DNS 查询日志）
+        $client->sendRaw('', <<<SQL
 CREATE TABLE IF NOT EXISTS dns_logs (
+    event_id String,
     event_time DateTime64(3),
-    profile_id String,
     user_id String,
-    domain String,
-    action LowCardinality(String),
-    client_ip_hash String,
+    profile_id String,
     device_id String,
+    node_id String,
+    domain String,
+    query_type LowCardinality(String),
+    action LowCardinality(String),
+    reason LowCardinality(String),
     protocol LowCardinality(String),
-    dnssec LowCardinality(String),
-    reason String,
-    country LowCardinality(String),
-    city String,
-    inserted_at DateTime64(3) DEFAULT now64(3)
+    client_ip String,
+    rcode UInt16,
+    latency_ms Float32,
+    INDEX idx_domain domain TYPE bloom_filter(0.01) GRANULARITY 2,
+    INDEX idx_client_ip client_ip TYPE bloom_filter(0.01) GRANULARITY 2,
+    INDEX idx_action action TYPE set(100) GRANULARITY 2,
+    INDEX idx_profile profile_id TYPE bloom_filter(0.01) GRANULARITY 2
 ) ENGINE = MergeTree()
 PARTITION BY toYYYYMM(event_time)
 ORDER BY (event_time, profile_id)
+TTL event_time + toIntervalDay(90)
 SQL);
 
         $this->info('  ✓ dns_logs');
