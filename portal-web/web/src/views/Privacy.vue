@@ -85,6 +85,17 @@
                 </div>
             </div>
 
+            <!-- 客户端 IP 匿名化 -->
+            <div v-if="showAnonymizeIp" class="section">
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <span class="setting-label">{{ $t('privacy.anonymizeIP') }}</span>
+                        <span class="setting-desc">{{ $t('privacy.anonymizeIPDesc') }}</span>
+                    </div>
+                    <el-switch v-model="form.anonymize_client_ip" />
+                </div>
+            </div>
+
             <!-- 第三方跟踪 -->
             <div v-if="showDisguisedTrackers" class="section">
                 <div class="setting-row">
@@ -240,6 +251,11 @@ const availableBlocklists = ref([])
 const privacyCatalogItems = ref([])
 
 // 后台 member-catalogs 可控制隐私开关项的显示
+const showAnonymizeIp = computed(() => {
+    const item = privacyCatalogItems.value.find(p => p.key === 'anonymize_client_ip')
+    return !item || item.enabled !== false
+})
+
 const showDisguisedTrackers = computed(() => {
     const item = privacyCatalogItems.value.find(p => p.key === 'disguised_trackers')
     return !item || item.enabled !== false
