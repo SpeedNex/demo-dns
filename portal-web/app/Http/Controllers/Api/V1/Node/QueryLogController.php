@@ -214,6 +214,14 @@ final class QueryLogController
             if ($usageEvents !== []) {
                 $clickhouse->insertJsonEachRow('usage_events', $usageEvents);
             }
+            // DEBUG: 记录写入状态
+            Log::info('QueryLog batch processed', [
+                'dns_logs_count' => count($dnsLogs),
+                'usage_events_count' => count($usageEvents),
+                'sample_profile_id' => $validated['items'][0]['profile_id'] ?? 'null',
+                'sample_user_pk' => isset($userPk) ? $userPk : 'unset',
+                'sample_profile_pk' => isset($profilePk) ? $profilePk : 'unset',
+            ]);
         } catch (\Throwable $e) {
             \Log::error('ClickHouse insert failed', [
                 'message' => $e->getMessage(),
