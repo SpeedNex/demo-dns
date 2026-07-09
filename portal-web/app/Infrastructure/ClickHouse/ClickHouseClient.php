@@ -117,7 +117,11 @@ class ClickHouseClient
             $payload .= $encoded . "\n";
         }
 
-        $this->sendRaw("INSERT INTO {$table} FORMAT JSONEachRow", $payload);
+        // 2026-07-09: ClickHouse SummingMergeTree + async_insert=1 (server default)
+        // causes data loss – HTTP 200 but rows are never persisted to disk.
+        // Force synchronous insert so callers can trust the response code.
+        // See: ai-doc/project-doc/07-CHANGE-LOG.md (2026-07-09 entry).
+        $this->sendRaw("INSERT INTO {$table} SETTINGS async_insert=0, wait_for_async_insert=0 FORMAT JSONEachRow", $payload);
     }
 
     /**

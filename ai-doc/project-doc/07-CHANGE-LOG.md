@@ -7,6 +7,7 @@
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |
 |---|---|---|---|---|
 | 2026-07-09 | fix | 修复 /user/account 页面配额显示 "0 / 300,000" 始终为 0 的问题：billing_periods 表中没有当前用户周期记录导致 queries_used 返回 0 | portal-web/app/Http/Controllers/Api/V1/User/UserWorkspaceController.php | ok |
+| 2026-07-09 | fix | 修复 ClickHouse SummingMergeTree + async_insert 组合导致数据写入后不可见的问题：INSERT 返回 200 但数据从未落盘（约 6174 行丢失）；在 ClickHouseClient::insertJsonEachRow 中添加 SETTINGS async_insert=0, wait_for_async_insert=0 强制同步写入 | portal-web/app/Infrastructure/ClickHouse/ClickHouseClient.php | staging |
 
 ## 2026-07-09 — 准确性提升：全量文档与代码对齐
 
@@ -849,3 +850,42 @@ delivery_level
 | 2026-07-06 | docs | 同步本变更日志 | project-doc/07-CHANGE-LOG.md | ok |
 
 > **注 #17**：经核实 `/admin/blacklist-whitelist` 路由对应独立 `AdminBlacklistWhitelistController::index`，该接口接收的 query 字段正是 `type/keyword/per_page`，与前端 `BlacklistWhitelist.vue` 调用完全一致（`type: filter.type, keyword: filter.keyword, page, per_page`）。老大手稿中提到的"前端传 type/keyword 后端收 list_type/domain"对应的是 `/admin/member-rules` 接口（由 `AdminMemberCatalogController::rules()` 处理，接收 `list_type/domain/profile_id`），但该接口前端未调用，本次无需修改。
+
+## 2026-07-09 — AI 开发规范补齐：新增 2 个提示词 + 修正文档同步流程 + 修复旧文档引用
+
+### 1. 新增 `prompts/frontend-review.md`（前端审查执行 wrapper）
+
+| 日期 | 类型 | 描述 | 涉及文件 | 涉及文档 | 状态 |
+|---|---|---|---|---|---|
+| 2026-07-09 | docs | 新建 `prompts/frontend-review.md`：前端审查执行入口，**不复制 `frontend-ui.md` 的 20 章审查维度**，只提供"必读 → 审查计划 → 证据输出 → 自检"的强制流程，并明确与 `frontend-ui.md`、`prompts/review.md`、`prompts/e2e-closure-check.md` 的职责边界 | ai-doc/prompts/frontend-review.md (新) | — | ok |
+
+### 2. 新建 `prompts/e2e-closure-check.md`（前后端闭环检查，无现有覆盖）
+
+| 日期 | 类型 | 描述 | 涉及文件 | 涉及文档 | 状态 |
+|---|---|---|---|---|---|
+| 2026-07-09 | docs | 新建 `prompts/e2e-closure-check.md`：12 项闭环检查清单（页面入口→路由→API 方法→真实联通→后端路由→中间件鉴权→Controller→Service→数据库字段→响应结构→状态处理→测试），与 `feature-start.md` 流程互补；不重复单端审查内容，通过引用 `frontend-review.md` 与 `review.md` 保持边界清晰 | ai-doc/prompts/e2e-closure-check.md (新) | — | ok |
+
+### 3. 修正 `prompts/feature-start.md`：文档同步从直写改为"AI 提议 + 人工确认"
+
+| 日期 | 类型 | 描述 | 涉及文件 | 涉及文档 | 状态 |
+|---|---|---|---|---|---|
+| 2026-07-09 | docs | 修复"阶段 4：同步更新文档"流程：由"AI 直写"改为三步走（4a 输出文档影响评估 diff → 4b 人工确认 → 4c 确认后同步 + 记录 07-CHANGE-LOG.md），并修 5 处旧文档引用（`05-delivery-criteria.md` → `08-DELIVERY-CRITERIA.md`、`03-plans.md` → `05-PLANS.md`、`04-change-log.md` → `07-CHANGE-LOG.md`） | ai-doc/prompts/feature-start.md | project-doc/08-DELIVERY-CRITERIA.md, 05-PLANS.md, 07-CHANGE-LOG.md | ok |
+
+### 4. 修复 `rules/coding.md` 旧文档引用
+
+| 日期 | 类型 | 描述 | 涉及文件 | 涉及文档 | 状态 |
+|---|---|---|---|---|---|
+| 2026-07-09 | docs | 将编码规范中调试章节引用的 `04-change-log.md` 改为 `07-CHANGE-LOG.md`（2 处），与实际文件名对齐 | ai-doc/rules/coding.md | — | ok |
+
+### 修改后整体"8 方向"满足度
+
+| 方向 | 补齐前 | 补齐后 |
+|---|---|---|
+| 1. AI 规范包结构 | ✅ | ✅ |
+| 2. 先读文档再动代码 | ✅ | ✅ |
+| 3. 任务拆小、边界清晰 | ✅ | ✅ |
+| 4. 开发→审查→验收→同步流程 | ⚠️ | ✅（e2e-closure-check.md + feature-start.md 人工确认门） |
+| 5. 文档同步"AI 提议 + 人工确认" | ⚠️ | ✅（feature-start.md 阶段 4 三步走） |
+| 6. 专用审查提示词（前端/后端/闭环） | ⚠️ | ✅（前端审查 wrapper + e2e-closure-check.md） |
+| 7. 输出证据不只给结论 | ✅ | ✅ |
+| 8. 验收清单 | ✅ | ✅ |
