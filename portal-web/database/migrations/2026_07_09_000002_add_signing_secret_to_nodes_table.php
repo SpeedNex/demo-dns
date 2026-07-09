@@ -10,15 +10,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('nodes', static function (Blueprint $table): void {
-            $table->string('signing_secret', 64)->nullable()->after('api_key_hash')
+        Schema::table('resolver_nodes', static function (Blueprint $table): void {
+            $table->string('signing_secret', 64)->nullable()->after('api_key')
                 ->comment('HMAC 签名密钥，用于验证设备数据防伪造');
         });
     }
 
     public function down(): void
     {
-        Schema::table('nodes', static function (Blueprint $table): void {
+        Schema::table('resolver_nodes', static function (Blueprint $table): void {
             $table->dropColumn('signing_secret');
         });
     }
