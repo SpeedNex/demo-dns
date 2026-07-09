@@ -12,9 +12,10 @@
 | portal-web | Profile | Profile CRUD、默认配置、版本草案、批量删除、复制 | 代码草案 |
 | portal-web | Rules | 白名单、黑名单、自定义规则、行内编辑、批量删除 | 代码草案 |
 | portal-web | Security | 安全防护 Lite：恶意、钓鱼、C2、Cryptojacking 基础拦截 | 代码草案 |
+| portal-web | ThreatDetection | 威胁检测 API：外部威胁情报客户端集成，支持四个外部 API 调用 | 代码草案 |
 | portal-web | Privacy | 隐私保护 Lite：跟踪器/遥测阻断、日志模式、IP 匿名化 | 代码草案 |
 | portal-web | Parental | 家长监护 Lite：成人内容、安全搜索、YouTube 受限模式 | 代码草案 |
-| portal-web | Device | 设备管理、接入指南 | 代码草案 |
+| portal-web | Device | 设备管理、接入指南、设备 IP 绑定 | 代码草案 |
 | portal-web | PublishCenter | 发布 Profile 配置版本 | 代码草案 |
 | portal-web | Logs | 查询日志筛选、分页 | 代码草案 |
 | portal-web | Stats | 今日查询、拦截数、Top 域名、按分类（安全/隐私/家长等）维度聚合、Free 额度进度 | MVP |

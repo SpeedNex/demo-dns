@@ -159,14 +159,14 @@ ClickHouse dns_logs = 日志分析事实，不是财务事实
 
 ```text
 dns-resolver 处理 DNS 查询
-  -> 批量上报 query logs 到 dns-console-web
-  -> dns-console-web 写 ClickHouse
-  -> dns-console-web usage worker 聚合 query_count
-  -> dns-console-web 调用 portal-web /api/v1/internal/usage/batches
+  -> 批量上报 query logs 到 portal-web(原 console 域)
+  -> portal-web(原 console 域) 写 ClickHouse
+  -> portal-web(原 console 域) usage worker 聚合 query_count
+  -> portal-web(原 console 域) 调用 portal-web /api/v1/internal/usage/batches
   -> portal-web 幂等写 usage_records / usage_counters
   -> portal-web 判断 Free 是否超过 300,000
   -> portal-web 生成 quota snapshot
-  -> dns-console-web 将 quota 放入 resolver config
+  -> portal-web(原 console 域) 将 quota 放入 resolver config
   -> dns-resolver 执行 classic_dns 降级或 unlimited 正常策略
 ```
 

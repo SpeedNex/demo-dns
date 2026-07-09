@@ -346,7 +346,7 @@ V1 不引入 `tenant_id` / `organization_id` / 多组织层级，而是采用 **
 | `audit_logs` | `portal-web` User/Auth | `portal-web` Admin | 会员/计费/团队操作审计 |
 | `profiles / profile_rules / profile_feature_settings / profile_versions` | `portal-web` User/Profile | `portal-web` User/Profile | User 工作区 |
 | `plans / plan_prices / plan_features / subscriptions / payment_transactions / billing_periods / billing_items / usage_records / stripe_webhook_logs` | `portal-web` Billing | `portal-web` Billing | 财务事实归属 |
-| `nodes / node_tokens / node_heartbeats` | `portal-web` Admin/Node + Node | `portal-web` Admin/Node + User(读状态) | 节点生命周期与心跳 |
+| `resolver_nodes / resolver_node_tokens / resolver_node_heartbeats` | `portal-web` Admin/Node + Node | `portal-web` Admin/Node + User(读状态) | 节点生命周期与心跳 |
 | `profile_versions / publish_tasks / task_executions / policy_snapshots / policy_publish_logs` | `portal-web` Admin/Publish | `portal-web` Admin/Publish + `dns-resolver` Node | 配置版本、发布任务、ACK 状态 |
 | `query_log_ingest_batches` | `portal-web` Node | `portal-web` Admin/Audit + LogWorker | 上报幂等批 |
 | `geo_dns_mappings / rule_sources / system_config / alerts / aggregation_offsets / job_executions / admin_menu_rules / regions` | `portal-web` Admin | `portal-web` Admin + `portal-web` User(读 system_config) | 控制面配置 |
@@ -397,7 +397,7 @@ portal-web/
 │   │   ├── Billing/        BillingService.php          ← 计费核心
 │   │   ├── ClickHouse/     ClickHouseStatsService.php
 │   │   ├── ConfigVersion/  CanonicalJson.php, ChecksumService.php,
-│   │   │                   ConfigAckService.php, ConfigBuildService.php
+│   │   │                   ConfigAckService.php
 │   │   ├── HealthView/     NodeHealthViewService.php
 │   │   ├── Heartbeat/      HeartbeatService.php
 │   │   ├── Ingest/         QueryLogIngestService.php, QueryLogReadService.php

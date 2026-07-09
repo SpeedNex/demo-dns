@@ -1,5 +1,5 @@
 {
-  "source": "dns-console-web",
+  "source": "portal-web(原 console 域)",
   "source_batch_id": "batch_01H_usage_20260612_1000",
   "sent_at": "2026-06-12T10:01:00Z",
   "checksum": "sha256:replace-with-canonical-json-hash",

@@ -43,7 +43,7 @@ app/Domain/Rule                 # ProfileRuleService / RuleService
 app/Domain/System               # HealthCheckService
 app/Domain/Team                 # TeamService
 # portal-web(原 console 域)子域
-app/Domain/ConfigVersion        # CanonicalJson / ChecksumService / ConfigAckService / ConfigBuildService
+app/Domain/ConfigVersion        # CanonicalJson / ChecksumService / ConfigAckService
 app/Domain/HealthView           # NodeHealthViewService
 app/Domain/Publish              # PublishService(发布任务)
 # 基础设施
@@ -99,7 +99,7 @@ app/Infrastructure/ClickHouse   # ClickHouseClient / MemberAnalyticsService
 | `teams / team_members / team_invitations` | `portal-web` Member/Auth | `portal-web(原 console 域)` 只读查询(按 `team_id` 过滤后台审计) | 单向 |
 | `plans / subscriptions / invoices / payments / billing_ledger_entries` | `portal-web` Billing | `portal-web(原 console 域)` 读 billing_usage 关联计划 | 单向 |
 | `profiles / profile_rules / profile_feature_settings / profile_versions`(主数据) | **`portal-web` Member 独占** | `portal-web(原 console 域)` **不得直接读写** | 单向(portal-web Member → portal-web 原 console 域) |
-| `config_versions / publish_tasks / task_executions`(配置快照与发布任务) | `portal-web(原 console 域)` | `portal-web` Member 读 `config_version` 状态回显给用户 | 反向只读 |
+| `profile_versions / publish_tasks / task_executions`(配置快照与发布任务) | `portal-web(原 console 域)` | `portal-web` Member 读 `profile_version` 状态回显给用户 | 反向只读 |
 | `usage_counters / usage_records` | `portal-web` Billing(由 portal-web 原 console 域 usage worker 回调写) | `portal-web(原 console 域)` 写入、portal-web Member 落库 | 单向(原 console 域 → Member) |
 | `devices / device_bindings` | `portal-web` Member | `portal-web(原 console 域)` 读 `device_id` 用于 source-IP 识别 | 单向 |
 | `resolver_nodes / resolver_node_tokens / resolver_node_heartbeats` | `portal-web(原 console 域)` Admin/Node + Agent | — | 自有 |
@@ -110,9 +110,9 @@ app/Infrastructure/ClickHouse   # ClickHouseClient / MemberAnalyticsService
 硬约束：
 
 1. **`portal-web` Member 是 `profiles / profile_rules / profile_feature_settings` 的唯一主写方**。`portal-web(原 console 域)` 不得提供 Profile CRUD 端点，不得直接 INSERT/UPDATE/DELETE 这三张表;同样**不得**绕过 Member 域直接写 `users / teams / subscriptions / usage_records`。
-2. **`portal-web` Member 不得直接写 `config_versions / publish_tasks`**，只能通过 `portal-web(原 console 域)` 暴露的进程内服务(`PortalInternalPublishService` / 原 `ProfilePublishService`)发起发布，并仅依赖返回的 `publish_id / status` 展示状态。`POST /api/v1/internal/profile-publishes` 路径保留供跨进程调试使用,但**生产**调用走进程内服务。
-3. **双向同步禁止**:`profiles.*` 与 `config_versions.*` 必须通过"portal Member 写 → portal Member 调 portal(原 console 域)内部 publish → portal(原 console 域)写 config_versions" 单向链路,禁止任何反向同步或双写。
-4. **配置消费**:`dns-resolver` 只通过 `GET /api/v1/node/dns-resolver/config` 读取 `config_versions` + `profile_versions` 编译产物,从不直接读 `portal-web` 数据库。
+2. **`portal-web` Member 不得直接写 `profile_versions / publish_tasks`**，只能通过 `portal-web(原 console 域)` 暴露的进程内服务发起发布，并仅依赖返回的 `publish_id / status` 展示状态。`POST /api/v1/internal/profile-publishes` 路径保留供跨进程调试使用,但**生产**调用走进程内服务。
+3. **双向同步禁止**:`profiles.*` 与 `profile_versions.*` 必须通过"portal Member 写 → portal Member 调 portal(原 console 域)内部 publish → portal(原 console 域)写 profile_versions" 单向链路,禁止任何反向同步或双写。
+4. **配置消费**:`dns-resolver` 只通过 `GET /api/v1/node/dns-resolver/config` 读取 `profile_versions` 编译产物,从不直接读 `portal-web` 数据库。
 5. **审计日志分离**:`portal-web` Member 写 `audit_logs`(用户/计费/订阅审计);`portal-web(原 console 域)` 写 `admin_audit_logs`(节点/发布/配置审计);二者仍是**两张独立表**,不合并字段,不交叉写。
 
 违反上述任一条的代码，code-review 必须直接拒绝并要求重构。
@@ -127,7 +127,7 @@ app/Infrastructure/ClickHouse   # ClickHouseClient / MemberAnalyticsService
 
 - 路由命名空间:`/api/v1/admin/{nodes,publishes,geo-dns,system-config,rule-library,audit-logs,...}`、`/api/v1/node/*`、`/api/v1/internal/*`。
 - 中间件:`/api/v1/admin/*` 中节点签发类路由走 `shared.token:admin`(沿用原 console 行为);`/api/v1/node/*` 走 `node.hmac` (Bearer + HMAC-SHA256);`/api/v1/internal/*` 走 `shared.token:internal`。
-- 数据表:`resolver_nodes / resolver_node_tokens / resolver_node_heartbeats / config_versions / publish_tasks / task_executions / query_log_ingest_batches / geo_dns_mappings / geodns_tokens / rule_sources / system_config / admin_audit_logs` 全部位于 `portal-web` 的 `ocer_dns` 库;`audit_logs` 与 `admin_audit_logs` **仍是两张独立表**。
+- 数据表:`resolver_nodes / resolver_node_tokens / resolver_node_heartbeats / profile_versions / publish_tasks / task_executions / query_log_ingest_batches / geo_dns_mappings / geodns_tokens / rule_sources / system_config / admin_audit_logs` 全部位于 `portal-web` 的 `ocer_dns` 库;`audit_logs` 与 `admin_audit_logs` **仍是两张独立表**。
 
 负责:
 

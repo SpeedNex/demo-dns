@@ -9,9 +9,9 @@
 ```
 Portal (MySQL)
     │
-    ├── GET  /config               → Global Config（全量同步，5分钟间隔）
+    ├── GET  /config               → Global Config（全量同步，30秒间隔）
     ├── GET  /profiles/{id}        → Profile Config（按需拉取，SingleFlight 防击穿）
-    └── POST /profiles/check       → 版本检查（5分钟间隔，V2 升级为 Redis PubSub）
+    └── POST /profiles/check       → 版本检查（2分钟间隔，V2 升级为 Redis PubSub）
     │
 Resolver
     ├── Memory Cache  (LRU, max 5000, TTL 30min)
@@ -31,7 +31,7 @@ Resolver
 
 **鉴权**：`node.api_key`
 
-**频率**：启动时 + 每 5 分钟
+**频率**：启动时 + 每 30 秒
 
 **返回**：
 

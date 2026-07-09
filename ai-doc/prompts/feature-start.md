@@ -17,7 +17,7 @@
 1. 读取 `project-doc/00-GOAL.md` 了解项目目标
 2. 读取 `project-doc/01-ARCHITECTURE.md` 了解架构设计
 3. 读取 `project-doc/adr/` 了解架构决策
-4. 读取 `project-doc/05-delivery-criteria.md` 了解交付门槛
+4. 读取 `project-doc/08-DELIVERY-CRITERIA.md` 了解交付门槛
 5. 读取 `rules/coding.md` 了解编码规范
 6. 读取 `rules/naming.md` 了解命名规范
 
@@ -66,22 +66,53 @@
 - 日志记录适当
 - 单元测试（如需要）
 
-### 阶段 4：同步更新文档
+### 阶段 4：文档同步（⚠️ AI 提议 + 人工确认，禁止直写）
 
-**必须更新的文档**：
+> **核心原则**：代码可以先改；文档必须先审后写。
+> 防止 AI 把错误代码的"错误理解"同步进规范文档，导致后续开发决策错误。
 
-| 文档 | 更新内容 | 位置 |
-|-----|---------|------|
-| `specs/{system}/api.md` | 新增/修改的 API 端点、参数、响应 | specs/ |
-| `specs/{system}/data-schema.md` / `data-model.md` | 新增/修改的数据表、字段、结构体 | specs/ |
-| `03-plans.md` | 当前阶段任务状态 | project-doc/ |
-| `04-change-log.md` | 记录本次变更 | project-doc/ |
-| `05-delivery-criteria.md` | 如交付门槛或验收方式有变更则同步 | project-doc/ |
+#### 步骤 4a：代码修改完成后，AI 输出"文档影响评估"
 
-**文档更新检查**：
-- [ ] specs 文档已更新（端点、参数、响应格式 / 数据模型）
-- [ ] 03-plans.md 已标记完成状态
-- [ ] 04-change-log.md 已记录本次变更
+**不要直接修改文档**，先输出以下评估：
+
+```markdown
+### 文档影响评估
+
+| 文档 | 是否影响 | 影响类型 | 建议更新内容（diff） |
+|------|----------|----------|----------------------|
+| `specs/{system}/api.md` | 是/否 | 新增端点 / 修改参数 / 无影响 | [具体 diff 或"无"] |
+| `specs/{system}/data-schema.md` | 是/否 | 新增表 / 修改字段 / 无影响 | [具体 diff 或"无"] |
+| `project-doc/03-PLANS.md` | 是/否 | 任务状态变更 / 无影响 | [具体 diff 或"无"] |
+| `project-doc/08-DELIVERY-CRITERIA.md` | 是/否 | 交付门槛变更 / 无影响 | [具体 diff 或"无"] |
+| `contracts/openapi.yaml` | 是/否 | 新增路径 / 修改响应 / 无影响 | [具体 diff 或"无"] |
+| `contracts/*.schema.json` | 是/否 | 新增字段 / 修改类型 / 无影响 | [具体 diff 或"无"] |
+| `project-doc/01-ARCHITECTURE.md` | 是/否 | 架构变更 / 无影响 | [具体 diff 或"无"] |
+| `project-doc/02-MODULES.md` | 是/否 | 模块边界变更 / 无影响 | [具体 diff 或"无"] |
+| `project-doc/09-CLOSED-LOOP-AND-DATA-DESTINATIONS.md` | 是/否 | 数据流变更 / 无影响 | [具体 diff 或"无"] |
+| `project-doc/15-CONFIG-ARCHITECTURE.md` | 是/否 | 配置项变更 / 无影响 | [具体 diff 或"无"] |
+```
+
+#### 步骤 4b：人工确认
+
+**等待调用方确认**：
+- 确认哪些文档需要更新
+- 确认 diff 内容是否准确
+- 确认是否遗漏影响文档
+
+**未确认前禁止写入文档**。
+
+#### 步骤 4c：确认后同步 + 记录变更日志
+
+确认后执行：
+1. 按确认的 diff 更新对应文档
+2. 在 `project-doc/07-CHANGE-LOG.md` 记录本次变更（按 `START.md §0.2` 格式）
+
+**文档同步检查**：
+- [ ] 已输出"文档影响评估"（步骤 4a）
+- [ ] 已等待人工确认（步骤 4b）
+- [ ] 已按确认结果更新文档（步骤 4c）
+- [ ] `project-doc/07-CHANGE-LOG.md` 已记录本次变更
+- [ ] 未在确认前直写文档
 
 ---
 
@@ -92,9 +123,9 @@
 - [ ] 安全性未降低
 - [ ] 性能可接受
 - [ ] specs 文档已更新
-- [ ] 03-plans.md 已更新
-- [ ] 04-change-log.md 已更新
-- [ ] 满足 05-delivery-criteria.md 当前阶段门槛
+- [ ] 05-PLANS.md 已更新
+- [ ] 07-CHANGE-LOG.md 已更新
+- [ ] 满足 08-DELIVERY-CRITERIA.md 当前阶段门槛
 
 ---
 
@@ -113,7 +144,7 @@
 | 前端页面完整性 | 所有 API 是否有对应的前端页面 |
 | 错误处理 | 所有外部接口返回值是否已检查 |
 | 权限校验 | 敏感操作是否已校验权限 |
-| 文档同步 | 03-plans.md / specs/* / 04-change-log.md 已更新 |
+| 文档同步 | 05-PLANS.md / specs/* / 07-CHANGE-LOG.md 已更新 |
 
 执行动作：
 1. **列出本次新增/修改的所有内容**（表、端点、前端页面、服务）
@@ -223,8 +254,8 @@
 |-----|------|-------------|
 | specs/{system}/api.md | [x] 已更新 / [ ] 无变更 / [ ] 不涉及 | |
 | specs/{system}/data-schema.md | [x] 已更新 / [ ] 无变更 / [ ] 不涉及 | |
-| 03-plans.md | [x] 已更新 / [ ] 无变更 | |
-| 04-change-log.md | [x] 已更新 / [ ] 无变更 | |
+| 05-PLANS.md | [x] 已更新 / [ ] 无变更 | |
+| 07-CHANGE-LOG.md | [x] 已更新 / [ ] 无变更 | |
 
 ### 自检清单
 

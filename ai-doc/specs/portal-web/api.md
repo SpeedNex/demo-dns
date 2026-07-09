@@ -13,30 +13,34 @@
 | Internal API | `/api/v1/internal/*` | `shared.token:internal` | 跨进程调用:发布配置、健康视图、查询日志/统计回读 |
 | Member 域 → 原 console 域 | 进程内 Service 调用 | 同 Laravel 容器 | ProfilePublishService / BillingUsageService / NodeHealthViewService 等 |
 
-## 当前实现映射（2026-06-12）
+## 当前实现状态（2026-07-09）
 
 - 当前开发目录：`ocer-dns/portal-web`
-- 已生成并扩展 `routes/api.php` 中的 Public / Member 路由草案
-- 已实现的领域草案：
-  - `app/Domain/Auth/AuthService.php`
-  - `app/Domain/Profile/DomainNormalizer.php`
-  - `app/Domain/Profile/MemberCenterService.php`
-  - `app/Domain/Profile/ProfileConfigBuilder.php`
-  - `app/Domain/Profile/ProfilePublishService.php`
-  - `app/Domain/Profile/ProfileService.php`
-  - `app/Domain/Rule/ProfileRuleService.php`
-  - `app/Domain/Rule/RuleService.php`
-- 已接入服务层的控制器草案：
-  - `AuthController`
-  - `ProfileController`
-  - `ProfileRuleController`
-  - `ProfilePublishController`
-  - `UserDashboardController`
-- 当前仍缺：
-  - 真实 Laravel 请求校验
-  - 真实认证与 token 持久化
-  - Repository / Eloquent / 数据库存取
-  - Internal API HMAC 调用
+- 路由分布在 `routes/v1/` 下：`auth.php`, `user.php`, `admin/`, `node/`, `internal/`, `build/`, `stripe.php`
+- 已实现的核心 Domain 服务：
+  - `app/Domain/Auth/AuthService.php` — 注册、登录
+  - `app/Domain/Profile/UserWorkspaceService.php` — 用户工作区（安全/隐私/家长/规则/发布）
+  - `app/Domain/Profile/ProfileService.php` — Profile CRUD
+  - `app/Domain/Profile/ProfilePublishApplicationService.php` — 配置发布
+  - `app/Domain/Rule/ProfileRuleService.php` — 规则管理
+  - `app/Domain/Rule/RuleCategoryResolver.php` — 规则分类加载
+  - `app/Domain/Ingest/QueryLogIngestService.php` — 日志接收
+  - `app/Domain/Ingest/QueryLogReadService.php` — 日志查询
+  - `app/Domain/ConfigVersion/ConfigAckService.php` — 配置 ACK
+  - `app/Domain/Publish/PublishService.php` — 发布任务
+  - `app/Domain/Billing/` — 计费相关（OrderService, PaymentService, UsageAggregationService 等）
+  - `app/Infrastructure/ClickHouse/` — ClickHouse 客户端
+- 已实现的控制器：
+  - `AuthController`（注册/登录）
+  - `UserWorkspaceController`（会员中心 CRUD）
+  - `ProfileController`（Profile CRUD）
+  - `ConfigPullController`（Resolver 配置拉取）
+  - `QueryLogController`（日志接收）
+  - `Admin*Controller` 系列（后台管理）
+  - `AdminFinanceController`（财务后台）
+  - `AdminRbacController`（RBAC）
+  - `StripeWebhookController`（Stripe 回调）
+- 鉴权：Sanctum Token（用户/管理员）+ node.api_key（Resolver）+ X-GeoDNS-Token（GeoDNS）+ Shared Token（Internal）
 
 ## 2. 通用响应
 
@@ -104,7 +108,7 @@ POST /api/v1/auth/register
 {
   "data": {
     "user": {
-      "id": "usr_01H...",
+      "id": 1,
       "name": "Alice",
       "email": "alice@example.com"
     },
@@ -138,7 +142,7 @@ POST /api/v1/auth/login
   "data": {
     "token": "plain_text_token_only_once",
     "user": {
-      "id": "usr_01H...",
+      "id": 1,
       "email": "alice@example.com",
       "role": "member"
     }
@@ -173,7 +177,7 @@ GET /api/v1/user/me
 ```json
 {
   "data": {
-    "id": "usr_01H...",
+    "id": 1,
     "name": "Alice",
     "email": "alice@example.com",
     "timezone": "Asia/Seoul",
@@ -197,7 +201,7 @@ GET /api/v1/user/overview
 {
   "data": {
     "navigation": ["security", "privacy", "parental", "blocklist", "allowlist", "analytics", "logs", "settings", "membership"],
-    "current_profile_id": "prf_01H...",
+    "current_profile_id": "b2d137",
     "plan_code": "free",
     "monthly_query_limit": 300000,
     "used_query_count": 12345,
@@ -229,7 +233,7 @@ GET /api/v1/user/profiles?page=1&per_page=20
 
 ```json
 {
-  "id": "prf_01H...",
+  "id": "b2d137",
   "name": "Home",
   "status": "active",
   "current_version": 3,
@@ -376,7 +380,7 @@ GET /api/v1/user/profiles/{profile_id}/rules?type=block&keyword=ads&page=1
 ```json
 {
   "id": "rule_01H...",
-  "profile_id": "prf_01H...",
+  "profile_id": "b2d137",
   "list_type": "block",
   "match_type": "exact",
   "domain": "ads.example.com",
@@ -524,7 +528,7 @@ POST /api/v1/user/profiles/{profile_id}/publish
 ```json
 {
   "data": {
-    "profile_id": "prf_01H...",
+    "profile_id": "b2d137",
     "version": 4,
     "checksum": "sha256:...",
     "publish_id": "pub_01H...",
@@ -579,7 +583,7 @@ GET /api/v1/user/profiles/{profile_id}/logs?from=2026-06-12T00:00:00Z&to=2026-06
 ```json
 {
   "timestamp": "2026-06-12T10:00:00Z",
-  "profile_id": "prf_01H...",
+  "profile_id": "b2d137",
   "device_id": "dev_01H...",
   "domain": "ads.example.com",
   "query_type": "A",
@@ -711,7 +715,7 @@ GET /api/v1/user/teams/{team_id}/members
 {
   "data": [
     {
-      "user_id": "usr_01H...",
+      "user_id": 1,
       "name": "Alice",
       "email": "alice@example.com",
       "role": "admin",
@@ -838,7 +842,7 @@ POST   /api/v1/user/devices/{device_id}/enable
   "name": "Alice iPhone",
   "device_type": "ios",
   "status": "active",
-  "profile_id": "prf_01H...",
+  "profile_id": "b2d137",
   "last_seen_at": "2026-06-12T10:00:00Z",
   "created_at": "2026-06-12T00:00:00Z"
 }
@@ -922,8 +926,8 @@ X-Internal-Signature: hmac-sha256(...)
 
 ```json
 {
-  "profile_id": "prf_01H...",
-  "user_id": "usr_01H...",
+  "profile_id": "b2d137",
+  "user_id": 1,
   "version": 4,
   "checksum": "sha256:...",
   "config": {
@@ -1045,7 +1049,7 @@ V1 中该用量只用于 Free 300,000 queries/月限制、统计展示和风控�
 
 ### 8.6 发布状态回调（V1 不实现）
 
-V1 **不提供** `POST /api/v1/internal/publish-status/callback` 端点。`portal-web` Member 域与原 console 域同进程，发布状态通过同库 `publish_tasks` / `config_versions` 直接读取；Admin 总后台通过 `GET /api/v1/admin/publishes` 轮询。
+V1 **不提供** `POST /api/v1/internal/publish-status/callback` 端点。`portal-web` Member 域与原 console 域同进程，发布状态通过同库 `publish_tasks` / `profile_versions` 直接读取；Admin 总后台通过 `GET /api/v1/admin/publishes` 轮询。
 
 V2+ 评估添加 push 回调。
 

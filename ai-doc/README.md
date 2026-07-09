@@ -25,7 +25,10 @@ ai-doc-v1/
 │   ├── feature-start.md         ← 功能开发提示词
 │   ├── refactor.md              ← 重构提示词
 │   ├── bug-fix.md               ← Bug 修复提示词
-│   └── review.md                ← 代码审查提示词
+│   ├── frontend-ui.md           ← 前端审查 20 个维度全集（审查项定义）
+│   ├── frontend-review.md       ← 前端审查执行入口（wrapper，引用 frontend-ui.md）
+│   ├── e2e-closure-check.md     ← 前后端闭环检查提示词
+│   └── review.md                ← 后端代码审查提示词
 │
 ├── project-doc/                 ← 总览文档
 │   ├── 00-GOAL.md               ← 产品目标、技术栈和边界

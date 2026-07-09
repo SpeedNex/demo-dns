@@ -115,7 +115,7 @@
         "source": {
           "type": "string",
           "enum": [
-            "dns-console-web"
+            "portal-web(原 console 域)"
           ]
         },
         "source_batch_id": {

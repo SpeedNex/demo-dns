@@ -20,13 +20,13 @@
 
 | Subject | 持久化 | 生产者 | 消费者 | 说明 |
 |---|---|---|---|---|
-| `profile.config.published` | 是 | portal-web / dns-console-web | dns-console-web / resolver agent | Profile 配置发布 |
-| `profile.config.deleted` | 是 | portal-web | dns-console-web / resolver agent | Profile 删除 |
-| `resolver.config.ack` | 是 | dns-resolver | dns-console-web | 配置应用结果 |
-| `resolver.heartbeat` | 否 / 可选 | dns-resolver | dns-console-web | 心跳，HTTP 是主路径 |
+| `profile.config.published` | 是 | portal-web | portal-web(原 console 域) / resolver agent | Profile 配置发布 |
+| `profile.config.deleted` | 是 | portal-web | portal-web(原 console 域) / resolver agent | Profile 删除 |
+| `resolver.config.ack` | 是 | dns-resolver | portal-web(原 console 域) | 配置应用结果 |
+| `resolver.heartbeat` | 否 / 可选 | dns-resolver | portal-web(原 console 域) | 心跳，HTTP 是主路径 |
 | `dns.query_logs` | 是 | dns-resolver | log-worker | DNS 查询日志 |
 | `resolver.metrics` | 是 | dns-resolver | metrics-worker | resolver 指标 |
-| `billing.usage` | 是 | dns-console-web usage-worker | portal-web billing-worker | 由 query log batch 派生的计费用量；不得由 metrics/heartbeat 派生 |
+| `billing.usage` | 是 | portal-web(原 console 域) usage-worker | portal-web billing-worker | 由 query log batch 派生的计费用量；不得由 metrics/heartbeat 派生 |
 | `alerts.created` | 是 | alert-manager | notification-worker | 告警 |
 
 ## 3. profile.config.published
@@ -36,7 +36,7 @@
   "event_id": "evt_01H...",
   "event_type": "profile.config.published",
   "trace_id": "trace_01H...",
-  "source": "dns-console-web",
+  "source": "portal-web(原 console 域)",
   "occurred_at": "2026-06-12T10:00:00.000Z",
   "schema_version": 1,
   "payload": {
@@ -127,4 +127,4 @@ payload 与 `contracts/query-log.schema.json` 的 `items[]` 一致，可以按 b
 
 ## Billing usage 约束
 
-`billing.usage` 只允许由 `dns-console-web` 的 usage-worker 从已接收的 query log batch 派生。`dns-resolver` 不直接发布财务事件；metrics、heartbeat、Prometheus 指标不得作为扣费事实来源。
+`billing.usage` 只允许由 `portal-web(原 console 域)` 的 usage-worker 从已接收的 query log batch 派生。`dns-resolver` 不直接发布财务事件；metrics、heartbeat、Prometheus 指标不得作为扣费事实来源。

@@ -7,7 +7,7 @@
 ```text
 portal-web = 财务事实归属
 
-dns-console-web = resolver 数据入口和用量聚合方
+portal-web(原 console 域) = resolver 数据入口和用量聚合方
 
 dns-resolver = DNS 执行和日志/指标/心跳上报方
 ```
@@ -16,7 +16,7 @@ dns-resolver = DNS 执行和日志/指标/心跳上报方
 
 ```text
 dns-resolver 直接创建订单/发票/支付/退款
-dns-console-web 直接修改订单/发票/支付/退款/账务流水
+portal-web(原 console 域) 直接修改订单/发票/支付/退款/账务流水
 ClickHouse 作为财务账本
 Redis 作为财务账本
 metrics / heartbeat 作为计费事实
@@ -260,7 +260,7 @@ manual adjustment ledger
 `usage_records` 是 query count 的事实来源。它来自：
 
 ```text
-dns-console-web usage worker
+portal-web(原 console 域) usage worker
 ```
 
 接口：
@@ -305,7 +305,7 @@ quota_status = unlimited
 
 ## 7. Quota Snapshot
 
-portal-web 必须向 dns-console-web 提供最新 quota 状态：
+portal-web 必须向 portal-web(原 console 域) 提供最新 quota 状态：
 
 ```json
 {

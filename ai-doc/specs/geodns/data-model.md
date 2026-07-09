@@ -1,6 +1,6 @@
 # geodns 数据模型
 
-> geodns 主要使用内存模型，数据来源是 `dns-console-web` 的健康视图。ops 监控只关心节点在线/离线，geodns 不再做"健康度降权"。
+> geodns 主要使用内存模型，数据来源是 `portal-web(原 console 域)` 的健康视图。ops 监控只关心节点在线/离线，geodns 不再做"健康度降权"。
 
 ## 1. HealthView
 

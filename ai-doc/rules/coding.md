@@ -11,7 +11,7 @@
   - Go `go.mod` 不得出现 `github.com/nats-io/*`
   - PHP `composer.json` 不得出现 `nats/*` / `repeater/nats-client` / 同类包
 - 文档中出现的 "NATS / event / stream / ingestion / worker" 全部按 V2+ 替换路径处理：
-  - 异步日志 → 走 `dns-console-web` HTTP `/api/v1/agent/query-logs/batch` + 本地 buffer
+  - 异步日志 → 走 `portal-web(原 console 域)` HTTP `/api/v1/agent/query-logs/batch` + 本地 buffer
   - 跨服务通知 → 走"轮询 + 短 TTL Redis 缓存"
   - 配置变更通知 → 走 resolver `current_version` 轮询
 - 任何在 V1 范围内引入 `NATS` 客户端、订阅、发布、JetStream stream 的代码必须被拒绝。
@@ -146,7 +146,7 @@ return (new PhpCsFixer\Config())
 1. **可复现** — 问题必须能在相同条件下复现
 2. **最小化** — 隔离问题，只改必要代码
 3. **有回滚** — 修改前确保能恢复
-4. **记录过程** — 调试步骤和结论写入 `project-doc/04-change-log.md`
+4. **记录过程** — 调试步骤和结论写入 `project-doc/07-CHANGE-LOG.md`
 
 ### 调试流程
 ```
@@ -192,4 +192,4 @@ Step 4：验证修复 → Step 5：记录归档
 - [ ] 修改范围最小化
 - [ ] 未破坏其他功能
 - [ ] 相同条件验证通过
-- [ ] 已更新 `project-doc/04-change-log.md`
+- [ ] 已更新 `project-doc/07-CHANGE-LOG.md`

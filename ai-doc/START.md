@@ -112,9 +112,7 @@ dns-console-web 仅保留 web/src/views/Layout.vue 一个占位文件,实际实�
 | 11 | `contracts/openapi.yaml` | 生成 API 路由、请求、响应和测试 |
 | 12 | `contracts/*.schema.json` | 生成配置、心跳、日志、指标校验 |
 | 13 | `specs/*` | 生成模块实现细节 |
-| 14 | `migrations/*` | 生成数据库结构 |
-| 15 | `project-doc/15-CONFIG-ARCHITECTURE.md` | 确认配置拉取架构（Global Config + Lazy Profile） |
-| 16 | `deploy/*` | 生成本地启动和部署配置 |
+| 14 | `project-doc/15-CONFIG-ARCHITECTURE.md` | 确认配置拉取架构（Global Config + Lazy Profile） |
 
 ## 2.1 API 路径约定（已锁定）
 
