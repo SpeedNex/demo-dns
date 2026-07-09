@@ -21,7 +21,7 @@ MySQL 是业务、财务、控制面事实库。
 |---|---|---|---|
 | 节点凭据 | `resolver install` 一次性写入 `configs/server.yaml`；不存在 resolver 侧注册端点 | 节点凭据三元组 | portal-web MySQL（仅存 hash） |
 | 心跳 | `POST /api/v1/node/heartbeat` | 在线、状态、版本、配置版本 | node_heartbeats + nodes 表更新 |
-| 配置拉取 | `GET /api/v1/node/dns-resolver/config` | 获取配置包 | 从 portal-web 读取 config_versions |
+| 配置拉取 | `GET /api/v1/node/dns-resolver/config` | 获取配置包 | 从 portal-web 读取 profile_versions |
 | 配置 ACK | `POST /api/v1/node/dns-resolver/config/ack` | 确认配置应用结果 | portal-web MySQL |
 | 查询日志 | `POST /api/v1/node/dns-resolver/query-logs` | DNS 查询日志 | ClickHouse + ingest batch MySQL |
 
@@ -147,16 +147,13 @@ audit_logs
 portal-web(原 console 域) MySQL：
 
 ```text
-nodes
-node_tokens
-node_heartbeats
-config_versions
+resolver_nodes
+resolver_node_tokens
+resolver_node_heartbeats
+profile_versions
 publish_tasks
 task_executions
-quota_snapshots
 query_log_ingest_batches
-metric_ingest_batches
-sync_failures
 ```
 
 ## 6. portal-web Member 域与 Console 域通信

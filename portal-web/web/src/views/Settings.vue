@@ -15,14 +15,14 @@
             <el-col :span="24">
                 <el-card shadow="never" class="settings-card">
                     <template #header><span>{{ $t('settings.changePassword') }}</span></template>
-                    <el-form label-position="top">
-                        <el-form-item :label="$t('settings.currentPassword')">
-                            <el-input v-model="passwordForm.current" type="password" show-password />
+                    <el-form label-position="top" :model="passwordForm" :rules="passwordRules" ref="passwordFormRef">
+                        <el-form-item :label="$t('settings.currentPassword')" prop="old">
+                            <el-input v-model="passwordForm.old" type="password" show-password />
                         </el-form-item>
-                        <el-form-item :label="$t('settings.newPassword')">
+                        <el-form-item :label="$t('settings.newPassword')" prop="new">
                             <el-input v-model="passwordForm.new" type="password" show-password />
                         </el-form-item>
-                        <el-form-item :label="$t('settings.confirmPassword')">
+                        <el-form-item :label="$t('settings.confirmPassword')" prop="confirm">
                             <el-input v-model="passwordForm.confirm" type="password" show-password />
                         </el-form-item>
                         <el-button type="primary" @click="handleChangePassword">{{ $t('settings.updatePassword') }}</el-button>
@@ -54,9 +54,33 @@ const form = reactive({
 })
 
 const passwordForm = reactive({
-    current: '',
+    old: '',
     new: '',
-    confirm: '',
+    confirm: ''
+})
+
+const passwordFormRef = ref(null)
+const passwordRules = reactive({
+    old: [
+        { required: true, message: () => t('settings.passwordRequired') || '请输入当前密码', trigger: 'blur' }
+    ],
+    new: [
+        { required: true, message: () => t('settings.newPasswordRequired') || '请输入新密码', trigger: 'blur' },
+        { min: 8, message: () => t('settings.passwordMinLength') || '密码至少 8 位', trigger: 'blur' }
+    ],
+    confirm: [
+        { required: true, message: () => t('settings.confirmPasswordRequired') || '请确认新密码', trigger: 'blur' },
+        {
+            validator: (rule, value, callback) => {
+                if (value !== passwordForm.new) {
+                    callback(new Error(t('settings.passwordMismatch') || '两次密码不一致'))
+                } else {
+                    callback()
+                }
+            },
+            trigger: 'blur'
+        }
+    ]
 })
 
 // DNS 接入端点由后端 /user/dns-endpoints 根据 profile_id 和 system_config.dns_domain 生成
@@ -98,23 +122,22 @@ const handleSave = async () => {
 }
 
 const handleChangePassword = async () => {
-    if (passwordForm.new !== passwordForm.confirm) {
-        ElMessage.error(t('settings.passwordMismatch'))
-        return
-    }
-    if (passwordForm.new.length < 6) {
-        ElMessage.error(t('settings.passwordMin'))
+    if (!passwordFormRef.value) return
+    try {
+        await passwordFormRef.value.validate()
+    } catch {
         return
     }
     try {
         await client.put('/user/password', {
-            current_password: passwordForm.current,
+            current_password: passwordForm.old,
             new_password: passwordForm.new,
         })
         ElMessage.success(t('settings.passwordUpdated'))
-        passwordForm.current = ''
+        passwordForm.old = ''
         passwordForm.new = ''
         passwordForm.confirm = ''
+        passwordFormRef.value?.resetFields()
     } catch (err) {
         ElMessage.error(err.response?.data?.message || t('settings.passwordUpdateFailed'))
     }

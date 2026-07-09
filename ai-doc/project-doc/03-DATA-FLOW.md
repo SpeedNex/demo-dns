@@ -12,7 +12,7 @@
   → 创建 profile_versions 草案
   → 用户点击发布
   → portal-web 调用 portal-web(原 console 域)Internal API(进程内服务)
-  → portal-web(原 console 域)生成 config_versions 和 publish_tasks
+  → portal-web(原 console 域)生成 profile_versions 和 publish_tasks
   → resolver 通过心跳响应发现 should_pull_config=true
   → resolver 拉取最新配置 bundle
   → checksum 校验成功

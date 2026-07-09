@@ -67,6 +67,7 @@ app/Infrastructure/ClickHouse   # ClickHouseClient / MemberAnalyticsService
 | `TeamService` | 团队创建、成员管理、角色分配、团队切换 |
 | **原 console 域新增(合并后)** | |
 | `NodeTokenService` | 预签发 / 重新签发 / 吊销 (api_key, secret);portal-web 仅存 hash,plain 仅返回一次 |
+| `GeoDnsTokenService` | GeoDNS 节点 token 预签发、校验、吊销;存储于 geodns_tokens 表;HTTP Header X-GeoDNS-Token 鉴权 |
 | `HeartbeatService` | 心跳校验、状态计算、健康快照写 Redis |
 | `ConfigBuildService` | 将 Profile 版本组织成 resolver config bundle |
 | `PublishService` | 发布任务创建、重试、失败记录 |
@@ -74,7 +75,7 @@ app/Infrastructure/ClickHouse   # ClickHouseClient / MemberAnalyticsService
 | `NodeHealthViewService` | 给 geodns 输出健康节点视图(进程内) |
 | `RuleLibraryService` | 规则源 CRUD、批量同步、立即同步 |
 | `SystemConfigService` | DNS/日志/安全参数配置 |
-| `AdminConsoleAuditService` | 节点/发布/控制面操作审计(写 admin_audit_logs) |
+| `AdminConsoleAuditService` | 节点/发布/控制面操作审计(写 `admin_audit_logs`) |
 
 ### 1.4 数据所有权与同步方向（硬约束）
 
@@ -84,12 +85,12 @@ app/Infrastructure/ClickHouse   # ClickHouseClient / MemberAnalyticsService
 |---|---|---|---|
 | `users / accounts / credentials` | `portal-web` Member/Auth | — | 自有 |
 | `teams / team_members / team_invitations` | `portal-web` Member/Auth | `portal-web(原 console 域)` 只读查询(按 `team_id` 过滤后台审计) | 单向 |
-| `plans / subscriptions / orders / invoices / payments / refunds / billing_ledger_entries` | `portal-web` Billing | `portal-web(原 console 域)` 读 billing_usage 关联计划 | 单向 |
+| `plans / subscriptions / invoices / payments / billing_ledger_entries` | `portal-web` Billing | `portal-web(原 console 域)` 读 billing_usage 关联计划 | 单向 |
 | `profiles / profile_rules / profile_feature_settings / profile_versions`(主数据) | **`portal-web` Member 独占** | `portal-web(原 console 域)` **不得直接读写** | 单向(portal-web Member → portal-web 原 console 域) |
 | `config_versions / publish_tasks / task_executions`(配置快照与发布任务) | `portal-web(原 console 域)` | `portal-web` Member 读 `config_version` 状态回显给用户 | 反向只读 |
 | `usage_counters / usage_records` | `portal-web` Billing(由 portal-web 原 console 域 usage worker 回调写) | `portal-web(原 console 域)` 写入、portal-web Member 落库 | 单向(原 console 域 → Member) |
 | `devices / device_bindings` | `portal-web` Member | `portal-web(原 console 域)` 读 `device_id` 用于 source-IP 识别 | 单向 |
-| `nodes / node_tokens / node_heartbeats` | `portal-web(原 console 域)` Admin/Node + Agent | — | 自有 |
+| `resolver_nodes / resolver_node_tokens / resolver_node_heartbeats` | `portal-web(原 console 域)` Admin/Node + Agent | — | 自有 |
 | `dns_logs`(ClickHouse) | `portal-web(原 console 域)` log worker 写 | `portal-web` Member 读(只读 API 层) | 单向 |
 | `audit_logs` | `portal-web` Member/Auth(用户/计费审计) | `portal-web` Admin | 独立 |
 | `admin_audit_logs` | `portal-web(原 console 域)` Admin/Console(节点/发布审计) | `portal-web(原 console 域)` Admin/Audit | 独立(**不与 audit_logs 合并**) |
@@ -114,7 +115,7 @@ app/Infrastructure/ClickHouse   # ClickHouseClient / MemberAnalyticsService
 
 - 路由命名空间:`/api/v1/admin/{nodes,publishes,geo-dns,system-config,rule-library,audit-logs,...}`、`/api/v1/node/*`、`/api/v1/internal/*`。
 - 中间件:`/api/v1/admin/*` 中节点签发类路由走 `shared.token:admin`(沿用原 console 行为);`/api/v1/node/*` 走 `node.hmac` (Bearer + HMAC-SHA256);`/api/v1/internal/*` 走 `shared.token:internal`。
-- 数据表:`nodes / node_tokens / node_heartbeats / config_versions / publish_tasks / task_executions / query_log_ingest_batches / geo_dns_mappings / rule_sources / system_config / admin_audit_logs` 全部位于 `portal-web` 的 `ocer_dns` 库;`audit_logs` 与 `admin_audit_logs` **仍是两张独立表**。
+- 数据表:`resolver_nodes / resolver_node_tokens / resolver_node_heartbeats / config_versions / publish_tasks / task_executions / query_log_ingest_batches / geo_dns_mappings / geodns_tokens / rule_sources / system_config / admin_audit_logs` 全部位于 `portal-web` 的 `ocer_dns` 库;`audit_logs` 与 `admin_audit_logs` **仍是两张独立表**。
 
 负责:
 
@@ -156,6 +157,7 @@ app/Infrastructure/ClickHouse
 | 服务 | 责任 |
 |---|---|
 | `NodeTokenService` | 预签发 / 重新签发 / 吊销 (api_key, secret);portal-web 仅存 hash,plain 仅返回一次 |
+| `GeoDnsTokenService` | GeoDNS 节点 token 预签发、校验、吊销;存储于 geodns_tokens 表;HTTP Header X-GeoDNS-Token 鉴权 |
 | `HeartbeatService` | 心跳校验、状态计算、健康快照写 Redis |
 | `ConfigBuildService` | 将 Profile 版本组织成 resolver config bundle |
 | `PublishService` | 发布任务创建、重试、失败记录 |
@@ -199,14 +201,22 @@ cmd/dns-resolver/main.go
 internal/config
 internal/agent
 internal/dnsserver
+internal/doh
+internal/doq
 internal/profile
+internal/matching
 internal/rules
 internal/cache
+internal/dnscache
 internal/upstream
 internal/logging
 internal/metrics
 internal/storage
 internal/security
+internal/blockresponse
+internal/validation
+internal/externalthreat
+internal/geodns
 ```
 
 ### 3.3 核心组件
@@ -243,7 +253,7 @@ internal/security
 
 ### 4.2 实际 Go 包结构(2026-06-16 实测)
 
-> 原 §4.2 推荐 6 个包,实际代码仅落地 4 个包:`internal/geoip` / `internal/cache` / `internal/adminapi` 三个包本期未实现,功能合并在 `internal/router` / `internal/server` 中;新增 `internal/config` 用于 yaml 加载。GeoIP 库与 admin API 待 Stage 06 补齐。
+> 原 §4.2 推荐 6 个包,实际代码仅落地 5 个包:`internal/geoip` / `internal/cache` / `internal/adminapi` 三个包本期未实现,功能合并在 `internal/router` / `internal/server` 中;新增 `internal/config` 用于 yaml 加载、`internal/node` 用于节点管理。GeoIP 库与 admin API 待 Stage 06 补齐。
 
 ```text
 cmd/geodns/main.go
@@ -251,6 +261,7 @@ internal/config        # yaml 加载与默认值
 internal/server        # HTTP 服务 /health /health-view /pick
 internal/healthview    # HealthViewClient + types
 internal/router        # 区域/权重/健康路由决策
+internal/node          # 节点注册、心跳、健康检查
 ```
 
 ### 4.3 核心组件

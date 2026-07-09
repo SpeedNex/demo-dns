@@ -360,11 +360,12 @@ CREATE INDEX idx_team_invitations_email ON team_invitations (email);
 以下表与 portal-web 共用同一 MySQL 库，但数据所有权属于 `portal-web(原 console 域)` 子命名空间：
 
 ```text
-nodes
-node_heartbeats
+resolver_nodes
+resolver_node_heartbeats
+resolver_node_tokens
 publish_tasks
 task_executions
-config_versions
+profile_versions
 ```
 
 portal-web 业务代码应只读引用这些表，数据变更由 console 域管理。

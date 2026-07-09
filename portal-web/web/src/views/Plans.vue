@@ -2,13 +2,13 @@
     <Layout>
         <div class="page-header">
             <div class="page-header-text">
-                <h2>购买套餐</h2>
-                <p>选择适合您的套餐，享受更安全、更快速、更智能的 DNS 防护</p>
+                <h2>{{ $t('plans.title') }}</h2>
+            <p>{{ $t('plans.subtitle') }}</p>
             </div>
         </div>
 
         <el-alert v-if="!hasPaidPlans" type="info" :closable="false" style="margin-bottom: 16px">
-            当前您使用的是 <strong>Free</strong> 套餐，升级后可解锁无限查询、家长监护、查询日志分析等高级功能。
+            {{ $t('plans.currentFreePlan') }}，{{ $t('plans.upgradeHint') }}
         </el-alert>
 
         <el-row v-loading="loading" :gutter="20">
@@ -26,10 +26,10 @@
 
                     <div class="plan-prices">
                         <div v-for="price in plan.prices" :key="price.billing_cycle" class="price-item">
-                            <div class="price-cycle">{{ price.billing_cycle === 'monthly' ? '月付' : '年付' }}</div>
+                            <div class="price-cycle">{{ $t('plans.' + price.billing_cycle) }}</div>
                             <div class="price-amount">
                                 <span class="price-amount-num">{{ money(price.amount_minor, price.currency) }}</span>
-                                <span class="price-amount-unit">/ {{ price.billing_cycle === 'monthly' ? '月' : '年' }}</span>
+                                <span class="price-amount-unit">/ {{ $t(price.billing_cycle === 'monthly' ? 'plans.perMonth' : 'plans.perYear') }}</span>
                             </div>
                             <div v-if="price.original_amount_minor && price.original_amount_minor > price.amount_minor" class="price-original">
                                 <s>{{ money(price.original_amount_minor, price.currency) }}</s>
@@ -55,7 +55,7 @@
                             style="width: 100%"
                             @click="handleBuy(plan)"
                         >
-                            {{ plan.code === 'free' ? '当前套餐' : '立即购买' }}
+                            {{ plan.code === 'free' ? $t('plans.currentPlan') : $t('plans.buyNow') }}
                         </el-button>
                     </div>
                 </el-card>
@@ -98,7 +98,7 @@ const fetchPlans = async () => {
         const { data } = await client.get('/user/plans')
         plans.value = data.data || []
     } catch (err) {
-        ElMessage.error('加载套餐失败')
+        ElMessage.error(t('plans.loadFailed'))
     } finally {
         loading.value = false
     }
@@ -107,14 +107,14 @@ const fetchPlans = async () => {
 const handleBuy = async (plan) => {
     const paidPrice = plan.prices?.find(p => p.amount_minor > 0)
     if (!paidPrice) {
-        ElMessage.warning('该套餐暂不支持购买')
+        ElMessage.warning(t('plans.notSupported'))
         return
     }
     try {
         await ElMessageBox.confirm(
-            `确认购买 ${plan.name}（${paidPrice.billing_cycle === 'monthly' ? '月付' : '年付'} ${money(paidPrice.amount_minor, paidPrice.currency)}）？`,
-            '确认订单',
-            { confirmButtonText: '确认下单', cancelButtonText: '取消', type: 'info' }
+            t('plans.confirmPurchase', { name: plan.name, period: t('plans.' + paidPrice.billing_cycle), amount: money(paidPrice.amount_minor, paidPrice.currency) }),
+            t('plans.confirmOrder'),
+            { confirmButtonText: t('plans.confirm'), cancelButtonText: t('common.cancel'), type: 'info' }
         )
     } catch {
         return
@@ -127,14 +127,14 @@ const handleBuy = async (plan) => {
             billing_cycle: paidPrice.billing_cycle,
             currency: paidPrice.currency,
         })
-        ElMessage.success('订单创建成功，正在跳转到支付...')
+        ElMessage.success(t('plans.orderCreated'))
         // 跳转到订单详情 / 支付
         const orderId = data.data?.id
         if (orderId) {
             router.push(`/user/order`)
         }
     } catch (err) {
-        const msg = err.response?.data?.error?.message || err.response?.data?.message || '下单失败'
+        const msg = err.response?.data?.error?.message || err.response?.data?.message || t('plans.orderFailed')
         ElMessage.error(msg)
     } finally {
         buying.value = null

@@ -15,15 +15,16 @@
 | portal-web | Privacy | 隐私保护 Lite：跟踪器/遥测阻断、日志模式、IP 匿名化 | 代码草案 |
 | portal-web | Parental | 家长监护 Lite：成人内容、安全搜索、YouTube 受限模式 | 代码草案 |
 | portal-web | Device | 设备管理、接入指南 | 代码草案 |
-| portal-web | Publish | 发布 Profile 配置版本 | 代码草案 |
+| portal-web | PublishCenter | 发布 Profile 配置版本 | 代码草案 |
 | portal-web | Logs | 查询日志筛选、分页 | 代码草案 |
 | portal-web | Stats | 今日查询、拦截数、Top 域名、按分类（安全/隐私/家长等）维度聚合、Free 额度进度 | MVP |
-| portal-web | Plan | 套餐查看、升级、续费、取消 | 代码草案 |
+| portal-web | Plans | 套餐查看、升级、续费、取消、订阅管理、会员中心入口 | 代码草案 |
 | portal-web | Billing | 套餐用量计算、超额判定与扣费；用量仅从 query log batch 派生；写接口幂等 | MVP |
-| portal-web | Wallet | 余额、账单、充值、退款；金额 amount_minor bigint；发票定稿不可变 | MVP |
+| portal-web | Account | 用户账户信息、密码修改、邮箱管理 | 代码草案 |
+| portal-web | SubscriptionCheckout | 订阅结账流程、Stripe 支付集成 | 代码草案 |
+| portal-web | APIKeys | API 密钥管理、创建、吊销 | 代码草案 |
 | portal-web | Notification | 告警通知：用量超额、扣费失败、节点离线、Heartbeat 异常、登录风控、Payment webhook 失败 | MVP |
 | portal-web | Classification | 域名分类统计：按安全/隐私/家长等分类维度对查询/拦截/用量做聚合，支撑用户端 Dashboard 与管理后台分类视图 | MVP |
-| portal-web | Membership | 安全/隐私/家长/黑白名单/统计/日志/设置/会员中心 | 代码草案 |
 | portal-web | Settings | 密码、邮箱、语言、时区 | 代码草案 |
 | portal-web | Team | 团队管理：创建团队、邀请成员、角色分配（owner/admin/member）、成员管理、角色变更、批量取消邀请、退出团队、转移所有权、团队切换 | 代码草案 |
 | portal-web | RBAC | 管理员角色与权限：5 个内置角色、23 个权限点、14 个导航栏目、角色-权限映射、角色-导航规则映射、用户-角色分配、Admin 模型 `roles()` / `assignRole()` / `hasNavKey()` | 代码草案 |
@@ -31,12 +32,30 @@
 | `portal-web(原 console 域)` | Heartbeat | 心跳接收、online/offline（基于 last_heartbeat_at 超时） | 代码草案 |
 | `portal-web(原 console 域)` | Config | 配置版本构建、拉取、ACK | 代码草案 |
 | `portal-web(原 console 域)` | Ingest | 查询日志 batch 接收（指标 batch 已下线） | 代码草案 |
-| `portal-web(原 console 域)` | Publish | 发布任务列表、单/批量重试、单/批量取消、清理已完成 | 代码草案 |
+| `portal-web(原 console 域)` | PublishCenter | 发布任务列表、单/批量重试、单/批量取消、清理已完成 | 代码草案 |
 | `portal-web(原 console 域)` | GeoDNS | 国家/区域映射、节点优先级/权重/健康、CRUD、批量删除 | 代码草案 |
 | `portal-web(原 console 域)` | SystemConfig | DNS/日志/安全参数配置 | 代码草案 |
 | `portal-web(原 console 域)` | Audit | 管理员操作审计日志、过滤、NDJSON 导出、批量删除 | 代码草案 |
 | `portal-web(原 console 域)` | RuleLibrary | 规则源 CRUD、批量删除、批量同步、立即同步 | 代码草案 |
-| dns-resolver | DNS | UDP 53、TCP 53、DoH、DoT | 代码草案 |
+| `portal-web(原 console 域)` | RuleCategories | 规则分类管理、CRUD | 代码草案 |
+| `portal-web(原 console 域)` | RuleItems | 规则条目管理、CRUD | 代码草案 |
+| `portal-web(原 console 域)` | SecurityData | 安全数据源管理 | 代码草案 |
+| `portal-web(原 console 域)` | SecurityDataItem | 安全数据条目管理 | 代码草案 |
+| `portal-web(原 console 域)` | Alerts | 告警列表、分派/确认/关闭 | 代码草案 |
+| `portal-web(原 console 域)` | RegionManage | 区域管理、CRUD | 代码草案 |
+| `portal-web(原 console 域)` | MenuConfig | 后台导航菜单动态配置 | 代码草案 |
+| `portal-web(原 console 域)` | Subscriptions | 用户订阅管理 | 代码草案 |
+| `portal-web(原 console 域)` | BasicConfig | 基础参数配置 | 代码草案 |
+| `portal-web(原 console 域)` | ProfilePublish | Profile 发布管理 | 代码草案 |
+| `portal-web(原 console 域)` | AdminAdmins | 管理员账号管理 | 代码草案 |
+| `portal-web(原 console 域)` | PaymentFlows | 支付流水管理 | 代码草案 |
+| `portal-web(原 console 域)` | BlacklistWhitelist | 黑白名单管理（管理后台） | 代码草案 |
+| `portal-web(原 console 域)` | ParentalControlAdmin | 家长监护管理（管理后台） | 代码草案 |
+| `portal-web(原 console 域)` | MemberCatalogs | 会员目录分类管理 | 代码草案 |
+| `portal-web(原 console 域)` | MemberPolicies | 会员策略管理 | 代码草案 |
+| `portal-web(原 console 域)` | Dashboard | 管理后台仪表盘 | 代码草案 |
+| `portal-web(原 console 域)` | Bill | 管理后台账单 | 代码草案 |
+| dns-resolver | DNS | UDP 53、TCP 53、DoH、DoT、DoQ | 代码草案 |
 | dns-resolver | RuleEngine | exact / suffix / wildcard 匹配，多规则优先级 | 代码草案 |
 | dns-resolver | Security | 恶意/钓鱼/C2/Cryptojacking 拦截 | 代码草案 |
 | dns-resolver | Privacy | 跟踪器/遥测/分析域名阻断 | 代码草案 |
@@ -48,8 +67,11 @@
 | dns-resolver | Logs | 查询日志批量上报 | 代码草案 |
 | dns-resolver | Metrics | 基础运行指标上报 | 代码草案 |
 | dns-resolver | Buffer | 上报失败时本地 buffer 落盘 | 代码草案 |
+| dns-resolver | ExternalThreat | 外部威胁情报客户端集成 | 代码草案 |
+| dns-resolver | GeoDNS | GeoDNS 节点选择器集成 | 代码草案 |
 | geodns | Routing | HTTP API 节点选择、GeoIP 路由、健康路由 | 代码草案 |
 | geodns | HTTPHealthView | `GET /health` `GET /health-view` `GET /pick?region=...` 周期刷新控制台健康视图 | 代码草案 |
+| geodns | Node | GeoDNS 节点注册、心跳、健康检查 | 代码草案 |
 | geodns | Weight | 节点权重分配、故障回退 | 代码草案 |
 | geodns | GrayScale | 灰度调度（Stage 06 完整） | — |
 
@@ -84,7 +106,7 @@
 | 家长监护 | 成人内容、安全搜索、YouTube 受限模式 | MVP Lite |
 | 高级分类 | 赌博、游戏、社交、短视频、规则源订阅 | Stage 02 |
 | 团队 | 创建团队、邀请成员、角色分配、成员管理、团队切换 | MVP |
-| 账单 | 套餐、订单、发票、支付 UI、充值、退款；底层财务表/接口为 MVP 强约束 | MVP |
+| 账单 | 套餐、订阅、发票、支付管理；底层财务表/接口为 MVP 强约束 | MVP |
 
 ## 4. 管理后台功能
 

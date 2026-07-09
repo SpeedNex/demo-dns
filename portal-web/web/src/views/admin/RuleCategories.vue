@@ -132,22 +132,24 @@
                 <el-input v-model="form.description" type="textarea" :rows="2" maxlength="500" />
             </el-form-item>
             <el-row :gutter="16">
-                <el-col :span="8">
+                <el-col :span="12">
                     <el-form-item :label="$t('admin.ruleCategories.icon')" prop="icon">
                         <el-input v-model="form.icon" maxlength="50" />
                     </el-form-item>
                 </el-col>
-                <el-col :span="8">
-                    <el-form-item :label="$t('admin.ruleCategories.color')" prop="color">
-                        <el-color-picker v-model="form.color" show-alpha />
-                    </el-form-item>
-                </el-col>
-                <el-col :span="4">
+                <el-col :span="12">
                     <el-form-item :label="$t('admin.ruleCategories.sortOrder')" prop="sort_order">
                         <el-input-number v-model="form.sort_order" :min="0" style="width:100%" />
                     </el-form-item>
                 </el-col>
-                <el-col :span="4">
+            </el-row>
+            <el-row :gutter="16">
+                <el-col :span="12">
+                    <el-form-item :label="$t('admin.ruleCategories.color')" prop="color">
+                        <el-color-picker v-model="form.color" show-alpha />
+                    </el-form-item>
+                </el-col>
+                <el-col :span="12">
                     <el-form-item :label="$t('admin.ruleCategories.enabled')" prop="enabled">
                         <el-switch v-model="form.enabled" />
                     </el-form-item>

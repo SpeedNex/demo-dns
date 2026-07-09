@@ -7,7 +7,7 @@
             </div>
         </div>
 
-        <el-card shadow="never" class="settings-card">
+        <el-card shadow="never" class="settings-card" v-loading="hydrating">
             <el-form label-position="top">
                 <!-- 动态渲染安全防护项 -->
                 <template v-for="(item, index) in securityItems" :key="item.key">

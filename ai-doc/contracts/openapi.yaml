@@ -2,17 +2,15 @@ openapi: 3.1.0
 info:
   title: OcerDNS Security Platform API
   version: 0.1.0
-  description: NextDNS Lite V1 API contract for portal-web and dns-console-web. V1 uses Free quota + flat subscription, not
+  description: NextDNS Lite V1 API contract for portal-web (单进程部署，原 dns-console-web 已合并). V1 uses Free quota + flat subscription, not
     DNS query overage billing.
 servers:
 - url: https://portal.example.com
-  description: portal-web
-- url: https://dns-console.example.com
-  description: OcerDNS
+  description: portal-web (单进程部署，原 dns-console-web 已合并)
 security:
 - bearerAuth: []
 paths:
-  /api/v1/public/auth/register:
+  /api/v1/auth/register:
     post:
       tags:
       - portal-public
@@ -35,7 +33,7 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationError'
-  /api/v1/public/auth/login:
+  /api/v1/auth/login:
     post:
       tags:
       - portal-public
@@ -58,10 +56,10 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/ValidationError'
-  /api/v1/member/me:
+  /api/v1/user/me:
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Current user
       responses:
         '200':
@@ -73,10 +71,10 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/User'
-  /api/v1/member/profiles:
+  /api/v1/user/profiles:
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: List profiles
       parameters:
       - $ref: '#/components/parameters/Page'
@@ -97,7 +95,7 @@ paths:
                     $ref: '#/components/schemas/PageMeta'
     post:
       tags:
-      - portal-member
+      - portal-user
       summary: Create profile
       requestBody:
         required: true
@@ -117,12 +115,12 @@ paths:
                     $ref: '#/components/schemas/Profile'
         '422':
           $ref: '#/components/responses/ValidationError'
-  /api/v1/member/profiles/{profile_id}:
+  /api/v1/user/profiles/{profile_id}:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get profile
       responses:
         '200':
@@ -138,7 +136,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     put:
       tags:
-      - portal-member
+      - portal-user
       summary: Update profile
       requestBody:
         required: true
@@ -158,17 +156,17 @@ paths:
                     $ref: '#/components/schemas/Profile'
     delete:
       tags:
-      - portal-member
+      - portal-user
       summary: Delete profile
       responses:
         '204':
           description: Deleted
-  /api/v1/member/profiles/{profile_id}/rules:
+  /api/v1/user/profiles/{profile_id}/rules:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: List profile rules
       responses:
         '200':
@@ -184,7 +182,7 @@ paths:
                       $ref: '#/components/schemas/ProfileRule'
     post:
       tags:
-      - portal-member
+      - portal-user
       summary: Create profile rule
       requestBody:
         required: true
@@ -206,7 +204,7 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationError'
-  /api/v1/member/profiles/{profile_id}/rules/{rule_id}:
+  /api/v1/user/profiles/{profile_id}/rules/{rule_id}:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     - name: rule_id
@@ -216,17 +214,17 @@ paths:
         type: string
     delete:
       tags:
-      - portal-member
+      - portal-user
       summary: Delete profile rule
       responses:
         '204':
           description: Deleted
-  /api/v1/member/profiles/{profile_id}/publish:
+  /api/v1/user/profiles/{profile_id}/publish:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     post:
       tags:
-      - portal-member
+      - portal-user
       summary: Publish profile config
       requestBody:
         required: false
@@ -255,12 +253,12 @@ paths:
           $ref: '#/components/responses/Conflict'
         '424':
           $ref: '#/components/responses/FailedDependency'
-  /api/v1/member/profiles/{profile_id}/logs:
+  /api/v1/user/profiles/{profile_id}/logs:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Query DNS logs
       parameters:
       - name: from
@@ -393,10 +391,10 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/NodeProvisionResponse'
-  /api/v1/agent/nodes/heartbeat:
+  /api/v1/node/heartbeat:
     post:
       tags:
-      - console-agent
+      - console-node
       summary: Submit node heartbeat
       security:
       - nodeBearer: []
@@ -417,10 +415,10 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/NodeHeartbeatResponse'
-  /api/v1/agent/resolver/config:
+  /api/v1/node/dns-resolver/config:
     get:
       tags:
-      - console-agent
+      - console-node
       summary: Pull resolver config
       security:
       - nodeBearer: []
@@ -446,10 +444,10 @@ paths:
                 $ref: '#/components/schemas/ResolverConfigResponse'
         '204':
           description: No change
-  /api/v1/agent/resolver/config/ack:
+  /api/v1/node/dns-resolver/config/ack:
     post:
       tags:
-      - console-agent
+      - console-node
       summary: Ack resolver config
       security:
       - nodeBearer: []
@@ -463,10 +461,10 @@ paths:
       responses:
         '200':
           description: Ack accepted
-  /api/v1/agent/query-logs/batch:
+  /api/v1/node/dns-resolver/query-logs:
     post:
       tags:
-      - console-agent
+      - console-node
       summary: Upload DNS query logs
       security:
       - nodeBearer: []
@@ -483,7 +481,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BatchAcceptedResponse'
-  /api/v1/public/plans:
+  /api/v1/plans:
     get:
       tags:
       - portal-public
@@ -501,10 +499,10 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Plan'
-  /api/v1/member/subscription:
+  /api/v1/user/subscription:
     get:
       tags:
-      - portal-billing
+      - portal-user
       summary: Get current subscription
       responses:
         '200':
@@ -516,10 +514,10 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Subscription'
-  /api/v1/member/subscription/checkout:
+  /api/v1/user/subscription/checkout:
     post:
       tags:
-      - portal-billing
+      - portal-user
       summary: Create checkout for subscription
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
@@ -543,10 +541,10 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationError'
-  /api/v1/member/invoices:
+  /api/v1/user/invoices:
     get:
       tags:
-      - portal-billing
+      - portal-user
       summary: List member invoices
       responses:
         '200':
@@ -560,10 +558,10 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Invoice'
-  /api/v1/member/payments:
+  /api/v1/user/payments:
     get:
       tags:
-      - portal-billing
+      - portal-user
       summary: List member payments
       responses:
         '200':
@@ -577,18 +575,12 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Payment'
-  /api/v1/public/billing/webhooks/{provider}:
+  /api/v1/stripe/webhook:
     post:
       tags:
-      - portal-billing
-      summary: Receive payment provider webhook
+      - portal-user
+      summary: Receive Stripe webhook
       security: []
-      parameters:
-      - name: provider
-        in: path
-        required: true
-        schema:
-          type: string
       requestBody:
         required: true
         content:
@@ -629,10 +621,8 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
       description: |
-        V1 **不实现**。当前 dns-console-web 在 `query_log_ingest_batches` 内完成
-        使用量派生，由 `portal-web` 主动 `GET /api/v1/internal/query-logs` /
-        `GET /api/v1/internal/query-analytics` 反向拉取汇总（见 dns-console-web
-        `routes/api.php` 实际路由）。V2+ 评估替换为 push 模型。
+        V1 **不实现**。portal-web 直接通过 ClickHouse 查询使用量（原 dns-console-web 中间层已废弃）。
+        V2+ 评估替换为 push 模型。
   /api/v1/internal/publish-status/callback:
     post:
       tags:
@@ -655,34 +645,7 @@ paths:
           $ref: '#/components/responses/Conflict'
       description: |
         V1 **不实现**。portal-web 通过 `GET /api/v1/admin/publishes` 主动轮询
-        publish_tasks 状态。V2+ 评估 push 回调。
-  /api/v1/admin/refunds:
-    post:
-      tags:
-      - portal-admin
-      summary: Create refund
-      parameters:
-      - $ref: '#/components/parameters/IdempotencyKey'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RefundCreateRequest'
-      responses:
-        '201':
-          description: Refund created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/Refund'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '422':
-          $ref: '#/components/responses/ValidationError'
+        publish_tasks 状态。V2+ 评估 push 回调。（原 dns-console-web 回调已废弃）
   /api/v1/internal/quota/snapshots:
     post:
       tags:
@@ -708,7 +671,7 @@ paths:
       description: |
         V1 **不实现**。V1 由 portal-web 在 Profile / publish 流程中内嵌 quota
         snapshot，并通过 `POST /api/v1/internal/profile-publishes` 的 `quota` 字段
-        一次性下发；dns-console-web 落 `quota_snapshots` 表供 resolver 拉取。
+        一次性下发。（原 dns-console-web 落表流程已废弃）
   /api/v1/internal/query-logs:
     get:
       tags:
@@ -778,10 +741,10 @@ paths:
                 properties:
                   data:
                     type: object
-  /api/v1/member/usage/quota:
+  /api/v1/user/usage/quota:
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get current NextDNS Lite quota status
       responses:
         '200':
@@ -790,10 +753,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/QuotaStatusResponse'
-  /api/v1/member/overview:
+  /api/v1/user/overview:
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get member overview and navigation
       responses:
         '200':
@@ -802,10 +765,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MemberCenterOverviewResponse'
-  /api/v1/member/dashboard:
+  /api/v1/user/dashboard:
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get member dashboard summary
       responses:
         '200':
@@ -828,12 +791,12 @@ paths:
           - 7d
           - 30d
           default: 24h
-  /api/v1/member/profiles/{profile_id}/settings:
+  /api/v1/user/profiles/{profile_id}/settings:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get all profile settings
       description: |
         Get all settings for a profile including security, privacy, and parental control.
@@ -857,7 +820,7 @@ paths:
                         $ref: '#/components/schemas/ParentalSettings'
     put:
       tags:
-      - portal-member
+      - portal-user
       summary: Update profile settings
       description: |
         Update all or part of profile settings.
@@ -878,12 +841,12 @@ paths:
       responses:
         '200':
           description: Updated
-  /api/v1/member/profiles/{profile_id}/settings/security:
+  /api/v1/user/profiles/{profile_id}/settings/security:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get profile Security settings
       responses:
         '200':
@@ -897,7 +860,7 @@ paths:
                     $ref: '#/components/schemas/SecuritySettings'
     put:
       tags:
-      - portal-member
+      - portal-user
       summary: Update profile Security settings
       requestBody:
         required: true
@@ -908,12 +871,12 @@ paths:
       responses:
         '200':
           description: Updated
-  /api/v1/member/profiles/{profile_id}/settings/privacy:
+  /api/v1/user/profiles/{profile_id}/settings/privacy:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get profile Privacy settings
       responses:
         '200':
@@ -927,7 +890,7 @@ paths:
                     $ref: '#/components/schemas/PrivacySettings'
     put:
       tags:
-      - portal-member
+      - portal-user
       summary: Update profile Privacy settings
       requestBody:
         required: true
@@ -938,12 +901,12 @@ paths:
       responses:
         '200':
           description: Updated
-  /api/v1/member/profiles/{profile_id}/settings/parental:
+  /api/v1/user/profiles/{profile_id}/settings/parental:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get Parental control settings
       responses:
         '200':
@@ -957,7 +920,7 @@ paths:
                     $ref: '#/components/schemas/ParentalSettings'
     put:
       tags:
-      - portal-member
+      - portal-user
       summary: Update Parental control settings
       requestBody:
         required: true
@@ -970,12 +933,12 @@ paths:
           content:
             application/json:
               schema: *id006
-  /api/v1/member/profiles/{profile_id}/allowlist:
+  /api/v1/user/profiles/{profile_id}/allowlist:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: List allowlist
       responses:
         '200':
@@ -1000,7 +963,7 @@ paths:
       - $ref: '#/components/parameters/PerPage'
     post:
       tags:
-      - portal-member
+      - portal-user
       summary: Create allowlist rule
       description: Alias of profile rules with list_type=allow and action=allow.
       requestBody:
@@ -1023,23 +986,23 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationError'
-  /api/v1/member/profiles/{profile_id}/allowlist/{rule_id}:
+  /api/v1/user/profiles/{profile_id}/allowlist/{rule_id}:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     - $ref: '#/components/parameters/RuleId'
     delete:
       tags:
-      - portal-member
+      - portal-user
       summary: Delete allowlist rule
       responses:
         '204':
           description: Deleted
-  /api/v1/member/profiles/{profile_id}/blocklist:
+  /api/v1/user/profiles/{profile_id}/blocklist:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: List blocklist
       responses:
         '200':
@@ -1064,7 +1027,7 @@ paths:
       - $ref: '#/components/parameters/PerPage'
     post:
       tags:
-      - portal-member
+      - portal-user
       summary: Create blocklist rule
       description: Alias of profile rules with list_type=block and action=block.
       requestBody:
@@ -1087,13 +1050,13 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationError'
-  /api/v1/member/profiles/{profile_id}/blocklist/{rule_id}:
+  /api/v1/user/profiles/{profile_id}/blocklist/{rule_id}:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     - $ref: '#/components/parameters/RuleId'
     put:
       tags:
-      - portal-member
+      - portal-user
       summary: Update blocklist rule
       requestBody:
         required: true
@@ -1113,17 +1076,17 @@ paths:
                     $ref: '#/components/schemas/ProfileRule'
     delete:
       tags:
-      - portal-member
+      - portal-user
       summary: Delete blocklist rule
       responses:
         '204':
           description: Deleted
-  /api/v1/member/profiles/{profile_id}/rules/import:
+  /api/v1/user/profiles/{profile_id}/rules/import:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     post:
       tags:
-      - portal-member
+      - portal-user
       summary: Import rules from file
       requestBody:
         required: true
@@ -1164,12 +1127,12 @@ paths:
                         type: integer
                       overwritten:
                         type: integer
-  /api/v1/member/profiles/{profile_id}/rules/export:
+  /api/v1/user/profiles/{profile_id}/rules/export:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Export rules to file
       parameters:
       - name: list_type
@@ -1198,12 +1161,12 @@ paths:
               schema:
                 type: string
                 format: binary
-  /api/v1/member/profiles/{profile_id}/publishes:
+  /api/v1/user/profiles/{profile_id}/publishes:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: List profile publish history
       responses:
         '200':
@@ -1219,7 +1182,7 @@ paths:
                       $ref: '#/components/schemas/ProfilePublish'
                   meta:
                     $ref: '#/components/schemas/PageMeta'
-  /api/v1/member/profiles/{profile_id}/publishes/{publish_id}:
+  /api/v1/user/profiles/{profile_id}/publishes/{publish_id}:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     - name: publish_id
@@ -1229,7 +1192,7 @@ paths:
         type: string
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get publish details
       responses:
         '200':
@@ -1241,12 +1204,12 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/ProfilePublish'
-  /api/v1/member/profiles/{profile_id}/clone:
+  /api/v1/user/profiles/{profile_id}/clone:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     post:
       tags:
-      - portal-member
+      - portal-user
       summary: Clone profile
       description: Create a copy of the profile including all rules and settings.
       requestBody:
@@ -1275,12 +1238,12 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Profile'
-  /api/v1/member/profiles/{profile_id}/stats/summary:
+  /api/v1/user/profiles/{profile_id}/stats/summary:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get profile stats summary
       responses:
         '200':
@@ -1299,12 +1262,12 @@ paths:
           - 7d
           - 30d
           default: 24h
-  /api/v1/member/profiles/{profile_id}/stats/top-domains:
+  /api/v1/user/profiles/{profile_id}/stats/top-domains:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get top domains
       responses:
         '200':
@@ -1330,12 +1293,12 @@ paths:
           enum:
           - allowed
           - blocked
-  /api/v1/member/profiles/{profile_id}/stats/timeseries:
+  /api/v1/user/profiles/{profile_id}/stats/timeseries:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get DNS query timeseries
       responses:
         '200':
@@ -1362,10 +1325,10 @@ paths:
           - 1h
           - 1d
           default: 1h
-  /api/v1/member/settings:
+  /api/v1/user/settings:
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get member settings
       responses:
         '200':
@@ -1376,7 +1339,7 @@ paths:
                 $ref: '#/components/schemas/MemberSettingsResponse'
     put:
       tags:
-      - portal-member
+      - portal-user
       summary: Update member settings
       requestBody:
         required: true
@@ -1391,12 +1354,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MemberSettingsResponse'
-  /api/v1/member/profiles/{profile_id}/settings/dns:
+  /api/v1/user/profiles/{profile_id}/settings/dns:
     parameters:
     - $ref: '#/components/parameters/ProfileId'
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get DNS setup endpoints for profile
       responses:
         '200':
@@ -1405,10 +1368,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProfileDnsSettingsResponse'
-  /api/v1/member/membership:
+  /api/v1/user/membership:
     get:
       tags:
-      - portal-billing
+      - portal-user
       summary: Get membership plan, quota and billing overview
       responses:
         '200':
@@ -1440,18 +1403,18 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/ValidationError'
-  /api/v1/member/logout:
+  /api/v1/user/logout:
     post:
       tags:
-      - portal-member
+      - portal-user
       summary: Logout current user
       responses:
         '200':
           description: Logged out
-  /api/v1/member/password:
+  /api/v1/user/password:
     put:
       tags:
-      - portal-member
+      - portal-user
       summary: Update password
       requestBody:
         required: true
@@ -1464,10 +1427,10 @@ paths:
           description: Password updated
         '422':
           $ref: '#/components/responses/ValidationError'
-  /api/v1/member/security:
+  /api/v1/user/security:
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get Security settings
       responses:
         '200':
@@ -1478,7 +1441,7 @@ paths:
                 $ref: '#/components/schemas/SecuritySettings'
     put:
       tags:
-      - portal-member
+      - portal-user
       summary: Update Security settings
       requestBody:
         required: true
@@ -1489,10 +1452,10 @@ paths:
       responses:
         '200':
           description: Updated
-  /api/v1/member/privacy:
+  /api/v1/user/privacy:
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get Privacy settings
       responses:
         '200':
@@ -1503,7 +1466,7 @@ paths:
                 $ref: '#/components/schemas/PrivacySettings'
     put:
       tags:
-      - portal-member
+      - portal-user
       summary: Update Privacy settings
       requestBody:
         required: true
@@ -1514,10 +1477,10 @@ paths:
       responses:
         '200':
           description: Updated
-  /api/v1/member/parental:
+  /api/v1/user/parental:
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get Parental control settings
       responses:
         '200':
@@ -1528,7 +1491,7 @@ paths:
                 $ref: '#/components/schemas/ParentalSettings'
     put:
       tags:
-      - portal-member
+      - portal-user
       summary: Update Parental control settings
       requestBody:
         required: true
@@ -1539,10 +1502,10 @@ paths:
       responses:
         '200':
           description: Updated
-  /api/v1/member/logs:
+  /api/v1/user/logs:
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Query DNS logs
       parameters:
       - name: from
@@ -1584,10 +1547,10 @@ paths:
                       $ref: '#/components/schemas/QueryLogItem'
                   meta:
                     $ref: '#/components/schemas/PageMeta'
-  /api/v1/member/analytics:
+  /api/v1/user/analytics:
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get analytics summary
       parameters:
       - name: range
@@ -1606,10 +1569,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AnalyticsResponse'
-  /api/v1/member/api-keys:
+  /api/v1/user/api-keys:
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: List API keys
       responses:
         '200':
@@ -1625,7 +1588,7 @@ paths:
                       $ref: '#/components/schemas/ApiKey'
     post:
       tags:
-      - portal-member
+      - portal-user
       summary: Create API key
       requestBody:
         required: true
@@ -1643,7 +1606,7 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/ApiKey'
-  /api/v1/member/api-keys/{key_id}:
+  /api/v1/user/api-keys/{key_id}:
     parameters:
     - name: key_id
       in: path
@@ -1652,7 +1615,7 @@ paths:
         type: string
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get API key details
       responses:
         '200':
@@ -1666,7 +1629,7 @@ paths:
                     $ref: '#/components/schemas/ApiKey'
     put:
       tags:
-      - portal-member
+      - portal-user
       summary: Update API key
       requestBody:
         required: true
@@ -1683,12 +1646,12 @@ paths:
           description: Updated
     delete:
       tags:
-      - portal-member
+      - portal-user
       summary: Delete API key
       responses:
         '204':
           description: Deleted
-  /api/v1/member/api-keys/{key_id}/rotate:
+  /api/v1/user/api-keys/{key_id}/rotate:
     parameters:
     - name: key_id
       in: path
@@ -1697,7 +1660,7 @@ paths:
         type: string
     post:
       tags:
-      - portal-member
+      - portal-user
       summary: Rotate API key
       description: Generate a new key value while keeping the same key metadata. The old key will be invalidated immediately.
       responses:
@@ -1710,10 +1673,10 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/ApiKey'
-  /api/v1/member/teams:
+  /api/v1/user/teams:
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: List teams
       responses:
         '200':
@@ -1729,7 +1692,7 @@ paths:
                       $ref: '#/components/schemas/Team'
     post:
       tags:
-      - portal-member
+      - portal-user
       summary: Create team
       requestBody:
         required: true
@@ -1747,7 +1710,7 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Team'
-  /api/v1/member/teams/{team_id}:
+  /api/v1/user/teams/{team_id}:
     parameters:
     - name: team_id
       in: path
@@ -1756,7 +1719,7 @@ paths:
         type: string
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get team details
       responses:
         '200':
@@ -1767,7 +1730,7 @@ paths:
                 $ref: '#/components/schemas/Team'
     put:
       tags:
-      - portal-member
+      - portal-user
       summary: Update team
       requestBody:
         required: true
@@ -1780,12 +1743,12 @@ paths:
           description: Updated
     delete:
       tags:
-      - portal-member
+      - portal-user
       summary: Delete team
       responses:
         '204':
           description: Deleted
-  /api/v1/member/teams/{team_id}/members:
+  /api/v1/user/teams/{team_id}/members:
     parameters:
     - name: team_id
       in: path
@@ -1794,7 +1757,7 @@ paths:
         type: string
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: List team members
       responses:
         '200':
@@ -1810,7 +1773,7 @@ paths:
                       $ref: '#/components/schemas/TeamMember'
     post:
       tags:
-      - portal-member
+      - portal-user
       summary: Add team member
       requestBody:
         required: true
@@ -1833,7 +1796,7 @@ paths:
       responses:
         '201':
           description: Member added
-  /api/v1/member/teams/{team_id}/members/{member_id}:
+  /api/v1/user/teams/{team_id}/members/{member_id}:
     parameters:
     - name: team_id
       in: path
@@ -1847,7 +1810,7 @@ paths:
         type: string
     put:
       tags:
-      - portal-member
+      - portal-user
       summary: Update team member role
       requestBody:
         required: true
@@ -1866,12 +1829,12 @@ paths:
           description: Member updated
     delete:
       tags:
-      - portal-member
+      - portal-user
       summary: Remove team member
       responses:
         '204':
           description: Member removed
-  /api/v1/member/teams/{team_id}/invitations:
+  /api/v1/user/teams/{team_id}/invitations:
     parameters:
     - name: team_id
       in: path
@@ -1880,7 +1843,7 @@ paths:
         type: string
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: List team invitations
       responses:
         '200':
@@ -1894,18 +1857,18 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/TeamInvitation'
-  /api/v1/member/teams/{team_id}/leave:
+  /api/v1/user/teams/{team_id}/leave:
     post:
       tags:
-      - portal-member
+      - portal-user
       summary: Leave team
       responses:
         '200':
           description: Left
-  /api/v1/member/teams/invitations/pending:
+  /api/v1/user/teams/invitations/pending:
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: List pending invitations
       responses:
         '200':
@@ -1919,10 +1882,10 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/TeamInvitation'
-  /api/v1/member/teams/accept-invitation:
+  /api/v1/user/teams/accept-invitation:
     post:
       tags:
-      - portal-member
+      - portal-user
       summary: Accept team invitation
       requestBody:
         required: true
@@ -1936,10 +1899,10 @@ paths:
       responses:
         '200':
           description: Accepted
-  /api/v1/member/devices:
+  /api/v1/user/devices:
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: List member devices
       responses:
         '200':
@@ -1953,7 +1916,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Device'
-  /api/v1/member/devices/{device_id}:
+  /api/v1/user/devices/{device_id}:
     parameters:
     - name: device_id
       in: path
@@ -1962,7 +1925,7 @@ paths:
         type: string
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get device details
       responses:
         '200':
@@ -1974,7 +1937,7 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Device'
-  /api/v1/member/devices/{device_id}/disable:
+  /api/v1/user/devices/{device_id}/disable:
     parameters:
     - name: device_id
       in: path
@@ -1983,12 +1946,12 @@ paths:
         type: string
     post:
       tags:
-      - portal-member
+      - portal-user
       summary: Disable device
       responses:
         '200':
           description: Device disabled
-  /api/v1/member/devices/{device_id}/enable:
+  /api/v1/user/devices/{device_id}/enable:
     parameters:
     - name: device_id
       in: path
@@ -1997,15 +1960,15 @@ paths:
         type: string
     post:
       tags:
-      - portal-member
+      - portal-user
       summary: Enable device
       responses:
         '200':
           description: Device enabled
-  /api/v1/member/dns-endpoints:
+  /api/v1/user/dns-endpoints:
     get:
       tags:
-      - portal-member
+      - portal-user
       summary: Get DNS setup endpoints
       responses:
         '200':
@@ -2942,293 +2905,236 @@ paths:
       responses:
         '204':
           description: Deleted
-  /api/v1/admin/billing/charge:
+  # ============================================================
+  # GeoDNS 节点路由
+  /api/v1/node/geodns/register:
     post:
       tags:
-      - console-admin
-      summary: Charge user
+      - console-node
+      summary: Register GeoDNS node
+      description: |
+        GeoDNS 节点首次注册，使用预分配的 geodns.token 鉴权。
+        返回心跳间隔等配置参数。
       security:
-      - adminBearer: []
-      parameters:
-      - $ref: '#/components/parameters/IdempotencyKey'
+      - geodnsToken: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+              - node_id
               properties:
-                user_id:
+                node_id:
                   type: string
-                amount:
-                  type: integer
-                  format: int64
-                currency:
+                version:
                   type: string
-                note:
+                public_ipv4:
+                  type: string
+                public_ipv6:
                   type: string
       responses:
         '200':
-          description: Charged
-  /api/v1/admin/billing/refund:
+          description: Registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      heartbeat_interval_seconds:
+                        type: integer
+                      server_time:
+                        type: string
+                        format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/v1/node/geodns/heartbeat:
     post:
       tags:
-      - console-admin
-      summary: Refund user
+      - console-node
+      summary: GeoDNS node heartbeat
       security:
-      - adminBearer: []
-      parameters:
-      - $ref: '#/components/parameters/IdempotencyKey'
+      - geodnsToken: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+              - node_id
+              - status
               properties:
-                user_id:
+                node_id:
                   type: string
-                amount:
+                status:
+                  type: string
+                  enum:
+                  - online
+                  - offline
+                uptime_seconds:
                   type: integer
-                  format: int64
-                currency:
-                  type: string
-                reason:
+                version:
                   type: string
       responses:
         '200':
-          description: Refunded
-  /api/v1/admin/finance/bills:
+          description: Heartbeat accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  server_time:
+                    type: string
+                    format: date-time
+  /api/v1/node/geodns/config:
     get:
       tags:
-      - console-admin
-      summary: List bills
+      - console-node
+      summary: Pull GeoDNS health view config
       security:
-      - adminBearer: []
+      - geodnsToken: []
       parameters:
-      - name: user_id
+      - name: node_id
         in: query
+        required: true
         schema:
           type: string
-      - name: from
+      - name: current_version
         in: query
         schema:
-          type: string
-          format: date-time
-      - name: to
-        in: query
-        schema:
-          type: string
-          format: date-time
-      - $ref: '#/components/parameters/Page'
-      - $ref: '#/components/parameters/PerPage'
+          type: integer
+          minimum: 0
       responses:
         '200':
-          description: Bills
+          description: Config bundle
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Bill'
-                  meta:
-                    $ref: '#/components/schemas/PageMeta'
-  /api/v1/admin/finance/bills/export:
-    get:
-      tags:
-      - console-admin
-      summary: Export bills
-      security:
-      - adminBearer: []
-      parameters:
-      - name: user_id
-        in: query
-        schema:
-          type: string
-      - name: from
-        in: query
-        schema:
-          type: string
-          format: date-time
-      - name: to
-        in: query
-        schema:
-          type: string
-          format: date-time
-      responses:
-        '200':
-          description: CSV file
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-  /api/v1/admin/finance/balances:
-    get:
-      tags:
-      - console-admin
-      summary: List user balances
-      security:
-      - adminBearer: []
-      parameters:
-      - $ref: '#/components/parameters/Page'
-      - $ref: '#/components/parameters/PerPage'
-      responses:
-        '200':
-          description: Balances
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        user_id:
-                          type: string
-                        balance:
-                          $ref: '#/components/schemas/Money'
-                  meta:
-                    $ref: '#/components/schemas/PageMeta'
-  /api/v1/admin/finance/recharges:
-    get:
-      tags:
-      - console-admin
-      summary: List recharges
-      security:
-      - adminBearer: []
-      parameters:
-      - name: user_id
-        in: query
-        schema:
-          type: string
-      - name: from
-        in: query
-        schema:
-          type: string
-          format: date-time
-      - name: to
-        in: query
-        schema:
-          type: string
-          format: date-time
-      - $ref: '#/components/parameters/Page'
-      - $ref: '#/components/parameters/PerPage'
-      responses:
-        '200':
-          description: Recharges
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Recharge'
-                  meta:
-                    $ref: '#/components/schemas/PageMeta'
-  /api/v1/admin/finance/recharges/export:
-    get:
-      tags:
-      - console-admin
-      summary: Export recharges
-      security:
-      - adminBearer: []
-      parameters:
-      - name: user_id
-        in: query
-        schema:
-          type: string
-      - name: from
-        in: query
-        schema:
-          type: string
-          format: date-time
-      - name: to
-        in: query
-        schema:
-          type: string
-          format: date-time
-      responses:
-        '200':
-          description: CSV file
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-  /api/v1/admin/finance/refunds:
-    get:
-      tags:
-      - console-admin
-      summary: List refunds
-      security:
-      - adminBearer: []
-      parameters:
-      - name: user_id
-        in: query
-        schema:
-          type: string
-      - $ref: '#/components/parameters/Page'
-      - $ref: '#/components/parameters/PerPage'
-      responses:
-        '200':
-          description: Refunds
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Refund'
-                  meta:
-                    $ref: '#/components/schemas/PageMeta'
-  /api/v1/admin/finance/refunds/{refund_id}/approve:
+                    type: object
+        '204':
+          description: No change
+  # ============================================================
+  # DNS Resolver Profile 按需拉取
+  /api/v1/node/dns-resolver/profiles/{profileId}:
     parameters:
-    - name: refund_id
+    - name: profileId
       in: path
       required: true
       schema:
         type: string
-    post:
-      tags:
-      - console-admin
-      summary: Approve refund
-      security:
-      - adminBearer: []
-      parameters:
-      - $ref: '#/components/parameters/IdempotencyKey'
-      responses:
-        '200':
-          description: Approved
-  /api/v1/admin/finance/refunds/export:
     get:
       tags:
-      - console-admin
-      summary: Export refunds
+      - console-node
+      summary: Pull single profile config
       security:
-      - adminBearer: []
-      parameters:
-      - name: user_id
-        in: query
-        schema:
-          type: string
+      - nodeBearer: []
       responses:
         '200':
-          description: CSV file
+          description: Profile config
           content:
-            application/octet-stream:
+            application/json:
               schema:
-                type: string
-                format: binary
+                type: object
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/node/dns-resolver/profiles/check:
+    post:
+      tags:
+      - console-node
+      summary: Check profile version
+      security:
+      - nodeBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                profile_ids:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Version check result
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/v1/node/dns-resolver/devices/seen:
+    post:
+      tags:
+      - console-node
+      summary: Report device seen
+      security:
+      - nodeBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                profile_id:
+                  type: string
+                device_id:
+                  type: string
+                device_name:
+                  type: string
+                device_type:
+                  type: string
+                client_ip:
+                  type: string
+      responses:
+        '200':
+          description: Acknowledged
+  /api/v1/node/tokens/verify:
+    post:
+      tags:
+      - console-node
+      summary: Verify node token
+      description: |
+        用于节点安装时验证 token 有效性，返回 node_id 和 api_key。
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+      responses:
+        '200':
+          description: Token verified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      node_id:
+                        type: string
+                      api_key:
+                        type: string
+                      secret:
+                        type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 components:
   securitySchemes:
     bearerAuth:
@@ -3262,6 +3168,14 @@ components:
       type: apiKey
       in: header
       name: X-Internal-Signature
+    geodnsToken:
+      type: http
+      scheme: bearer
+      description: |
+        GeoDNS 节点预分配的 bearer token。存储于 geodns_tokens 表。
+        用于 GeoDNS 节点注册、心跳、配置拉取等接口的鉴权。
+        Bearer token 值由 portal-web 在预配 GeoDNS 节点时生成，
+        节点安装时通过 `geodns install --token=...` 写入本地配置。
   parameters:
     Page:
       name: page
@@ -4259,41 +4173,6 @@ components:
           type: string
           format: date-time
           nullable: true
-    RefundCreateRequest:
-      type: object
-      required:
-      - payment_id
-      - amount_minor
-      - currency
-      - reason
-      properties:
-        payment_id:
-          type: string
-        amount_minor:
-          type: integer
-          format: int64
-          minimum: 1
-        currency:
-          type: string
-          minLength: 3
-          maxLength: 3
-        reason:
-          type: string
-          maxLength: 120
-    Refund:
-      type: object
-      properties:
-        id:
-          type: string
-        payment_id:
-          type: string
-        amount_minor:
-          type: integer
-          format: int64
-        currency:
-          type: string
-        status:
-          type: string
     UsageBatchRequest:
       type: object
       required:
@@ -5237,71 +5116,3 @@ components:
           type: string
           format: date-time
           nullable: true
-    Bill:
-      type: object
-      properties:
-        id:
-          type: string
-        user_id:
-          type: string
-        type:
-          type: string
-          enum:
-          - charge
-          - refund
-          - subscription
-        amount:
-          $ref: '#/components/schemas/Money'
-        status:
-          type: string
-          enum:
-          - pending
-          - completed
-          - failed
-        note:
-          type: string
-          nullable: true
-        created_at:
-          type: string
-          format: date-time
-    Recharge:
-      type: object
-      properties:
-        id:
-          type: string
-        user_id:
-          type: string
-        amount:
-          $ref: '#/components/schemas/Money'
-        payment_method:
-          type: string
-        status:
-          type: string
-          enum:
-          - pending
-          - completed
-          - failed
-        created_at:
-          type: string
-          format: date-time
-    Refund:
-      type: object
-      properties:
-        id:
-          type: string
-        user_id:
-          type: string
-        amount:
-          $ref: '#/components/schemas/Money'
-        reason:
-          type: string
-        status:
-          type: string
-          enum:
-          - pending
-          - approved
-          - rejected
-          - completed
-        created_at:
-          type: string
-          format: date-time

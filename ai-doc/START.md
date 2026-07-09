@@ -2,18 +2,58 @@
 
 > 使用本文件作为唯一启动入口。目标是先生成稳定文档规格，再生成可运行 MVP 代码，避免旧文档、旧命名和未确认范围干扰生成结果。
 
-## 0. 变更记录规则
+## 0. 变更纪律
 
-代码变更后必须同步更新 `project-doc/07-CHANGE-LOG.md`：
+### 0.1 文档同步工作流（强制）
+
+**顺序**：先改代码 → 测试验证通过 → 再同步更新对应文档。禁止在未验证的情况下提前更新文档。
+
+#### 步骤一：改代码
+
+| 变更类型 | 修改的代码文件 | 验证命令 |
+|---|---|---|
+| 新增/修改 API 路由 | `portal-web/routes/v1/*.php` + `app/Http/Controllers/Api/V1/*/*.php` | `php artisan test` 或 `curl` 测试端点 |
+| 新增/修改数据库表（MySQL） | `portal-web/database/migrations/` + `app/Models/*.php` | `php artisan migrate:fresh --seed` + `php artisan test` |
+| 新增/修改数据库表（ClickHouse） | `database/migrations/clickhouse/` | `php artisan clickhouse:retry-failed-batches` 或手动查询验证 |
+| 新增/修改后端 Service | `portal-web/app/Domain/*/*.php` | `php artisan test --filter={ServiceName}` |
+| 新增/修改后端 Controller | `portal-web/app/Http/Controllers/Api/V1/*/*.php` | `php artisan test --filter={ControllerName}` |
+| 新增/修改前端页面 | `portal-web/web/src/views/**/*.vue` + `portal-web/web/src/router/index.js` | `cd portal-web/web && npx vite build`（1792+ modules transformed） |
+| 新增/修改目录结构 | 新建或删除目录/文件 | `ls` 确认目录结构 |
+| 新增/修改数据闭环 | 涉及多个包（portal-web + dns-resolver + geodns） | 端到端链路测试 |
+| 新增/修改配置项 | `dns-resolver/internal/config/config.go` 等 | `go test ./internal/config/...` |
+| 新增/修改计费逻辑 | `portal-web/app/Domain/Billing/*.php` | `php artisan test --filter=Billing` |
+| 新增/修改节点鉴权机制 | `portal-web/app/Http/Middleware/AuthenticateNodeApiKey.php`、`AuthenticateGeoDnsToken.php` 等 | `curl -I` 测试 401/200 |
+
+#### 步骤二：验证通过 → 同步文档
+
+| 变更类型 | 必须同步的文档文件 | 检查项 |
+|---|---|---|
+| 新增/修改 API 路由 | `contracts/openapi.yaml` | 路径、方法、parameters、responses、security 与代码一致 |
+| 新增/修改 MySQL 数据库表 | `START.md §7`（表名清单） | 表名、主键名、前缀规则 |
+| 新增/修改 ClickHouse 表 | `specs/clickhouse/tables.md` | 表名、字段类型、分区键、TTL |
+| 新增/修改数据所有权归属 | `project-doc/02-MODULES.md` | 表的写入/读取方与代码一致 |
+| 新增/删除代码模块/目录 | `project-doc/01-ARCHITECTURE.md §14`（目录结构） | 目录名、文件清单与实际 `ls` 一致 |
+| 新增/修改数据闭环 | `project-doc/03-DATA-FLOW.md`（数据流图）、`project-doc/09-CLOSED-LOOP-AND-DATA-DESTINATIONS.md`（闭环终点） | 数据流向、终点存储与实际代码一致 |
+| 新增/修改配置项 | `project-doc/15-CONFIG-ARCHITECTURE.md` | 拉取间隔、配置字段名、默认值 |
+| 新增/修改前端页面 | `project-doc/04-FEATURES.md`（功能清单）、`project-doc/01-ARCHITECTURE.md §14.2`（视图列表） | 页面名、路由路径、功能描述 |
+| 新增/修改功能/计费逻辑 | `project-doc/10-NEXTDNS-LITE-BILLING.md`（计费模型）、`project-doc/06-MVP-SCOPE.md`（MVP 范围） | 套餐结构、价格、计费规则 |
+| 新增/修改节点鉴权机制 | `project-doc/01-ARCHITECTURE.md §8`（安全边界）、`START.md §5.8`（节点部署钥匙机制） | 鉴权方式、Token 格式、生命周期 |
+
+> **违反后果**：文档与代码不一致导致后续开发决策错误，等同于生产事故。
+
+### 0.2 变更记录规则
+
+每次变更后必须同步更新 `project-doc/07-CHANGE-LOG.md`：
 
 ```text
-| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
-|---|---|---|---|---|
-| YYYY-MM-DD | code/docs/test | 简要描述 | file1, file2 | ok/pending |
+| 日期 | 类型 | 描述 | 涉及文件 | 涉及文档 | 状态 |
+|---|---|---|---|---|---|
+| YYYY-MM-DD | code/docs/test | 简要描述 | file1, file2 | doc1, doc2 | ok/pending |
 ```
 
 - **时机**：每次功能增减、Bug 修复、文档变更时
 - **类型**：code=代码, docs=文档, test=测试
+- **涉及文档**：新增列，列出本次同步更新的文档文件
 - **状态**：doc_status / impl_status / test_status
 
 ---
@@ -110,7 +150,6 @@ dns-resolver/
 | DNS 节点 | `dns-resolver` | Go 单二进制 | 本地内存 / 文件 buffer | DNS / HTTPS Agent API |
 | 接入调度 | `geodns` | Go | 内存 | Health View / Selector Internal API |
 | 日志分析 | `clickhouse` | ClickHouse | MergeTree | HTTP / Native |
-| 消息总线 | `nats`（V2+ 可选） | NATS JetStream | Stream | Pub/Sub |
 
 ## 4. 生成阶段
 
@@ -120,7 +159,7 @@ dns-resolver/
 
 - `portal-web` 是否有 API、数据表、权限、验收标准。
 - `portal-web` 前端是否收口在 `portal-web/web`，不得漂移到包外共享目录。
-- `dns-console-web` 是否有节点注册、心跳、配置发布、配置拉取、ACK、日志 / 指标接收。
+- `portal-web(原 console 域)` 是否有节点注册、心跳、配置发布、配置拉取、ACK、日志 / 指标接收。
 - `dns-resolver` 是否有配置结构、Profile 识别、规则引擎、日志 buffer、心跳、热加载。
 - `geodns` 是否只做入口调度，不参与实际 DNS 过滤查询。
 - `contracts/` 是否有 OpenAPI 和 JSON Schema。
@@ -144,7 +183,7 @@ DoH + UDP DNS 查询
 规则命中拦截 / 默认放行
 日志批量上报
 portal-web 查询日志
-console-web 查看节点在线状态
+portal-web(原 console 域) 查看节点在线状态
 超额计费（用量从 query log batch 派生，写接口幂等）
 余额 / 账单 / 充值 / 退款（amount_minor bigint，发票定稿不可变）
 告警通知（用量超额、扣费失败、节点离线、Heartbeat 异常、登录风控、Payment webhook 失败）
@@ -197,7 +236,7 @@ JSON Schema 校验样例
 节点心跳：resolver → portal-web(原 console 域)
 用于证明节点在线、健康、负载、配置版本是否一致。
 
-查询日志：resolver → portal-web(原 console 域) Node API（HTTP batch `/api/v1/node/dns-resolver/query-logs`，本地 buffer 持久化）；V2+ 规模化阶段可再切换为 NATS ingestion → portal-web(原 console 域) log worker → ClickHouse
+查询日志：resolver → portal-web(原 console 域) Node API（HTTP batch `/api/v1/node/dns-resolver/query-logs`，本地 buffer 持久化）
 用于记录用户 DNS 查询、命中规则、拦截动作、延迟和用量；resolver 不得直接写 ClickHouse。
 ```
 
@@ -218,7 +257,7 @@ GeoDNS 不应作为每一次用户 DNS 查询的中间代理。
 架构：Global Config（全量同步）+ Profile Config（按需懒加载）
 
 Global Config（GET /config）：
-  - 启动时拉取 + 定时刷新（5 分钟）
+  - 启动时拉取 + 定时刷新（30 秒）
   - 仅返回公共运行参数：upstreams / plans / rulesets / limits
   - 绝对不包含任何用户 Profile 数据
   - 保存为 {profiles_path}/global.json（默认 ./data/profiles/global.json，可通过 control_plane.profiles_path 配置）
@@ -229,9 +268,14 @@ Profile Config（GET /profiles/{profile_id}）：
   - 保存为 data/profiles/{prefix}/{profile_id}.json
 
 版本检查（POST /profiles/check）：
-  - 每 5 分钟批量检查本地缓存的 Profile 版本
+  - 每 2 分钟批量检查本地缓存的 Profile 版本
   - Portal 返回有更新的 Profile ID 列表
   - V2 升级为 Redis PubSub 主动通知
+
+GeoDNS Token 认证：
+  - GeoDNS 节点 token 预签发，每个节点独立存储于 geodns_tokens 表
+  - GeoDNS 节点通过 HTTP Header `X-GeoDNS-Token` 携带 token 访问 portal-web 健康视图 API
+  - portal-web 通过 GeoDnsTokenService 完成 token 校验与节点身份识别
 
 淘汰策略：
   - Memory Cache：LRU，上限 5000，30 分钟无命中淘汰
@@ -274,9 +318,16 @@ node_type 字段已删除
 ### 5.8 节点部署钥匙机制
 
 ```text
-签发接口：POST /api/v1/admin/nodes/{id}/tokens（expires_in_days: 1）
-缓存机制：本地缓存 24h，超期后自动重新签发
-Token 格式：去除 ocnd_ 前缀后展示和复制
+Resolver 节点 Token：
+  签发接口：POST /api/v1/admin/nodes/{id}/tokens（expires_in_days: 1）
+  缓存机制：本地缓存 24h，超期后自动重新签发
+  Token 格式：去除 ocnd_ 前缀后展示和复制
+
+GeoDNS 节点 Token：
+  签发接口：POST /api/v1/admin/geo-dns/{id}/tokens
+  存储：geodns_tokens 表，每个节点独立 token
+  鉴权方式：HTTP Header X-GeoDNS-Token
+  用途：GeoDNS 节点访问 portal-web 健康视图 API 时鉴权
 ```
 
 ## 6. 生成提示词建议
@@ -357,9 +408,6 @@ DNS 配置：
 - payment_transactions          ← 支付交易
 - stripe_webhook_logs           ← Stripe Webhook 日志
 - invoices                      ← 发票
-- wallets                       ← 钱包（已废弃）
-- wallet_transactions           ← 钱包流水（已废弃）
-- orders                        ← 订单（已废弃）
 
 告警与系统：
 - alerts                        ← 告警
@@ -469,8 +517,8 @@ return $this->belongsTo(User::class);
 
 Laravel/Eloquent 在运行时会 **自动给 `DB::table()` 和 Model 的表名前面加上 `dns_` 前缀**。
 ```text
-DB::table('global_config_versions')    →  SQL: SELECT ... FROM dns_global_config_versions   ✅ 正确
-DB::table('dns_global_config_versions') →  SQL: SELECT ... FROM dns_dns_global_config_versions ❌ 500 报错
+DB::table('profile_versions')    →  SQL: SELECT ... FROM dns_profile_versions   ✅ 正确
+DB::table('dns_profile_versions') →  SQL: SELECT ... FROM dns_dns_profile_versions ❌ 500 报错
 ```
 
 ### 2026-06-30 生产事故链（二次复发根因详见 `.trae/线上生产环境真实调试.md`）
@@ -489,10 +537,10 @@ DB::table('dns_global_config_versions') →  SQL: SELECT ... FROM dns_dns_global
   ```
 
 **事故 #2：Resolver 配置拉取 500 (table not found)**
-- 触发条件：`ConfigPullController.php:42` 误用 `DB::table('dns_global_config_versions')` + 该表从未创建
+- 触发条件：`ConfigPullController.php:42` 误用 `DB::table('dns_profile_versions')` + 该表从未创建
 - 现象：auth 通过后，SQL 层面 table not found → 500 HTML 错误页
 - 根因：
-  1. 双前缀 Bug — Laravel 自动加 `dns_`，再手加就成 `dns_dns_global_config_versions`
+  1. 双前缀 Bug — Laravel 自动加 `dns_`，再手加就成 `dns_dns_profile_versions`
   2. 数据表缺失 — 项目开发期迁移脚本未完整运行，遗漏了版本表
 - 修复：**复用 `profile_versions` 表（`target_scope = 'global'`）**作为唯一的发布版本表；Controller 改为：
   ```php

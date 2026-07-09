@@ -348,10 +348,14 @@ final class UserWorkspaceService
         // CH dns_logs.profile_id 存 uid 字符串
         $profileUid = ($profileId !== null && $profileId !== '') ? $profileId : null;
 
+        // 获取用户配额限制
+        $quotaLimit = $this->resolveQuotaLimit($userId);
+
         // ClickHouse analytics (dns_logs)
         $ch = $this->clickhouseAnalytics->summaryForUser($userId, $profileUid);
         if (($ch['period_queries'] ?? 0) > 0) {
             return array_merge($ch, [
+                'quota_limit'         => $quotaLimit,
                 'allowed_domains'     => $this->clickhouseAnalytics->allowedDomains($userId, 20, $profileUid),
                 'blocked_domains'     => $this->clickhouseAnalytics->blockedDomains($userId, 20, $profileUid),
                 'block_reasons'       => $this->clickhouseAnalytics->blockReasons($userId, 10, $profileUid),
@@ -365,6 +369,7 @@ final class UserWorkspaceService
 
         // 2026-06-22: query_log_entries (PG) fallback 已删除，该表不再写入。
         return array_merge($ch, [
+            'quota_limit'   => $quotaLimit,
             'allowed_domains' => [],
             'blocked_domains' => [],
             'block_reasons'   => [],
@@ -374,6 +379,21 @@ final class UserWorkspaceService
             'encrypted_dns'   => ['total' => 0, 'encrypted' => 0, 'ratio_percent' => 0],
             'dnssec'          => ['total' => 0, 'validated' => 0, 'ratio_percent' => 0],
         ]);
+    }
+
+    private function resolveQuotaLimit(string $userId): int
+    {
+        $subscription = DB::table('subscriptions')
+            ->where('user_id', $userId)
+            ->whereIn('status', ['active', 'trialing', 'past_due'])
+            ->orderByDesc('id')
+            ->first();
+        $planCode = (string) ($subscription->plan_code ?? 'free');
+        $plan = DB::table('plans')->where('code', $planCode)->first();
+        $limits = is_string($plan?->limits ?? null) ? json_decode($plan->limits, true) : [];
+        $limits = is_array($limits) ? $limits : [];
+
+        return array_key_exists('monthly_queries', $limits) ? (int) $limits['monthly_queries'] : 300000;
     }
 
     public function logs(string $userId, array $filters): array

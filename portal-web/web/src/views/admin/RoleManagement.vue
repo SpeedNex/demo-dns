@@ -259,6 +259,15 @@ const handleSaveRole = async () => {
 
 const deleteRole = async (row) => {
     try {
+        await ElMessageBox.confirm(
+            t('admin.rbac.confirmDeleteRole') || '确认删除此角色？',
+            t('common.confirm'),
+            { type: 'warning' }
+        )
+    } catch {
+        return
+    }
+    try {
         await client.delete(`/admin/rbac/roles/${row.id}`)
         ElMessage.success(t('admin.rbac.deleteSuccess'))
         if (selectedRole.value?.id === row.id) {

@@ -27,8 +27,8 @@
 - 详见 `project-doc/06-MVP-SCOPE.md` 与 `08-DELIVERY-CRITERIA.md`。
 
 ### HC-03 V1 数据所有权与同步方向单一
-- `portal-web` 独占 `profiles / profile_rules / profile_feature_settings / profile_versions` 写入；`dns-console-web` 不得直接读写这三张表。
-- `portal-web` 不得直接写 `config_versions / publish_tasks`，只能通过 `dns-console-web` 的 `Internal API` 发起发布。
+- `portal-web` 独占 `profiles / profile_rules / profile_feature_settings / profile_versions` 写入；`portal-web(原 console 域)` 不得直接读写这三张表。
+- `portal-web` 不得直接写 `profile_versions / publish_tasks`，只能通过 `portal-web(原 console 域)` 的进程内服务发起发布。
 - 任意双向同步、双写、回流都判定为不合格。详见 `project-doc/02-MODULES.md` §1.4。
 
 ### HC-04 查询隔离（租户/团队可见域硬约束）

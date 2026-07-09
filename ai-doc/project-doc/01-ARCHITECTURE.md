@@ -72,35 +72,28 @@ GeoDNS 的职责是**入口寻址**，不是每次 DNS 递归查询的中间代�
 
 | 包 | 技术栈 | 核心职责 | 关键接口 |
 |---|---|---|---|
-| `portal-web` | Laravel + Vue 3 | 会员控制台 + 总后台(含原 console 域:节点管理、心跳、配置版本、发布任务、ACK、健康视图、规则库、系统配置、节点侧审计、GeoDNS 映射) | Public / User / Admin / Node / Internal API |
-| `dns-resolver` | Go | DNS 协议接入、规则匹配、缓存、日志、心跳、配置热加载 | DNS / Node HTTP(指向 `portal-web`) |
-| `geodns` | Go | 地域调度、权重路由、健康摘除、灰度;从 `portal-web` 拉健康视图 | Health View / Selector HTTP API (:15354) |
+| `portal-web` | Laravel + Vue 3 | 会员控制台 + 总后台(节点管理、心跳、配置版本、发布任务、ACK、健康视图、规则库、系统配置、节点侧审计、GeoDNS 映射) | Public / User / Admin / Node / Internal API |
+| `dns-resolver` | Go | DNS 协议接入、规则匹配、外部威胁检测、缓存、日志、心跳、配置热加载 | DNS / Node HTTP(指向 `portal-web`) |
+| `geodns` | Go | 地域调度、权重路由、健康摘除、灰度、DNS 协议服务器;从 `portal-web` 拉健康视图 | DNS / Health View / Selector HTTP API |
 
-> `portal-web(原 console 域)/` 目录在仓库中仅保留 `web/src/views/Layout.vue` 一个占位文件,所有 Admin / Node / Internal 控制器与 middleware 整段并入 `portal-web`,路由路径已从 `/api/v1/agent/*` 更新为 `/api/v1/node/*`;
+> `portal-web(原 console 域)` 已完全并入 `portal-web`,请查看 `portal-web` 目录结构。
 
 ## 4. 存储划分
 
 | 存储 | 归属 | 数据 |
 |---|---|---|
-| MySQL | `portal-web` | users、profiles、rules、devices、plans、plan_prices、plan_features、orders、payment_transactions、stripe_webhook_logs、wallets、wallet_transactions、billing_periods、billing_items、usage_records、audit_logs |
-| MySQL | `portal-web(原 console 域)` | nodes、node_tokens、node_heartbeats、config_versions、publish_tasks、task_executions、query_log_ingest_batches、geo_dns_mappings、rule_sources、system_config、admin_audit_logs、policy_snapshots、policy_publish_logs、alerts、aggregation_offsets、job_executions、admin_menu_rules |
-| Redis | `portal-web(原 console 域)` / `geodns` | 节点健康快照、配置缓存、调度视图、限流 |
+| MySQL | `portal-web` | users、profiles、rules、profile_rules、devices、plans、plan_prices、plan_features、subscriptions、payment_transactions、stripe_webhook_logs、billing_periods、billing_items、usage_records、audit_logs、resolver_nodes、resolver_node_tokens、resolver_node_heartbeats、geodns_tokens、geo_dns_mappings、profile_versions、publish_tasks、task_executions、rule_sources、rule_categories、rule_items、security_data_items、system_configs、admin_audit_logs、policy_snapshots、policy_publish_logs、alerts、aggregation_offsets、job_executions、admin_menu_rules、regions、api_keys、teams、team_members、team_invitations、navigation_catalogs、brands |
+| Redis | `portal-web` / `geodns` | 节点健康快照、配置缓存、调度视图、限流 |
 | 本地文件 | `dns-resolver` | server.yaml、profile config、规则编译产物、本地日志 buffer |
 | ClickHouse | 日志链路 | dns_logs、分钟 / 小时 / 天聚合、Top 域名统计 |
-| NATS JetStream | 异步链路 | profile.updated、dns.logs、billing.usage、alerts.created；`billing.usage` 只能由 query log 派生，不能由 metrics/heartbeat 派生 |
 
 ## 5. 包间通信
 
 | 来源 | 目标 | 协议 | 内容 | 同步性 |
 |---|---|---|---|---|
-| `portal-web` | `portal-web(原 console 域)` | Internal HTTPS / HMAC(进程内)/ Internal HTTP(跨进程) | Profile 发布、配额同步、发布状态查询 | 同步请求 + 异步任务 |
-| `dns-resolver` | `portal-web(原 console 域)` | Node HTTPS / HMAC (Bearer + HMAC-SHA256) | 心跳、拉配置、ACK、查询日志批量上报；凭据由 `install.sh` → `geo-dns install` 一次性写入 | 周期 / 拉取 |
-| `portal-web(原 console 域)` | `dns-resolver` | NATS / 配置版本通知 | 提醒节点有新配置 | 异步通知，可丢失后由轮询补偿 |
-| `dns-resolver` | `portal-web(原 console 域)` | Node HTTPS / NATS | 查询日志、指标；MVP 走 HTTP batch | 异步批量 |
-| `geodns` | `portal-web(原 console 域)` / Redis | Internal API / Cache | 健康节点视图 | 周期拉取 |
-| `portal-web(原 console 域)` | ClickHouse | Worker / HTTP client | 写入 DNS 查询日志和聚合 | 异步 |
-| `portal-web` | ClickHouse | 查询 API / 服务层 | 日志查询、统计查询，只读 | 只读 |
-| `portal-web(原 console 域)` | `portal-web` | Internal HTTPS / HMAC | usage batch、发布状态 callback | 异步幂等 |
+| `portal-web` (internal) | `portal-web` (process-internal calls) | Internal HTTPS / HMAC(进程内) | Profile 发布、配额同步、发布状态查询 | 同步请求 + 异步任务 |
+| `dns-resolver` | `portal-web` | Node HTTPS / HMAC (Bearer + HMAC-SHA256) | 心跳、拉配置、ACK、查询日志批量上报；凭据由 `install.sh` → `geo-dns install` 一次性写入 | 周期 / 拉取 |
+| `geodns` | `portal-web` | Internal API / Cache | 健康节点视图 | 周期拉取 |
 
 ## 6. 核心运行链路
 
@@ -111,7 +104,7 @@ GeoDNS 的职责是**入口寻址**，不是每次 DNS 递归查询的中间代�
   → portal-web 生成 profile_versions 草案
   → 用户点击发布
   → portal-web 调用 portal-web(原 console 域)internal publish
-  → portal-web(原 console 域)生成 config_versions / publish_tasks
+  → portal-web(原 console 域)生成 profile_versions / publish_tasks
   → resolver 心跳发现新版本或收到通知
   → resolver 拉取 config bundle
   → checksum 校验
@@ -176,12 +169,15 @@ POST /api/v1/node/tokens/verify
 此端点无鉴权中间件，仅用于安装时 token 兑换凭据。
 ```
 
+> GeoDNS 节点使用独立的 `geodns.token` 中间件（区别于 `node.token`），对应 `POST /api/v1/node/geodns/register` 注册端点。`geodns.token` 与 `node.token` 共享同一套鉴权模式，但读取 `geodns_tokens` 表而非 `resolver_node_tokens` 表。
+
 **禁止路径**：
 
 - ❌ 任何旧版 `/api/v1/agent/*` 注册端点（已删除）
 - ❌ resolver 侧 `bootstrap_token` / `identity.json` 自助注册
 - ❌ 任何"凭据缺失就走旧流程"的兜底 / 回退 / 虚拟代码
 - ❌ 创建节点时自动签发 token（创建和签发是两步独立操作）
+- ❌ 旧版 geodns 路由 `/api/v1/node/geodns/register` 不使用 `geodns.token` 中间件（已修复为 `geodns.token`）
 
 API 契约见 `contracts/openapi.yaml` 中 `/api/v1/admin/nodes*` 和 `/api/v1/node/tokens/verify` 端点。
 
@@ -222,11 +218,9 @@ resolver 处理 DNS 查询
   → query log batch 上报 portal-web
   → portal-web 聚合 usage_records / billing_periods
   → 生成 billing_items
-  → 用户创建 orders
   → PaymentService 创建 Stripe Checkout
-  → Stripe webhook 回写 payment_transactions / orders
+  → Stripe webhook 回写 payment_transactions
   → SubscriptionService 生效套餐
-  → Wallet / BillingItem / FinanceVerifier 完成财务闭环
 ```
 
 当前强约束：
@@ -235,10 +229,9 @@ resolver 处理 DNS 查询
 - SafeSearch 不能对全体用户生效，只能由 `parental.safe_search` / `force_safe_search` 开关驱动。
 - 用量计费只能来自 `usage_records`，而 `usage_records` 只能来自 resolver 查询日志聚合，不能来自 heartbeat / metrics。
 - 订单与支付必须幂等：
-  - `orders.idempotency_key`
+  - `payment_transactions.idempotency_key`
   - pending `payment_transactions` 复用
   - Stripe webhook 按 `event_id` 去重
-- 钱包真相在 `wallets`，余额变动必须伴随 `wallet_transactions`，并记录 `wallet_id`、`transaction_no`、`balance_after`。
 
 当前已验证证据：
 
@@ -268,7 +261,8 @@ resolver 处理 DNS 查询
 - Internal API 使用 HMAC-SHA256 或 mTLS。
 - Node API（心跳/拉配置/ACK/日志上报）使用两层鉴权中间件策略：
   - `POST /api/v1/node/tokens/verify`：无鉴权，安装时用 token 一次性兑换 api_key
-  - `POST /api/v1/node/dns-resolver/register`、`POST /api/v1/node/geodns/register`：`node.token` 中间件，凭旧 token 签发 api_key
+  - `POST /api/v1/node/dns-resolver/register`：`node.token` 中间件，凭旧 token 签发 api_key
+  - `POST /api/v1/node/geodns/register`：`geodns.token` 中间件，凭 geodns token 签发 api_key
   - 其余业务接口（心跳、拉配置、ACK、日志上报）：`node.api_key` 中间件，凭注册时签发的明文 api_key 鉴权
 - Admin API（节点凭据签发）：管理员 Sanctum session + `admin.access` 权限。
 - 节点凭据（token + hmac_secret）**只**在 `POST /api/v1/admin/nodes/{nodeCode}/tokens` 响应中返回一次；之后只能 reissue 或 revoke。
@@ -320,28 +314,28 @@ V1 不引入 `tenant_id` / `organization_id` / 多组织层级，而是采用 **
 
 ## 12. Internal Service API 章节(合并后)
 
-> **合并计划(待审批)**:原 `portal-web(原 console 域)` 作为目标侧的所有"内部 API"调用,在合并后**目标侧统一为 `portal-web(原 console 域)`**。调用方在 `portal-web` 内部走 Laravel 进程内服务调用,跨进程路径为 `dns-resolver` / `geodns` → `portal-web`。
+> **合并计划(待审批)**:原 `portal-web(原 console 域)` 作为目标侧的所有"内部 API"调用,在合并后**目标侧统一为 `portal-web`**。调用方在 `portal-web` 内部走 Laravel 进程内服务调用,跨进程路径为 `dns-resolver` / `geodns` → `portal-web`。
 
 | 调用方 | 目标 | 路径 | 鉴权 | 用途 |
 |---|---|---|---|---|
-| `portal-web` User/Profile | `portal-web(原 console 域)` | `POST /api/v1/internal/profile-publishes` | `shared.token:internal` | Profile 发布、配额同步 |
-| `portal-web` User/Stats | `portal-web(原 console 域)` | `GET /api/v1/internal/query-logs?user_id=...&page=...` | `shared.token:internal` | 日志查询回读 |
-| `portal-web` User/Stats | `portal-web(原 console 域)` | `GET /api/v1/internal/query-analytics?user_id=...&from=...&to=...` | `shared.token:internal` | 统计聚合回读 |
-| `geodns` | `portal-web(原 console 域)` | `GET /api/v1/internal/geodns/health-view` | `shared.token:internal` | 健康节点视图(geodns Go 代码零修改,只改 Endpoint) |
-| `dns-resolver` | `portal-web(原 console 域)` | `POST /api/v1/node/heartbeat` | `node.api_key` | 心跳 |
-| `dns-resolver` | `portal-web(原 console 域)` | `GET /api/v1/node/dns-resolver/config` | `node.api_key` | 拉取配置 |
-| `dns-resolver` | `portal-web(原 console 域)` | `POST /api/v1/node/dns-resolver/config/ack` | `node.api_key` | 配置 ACK |
-| `dns-resolver` | `portal-web(原 console 域)` | `POST /api/v1/node/dns-resolver/query-logs` | `node.api_key` | 查询日志批量上报 |
-| `dns-resolver` (安装) | `portal-web(原 console 域)` | `POST /api/v1/node/tokens/verify` | 无鉴权 | 安装时用 token 兑换 api_key + secret |
-| `dns-resolver` (注册) | `portal-web(原 console 域)` | `POST /api/v1/node/dns-resolver/register` | `node.token` | 注册并签发 api_key |
-| `geodns` (注册) | `portal-web(原 console 域)` | `POST /api/v1/node/geodns/register` | `node.token` | 注册并签发 api_key |
-| `geodns` | `portal-web(原 console 域)` | `GET /api/v1/node/geodns/config` | `node.api_key` | 拉取 geo 配置 |
+| `portal-web` User/Profile | `portal-web` | `POST /api/v1/internal/profile-publishes` | `shared.token:internal` | Profile 发布、配额同步 |
+| `portal-web` User/Stats | `portal-web` | `GET /api/v1/internal/query-logs?user_id=...&page=...` | `shared.token:internal` | 日志查询回读 |
+| `portal-web` User/Stats | `portal-web` | `GET /api/v1/internal/query-analytics?user_id=...&from=...&to=...` | `shared.token:internal` | 统计聚合回读 |
+| `geodns` | `portal-web` | `GET /api/v1/internal/geodns/health-view` | `shared.token:internal` | 健康节点视图(geodns Go 代码零修改,只改 Endpoint) |
+| `dns-resolver` | `portal-web` | `POST /api/v1/node/heartbeat` | `node.api_key` | 心跳 |
+| `dns-resolver` | `portal-web` | `GET /api/v1/node/dns-resolver/config` | `node.api_key` | 拉取配置 |
+| `dns-resolver` | `portal-web` | `POST /api/v1/node/dns-resolver/config/ack` | `node.api_key` | 配置 ACK |
+| `dns-resolver` | `portal-web` | `POST /api/v1/node/dns-resolver/query-logs` | `node.api_key` | 查询日志批量上报 |
+| `dns-resolver` (安装) | `portal-web` | `POST /api/v1/node/tokens/verify` | 无鉴权 | 安装时用 token 兑换 api_key + secret |
+| `dns-resolver` (注册) | `portal-web` | `POST /api/v1/node/dns-resolver/register` | `node.token` | 注册并签发 api_key |
+| `geodns` (注册) | `portal-web` | `POST /api/v1/node/geodns/register` | `geodns.token` | 注册并签发 api_key |
+| `geodns` | `portal-web` | `GET /api/v1/node/geodns/config` | `node.api_key` | 拉取 geo 配置 |
 
 > 路径已从旧版 `/api/v1/agent/*` 更新为 `/api/v1/node/*`。`portal-web` 同时承载 `/api/v1/public/*`、`/api/v1/user/*`、`/api/v1/admin/*`、`/api/v1/node/*`、`/api/v1/internal/*` 五组路由。
 
 ## 13. Portal-Web Member 域与原 console 域职责边界(合并后)
 
-> 本节定义同一个 Laravel 应用内两个域(Member / 原 console 域)的职责边界;`portal-web(原 console 域)` 整体消失,边界仍然存在但**进程内**。
+> 原 console 域已完全并入 portal-web,进程内边界见下文。
 
 ### 13.1 数据所有权(合并后)
 
@@ -351,17 +345,17 @@ V1 不引入 `tenant_id` / `organization_id` / 多组织层级，而是采用 **
 | `permissions / role_permissions` | `portal-web` User/Auth | `portal-web` User/Auth | RBAC |
 | `audit_logs` | `portal-web` User/Auth | `portal-web` Admin | 会员/计费/团队操作审计 |
 | `profiles / profile_rules / profile_feature_settings / profile_versions` | `portal-web` User/Profile | `portal-web` User/Profile | User 工作区 |
-| `plans / plan_prices / plan_features / subscriptions / orders / payment_transactions / wallets / wallet_transactions / billing_periods / billing_items / usage_records / stripe_webhook_logs` | `portal-web` Billing | `portal-web` Billing | 财务事实归属 |
-| `nodes / node_tokens / node_heartbeats` | `portal-web(原 console 域)` Admin/Node + Node | `portal-web(原 console 域)` Admin/Node + User(读状态) | 节点生命周期与心跳 |
-| `config_versions / publish_tasks / task_executions / policy_snapshots / policy_publish_logs` | `portal-web(原 console 域)` Admin/Publish | `portal-web(原 console 域)` Admin/Publish + `dns-resolver` Node | 配置版本、发布任务、ACK 状态 |
-| `query_log_ingest_batches` | `portal-web(原 console 域)` Node | `portal-web(原 console 域)` Admin/Audit + LogWorker | 上报幂等批 |
-| `geo_dns_mappings / rule_sources / system_config / alerts / aggregation_offsets / job_executions / admin_menu_rules / regions` | `portal-web(原 console 域)` Admin | `portal-web(原 console 域)` Admin + `portal-web` User(读 system_config) | 控制面配置 |
-| `admin_audit_logs` | `portal-web(原 console 域)` Admin/Console | `portal-web(原 console 域)` Admin/Audit | 节点/发布/控制面操作审计;与 `audit_logs` 互不污染 |
-| `dns_logs`(ClickHouse) | `portal-web(原 console 域)` LogWorker | `portal-web` User/Stats + `portal-web(原 console 域)` Admin/Stats | DNS 查询日志与聚合 |
+| `plans / plan_prices / plan_features / subscriptions / payment_transactions / billing_periods / billing_items / usage_records / stripe_webhook_logs` | `portal-web` Billing | `portal-web` Billing | 财务事实归属 |
+| `nodes / node_tokens / node_heartbeats` | `portal-web` Admin/Node + Node | `portal-web` Admin/Node + User(读状态) | 节点生命周期与心跳 |
+| `profile_versions / publish_tasks / task_executions / policy_snapshots / policy_publish_logs` | `portal-web` Admin/Publish | `portal-web` Admin/Publish + `dns-resolver` Node | 配置版本、发布任务、ACK 状态 |
+| `query_log_ingest_batches` | `portal-web` Node | `portal-web` Admin/Audit + LogWorker | 上报幂等批 |
+| `geo_dns_mappings / rule_sources / system_config / alerts / aggregation_offsets / job_executions / admin_menu_rules / regions` | `portal-web` Admin | `portal-web` Admin + `portal-web` User(读 system_config) | 控制面配置 |
+| `admin_audit_logs` | `portal-web` Admin/Console | `portal-web` Admin/Audit | 节点/发布/控制面操作审计;与 `audit_logs` 互不污染 |
+| `dns_logs`(ClickHouse) | `portal-web` LogWorker | `portal-web` User/Stats + `portal-web` Admin/Stats | DNS 查询日志与聚合 |
 
 ### 13.2 进程内边界
 
-- User 域 Controller（命名空间 `User/`）**不直接**写 `config_versions / publish_tasks / nodes / node_heartbeats`;通过 `portal-web(原 console 域)` 暴露的进程内服务(原 `NodeService` / `ConfigVersionService` / `PublishTaskService`)调用,保持 13.1 的所有权约束。
+- User 域 Controller（命名空间 `User/`）**不直接**写 `profile_versions / publish_tasks / resolver_nodes / resolver_node_heartbeats`;通过 `portal-web(原 console 域)` 暴露的进程内服务调用,保持 13.1 的所有权约束。
 - 原 console 域 Controller **不直接**写 `profiles / users / teams / subscriptions / usage_records`;配置版本/发布任务需要的配额与会员信息从 `portal-web` User 域进程内服务(`QuotaService` / `BillingUsageService`)读取,绝不允许直接 `INSERT INTO users`。
 - `audit_logs` 与 `admin_audit_logs` 是**两张独立表**;不允许任何代码通过 `INSERT INTO ... SELECT *` 跨表搬数。
 - Node/Internal 控制器与 User/Admin 控制器共享同一个 Laravel 进程,但路由命名空间与中间件独立:`/api/v1/node/*` 使用 `node.token`（注册）或 `node.api_key`（业务接口）中间件;`/api/v1/internal/*` 只接 `shared.token:internal`;`/api/v1/admin/*` 接 Sanctum + `admin.only` + `permission:admin.access`;`/api/v1/user/*` 接 `auth:api` + `user.only`。
@@ -383,9 +377,7 @@ ocer-dns/
 │
 ├── portal-web/             ← 用户门户 + 总后台（Laravel + Vue 3）
 ├── dns-resolver/           ← Go DNS 解析节点
-├── geodns/                 ← Go 接入调度
-└── portal-web(原 console 域)/        ← 已删除（已并入 portal-web）
-    └── web/src/views/Layout.vue
+└── geodns/                 ← Go 接入调度
 ```
 
 ### 14.2 portal-web 目录结构
@@ -402,13 +394,14 @@ portal-web/
 │   │   ├── ApiKey/         ApiKeyService.php
 │   │   ├── Audit/          AuditService.php
 │   │   ├── Auth/           AuthService.php, NodeTokenService.php, PermissionService.php
-│   │   ├── Billing/        BillingService.php          ← 模拟实现
+│   │   ├── Billing/        BillingService.php          ← 计费核心
 │   │   ├── ClickHouse/     ClickHouseStatsService.php
 │   │   ├── ConfigVersion/  CanonicalJson.php, ChecksumService.php,
 │   │   │                   ConfigAckService.php, ConfigBuildService.php
 │   │   ├── HealthView/     NodeHealthViewService.php
 │   │   ├── Heartbeat/      HeartbeatService.php
 │   │   ├── Ingest/         QueryLogIngestService.php, QueryLogReadService.php
+│   │   ├── Node/           NodeRegistryService.php     ← 节点注册
 │   │   ├── Profile/        ProfileService.php, MemberCatalogService.php,
 │   │   │                   DomainNormalizer.php, ProfileConfigBuilder.php,
 │   │   │                   ProfilePublishService.php, RuleCategoryResolver.php,
@@ -472,20 +465,21 @@ portal-web/
 │   │       ├── ApiRequestLog.php
 │   │       ├── AuthenticateNodeApiKey.php       ← 中间件别名 node.api_key
 │   │       ├── AuthenticateNodeToken.php        ← 中间件别名 node.token
+│   │       ├── AuthenticateGeoDnsToken.php      ← 中间件别名 geodns.token
 │   │       ├── CheckPermission.php              ← 权限检查
 │   │       ├── RequireSharedToken.php           ← 内部服务认证
 │   │       ├── UserOnly.php
 │   │       └── VerifyRequestSignature.php
 │   │
 │   ├── Infrastructure/
-│   │   └── ClickHouse/     ClickHouseClient.php, MemberAnalyticsService.php
+│   │   └── ClickHouse/     ClickHouseClient.php, UserAnalyticsService.php
 │   │
 │   ├── Models/             43 个 Eloquent Model
 │   │   ├── Admin.php, AdminAuditLog.php, AdminMenuRule.php
 │   │   ├── AdminPermission.php, AdminRole.php
 │   │   ├── AggregationOffset.php, Alert.php, ApiKey.php
 │   │   ├── AuditLog.php, BaseModel.php, BillingItem.php
-│   │   ├── Brand.php, Device.php, DnsGeodns.php
+│   │   ├── Device.php, DnsGeodns.php, GeoDnsToken.php
 │   │   ├── JobExecution.php, Node.php, NodeHeartbeat.php
 │   │   ├── NodeToken.php, PaymentTransaction.php, Permission.php
 │   │   ├── Plan.php, PlanFeature.php, PlanPrice.php
@@ -552,18 +546,24 @@ portal-web/
 │           ├── router/       index.js（39 条路由）
 │           └── views/
 │               ├── 公共 (4): Home.vue, Login.vue, Register.vue, AdminLogin.vue
-│               ├── 会员中心 (17):
+│               ├── 会员中心 (23):
 │               │   Dashboard.vue, ProfileList.vue, ProfileDetail.vue
 │               │   Security.vue, Privacy.vue, ParentalControl.vue
-│               │   Allowlist.vue, blocklist.vue, Analytics.vue, Logs.vue
-│               │   Devices.vue, APIKeys.vue, Settings.vue, Membership.vue
+│               │   Allowlist.vue, Blocklist.vue, Analytics.vue, Logs.vue
+│               │   Devices.vue, APIKeys.vue, Settings.vue, Plans.vue
+│               │   SubscriptionCheckout.vue, Account.vue, Home.vue
 │               │   TeamList.vue, TeamCreate.vue, TeamDetail.vue, TeamInvitations.vue
-│               └── admin/ (20):
-│                   Dashboard.vue, Nodes.vue, Publishes.vue, GeoDNS.vue
-│                   RuleLibrary.vue, Users.vue, Devices.vue, QueryLogs.vue
-│                   Alerts.vue, Billing.vue, Balance.vue, Recharge.vue
-│                   Bill.vue, RefundRecords.vue, SystemConfig.vue, BasicConfig.vue
+│               │   Login.vue, Register.vue
+│               └── admin/ (31):
+│                   Dashboard.vue, Nodes.vue, PublishCenter.vue, GeoDNS.vue
+│                   Rules.vue, RuleCategories.vue, RuleItems.vue, Users.vue
+│                   Devices.vue, QueryLogs.vue, Alerts.vue, Plans.vue
+│                   Subscriptions.vue, PaymentFlows.vue, SystemConfig.vue, BasicConfig.vue
 │                   AuditLogs.vue, RoleManagement.vue, MenuConfig.vue
+│                   AdminAdmins.vue, AdminLogin.vue, BlacklistWhitelist.vue
+│                   MemberCatalogs.vue, MemberPolicies.vue, ParentalControlAdmin.vue
+│                   ProfilePublish.vue, RegionManage.vue, SecurityData.vue, SecurityDataItem.vue
+│                   Teams.vue, Bill.vue
 ```
 
 ### 14.3 dns-resolver 目录结构
@@ -584,6 +584,7 @@ dns-resolver/
 │   ├── dnsserver/              server.go, tls.go                ← UDP DNS 服务器
 │   ├── doh/                    server.go                        ← DoH 服务器
 │   ├── doq/                    server.go                        ← DoQ 服务器
+│   ├── externalthreat/         client.go                        ← 外部威胁情报
 │   ├── geodns/                 selector.go                      ← GeoDNS 选择器
 │   ├── logging/                buffer.go, buffer_test.go        ← 日志 buffer
 │   ├── matching/               engine.go, trie.go               ← 规则匹配引擎
@@ -610,8 +611,9 @@ geodns/
 ├── internal/
 │   ├── config/                 config.go
 │   ├── healthview/             client.go, types.go             ← 健康视图客户端
+│   ├── node/                   client.go, heartbeat.go         ← 节点心跳
 │   ├── router/                 router.go                       ← 调度路由
-│   └── server/                 server.go                       ← DNS 服务器
+│   └── server/                 server.go, dns_server.go        ← DNS 服务器
 └── tests/                      router_test.go
 ```
 
@@ -624,7 +626,7 @@ geodns/
 | **Domain Service** | 18 sub-domains | - | - |
 | **Controller** | ~55 (~250 方法) | - | - |
 | **路由** | 151 条 | - | - |
-| **前端页面** | 41 (4 公共 + 17 会员 + 20 管理) | - | - |
+| **前端页面** | 53 (4 公共 + 23 会员 + 26 管理) | - | - |
 | **多语言** | 3 (en/zh-CN/ko) | - | - |
-| **内部模块** | 5 中间件 | 12 internal pkg | 4 internal pkg |
+| **内部模块** | 6 中间件 | 13 internal pkg | 5 internal pkg |
 | **数据库** | MySQL + Redis + ClickHouse | 本地文件/内存 | 内存/Redis |

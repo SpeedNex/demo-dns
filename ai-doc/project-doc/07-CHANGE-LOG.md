@@ -2,6 +2,27 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-07-09 — P0 修复：前端 UI 审查问题（硬编码/验证/加载/确认/变量声明）
+
+| 日期 | 类型 | 描述 | 涉及文件 | 涉及文档 | 状态 |
+|---|---|---|---|---|---|---|
+| 2026-07-09 | fix | Plans.vue 全部硬编码中文替换为 $t() i18n 调用（约15处，含标题、副标题、套餐状态、购买按钮、确认对话框等） | portal-web/web/src/views/Plans.vue | — | ok |
+| 2026-07-09 | i18n | 新增 17 个 plans i18n keys（title/subtitle/currentFreePlan/upgradeHint/monthly/yearly/perMonth/perYear/currentPlan/buyNow/loadFailed/notSupported/confirmPurchase/confirmOrder/confirm/orderCreated/orderFailed） | portal-web/web/src/locales/en.json, zh-CN.json | — | ok |
+| 2026-07-09 | fix | Settings.vue 密码表单添加 el-form 验证规则（:rules="passwordRules" ref="passwordFormRef"），含 required/min:8/confirm 对比验证 | portal-web/web/src/views/Settings.vue | — | ok |
+| 2026-07-09 | i18n | 新增 5 个 settings 密码验证 i18n keys（passwordRequired/newPasswordRequired/passwordMinLength/confirmPasswordRequired/passwordMismatch） | portal-web/web/src/locales/en.json, zh-CN.json | — | ok |
+| 2026-07-09 | fix | Security.vue 添加 v-loading="hydrating" 加载状态 | portal-web/web/src/views/Security.vue | — | ok |
+| 2026-07-09 | fix | RoleManagement.vue deleteRole 添加 ElMessageBox.confirm 确认弹窗 | portal-web/web/src/views/admin/RoleManagement.vue | — | ok |
+| 2026-07-09 | i18n | 新增 admin.rbac.confirmDeleteRole i18n key | portal-web/web/src/locales/en.json, zh-CN.json | — | ok |
+| 2026-07-09 | fix | PaymentFlows.vue 新增 const filterType = ref('') 变量声明，修复 type 筛选功能 | portal-web/web/src/views/admin/PaymentFlows.vue | — | ok |
+| 2026-07-09 | test | 前端构建验证 npx vite build 1792+ modules transformed 通过 | portal-web/web | — | ok |
+
+## 2026-07-09 — 修复 Analytics 页面配额百分比显示 0% 的问题
+
+| 日期 | 类型 | 描述 | 涉及文件 | 涉及文档 | 状态 |
+|---|---|---|---|---|---|
+| 2026-07-09 | fix | analytics 后端新增 resolveQuotaLimit() 方法，返回 quota_limit 字段，修复前端配额百分比始终显示 0% 的 Bug | portal-web/app/Domain/Profile/UserWorkspaceService.php#L346-L397 | — | ok |
+| 2026-07-09 | code | 前端 Analytics.vue 配额百分比计算逻辑不变（`quota_limit` 字段名已对齐） | portal-web/web/src/views/Analytics.vue#L222-L228 | — | ok |
+
 ## 2026-07-07 — 恢复 MemberCatalogService 安全防护功能条目
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |

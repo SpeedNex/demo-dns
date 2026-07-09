@@ -2,19 +2,6 @@
 
 > MVP 目标不是一次性做完整企业级 DNS SaaS，而是先跑通 NextDNS-like 的最小可用闭环：用户创建配置、resolver 执行过滤、日志可查、Free 限额硬拒绝、Pro 订阅可无限使用。
 
-## NATS JetStream 状态
-
-```
-Status: Deferred
-
-NATS 不属于 MVP。
-不允许作为 V1 主链路依赖。
-
-V1 消息通道使用同步 API + DB/Redis/队列任务。
-NATS 在 V2+ 用于：日志异步 ingestion、事件驱动配置同步、企业版高级特性。
-EOF
-```
-
 ## 1. MVP 必须包含
 
 ### 1.1 portal-web
@@ -25,7 +12,7 @@ EOF
 Pro 月付 / 年付 checkout
 Business / Education 按人数单位 checkout
 当前订阅状态
-订单 / 发票 / 支付 / 退款基础页面
+订阅管理 / 支付基础页面
 Profile CRUD
 黑名单 / 白名单规则
 设备 / 接入指引
@@ -134,10 +121,8 @@ Anycast 全球生产网络
 ```text
 plans / plan_prices
 subscriptions
-orders / order_items
 invoices / invoice_lines
 payments
-refunds
 billing_ledger_entries
 payment_webhook_events
 usage_records / usage_counters
