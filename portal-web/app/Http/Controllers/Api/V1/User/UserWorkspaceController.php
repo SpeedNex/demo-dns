@@ -432,11 +432,28 @@ final class UserWorkspaceController
             ? $limits['monthly_queries']
             : 300000;
 
-        $periodIds = DB::table('billing_periods')
+        $periodRows = DB::table('billing_periods')
             ->where('user_id', $user->uid)
             ->where('period_start', '<=', now())
             ->where('period_end', '>=', now())
-            ->pluck('id');
+            ->where('status', 'open')
+            ->get();
+
+        if ($periodRows->isEmpty()) {
+            $now = now();
+            $periodId = DB::table('billing_periods')->insertGetId([
+                'user_id' => $user->uid,
+                'period_start' => $now->copy()->startOfMonth(),
+                'period_end' => $now->copy()->endOfMonth(),
+                'status' => 'open',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+            $periodIds = [$periodId];
+        } else {
+            $periodIds = $periodRows->pluck('id')->all();
+        }
+
         $queriesUsed = (int) DB::table('usage_records')
             ->where('user_id', $user->uid)
             ->whereIn('billing_period_id', $periodIds)
