@@ -12,6 +12,8 @@
 | 2026-07-09 | fix | 修复数据库覆盖配置：dns_system_configs 表中 clickhouse.username='ocer' 覆盖配置文件默认值；UPDATE 为 'default' 对齐线上账号 | MySQL dns_system_configs 表 | ok |
 | 2026-07-09 | fix | 修复 SummingMergeTree 数据永久不可见：将 usage_events 表引擎从 SummingMergeTree 改为 MergeTree（SummingMergeTree 后台合并可能永不触发，INSERT 成功但 SELECT 看不到）；通过 RENAME → CREATE → INSERT → DROP 安全迁移，保留历史数据 | ClickHouse ocer_dns.usage_events | ok |
 | 2026-07-09 | feat | 新增 ClickHouseSetupCommand (php artisan clickhouse:setup)：幂等创建 usage_events 和 dns_logs 表，支持本地和远程 ClickHouse（.env CLICKHOUSE_HOST），用于初始化/重建表结构 | portal-web/app/Console/Commands/ClickHouseSetupCommand.php | ok |
+| 2026-07-09 | fix | 修正 ClickHouseSetupCommand 中 dns_logs 表结构，与线上实际部署对齐（原命令 schema 与实际不一致，缺少 event_id/node_id/query_type/rcode/latency_ms 等字段，缺少索引和 TTL）；修复 sendRaw DDL 调用方式（需以 body 形式发送） | portal-web/app/Console/Commands/ClickHouseSetupCommand.php | ok |
+| 2026-07-09 | docs | 完善 ClickHouse tables.md 文档：增加"实际部署表结构"章节（usage_events + dns_logs 完整字段、索引、TTL），保留"设计规格"供参考并标注差异 | ai-doc/specs/clickhouse/tables.md | ok |
 
 ## 2026-07-09 — 准确性提升：全量文档与代码对齐
 
