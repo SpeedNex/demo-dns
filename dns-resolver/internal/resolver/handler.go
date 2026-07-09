@@ -92,6 +92,15 @@ func (h *Handler) Handle(
 ) *Result {
 	h.metrics.IncQueries()
 
+	// 实时配额检查：Redis blocklist（30s刷新），弥补quota:check 5分钟窗口期
+	if profileID != "" && h.dedupCache != nil && h.dedupCache.IsQuotaExceeded(profileID) {
+		reply := new(dns.Msg)
+		reply.SetReply(req)
+		reply.Rcode = dns.RcodeRefused
+		h.metrics.IncErrors()
+		return &Result{Reply: reply, Action: "REFUSED", Reason: "quota_exceeded", Rcode: dns.RcodeRefused}
+	}
+
 	reply := new(dns.Msg)
 	reply.SetReply(req)
 

@@ -13,6 +13,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -20,6 +21,7 @@ use Illuminate\Support\Str;
  * 2026-06-22: 查询日志只写 ClickHouse，不再经过 MySQL 中间表。
  * dns-resolver 上报失败时由其本地 buffer 重试。
  */
+
 final class QueryLogController
 {
     private const BATCH_DEDUP_TTL = 3600; // 1小时内相同 batch_id 只处理一次
@@ -159,7 +161,7 @@ final class QueryLogController
                     $devicePk = null;
                 }
 
-                // 记录设备操作上下文，Phase 2 中执行
+                // 记录设备操作上下文，Phase 3 中执行
                 $deviceOps[] = [
                     'index' => $i,
                     'userPk' => (int) $userPk,
@@ -172,6 +174,8 @@ final class QueryLogController
                     'queriedAt' => $queriedAt,
                     'newDeviceUid' => $newDeviceUid,
                     'devicePk' => $devicePk,
+                    'device_sig' => $item['device_sig'] ?? null,
+                    'profileUid' => $profileUid,
                 ];
 
                 $usageEvents[] = [
@@ -223,19 +227,90 @@ final class QueryLogController
                 'sample_profile_pk' => isset($profilePk) ? $profilePk : 'unset',
             ]);
         } catch (\Throwable $e) {
-            \Log::error('ClickHouse insert failed', [
+            Log::error('ClickHouse insert failed', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'batch_id' => $validated['batch_id'] ?? null,
+                'dns_logs_count' => count($dnsLogs),
+                'usage_events_count' => count($usageEvents),
             ]);
+
+            // 保存失败批次到 MySQL，由 clickhouse:retry-failed-batches 命令重试
+            // 返回 200 让 resolver 可以安全清除本地缓冲（数据已持久化到 MySQL）
+            try {
+                $batchId = $validated['batch_id'] ?? ('missed_' . Str::uuid()->toString());
+                DB::table('failed_ch_batches')->insert([
+                    'batch_id' => $batchId,
+                    'node_id' => $node->id,
+                    'dns_logs' => json_encode($dnsLogs),
+                    'usage_events' => json_encode($usageEvents),
+                    'error_message' => substr($e->getMessage(), 0, 512),
+                    'retry_count' => 0,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                Log::info('Saved failed CH batch for retry', [
+                    'batch_id' => $batchId,
+                    'node_id' => $node->id,
+                ]);
+            } catch (\Throwable $dbError) {
+                // 如果连 MySQL 也失败，返回 500 让 resolver 保留缓冲稍后重试
+                Log::critical('Failed to save failed CH batch to MySQL', [
+                    'ch_error' => $e->getMessage(),
+                    'db_error' => $dbError->getMessage(),
+                ]);
+                return response()->json([
+                    'data' => $result,
+                    'error' => 'Log storage temporarily unavailable.',
+                ], 500);
+            }
+
             return response()->json([
                 'data' => $result,
-                'error' => 'Log storage temporarily unavailable.',
-            ], 500);
+                'warning' => 'Logs queued for retry.',
+            ]);
         }
 
-        // Phase 3：ClickHouse 写入成功后再执行 MySQL 设备操作
+        // PHP 8.1: ClickHouse/MySQL transaction split — commit CH first, then MySQL
+        // Phase 3: 按 fingerprint 去重设备操作，避免同一设备批量查询触发 N+1 更新
+        // 每个 unique device 仅执行 1 次 SELECT + 1 次 INSERT/UPDATE
+        // 2026-07-09: 增加 HMAC 签名验证，防止设备指纹伪造
+        $deduped = [];
+        $nodeSigningSecret = $node->signing_secret ?? null;
         foreach ($deviceOps as $op) {
-            $device = $this->resolveDevice(
+            // 验证设备数据签名
+            $signature = $op['device_sig'] ?? null;
+            if (! $this->verifyDeviceSignature(
+                deviceUid: $op['deviceUid'],
+                deviceType: $op['deviceType'],
+                clientIp: $op['clientIp'],
+                profileId: $op['profileUid'] ?? '',
+                signature: $signature,
+                signingSecret: $nodeSigningSecret
+            )) {
+                Log::warning('Device signature verification failed, skipping device op', [
+                    'device_uid' => $op['deviceUid'],
+                    'profile_uid' => $op['profileUid'] ?? null,
+                    'node_id' => $node->id,
+                ]);
+                continue;
+            }
+
+            $key = $op['fingerprint'];
+            if (! isset($deduped[$key])) {
+                $deduped[$key] = $op;
+                $deduped[$key]['query_count'] = 1;
+            } else {
+                // 取最新的时间戳
+                if ($op['queriedAt']->gt($deduped[$key]['queriedAt'])) {
+                    $deduped[$key]['queriedAt'] = $op['queriedAt'];
+                }
+                $deduped[$key]['query_count']++;
+            }
+        }
+
+        foreach ($deduped as $op) {
+            $this->resolveDevice(
                 userPk: $op['userPk'],
                 profilePk: $op['profilePk'],
                 deviceUid: $op['deviceUid'],
@@ -244,7 +319,8 @@ final class QueryLogController
                 clientIp: $op['clientIp'],
                 protocol: $op['protocol'],
                 queriedAt: $op['queriedAt'],
-                now: $now
+                now: $now,
+                batchCount: $op['query_count'],
             );
         }
 
@@ -262,7 +338,8 @@ final class QueryLogController
         string $clientIp,
         string $protocol,
         Carbon $queriedAt,
-        Carbon $now
+        Carbon $now,
+        int $batchCount = 1
     ): Device {
         $resolvedDeviceUid = $deviceUid !== ''
             ? $deviceUid
@@ -290,7 +367,7 @@ final class QueryLogController
                     'first_seen_at' => $queriedAt,
                     'last_seen_at' => $queriedAt,
                     'last_query_at' => $queriedAt,
-                    'query_count' => 1,
+                    'query_count' => $batchCount,
                     'status' => 'active',
                     'created_at' => $now,
                     'updated_at' => $now,
@@ -319,7 +396,8 @@ final class QueryLogController
             clientIp: $clientIp,
             protocol: $protocol,
             queriedAt: $queriedAt,
-            now: $now
+            now: $now,
+            batchCount: $batchCount
         );
 
         return $device;
@@ -353,7 +431,8 @@ final class QueryLogController
         string $clientIp,
         string $protocol,
         Carbon $queriedAt,
-        Carbon $now
+        Carbon $now,
+        int $batchCount = 1
     ): void {
         $update = [
             'user_id' => $userPk,
@@ -390,11 +469,50 @@ final class QueryLogController
 
         Device::query()
             ->whereKey($device->id)
-            ->increment('query_count');
+            ->increment('query_count', $batchCount);
     }
 
     private function isDuplicateKeyException(QueryException $e): bool
     {
         return (int) ($e->errorInfo[1] ?? 0) === 1062;
+    }
+
+    /**
+     * 验证设备数据 HMAC 签名（防伪造）。
+     *
+     * 签名内容：device_uid|device_type|client_ip|profile_id
+     * 密钥：Node 的 signing_secret（存储在 nodes.signing_secret）
+     *
+     * 向后兼容：旧版 resolver 不上报签名，跳过验证（trust-on-first-use）。
+     * 新版 resolver 上报签名，必须验证通过。
+     */
+    private function verifyDeviceSignature(
+        string $deviceUid,
+        string $deviceType,
+        string $clientIp,
+        string $profileId,
+        ?string $signature,
+        ?string $signingSecret
+    ): bool {
+        // 无签名 → 旧版 resolver，暂时信任
+        if (empty($signature)) {
+            return true;
+        }
+
+        // 有签名但无 secret → 无法验证，拒绝（防止伪造）
+        if (empty($signingSecret)) {
+            Log::warning('Device signature present but node has no signing_secret', [
+                'profile_id' => $profileId,
+                'device_uid' => $deviceUid,
+            ]);
+            return false;
+        }
+
+        // 计算期望签名
+        $data = $deviceUid . '|' . $deviceType . '|' . $clientIp . '|' . $profileId;
+        $expected = hash_hmac('sha256', $data, $signingSecret);
+
+        // 恒定时间比较，防止时序攻击
+        return hash_equals($expected, $signature);
     }
 }

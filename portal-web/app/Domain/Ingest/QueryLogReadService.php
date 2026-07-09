@@ -26,6 +26,8 @@ final class QueryLogReadService
         }
         if (! empty($filters['domain'])) {
             $like = strtolower((string) $filters['domain']);
+            // 先转义 LIKE 通配符（%, _, \），防止用户输入通配符导致全表扫描
+            $like = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $like);
             $where[] = 'domain LIKE ' . $this->q('%' . $like . '%');
         }
         if (! empty($filters['profile_id'])) {

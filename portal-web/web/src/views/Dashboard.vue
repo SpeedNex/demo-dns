@@ -12,27 +12,43 @@
             <div class="left-col">
                 <div class="card">
                     <div class="card-header">
-                        <h2>{{ $t('dashboard.deviceInfo') }}</h2>
+                        <h2>{{ $t('dashboard.endpointsTitle') }}</h2>
+                        <span class="badge-endpoint">{{ $t('dashboard.endpointsTag') }}</span>
                     </div>
                     <div class="card-body">
-                        <!-- DNS Server IP (GeoDNS) -->
+                        <!-- ID -->
                         <div class="endpoint-row-item">
-                            <div class="endpoint-label">{{ $t('dashboard.dnsServerIp') }}</div>
+                            <div class="endpoint-label">{{ $t('dashboard.endpointId') }}</div>
                             <div class="code-row">
-                                <div class="code">{{ geodnsIp || '—' }}</div>
-                                <button class="copy-btn" @click="copyText(geodnsIp)">{{ $t('dashboard.copy') }}</button>
+                                <div class="code">{{ endpoints.profile_id || '—' }}</div>
+                                <button class="copy-btn" @click="copyText(endpoints.profile_id)">{{ $t('dashboard.copy') }}</button>
                             </div>
                         </div>
 
-                        <!-- Current Client Public IP -->
+                        <!-- DoH -->
                         <div class="endpoint-row-item">
-                            <div class="endpoint-label">
-                                {{ $t('dashboard.currentClientIp') }}
-                                <span class="endpoint-hint-inline">{{ $t('dashboard.currentClientIpHint') }}</span>
-                            </div>
+                            <div class="endpoint-label">{{ $t('dashboard.endpointDoh') }}</div>
                             <div class="code-row">
-                                <div class="code">{{ clientPublicIp || '—' }}</div>
-                                <button class="copy-btn" @click="copyText(clientPublicIp)">{{ $t('dashboard.copy') }}</button>
+                                <div class="code">{{ endpoints.doh || '—' }}</div>
+                                <button class="copy-btn" @click="copyText(endpoints.doh)">{{ $t('dashboard.copy') }}</button>
+                            </div>
+                        </div>
+
+                        <!-- DoT / DoQ -->
+                        <div class="endpoint-row-item">
+                            <div class="endpoint-label">{{ $t('dashboard.endpointDotDoq') }}</div>
+                            <div class="code-row">
+                                <div class="code">{{ endpoints.dot || '—' }}</div>
+                                <button class="copy-btn" @click="copyText(endpoints.dot)">{{ $t('dashboard.copy') }}</button>
+                            </div>
+                        </div>
+
+                        <!-- DNS Server Domain -->
+                        <div class="endpoint-row-item">
+                            <div class="endpoint-label">{{ $t('dashboard.serverDomain') }}</div>
+                            <div class="code-row">
+                                <div class="code">{{ endpoints.server_domain || '—' }}</div>
+                                <button class="copy-btn" @click="copyText(endpoints.server_domain)">{{ $t('dashboard.copy') }}</button>
                             </div>
                         </div>
                     </div>
@@ -60,8 +76,37 @@
 
             <!-- Right Column -->
             <aside class="right-col">
-                <!-- Devices Panel (auto-discovered) -->
+                <!-- Server Info: DNS Server IP + Current Client IP -->
                 <div class="card">
+                    <div class="card-header">
+                        <h2>{{ $t('dashboard.deviceInfo') }}</h2>
+                    </div>
+                    <div class="card-body">
+                        <!-- DNS Server IP (GeoDNS) -->
+                        <div class="endpoint-row-item">
+                            <div class="endpoint-label">{{ $t('dashboard.dnsServerIp') }}</div>
+                            <div class="code-row">
+                                <div class="code">{{ geodnsIp || '—' }}</div>
+                                <button class="copy-btn" @click="copyText(geodnsIp)">{{ $t('dashboard.copy') }}</button>
+                            </div>
+                        </div>
+
+                        <!-- Current Client Public IP -->
+                        <div class="endpoint-row-item">
+                            <div class="endpoint-label">
+                                {{ $t('dashboard.currentClientIp') }}
+                                <span class="endpoint-hint-inline">{{ $t('dashboard.currentClientIpHint') }}</span>
+                            </div>
+                            <div class="code-row">
+                                <div class="code">{{ clientPublicIp || '—' }}</div>
+                                <button class="copy-btn" @click="copyText(clientPublicIp)">{{ $t('dashboard.copy') }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Devices Panel (auto-discovered) -->
+                <div class="card section-gap">
                     <div class="card-header">
                         <h2>{{ $t('devices.title') || 'Devices' }}</h2>
                         <span class="badge-device">{{ devices.length }}</span>
@@ -82,6 +127,35 @@
                         </div>
                         <div class="card-footer-link">
                             <router-link :to="`/user/${route.params.profile_id}/devices`">{{ $t('dashboard.viewAllDevices') }} →</router-link>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Server Info: DNS Server IP + Current Client IP -->
+                <div class="card section-gap">
+                    <div class="card-header">
+                        <h2>{{ $t('dashboard.deviceInfo') }}</h2>
+                    </div>
+                    <div class="card-body">
+                        <!-- DNS Server IP (GeoDNS) -->
+                        <div class="endpoint-row-item">
+                            <div class="endpoint-label">{{ $t('dashboard.dnsServerIp') }}</div>
+                            <div class="code-row">
+                                <div class="code">{{ geodnsIp || '—' }}</div>
+                                <button class="copy-btn" @click="copyText(geodnsIp)">{{ $t('dashboard.copy') }}</button>
+                            </div>
+                        </div>
+
+                        <!-- Current Client Public IP -->
+                        <div class="endpoint-row-item">
+                            <div class="endpoint-label">
+                                {{ $t('dashboard.currentClientIp') }}
+                                <span class="endpoint-hint-inline">{{ $t('dashboard.currentClientIpHint') }}</span>
+                            </div>
+                            <div class="code-row">
+                                <div class="code">{{ clientPublicIp || '—' }}</div>
+                                <button class="copy-btn" @click="copyText(clientPublicIp)">{{ $t('dashboard.copy') }}</button>
+                            </div>
                         </div>
                     </div>
                 </div>

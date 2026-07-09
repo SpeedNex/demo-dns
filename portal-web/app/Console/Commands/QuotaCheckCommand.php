@@ -10,6 +10,7 @@ use App\Domain\Publish\PublishService;
 use App\Models\Profile;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 
 /**
  * quota:check — 检测所有活跃套餐的查询用量是否超过月度限额。
@@ -109,7 +110,47 @@ class QuotaCheckCommand extends Command
         }
 
         $this->info("Quota check completed: {$checked} subscriptions checked, {$republished} profiles republished.");
+
+        // 更新 Redis 实时配额 blocklist（Resolver 每 30s 轮询，实现近实时配额控制）
+        $this->updateRedisQuotaBlocklist($subscriptions);
+
         return 0;
+    }
+
+    /**
+     * 将超额用户的 profile_id 写入 Redis SET，供 Resolver 实时查询。
+     * Key: quota:exceeded_profiles (SET)
+     * Resolver 每 30s 从 Redis 拉取并缓存到内存，DNS 查询时优先检查此 SET。
+     */
+    private function updateRedisQuotaBlocklist($subscriptions): void
+    {
+        try {
+            $exceededProfileIds = [];
+
+            foreach ($subscriptions as $sub) {
+                if ($sub->quota_status !== 'exceeded') {
+                    continue;
+                }
+                $profiles = Profile::where('user_id', $sub->user_id)->pluck('profile_id');
+                foreach ($profiles as $pid) {
+                    $exceededProfileIds[] = $pid;
+                }
+            }
+
+            $key = 'quota:exceeded_profiles';
+            // 使用 pipeline 原子替换
+            $pipe = Redis::pipeline();
+            $pipe->del($key);
+            if (! empty($exceededProfileIds)) {
+                $pipe->sadd($key, ...$exceededProfileIds);
+            }
+            $pipe->execute();
+
+            $this->info('Redis quota blocklist updated: ' . count($exceededProfileIds) . ' profiles in denied set.');
+        } catch (\Throwable $e) {
+            $this->error('Failed to update Redis quota blocklist: ' . $e->getMessage());
+            logger()->error('quota:check redis update failed', ['error' => $e->getMessage()]);
+        }
     }
 
     /**

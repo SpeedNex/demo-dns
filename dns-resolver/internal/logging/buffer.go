@@ -6,6 +6,9 @@ package logging
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -32,13 +35,18 @@ type LogEntry struct {
 	QueriedAt      int64  `json:"queried_at"`
 	// 2026-06-22: 上报协议 doh/dot/udp/tcp，便于按协议分账/告警
 	Protocol string `json:"protocol,omitempty"`
+	// 2026-07-09: HMAC-SHA256 签名，防止设备指纹伪造
+	// 签名内容：device_uid|device_type|client_ip|profile_id
+	// 密钥：Node 的 api_key
+	Signature string `json:"device_sig,omitempty"`
 }
 
 // Credentials 是 console 预签发凭据在日志上报场景下的最小投影。
 // 2026-06-22 改造：删除 Secret 字段，统一 Token 鉴权。
 type Credentials struct {
-	NodeID string
-	APIKey string
+	NodeID        string
+	APIKey        string
+	SigningSecret string // 2026-07-09: HMAC 签名密钥，防设备指纹伪造
 }
 
 type Buffer struct {
@@ -86,6 +94,16 @@ func (b *Buffer) Append(entry LogEntry) {
 		log.Printf("[日志] 追加调用在空缓冲上 domain=%s", entry.Domain)
 		return
 	}
+
+	// 2026-07-09: 计算设备数据 HMAC 签名，防止客户端伪造 device_uid
+	// 签名内容：device_uid|device_type|client_ip|profile_id
+	if b.cred.APIKey != "" {
+		data := entry.DeviceUID + "|" + entry.DeviceType + "|" + entry.ClientIP + "|" + entry.ProfileUID
+		h := hmac.New(sha256.New, []byte(b.cred.APIKey))
+		h.Write([]byte(data))
+		entry.Signature = hex.EncodeToString(h.Sum(nil))
+	}
+
 	b.mu.Lock()
 	defer b.mu.Unlock()
 

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -25,6 +26,12 @@ type Cache struct {
 	enabled atomic.Bool
 	client  *redis.Client
 	timeout time.Duration
+
+	// quotaBlocklist holds the set of profile UIDs that have exceeded quota.
+	// Updated by the RefreshQuotaBlocklist goroutine every 30s.
+	// Accessed atomically by the DNS query path.
+	quotaBlocklist atomic.Value // map[string]struct{}
+	quotaMu        sync.RWMutex
 }
 
 // New initialises a Cache. If `redis.enabled` is false the returned Cache
@@ -137,4 +144,46 @@ func (c *Cache) Incr(ctx context.Context, counterKey string, ttl time.Duration) 
 		return 0, fmt.Errorf("redis incr pipeline: %w", err)
 	}
 	return incr.Val(), nil
+}
+
+// RefreshQuotaBlocklist fetches the set of profile UIDs that have exceeded
+// quota from Redis (key: "quota:exceeded_profiles"). Safe to call on a
+// disabled cache (returns empty set).
+func (c *Cache) RefreshQuotaBlocklist(ctx context.Context) (map[string]struct{}, error) {
+	if !c.Enabled() {
+		return make(map[string]struct{}), nil
+	}
+
+	cctx, cancel := context.WithTimeout(ctx, c.timeout)
+	defer cancel()
+
+	members, err := c.client.SMembers(cctx, "quota:exceeded_profiles").Result()
+	if err != nil {
+		return nil, fmt.Errorf("redis smembers quota:exceeded_profiles: %w", err)
+	}
+
+	set := make(map[string]struct{}, len(members))
+	for _, m := range members {
+		set[m] = struct{}{}
+	}
+
+	c.quotaBlocklist.Store(set)
+	return set, nil
+}
+
+// IsQuotaExceeded checks if a profile UID is in the quota exceeded blocklist.
+// Safe to call on a disabled cache (returns false).
+func (c *Cache) IsQuotaExceeded(profileUID string) bool {
+	if !c.Enabled() {
+		// When Redis is disabled, fall back to the profile config in profile cache
+		return false
+	}
+	if v := c.quotaBlocklist.Load(); v != nil {
+		blocklist, ok := v.(map[string]struct{})
+		if ok {
+			_, found := blocklist[profileUID]
+			return found
+		}
+	}
+	return false
 }

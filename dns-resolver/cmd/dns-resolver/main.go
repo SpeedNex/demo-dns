@@ -217,6 +217,30 @@ func main() {
 	go agt.StartConfigSync(ctx, time.Duration(cfg.ControlPlane.ConfigPollInterval)*time.Second)
 	log.Printf("DEBUG: config sync started")
 
+	// Start quota blocklist refresher (every 30s)
+	// Provides real-time quota enforcement between quota:check runs
+	go func() {
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+
+		// Initial refresh
+		if _, err := queryCache.RefreshQuotaBlocklist(ctx); err != nil {
+			log.Printf("[quota] initial blocklist refresh failed: %v", err)
+		}
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				if _, err := queryCache.RefreshQuotaBlocklist(ctx); err != nil {
+					log.Printf("[quota] blocklist refresh failed: %v", err)
+				}
+			}
+		}
+	}()
+	log.Printf("DEBUG: quota blocklist refresher started")
+
 	// Start reliable log flusher
 	go logBuffer.StartFlusher(ctx)
 	log.Printf("DEBUG: log flusher started")

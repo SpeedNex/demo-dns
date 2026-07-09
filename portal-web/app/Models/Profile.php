@@ -12,14 +12,16 @@ class Profile extends BaseModel
     protected $keyType = 'int';
 
     /**
-     * profile_id is a stable 6-char hex used as the DNS routing key.
+     * profile_id is a stable 8-char hex used as the DNS routing key.
      * It is generated when the profile is created and never changes.
+     * 8 hex chars ≈ 4.3 billion combinations; mixed letter+digit constraint avoids pure numbers.
+     * Birthday paradox: 1% collision probability at ~28,000 profiles.
      */
     public static function generateProfileUid(): string
     {
         do {
-            $uid = substr(bin2hex(random_bytes(3)), 0, 6);
-            // 必须同时包含数字和字母（a-f），不能是纯数字或纯字母
+            $uid = substr(bin2hex(random_bytes(4)), 0, 8);
+            // Must contain at least one letter (a-f) and one digit (0-9)
             if (! ctype_xdigit($uid)) {
                 continue;
             }

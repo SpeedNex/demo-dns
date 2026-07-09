@@ -17,6 +17,10 @@ class Node extends Model
             if (blank($node->node_code)) {
                 $node->node_code = strtolower(\Illuminate\Support\Str::random(10));
             }
+            // 2026-07-09: 自动生成 signing_secret 用于设备数据 HMAC 签名
+            if (blank($node->signing_secret)) {
+                $node->signing_secret = \Illuminate\Support\Str::random(32);
+            }
         });
     }
 
@@ -31,6 +35,8 @@ class Node extends Model
         'install_status', 'last_installed_at', 'last_listen_addr',
         // 2026-06-22 fix: register 端点签发 api_key 必须可写。
         'api_key', 'api_key_issued_at',
+        // 2026-07-09: HMAC 签名密钥，防设备指纹伪造
+        'signing_secret',
     ];
     protected $casts = [
         'supported_protocols' => 'array',

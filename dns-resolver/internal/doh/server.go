@@ -268,14 +268,23 @@ func (s *Server) resolveDNS(w http.ResponseWriter, r *http.Request, profileUID s
 		}
 
 		// 配额检查：quota_status == "exceeded" 时返回 403
+		// 双重检查：1) Profile配置中的quota状态 2) Redis实时blocklist（30s刷新）
+		quotaExceeded := false
 		if pc != nil && pc.Quota != nil {
 			if status, ok := pc.Quota["quota_status"]; ok {
 				if s, ok := status.(string); ok && s == "exceeded" {
-					log.Printf("[配额] profile=%s client=%s domain=%s 配额超限", profileUID, clientAddr, domain)
-					http.Error(w, "quota exceeded", http.StatusForbidden)
-					return
+					quotaExceeded = true
 				}
 			}
+		}
+		// Redis实时blocklist检查（弥补quota:check 5分钟窗口期的漏洞）
+		if !quotaExceeded && s.cache != nil && s.cache.IsQuotaExceeded(profileUID) {
+			quotaExceeded = true
+		}
+		if quotaExceeded {
+			log.Printf("[配额] profile=%s client=%s domain=%s 配额超限", profileUID, clientAddr, domain)
+			http.Error(w, "quota exceeded", http.StatusForbidden)
+			return
 		}
 
 		// Extract device info from headers
