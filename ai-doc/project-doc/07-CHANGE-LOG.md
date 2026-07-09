@@ -8,6 +8,10 @@
 |---|---|---|---|---|
 | 2026-07-09 | fix | 修复 /user/account 页面配额显示 "0 / 300,000" 始终为 0 的问题：billing_periods 表中没有当前用户周期记录导致 queries_used 返回 0 | portal-web/app/Http/Controllers/Api/V1/User/UserWorkspaceController.php | ok |
 | 2026-07-09 | fix | 修复 ClickHouse SummingMergeTree + async_insert 组合导致数据写入后不可见的问题：INSERT 返回 200 但数据从未落盘（约 6174 行丢失）；在 ClickHouseClient::insertJsonEachRow 中添加 SETTINGS async_insert=0, wait_for_async_insert=0 强制同步写入 | portal-web/app/Infrastructure/ClickHouse/ClickHouseClient.php | staging |
+| 2026-07-09 | fix | 修复 ClickHouse 认证失败：config/clickhouse.php 默认 username='ocer' 但线上 ClickHouse 仅存在 default 用户，导致 HTTP 403 Authentication failed；改为 env('CLICKHOUSE_USERNAME', 'default') 并支持环境变量覆盖 | portal-web/config/clickhouse.php | ok |
+| 2026-07-09 | fix | 修复数据库覆盖配置：dns_system_configs 表中 clickhouse.username='ocer' 覆盖配置文件默认值；UPDATE 为 'default' 对齐线上账号 | MySQL dns_system_configs 表 | ok |
+| 2026-07-09 | fix | 修复 SummingMergeTree 数据永久不可见：将 usage_events 表引擎从 SummingMergeTree 改为 MergeTree（SummingMergeTree 后台合并可能永不触发，INSERT 成功但 SELECT 看不到）；通过 RENAME → CREATE → INSERT → DROP 安全迁移，保留历史数据 | ClickHouse ocer_dns.usage_events | ok |
+| 2026-07-09 | feat | 新增 ClickHouseSetupCommand (php artisan clickhouse:setup)：幂等创建 usage_events 和 dns_logs 表，支持本地和远程 ClickHouse（.env CLICKHOUSE_HOST），用于初始化/重建表结构 | portal-web/app/Console/Commands/ClickHouseSetupCommand.php | ok |
 
 ## 2026-07-09 — 准确性提升：全量文档与代码对齐
 
