@@ -17,7 +17,7 @@ final class DeviceSeenController
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'profile_id' => 'required|string|size:6',
+            'profile_id' => 'required|string|size:8',
             'device_name' => 'nullable|string|max:120',
             'protocol' => 'required|string|in:doh,dot,doq,udp,tcp',
             'client_ip' => 'nullable|string|max:45',
