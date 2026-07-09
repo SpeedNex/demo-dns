@@ -187,7 +187,7 @@ const profiles = ref([])
 const currentProfileId = ref(null)
 const currentProfileName = computed(() => {
     const profile = profiles.value.find(p => (p.profile_id || p.id) === currentProfileId.value)
-    return profile?.name || t('common.defaultProfile')
+    return profile?.name || localStorage.getItem('current_profile_name') || t('common.defaultProfile')
 })
 
 // 新建 Profile 弹窗
@@ -240,9 +240,13 @@ const loadProfiles = async () => {
         if (!isProfileScopedPath()) {
             const fallback = (savedId && matchProfile(savedId)) || firstKey
             if (fallback) {
-                currentProfileId.value = profileKey(matchProfile(savedId) || profiles.value[0])
+                const matchedProfile = matchProfile(savedId) || profiles.value[0]
+                currentProfileId.value = profileKey(matchedProfile)
                 if (!urlProfileId) {
                     localStorage.setItem('current_profile_id', currentProfileId.value)
+                }
+                if (matchedProfile?.name) {
+                    localStorage.setItem('current_profile_name', matchedProfile.name)
                 }
             }
             return
@@ -253,6 +257,7 @@ const loadProfiles = async () => {
             const matchedKey = profileKey(matched)
             currentProfileId.value = matchedKey
             localStorage.setItem('current_profile_id', matchedKey)
+            localStorage.setItem('current_profile_name', matched.name)
             // URL 中的 id 不是 profile_id 时，重定向到 6 位 hex 形式，保留子路径
             if (urlProfileId && urlProfileId !== matchedKey) {
                 router.replace(buildProfileUrl(matchedKey))
@@ -260,6 +265,8 @@ const loadProfiles = async () => {
         } else if (firstKey) {
             currentProfileId.value = firstKey
             localStorage.setItem('current_profile_id', currentProfileId.value)
+            const firstProfile = profiles.value.find(p => profileKey(p) === firstKey)
+            if (firstProfile?.name) localStorage.setItem('current_profile_name', firstProfile.name)
             // 保留当前子路径（如 /security），仅替换 profile_id
             router.replace(buildProfileUrl(firstKey))
         }
@@ -271,6 +278,8 @@ const loadProfiles = async () => {
 const switchProfile = (profileId) => {
     currentProfileId.value = profileId
     localStorage.setItem('current_profile_id', profileId)
+    const target = profiles.value.find(p => profileKey(p) === profileId)
+    if (target?.name) localStorage.setItem('current_profile_name', target.name)
     // 保留当前子路径（如 /security），仅替换 profile_id
     router.push(buildProfileUrl(profileId))
 }
@@ -302,6 +311,7 @@ const handleCreateProfile = async () => {
 
         if (data.data) {
             profiles.value.push(data.data)
+            localStorage.setItem('current_profile_name', data.data.name)
             switchProfile(profileKey(data.data))
             ElMessage.success(t('profile.created'))
         }

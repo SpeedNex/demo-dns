@@ -2,6 +2,13 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-07-09 — UI 修复：刷新时 profile 闪烁 + Logs 页无 loading
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-09 | fix | 修复 F5 刷新时右上角 profile 切换器短暂显示"默认配置"的问题：将 currentProfileName 缓存到 localStorage，computed 优先读缓存回退；loadProfiles / switchProfile / handleCreateProfile 三处同步写缓存 | portal-web/web/src/components/Layout.vue | ok |
+| 2026-07-09 | fix | 修复 /user/e6ac2c/logs 页切换筛选/分页时数据直接替换无过渡的问题：el-card 加 v-loading 指令，fetchLogs 请求周期内显示 loading 遮罩 | portal-web/web/src/views/Logs.vue | ok |
+
 ## 2026-07-09 — /admin/users 密码最小长度从 8 位调整为 6 位
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |

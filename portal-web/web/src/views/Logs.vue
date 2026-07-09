@@ -7,9 +7,9 @@
             </div>
         </div>
 
-        <el-card shadow="never" class="logs-card">
+        <el-card shadow="never" class="logs-card" v-loading="loading">
             <div class="log-filters">
-                <div class="filter-toolbar">
+            <div class="filter-toolbar">
                     <div class="filter-icon">
                         <el-icon><Filter /></el-icon>
                     </div>
@@ -95,6 +95,7 @@ const { currentProfileId } = useCurrentProfile()
 const logs = ref([])
 const page = ref(1)
 const total = ref(0)
+const loading = ref(false)
 const filter = reactive({ action: '', domain: '' })
 let searchTimer = null
 
@@ -116,6 +117,7 @@ const resetFilters = () => {
 }
 
 const fetchLogs = async () => {
+    loading.value = true
     try {
         const params = { page: page.value, per_page: 20, profile_id: currentProfileId.value }
         if (filter.action) params.action = filter.action
@@ -123,7 +125,9 @@ const fetchLogs = async () => {
         const { data } = await client.get('/user/logs', { params })
         logs.value = data.data || []
         total.value = data.meta?.total || 0
-    } catch {}
+    } catch {} finally {
+        loading.value = false
+    }
 }
 
 onMounted(fetchLogs)
