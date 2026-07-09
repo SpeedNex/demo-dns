@@ -335,7 +335,7 @@ ledger entry：idempotency_key 唯一
 安全/隐私/家长/黑白名单/设置
   -> portal-web MySQL
   -> profile_versions.config_json
-  -> portal-web(原 console 域) config_versions
+  -> portal-web(原 console 域) profile_versions
   -> resolver config bundle
   -> dns-resolver 执行
 

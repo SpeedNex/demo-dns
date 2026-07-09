@@ -69,13 +69,25 @@ app/Infrastructure/ClickHouse   # ClickHouseClient / MemberAnalyticsService
 | `NodeTokenService` | 预签发 / 重新签发 / 吊销 (api_key, secret);portal-web 仅存 hash,plain 仅返回一次 |
 | `GeoDnsTokenService` | GeoDNS 节点 token 预签发、校验、吊销;存储于 geodns_tokens 表;HTTP Header X-GeoDNS-Token 鉴权 |
 | `HeartbeatService` | 心跳校验、状态计算、健康快照写 Redis |
-| `ConfigBuildService` | 将 Profile 版本组织成 resolver config bundle |
 | `PublishService` | 发布任务创建、重试、失败记录 |
 | `ConfigAckService` | 处理 resolver 配置应用结果 |
 | `NodeHealthViewService` | 给 geodns 输出健康节点视图(进程内) |
-| `RuleLibraryService` | 规则源 CRUD、批量同步、立即同步 |
-| `SystemConfigService` | DNS/日志/安全参数配置 |
-| `AdminConsoleAuditService` | 节点/发布/控制面操作审计(写 `admin_audit_logs`) |
+| `ProfileConfigBuilder` | 将 Profile 版本组织成 resolver config bundle |
+| `RuleCategoryResolver` | 规则分类解析与匹配 |
+| **基础设施服务** | |
+| `AlertService` | 告警通知管理 |
+| `ApiKeyService` | API 密钥管理 |
+| `BillingService` | 账单生成与管理 |
+| `PaymentService` | 支付交易处理 |
+| `PlanCatalogService` | 套餐目录管理 |
+| `SubscriptionService` | 订阅管理 |
+| `ClickHouseStatsService` | ClickHouse 统计分析 |
+| `QueryLogIngestService` | 查询日志接收与写入 |
+| `QueryLogReadService` | 查询日志读取与分析 |
+| `NodeRegistryService` | 节点注册管理 |
+| `PolicyPublisher` | 策略发布 |
+| `PolicySnapshotService` | 策略快照管理 |
+| `HealthCheckService` | 系统健康检查 |
 
 ### 1.4 数据所有权与同步方向（硬约束）
 
@@ -159,14 +171,15 @@ app/Infrastructure/ClickHouse
 | `NodeTokenService` | 预签发 / 重新签发 / 吊销 (api_key, secret);portal-web 仅存 hash,plain 仅返回一次 |
 | `GeoDnsTokenService` | GeoDNS 节点 token 预签发、校验、吊销;存储于 geodns_tokens 表;HTTP Header X-GeoDNS-Token 鉴权 |
 | `HeartbeatService` | 心跳校验、状态计算、健康快照写 Redis |
-| `ConfigBuildService` | 将 Profile 版本组织成 resolver config bundle |
 | `PublishService` | 发布任务创建、重试、失败记录 |
 | `ConfigAckService` | 处理 resolver 配置应用结果 |
 | `NodeHealthViewService` | 给 geodns 输出健康节点视图(进程内) |
-| `RuleLibraryService` | 规则源 CRUD、批量同步、立即同步 |
-| `SystemConfigService` | DNS/日志/安全参数配置 |
-| `AdminConsoleAuditService` | 节点/发布/控制面操作审计(写 `admin_audit_logs`) |
+| `ProfileConfigBuilder` | 将 Profile 版本组织成 resolver config bundle |
 | `QueryLogIngestService` | 接收 `dns-resolver` 批量查询日志;幂等写 `query_log_ingest_batches`;log worker 异步写 ClickHouse |
+| `QueryLogReadService` | 查询日志读取与分析 |
+| `NodeRegistryService` | 节点注册管理 |
+| `PolicyPublisher` | 策略发布 |
+| `PolicySnapshotService` | 策略快照管理 |
 
 ## 3. dns-resolver
 

@@ -942,7 +942,7 @@ X-Internal-Signature: hmac-sha256(...)
 
 ### 6.2 查询发布状态
 
-发布状态由 Member 域直接读 `config_versions` / `publish_tasks`（同库同进程）；V1 **不**提供独立的 `GET /api/v1/internal/profile-configs/publishes/{publish_id}/status` 端点。Member 域可通过 `/api/v1/user/profiles/{profile_id}/publishes/{publish_id}` 读取状态；Admin 总后台可通过 `GET /api/v1/admin/publishes` 轮询 publish_tasks 状态。
+发布状态由 Member 域直接读 `profile_versions` / `publish_tasks`（同库同进程）；V1 **不**提供独立的 `GET /api/v1/internal/profile-configs/publishes/{publish_id}/status` 端点。Member 域可通过 `/api/v1/user/profiles/{profile_id}/publishes/{publish_id}` 读取状态；Admin 总后台可通过 `GET /api/v1/admin/publishes` 轮询 publish_tasks 状态。
 
 ## 7. 安全要求
 
