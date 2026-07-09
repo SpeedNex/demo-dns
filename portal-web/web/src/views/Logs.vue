@@ -199,6 +199,7 @@ watch(
 .filter-clear {
     height: 36px;
     box-sizing: border-box;
+    vertical-align: middle;
 }
 .filter-select :deep(.el-select__wrapper),
 .filter-input :deep(.el-input__wrapper) {
@@ -248,16 +249,30 @@ watch(
     margin-left: auto;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 4px;
     border-radius: 10px;
     padding: 0 14px;
     position: relative;
+    height: 36px;
+    box-sizing: border-box;
+    line-height: 1;
+    vertical-align: middle;
+}
+.filter-clear :deep(.el-button__content) {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    line-height: 1;
 }
 .filter-badge {
     margin-left: 4px;
+    display: inline-flex;
+    align-items: center;
 }
 .filter-badge :deep(.el-badge__content) {
-    transform: translateY(-2px);
+    position: static;
+    transform: none;
 }
 .log-filters .el-switch {
     display: inline-flex;
