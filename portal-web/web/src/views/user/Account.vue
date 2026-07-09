@@ -146,8 +146,8 @@
             <el-dialog v-model="showSubscriptionDialog" :title="dialogTitle" width="880px" destroy-on-close>
                 <!-- 第一步：选择套餐 — 仅无订阅时显示 -->
                 <div v-if="!sub" class="plan-dialog-body">
-                    <!-- 全局周期切换 -->
-                    <div class="billing-toggle">
+                    <!-- 全局周期切换 — 仅当两种周期都有有效价格时显示切换器 -->
+                    <div v-if="hasMonthlyPrice && hasYearlyPrice" class="billing-toggle">
                         <el-radio-group v-model="selectedCycle" size="large">
                             <el-radio-button value="monthly">
                                 <span class="cycle-label">{{ $t('subscription.monthly') }}</span>
@@ -291,7 +291,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Coin, Key, Lock, User } from '@element-plus/icons-vue'
@@ -364,6 +364,25 @@ const getPrice = (plan, cycle) => {
     const price = normalizePlans(plan.prices).find(p => p.billing_cycle === cycle)
     return price || { amount_minor: 0, currency: 'USD' }
 }
+
+// 判断是否有任意套餐在指定周期下存在有效价格（>0）
+const hasCyclePrice = (cycle) =>
+    normalizePlans(plans.value).some(p => (getPrice(p, cycle).amount_minor || 0) > 0)
+
+const hasMonthlyPrice = computed(() => hasCyclePrice('monthly'))
+const hasYearlyPrice = computed(() => hasCyclePrice('yearly'))
+
+// 当套餐加载后，若当前选中周期无有效价格，自动切换到有价格的周期
+watch(() => plans.value, (val) => {
+    if (!val || !val.length) return
+    const monthlyOk = hasCyclePrice('monthly')
+    const yearlyOk = hasCyclePrice('yearly')
+    if (selectedCycle.value === 'monthly' && !monthlyOk && yearlyOk) {
+        selectedCycle.value = 'yearly'
+    } else if (selectedCycle.value === 'yearly' && !yearlyOk && monthlyOk) {
+        selectedCycle.value = 'monthly'
+    }
+}, { immediate: true })
 
 const getPlanSortOrder = (planCode) => {
     const plan = normalizePlans(plans.value).find(p => p.code === planCode)

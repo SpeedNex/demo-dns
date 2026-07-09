@@ -2,6 +2,14 @@
 
 > 记录每次功能增减、Bug 修复、文档变更。没有构建、测试、部署证据时，状态只能写"文档已定义"或"代码草案"。
 
+## 2026-07-09 — UI 优化：套餐选择页隐藏无效价格周期选项
+
+| 日期 | 类型 | 描述 | 涉及文件 | 状态 |
+|---|---|---|---|---|
+| 2026-07-09 | fix | 修复 /user/account 选择套餐时，月付/年付 toggle 始终显示的问题：后台未设置或设为 0 的计费周期现在自动隐藏；增加 hasMonthlyPrice/hasYearlyPrice 计算属性判断有效价格，当某周期无有效价格时自动切换到另一可用周期 | portal-web/web/src/views/user/Account.vue | ok |
+| 2026-07-09 | fix | SubscriptionCheckout.vue 过滤 amount_minor<=0 的价格选项，避免展示 $0.00 计费周期 | portal-web/web/src/views/SubscriptionCheckout.vue | ok |
+| 2026-07-09 | fix | Plans.vue 套餐展示页过滤 amount_minor<=0 的价格项，避免误导用户 | portal-web/web/src/views/Plans.vue | ok |
+
 ## 2026-07-09 — P1 修复：/user/account 配额显示异常
 
 | 日期 | 类型 | 描述 | 涉及文件 | 状态 |

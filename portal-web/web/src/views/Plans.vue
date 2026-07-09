@@ -25,16 +25,18 @@
                     </div>
 
                     <div class="plan-prices">
-                        <div v-for="price in plan.prices" :key="price.billing_cycle" class="price-item">
-                            <div class="price-cycle">{{ $t('plans.' + price.billing_cycle) }}</div>
-                            <div class="price-amount">
-                                <span class="price-amount-num">{{ money(price.amount_minor, price.currency) }}</span>
-                                <span class="price-amount-unit">/ {{ $t(price.billing_cycle === 'monthly' ? 'plans.perMonth' : 'plans.perYear') }}</span>
+                        <template v-for="price in plan.prices" :key="price.billing_cycle">
+                            <div v-if="(price.amount_minor || 0) > 0" class="price-item">
+                                <div class="price-cycle">{{ $t('plans.' + price.billing_cycle) }}</div>
+                                <div class="price-amount">
+                                    <span class="price-amount-num">{{ money(price.amount_minor, price.currency) }}</span>
+                                    <span class="price-amount-unit">/ {{ $t(price.billing_cycle === 'monthly' ? 'plans.perMonth' : 'plans.perYear') }}</span>
+                                </div>
+                                <div v-if="price.original_amount_minor && price.original_amount_minor > price.amount_minor" class="price-original">
+                                    <s>{{ money(price.original_amount_minor, price.currency) }}</s>
+                                </div>
                             </div>
-                            <div v-if="price.original_amount_minor && price.original_amount_minor > price.amount_minor" class="price-original">
-                                <s>{{ money(price.original_amount_minor, price.currency) }}</s>
-                            </div>
-                        </div>
+                        </template>
                     </div>
 
                     <el-divider />

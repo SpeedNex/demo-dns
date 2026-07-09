@@ -10,16 +10,17 @@
           <div class="plan-info">
             <strong>{{ p.name }}</strong>
             <p>{{ p.description }}</p>
-            <div class="plan-prices">
+            <div class="plan-prices" v-if="p.prices?.some(pr => (pr.amount_minor || 0) > 0)">
               <el-radio-group v-model="selectedCycle" size="small">
-                <el-radio-button
-                  v-for="price in p.prices"
-                  :key="price.billing_cycle"
-                  :value="price.billing_cycle"
-                >
-                  {{ price.billing_cycle === 'yearly' ? $t('subscription.yearly') : $t('subscription.monthly') }}
-                  {{ formatMoney(price.amount_minor, price.currency) }}
-                </el-radio-button>
+                <template v-for="price in p.prices" :key="price.billing_cycle">
+                  <el-radio-button
+                    v-if="(price.amount_minor || 0) > 0"
+                    :value="price.billing_cycle"
+                  >
+                    {{ price.billing_cycle === 'yearly' ? $t('subscription.yearly') : $t('subscription.monthly') }}
+                    {{ formatMoney(price.amount_minor, price.currency) }}
+                  </el-radio-button>
+                </template>
               </el-radio-group>
             </div>
           </div>
