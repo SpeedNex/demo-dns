@@ -44,48 +44,45 @@
 
             <!-- 深度跟踪保护 -->
             <div class="section">
-                <div class="section-title-row">
-                    <span class="section-title">{{ $t('privacy.blocklists.deepTracking') }}</span>
-                    <el-tag size="small" type="warning" effect="light" style="margin-left:6px">beta</el-tag>
-                </div>
-                <div class="section-desc">{{ $t('privacy.blocklists.deepTrackingDesc') }}</div>
-                <div v-if="addedDevices.length === 0" class="empty-tip">
-                    {{ $t('privacy.blocklists.noDevices') }}
-                </div>
-                <div
-                    v-for="device in addedDevices"
-                    :key="device.key"
-                    class="setting-row"
-                >
-                    <div class="setting-info setting-info-row">
-                        <div class="device-icon">
-                            <span class="device-emoji">{{ device.icon }}</span>
-                        </div>
-                        <div class="setting-info-text">
-                            <span class="setting-label">{{ device.name }}</span>
-                        </div>
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <span class="setting-label">{{ $t('privacy.blocklists.deepTracking') }}</span>
+                        <span class="setting-desc">{{ $t('privacy.blocklists.deepTrackingDesc') }}</span>
                     </div>
-                    <el-button link @click="removeDevice(device.key)">
-                        <el-icon><Delete /></el-icon>
-                    </el-button>
+                    <el-switch v-model="form.blocklists.deep_tracking_protection" />
                 </div>
-                <el-divider />
-                <el-tooltip
-                    :disabled="form.blocklists.deep_tracking_protection === true"
-                    content="请先开启深度跟踪保护开关"
-                    placement="top"
-                >
+                <div v-if="form.blocklists.deep_tracking_protection">
+                    <div v-if="addedDevices.length === 0" class="empty-tip">
+                        {{ $t('privacy.blocklists.noDevices') }}
+                    </div>
+                    <div
+                        v-for="device in addedDevices"
+                        :key="device.key"
+                        class="setting-row"
+                    >
+                        <div class="setting-info setting-info-row">
+                            <div class="device-icon">
+                                <span class="device-emoji">{{ device.icon }}</span>
+                            </div>
+                            <div class="setting-info-text">
+                                <span class="setting-label">{{ device.name }}</span>
+                            </div>
+                        </div>
+                        <el-button link @click="removeDevice(device.key)">
+                            <el-icon><Delete /></el-icon>
+                        </el-button>
+                    </div>
+                    <el-divider />
                     <el-button
                         type="primary"
                         size="small"
                         plain
-                        :disabled="form.blocklists.deep_tracking_protection !== true"
                         @click="showDeviceModal = true"
                     >
                         <el-icon><Plus /></el-icon>
                         {{ $t('privacy.catalogs.addDevice') }}
                     </el-button>
-                </el-tooltip>
+                </div>
             </div>
 
             <!-- 第三方跟踪 -->
@@ -230,7 +227,9 @@ const form = reactive({
     block_disguised_trackers: true,
     log_mode: 'full',
     // 2026-06-22: 不在此处硬编码默认拦截列表，避免首次渲染 2 项 → 拉取后空 的闪烁
-    blocklists: {},
+    blocklists: {
+        deep_tracking_protection: true,  // 默认开启深度跟踪保护
+    },
     deep_tracking_devices: [],
 })
 
