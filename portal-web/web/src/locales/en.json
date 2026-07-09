@@ -815,6 +815,7 @@
     "offline": "Offline",
     "lastSeen": "Last Seen",
     "sourceIp": "Source IP",
+    "publicIp": "Public IP",
     "actions": "Actions",
     "edit": "Edit",
     "delete": "Delete",

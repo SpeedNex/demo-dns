@@ -523,6 +523,8 @@ final class UserWorkspaceService
                 'device_os' => $device->device_os,
                 'protocol' => $device->protocol,
                 'source_ip' => $device->ip_hash ? 'hashed' : ($device->source_ip ?? null),
+                'detected_ip' => $device->detected_ip,
+                'public_ip' => $device->detected_ip ?: ($device->ip_hash ? null : $device->source_ip),
                 // 2026-06-25: 修复 P3-B — 与 Admin API 字段对齐，统一返回 device_uid
                 'device_uid' => $device->device_uid,
                 'device_id' => $device->device_uid,

@@ -787,6 +787,7 @@
     "offline": "오프라인",
     "lastSeen": "마지막으로 본 시간",
     "sourceIp": "소스 IP",
+    "publicIp": "공인 IP",
     "actions": "작업",
     "edit": "편집",
     "delete": "삭제",

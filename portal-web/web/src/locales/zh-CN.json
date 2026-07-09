@@ -816,6 +816,7 @@
     "offline": "离线",
     "lastSeen": "最后在线",
     "sourceIp": "来源 IP",
+    "publicIp": "公网 IP",
     "actions": "操作",
     "delete": "删除",
     "deleteDevice": "删除设备",

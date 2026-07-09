@@ -10,6 +10,7 @@ use App\Models\Profile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 final class DeviceSeenController
 {
@@ -39,6 +40,10 @@ final class DeviceSeenController
             $sni,
         ]));
 
+        // 根据隐私设置决定是否存储明文 IP
+        $privacy = $profile->privacy_settings ?? [];
+        $anonymizeIp = $privacy['anonymize_client_ip'] ?? true;
+
         $device = Device::query()->updateOrCreate(
             [
                 'profile_id' => $profile->id,
@@ -53,6 +58,7 @@ final class DeviceSeenController
                 'user_agent' => $userAgent !== '' ? $userAgent : null,
                 'sni' => $sni !== '' ? $sni : null,
                 'ip_hash' => $clientIp !== '' ? hash('sha256', $clientIp) : null,
+                'detected_ip' => ($clientIp !== '' && ! $anonymizeIp) ? $clientIp : null,
                 'first_seen_at' => DB::raw('COALESCE(first_seen_at, NOW())'),
                 'last_seen_at' => $now,
                 'last_query_at' => $now,

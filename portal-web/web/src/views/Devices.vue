@@ -59,9 +59,9 @@
                             <span>{{ formatDateTime(row.last_seen_at) }}</span>
                         </template>
                     </el-table-column>
-                    <el-table-column :label="$t('devices.sourceIp')" width="140">
+                    <el-table-column :label="$t('devices.publicIp')" width="150">
                         <template #default="{ row }">
-                            <span>{{ row.source_ip || extractIp(row.info) }}</span>
+                            <span>{{ displayIp(row) }}</span>
                         </template>
                     </el-table-column>
                     <el-table-column :label="$t('devices.actions')" width="170">
@@ -133,6 +133,27 @@ const extractIp = (info) => {
     if (!info) return '-'
     const parts = String(info).trim().split(/\s+/)
     return parts[parts.length - 1] || '-'
+}
+
+const isPrivateIp = (ip) => {
+    if (!ip) return false
+    const s = String(ip).trim()
+    if (/^10\./.test(s)) return true
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(s)) return true
+    if (/^192\.168\./.test(s)) return true
+    if (/^127\./.test(s)) return true
+    if (/^169\.254\./.test(s)) return true
+    if (/^::1$|^fc|^fd|^fe80/i.test(s)) return true
+    return false
+}
+
+const displayIp = (row) => {
+    // 优先显示自动检测的公网 IP
+    if (row.detected_ip && !isPrivateIp(row.detected_ip)) return row.detected_ip
+    // 其次显示用户绑定的公网 IP
+    if (row.source_ip && row.source_ip !== 'hashed' && !isPrivateIp(row.source_ip)) return row.source_ip
+    // 无法确定公网 IP
+    return '—'
 }
 
 const copyText = (text) => {
