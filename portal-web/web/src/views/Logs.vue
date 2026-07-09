@@ -165,8 +165,7 @@ watch(
     gap: 10px;
     align-items: center;
     flex-wrap: wrap;
-    padding: 0 16px;
-    min-height: 64px;
+    padding: 10px 16px;
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     border: 1px solid #e2e8f0;
     border-radius: 12px;
@@ -180,26 +179,25 @@ watch(
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     background: #fff;
-    border-radius: 10px;
+    border-radius: 8px;
     color: #6366f1;
-    font-size: 18px;
+    font-size: 16px;
     box-shadow: inset 0 0 0 1px #e2e8f0;
     flex-shrink: 0;
 }
 .filter-select,
 .filter-input,
 .filter-clear {
-    height: 40px;
+    height: 36px;
     box-sizing: border-box;
 }
-/* 强制 select / input / button 三者内部高度与行高完全对齐 */
 .filter-select :deep(.el-select__wrapper),
 .filter-input :deep(.el-input__wrapper) {
-    min-height: 40px;
-    height: 40px;
+    min-height: 36px;
+    height: 36px;
     padding: 0 12px;
     box-sizing: border-box;
     display: inline-flex;
@@ -210,33 +208,22 @@ watch(
 .filter-select :deep(.el-select__wrapper) {
     width: 100%;
 }
-.filter-select :deep(.el-select__placeholder),
-.filter-input :deep(.el-input__inner) {
-    line-height: 40px;
-    height: 40px;
-}
 .filter-input :deep(.el-input__prefix) {
     display: inline-flex;
     align-items: center;
-    height: 40px;
-}
-.filter-input :deep(.el-input__prefix-inner) {
-    display: inline-flex;
-    align-items: center;
-    height: 40px;
 }
 .filter-clear {
-    padding: 0 16px;
+    padding: 0 14px;
     line-height: 1;
 }
 .filter-select {
-    width: 260px;
+    width: 150px;
     flex-shrink: 0;
 }
 .filter-input {
     flex: 1;
-    min-width: 320px;
-    max-width: 520px;
+    min-width: 260px;
+    max-width: 420px;
 }
 .prefix-icon {
     color: #94a3b8;
