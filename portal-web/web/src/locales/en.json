@@ -482,6 +482,7 @@
     "action": "Action",
     "device": "Device",
     "profile": "Profile",
+    "clientIp": "Client IP",
     "noLogs": "No logs",
     "logModeDisabled": "Logging is disabled in Privacy settings.",
     "clearFilters": "Clear filters",

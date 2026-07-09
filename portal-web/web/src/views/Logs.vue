@@ -52,6 +52,12 @@
                 </el-table-column>
                 <el-table-column prop="device" :label="$t('logs.device')" width="150" />
                 <el-table-column prop="profile_name" :label="$t('logs.profile')" width="120" />
+                <el-table-column prop="client_ip" :label="$t('logs.clientIp')" width="180">
+                    <template #default="{ row }">
+                        <span v-if="row.client_ip" class="client-ip">{{ row.client_ip }}</span>
+                        <span v-else class="text-muted">-</span>
+                    </template>
+                </el-table-column>
             </el-table>
 
             <div v-if="total > 0" class="log-pagination">
@@ -228,6 +234,15 @@ watch(
 .prefix-icon {
     color: #94a3b8;
     font-size: 16px;
+}
+.client-ip {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    word-break: break-all;
+}
+.text-muted {
+    color: #cbd5e1;
 }
 .filter-clear {
     margin-left: auto;

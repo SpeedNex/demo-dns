@@ -483,6 +483,7 @@
     "action": "动作",
     "device": "设备",
     "profile": "配置",
+    "clientIp": "客户端 IP",
     "noLogs": "暂无日志",
     "logModeDisabled": "隐私设置中已禁用日志记录。",
     "clearFilters": "清空筛选",

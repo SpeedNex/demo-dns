@@ -43,7 +43,7 @@ final class QueryLogReadService
         $total = (int) ($countRows[0]['c'] ?? 0);
 
         $sql = sprintf(
-            "SELECT event_time, user_id, profile_id, device_id, domain, action, reason, query_type, rcode, latency_ms, protocol
+            "SELECT event_time, user_id, profile_id, device_id, domain, action, reason, query_type, rcode, latency_ms, protocol, client_ip
              FROM dns_logs %s ORDER BY event_time DESC LIMIT %d OFFSET %d",
             $whereSql,
             $perPage,
@@ -63,6 +63,7 @@ final class QueryLogReadService
                 'rcode' => is_numeric($r['rcode'] ?? null) ? (int) $r['rcode'] : null,
                 'latency_ms' => is_numeric($r['latency_ms'] ?? null) ? (int) $r['latency_ms'] : null,
                 'protocol' => $r['protocol'] ?? null,
+                'client_ip' => $r['client_ip'] ?? null,
                 'timestamp' => (string) ($r['event_time'] ?? ''),
             ];
         }, $rows);
