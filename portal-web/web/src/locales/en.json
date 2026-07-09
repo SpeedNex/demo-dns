@@ -170,6 +170,7 @@
     "quickAccess": "Quick Access",
     "dnsOverHttps": "DNS-over-HTTPS",
     "endpointsTitle": "DNS Endpoints",
+    "deviceInfo": "Device Info",
     "endpointsTag": "Standard DNS",
     "boundIpTitle": "Bound IPs",
     "boundIpTag": "Resolved Addresses",

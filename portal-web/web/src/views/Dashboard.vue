@@ -8,50 +8,13 @@
 
         <!-- Main Content Grid -->
         <section class="content-grid">
-            <!-- Left Column: DNS Endpoints -->
+            <!-- Left Column: Device Info -->
             <div class="left-col">
                 <div class="card">
                     <div class="card-header">
-                        <h2>{{ $t('dashboard.endpointsTitle') }}</h2>
-                        <span class="badge-endpoint">{{ $t('dashboard.endpointsTag') }}</span>
+                        <h2>{{ $t('dashboard.deviceInfo') }}</h2>
                     </div>
                     <div class="card-body">
-                        <!-- ID -->
-                        <div class="endpoint-row-item">
-                            <div class="endpoint-label">{{ $t('dashboard.endpointId') }}</div>
-                            <div class="code-row">
-                                <div class="code">{{ endpoints.profile_id || '—' }}</div>
-                                <button class="copy-btn" @click="copyText(endpoints.profile_id)">{{ $t('dashboard.copy') }}</button>
-                            </div>
-                        </div>
-
-                        <!-- DoH -->
-                        <div class="endpoint-row-item">
-                            <div class="endpoint-label">{{ $t('dashboard.endpointDoh') }}</div>
-                            <div class="code-row">
-                                <div class="code">{{ endpoints.doh || '—' }}</div>
-                                <button class="copy-btn" @click="copyText(endpoints.doh)">{{ $t('dashboard.copy') }}</button>
-                            </div>
-                        </div>
-
-                        <!-- DoT / DoQ -->
-                        <div class="endpoint-row-item">
-                            <div class="endpoint-label">{{ $t('dashboard.endpointDotDoq') }}</div>
-                            <div class="code-row">
-                                <div class="code">{{ endpoints.dot || '—' }}</div>
-                                <button class="copy-btn" @click="copyText(endpoints.dot)">{{ $t('dashboard.copy') }}</button>
-                            </div>
-                        </div>
-
-                        <!-- DNS Server Domain -->
-                        <div class="endpoint-row-item">
-                            <div class="endpoint-label">{{ $t('dashboard.serverDomain') }}</div>
-                            <div class="code-row">
-                                <div class="code">{{ endpoints.server_domain || '—' }}</div>
-                                <button class="copy-btn" @click="copyText(endpoints.server_domain)">{{ $t('dashboard.copy') }}</button>
-                            </div>
-                        </div>
-
                         <!-- Device IP Binding -->
                         <div class="endpoint-row-item">
                             <div class="endpoint-label">{{ $t('dashboard.deviceIpBinding') }}</div>

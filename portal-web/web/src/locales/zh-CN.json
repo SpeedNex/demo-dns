@@ -170,6 +170,7 @@
     "quickAccess": "快速接入",
     "dnsOverHttps": "DNS-over-HTTPS",
     "endpointsTitle": "DNS 接入端点",
+    "deviceInfo": "设备信息",
     "endpointsTag": "",
     "boundIpTitle": "已绑定的 IP",
     "boundIpTag": "Bound IPs",
