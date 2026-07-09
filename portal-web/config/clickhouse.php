@@ -28,7 +28,9 @@ return [
     'host'        => '127.0.0.1',
     'port'        => 8123,
     'database'    => 'ocer_dns',
-    'username'    => 'ocer',
+    // 2026-07-09: 线上 ClickHouse 仅存在 default 用户，ocer 用户未创建。
+    // 对齐线上账号，避免 HTTP 403 Authentication failed。
+    'username'    => env('CLICKHOUSE_USERNAME', 'default'),
     'password'    => '',
     'password_file' => '',
     'timeout_seconds'        => 1.5,
