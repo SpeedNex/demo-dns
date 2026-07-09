@@ -171,6 +171,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
+import { getApiError } from '@/composables/useApiError'
 import { UserFilled, Search, Plus, Message, Edit, Delete, Key } from '@element-plus/icons-vue'
 import ListPage from '@/components/ListPage.vue'
 import client from '@/api/client'
@@ -311,7 +312,7 @@ const handleSubmit = async () => {
         dialogVisible.value = false
         fetchAdmins()
     } catch (err) {
-        ElMessage.error(err.response?.data?.message || t('admin.adminUsers.saveFailed'))
+        ElMessage.error(getApiError(err, t('admin.adminUsers.saveFailed')))
     } finally {
         saving.value = false
     }
@@ -323,7 +324,7 @@ const handleStatus = async (row, status) => {
         ElMessage.success(t('admin.adminUsers.statusUpdated'))
         fetchAdmins()
     } catch (err) {
-        ElMessage.error(err.response?.data?.message || t('admin.adminUsers.saveFailed'))
+        ElMessage.error(getApiError(err, t('admin.adminUsers.saveFailed')))
     }
 }
 
@@ -342,7 +343,7 @@ const handleDelete = async (row) => {
         ElMessage.success(t('admin.adminUsers.deleteSuccess'))
         fetchAdmins()
     } catch (err) {
-        ElMessage.error(err.response?.data?.message || t('admin.adminUsers.deleteFailed'))
+        ElMessage.error(getApiError(err, t('admin.adminUsers.deleteFailed')))
     }
 }
 
@@ -364,7 +365,7 @@ const handleAssignSubmit = async () => {
         assignDialogVisible.value = false
         fetchAdmins()
     } catch (err) {
-        ElMessage.error(err.response?.data?.message || (t('admin.rbac.assignFailed')))
+        ElMessage.error(getApiError(err, t('admin.rbac.assignFailed')))
     } finally {
         assigning.value = false
     }

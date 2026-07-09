@@ -48,6 +48,7 @@ import { User, Lock } from '@element-plus/icons-vue'
 import client from '@/api/client'
 import AuthShell from '@/components/AuthShell.vue'
 import { redirectToConsole } from '@/composables/usePostAuthRedirect'
+import { getApiError } from '@/composables/useApiError'
 import { SITE_NAME } from '@/config'
 
 const { t } = useI18n()
@@ -94,7 +95,7 @@ const handleLogin = async () => {
             await redirectToConsole(router)
         }
     } catch (err) {
-        ElMessage.error(err.response?.data?.message || t('auth.loginFailed'))
+        ElMessage.error(getApiError(err, t('auth.loginFailed')))
     } finally {
         loading.value = false
     }

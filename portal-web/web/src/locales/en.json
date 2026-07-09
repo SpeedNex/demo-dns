@@ -124,6 +124,7 @@
     "registerSuccess": "Registration successful",
     "loginFailed": "Login failed",
     "registerFailed": "Registration failed",
+    "emailExists": "This email is already registered",
     "passwordMin": "Password must be at least 6 characters",
     "emailRequired": "Email or username is required",
     "emailValidRequired": "Valid email is required",

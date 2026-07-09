@@ -55,6 +55,7 @@ import { User, Message, Lock } from '@element-plus/icons-vue'
 import client from '@/api/client'
 import AuthShell from '@/components/AuthShell.vue'
 import { redirectToConsole } from '@/composables/usePostAuthRedirect'
+import { getApiError } from '@/composables/useApiError'
 import { SITE_NAME } from '@/config'
 
 const router = useRouter()
@@ -82,11 +83,12 @@ const highlights = computed(() => ([
 ]))
 
 const extractErrorMessage = (error) => {
-    const errors = error?.response?.data?.errors
-    if (errors && typeof errors === 'object') {
-        return Object.values(errors).flat().join('\n')
+    const msg = getApiError(error, t('auth.registerFailed'))
+    // 将后端英文错误映射为前端多语言提示
+    if (/email.*already/i.test(msg)) {
+        return t('auth.emailExists')
     }
-    return error?.response?.data?.message || error?.message || t('auth.registerFailed')
+    return msg
 }
 
 const handleRegister = async () => {

@@ -293,6 +293,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { getApiError } from '@/composables/useApiError'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Coin, Key, Lock, User } from '@element-plus/icons-vue'
 import client from '@/api/client'
@@ -470,7 +471,7 @@ const handleSubscribe = async () => {
         paymentSubscription.value = data.data
         showPaymentModal.value = true
     } catch (e) {
-        ElMessage.error(e.response?.data?.message || t('subscription.createFailed'))
+        ElMessage.error(getApiError(e, t('subscription.createFailed')))
     } finally {
         creating.value = false
     }
@@ -602,8 +603,7 @@ const handleUpdatePassword = async () => {
         passwordForm.value = { currentPassword: '', newPassword: '', confirmPassword: '' }
         ElMessage.success(t('account.password.success'))
     } catch (err) {
-        const errors = err?.response?.data?.errors
-        ElMessage.error(errors ? Object.values(errors).flat().join('\n') : (err?.response?.data?.message || err.message || t('account.password.failed')))
+        ElMessage.error(getApiError(err, t('account.password.failed')))
     } finally {
         updatingPassword.value = false
     }
@@ -635,7 +635,7 @@ const handleCreateApiKey = async () => {
         apiKeyForm.value.scopes = ['dns:query', 'logs:read', 'stats:read']
         await fetchApiKeys()
     } catch (err) {
-        ElMessage.error(err.response?.data?.message || t('apiKeys.failedToCreate'))
+        ElMessage.error(getApiError(err, t('apiKeys.failedToCreate')))
     } finally {
         creatingApiKey.value = false
     }

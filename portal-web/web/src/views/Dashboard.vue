@@ -43,14 +43,6 @@
                             </div>
                         </div>
 
-                        <!-- DNS Server Domain -->
-                        <div class="endpoint-row-item">
-                            <div class="endpoint-label">{{ $t('dashboard.serverDomain') }}</div>
-                            <div class="code-row">
-                                <div class="code">{{ endpoints.server_domain || '—' }}</div>
-                                <button class="copy-btn" @click="copyText(endpoints.server_domain)">{{ $t('dashboard.copy') }}</button>
-                            </div>
-                        </div>
                     </div>
                 </div>
 

@@ -124,7 +124,7 @@ func (s *Server) handleDNSQuery(w http.ResponseWriter, r *http.Request) {
 // handleProfileDNSQuery handles profile-specific DoH requests.
 // URL format: /{profile_id} or /{profile_id}/dns-query
 // Also supports X-Profile-UID header (when running behind Nginx).
-// Only stable 6-char hex profile_id values are accepted.
+// Only stable 6-to-8-char hex profile_id values are accepted.
 func (s *Server) handleProfileDNSQuery(w http.ResponseWriter, r *http.Request) {
 	// Nginx 转发模式: 通过 X-Profile-UID header 传递 profile_id
 	profileUID := r.Header.Get("X-Profile-UID")

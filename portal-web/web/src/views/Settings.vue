@@ -39,6 +39,7 @@ import { ElMessage } from 'element-plus'
 import { Check } from '@element-plus/icons-vue'
 import client from '@/api/client'
 import { useI18n } from 'vue-i18n'
+import { getApiError } from '@/composables/useApiError'
 import Layout from '@/components/Layout.vue'
 
 const { locale, t } = useI18n()
@@ -139,7 +140,7 @@ const handleChangePassword = async () => {
         passwordForm.confirm = ''
         passwordFormRef.value?.resetFields()
     } catch (err) {
-        ElMessage.error(err.response?.data?.message || t('settings.passwordUpdateFailed'))
+        ElMessage.error(getApiError(err, t('settings.passwordUpdateFailed')))
     }
 }
 

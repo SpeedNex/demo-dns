@@ -149,9 +149,9 @@ func (s *Server) handleStream(stream *quic.Stream, remoteAddr string, profileUID
 		return
 	}
 
-	// ① SNI profile_id 校验（6位），非法格式直接拒绝
+	// ① SNI profile_id 校验（6-8位），非法格式直接拒绝
 	profileID, blockResponse, deviceID, safeSearchEnabled, youtubeRestrictedEnabled, blockBypassEnabled := profileUID, "nxdomain", "", false, false, false
-	if profileID == "" || len(profileID) != 6 {
+	if profileID == "" || len(profileID) < 6 || len(profileID) > 8 {
 		reply := new(dns.Msg)
 		reply.SetReply(req)
 		reply.Rcode = dns.RcodeRefused

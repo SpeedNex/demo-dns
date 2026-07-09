@@ -54,10 +54,10 @@ type ProfileResolutionLayer struct {
 	security map[string]*profileSecurity
 }
 
-var profileUIDPattern = regexp.MustCompile(`^[a-f0-9]{6}$`)
+var profileUIDPattern = regexp.MustCompile(`^[a-f0-9]{6,8}$`)
 
 // IsValidProfileID reports whether id is a syntactically valid profile ID.
-// The current format is a 6-character lowercase hex string.
+// The current format is a 6-to-8-character lowercase hex string.
 // Keep in sync with portal-web's Profile ID generation logic.
 func IsValidProfileID(id string) bool {
 	return profileUIDPattern.MatchString(id)

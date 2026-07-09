@@ -124,6 +124,7 @@
     "registerSuccess": "注册成功",
     "loginFailed": "登录失败",
     "registerFailed": "注册失败",
+    "emailExists": "该邮箱已被注册",
     "passwordMin": "密码至少 6 个字符",
     "emailRequired": "请输入邮箱或用户名",
     "emailValidRequired": "请输入有效的邮箱",
